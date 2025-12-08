@@ -38,7 +38,7 @@ class Course_Post_Type {
         $labels = array(
             'name'                  => _x('Курсы', 'Post Type General Name', 'course-plugin'),
             'singular_name'         => _x('Курс', 'Post Type Singular Name', 'course-plugin'),
-            'menu_name'             => __('Курсы', 'course-plugin'),
+            'menu_name'             => __('Курсы Про', 'course-plugin'),
             'name_admin_bar'        => __('Курс', 'course-plugin'),
             'archives'              => __('Архив курсов', 'course-plugin'),
             'attributes'            => __('Атрибуты курса', 'course-plugin'),
