@@ -28,7 +28,8 @@ class Course_Taxonomies {
      * Конструктор
      */
     private function __construct() {
-        add_action('init', array($this, 'register_taxonomies'));
+        // Регистрируем таксономии после типа поста (приоритет 20)
+        add_action('init', array($this, 'register_taxonomies'), 20);
     }
     
     /**
@@ -77,6 +78,8 @@ class Course_Taxonomies {
             'show_in_nav_menus'          => true,
             'show_tagcloud'              => true,
             'show_in_rest'               => true,
+            'show_in_quick_edit'         => true,
+            'meta_box_cb'                => 'post_categories_meta_box',
             'rewrite'                    => array('slug' => 'specialization'),
         );
         
@@ -119,6 +122,8 @@ class Course_Taxonomies {
             'show_in_nav_menus'          => true,
             'show_tagcloud'              => true,
             'show_in_rest'               => true,
+            'show_in_quick_edit'         => true,
+            'meta_box_cb'                => 'post_categories_meta_box',
             'rewrite'                    => array('slug' => 'education-level'),
         );
         
@@ -161,6 +166,8 @@ class Course_Taxonomies {
             'show_in_nav_menus'          => true,
             'show_tagcloud'              => true,
             'show_in_rest'               => true,
+            'show_in_quick_edit'         => true,
+            'meta_box_cb'                => 'post_categories_meta_box',
             'rewrite'                    => array('slug' => 'topic'),
         );
         
@@ -203,6 +210,8 @@ class Course_Taxonomies {
             'show_in_nav_menus'          => true,
             'show_tagcloud'              => true,
             'show_in_rest'               => true,
+            'show_in_quick_edit'         => true,
+            'meta_box_cb'                => 'post_tags_meta_box',
             'rewrite'                    => array('slug' => 'teacher'),
         );
         
