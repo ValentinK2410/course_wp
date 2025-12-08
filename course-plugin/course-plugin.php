@@ -72,27 +72,55 @@ class Course_Plugin {
      * Подключение файлов классов
      */
     private function includes() {
-        require_once COURSE_PLUGIN_DIR . 'includes/class-course-post-type.php';
-        require_once COURSE_PLUGIN_DIR . 'includes/class-course-taxonomies.php';
-        require_once COURSE_PLUGIN_DIR . 'includes/class-course-admin.php';
-        require_once COURSE_PLUGIN_DIR . 'includes/class-course-meta-boxes.php';
+        $files = array(
+            'includes/class-course-post-type.php',
+            'includes/class-course-taxonomies.php',
+            'includes/class-course-admin.php',
+            'includes/class-course-meta-boxes.php',
+        );
+        
+        foreach ($files as $file) {
+            $file_path = COURSE_PLUGIN_DIR . $file;
+            if (file_exists($file_path)) {
+                require_once $file_path;
+            } else {
+                // Логируем ошибку, если файл не найден
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Course Plugin: Файл не найден - ' . $file_path);
+                }
+            }
+        }
     }
     
     /**
      * Загрузка компонентов
      */
     public function load_components() {
+        // Проверяем, что классы загружены
+        if (!class_exists('Course_Post_Type')) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Course Plugin: Класс Course_Post_Type не найден');
+            }
+            return;
+        }
+        
         // Инициализируем Custom Post Type
         Course_Post_Type::get_instance();
         
         // Инициализируем таксономии
-        Course_Taxonomies::get_instance();
+        if (class_exists('Course_Taxonomies')) {
+            Course_Taxonomies::get_instance();
+        }
         
         // Инициализируем административный интерфейс
-        Course_Admin::get_instance();
+        if (class_exists('Course_Admin')) {
+            Course_Admin::get_instance();
+        }
         
         // Инициализируем метабоксы
-        Course_Meta_Boxes::get_instance();
+        if (class_exists('Course_Meta_Boxes')) {
+            Course_Meta_Boxes::get_instance();
+        }
     }
     
     /**
