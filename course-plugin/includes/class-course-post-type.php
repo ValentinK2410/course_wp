@@ -28,7 +28,8 @@ class Course_Post_Type {
      * Конструктор
      */
     private function __construct() {
-        add_action('init', array($this, 'register_post_type'));
+        // Регистрируем тип поста с приоритетом 10 (до таксономий)
+        add_action('init', array($this, 'register_post_type'), 10);
     }
     
     /**
@@ -70,7 +71,6 @@ class Course_Post_Type {
             'description'           => __('Управление курсами', 'course-plugin'),
             'labels'                => $labels,
             'supports'              => array('title', 'editor', 'thumbnail', 'excerpt', 'custom-fields'),
-            'taxonomies'            => array('course_specialization', 'course_level', 'course_topic', 'course_teacher'),
             'hierarchical'          => false,
             'public'                => true,
             'show_ui'               => true,
@@ -84,15 +84,6 @@ class Course_Post_Type {
             'exclude_from_search'   => false,
             'publicly_queryable'    => true,
             'capability_type'       => 'post',
-            'capabilities'          => array(
-                'edit_post'          => 'edit_post',
-                'read_post'          => 'read_post',
-                'delete_post'        => 'delete_post',
-                'edit_posts'         => 'edit_posts',
-                'edit_others_posts'  => 'edit_others_posts',
-                'publish_posts'      => 'publish_posts',
-                'read_private_posts' => 'read_private_posts',
-            ),
             'map_meta_cap'          => true,
             'show_in_rest'          => true,
             'rest_base'             => 'courses',
