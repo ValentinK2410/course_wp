@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Курсы
- * Plugin URI: https://example.com/course-plugin
+ * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
  * Version: 1.0.0
- * Author: Ваше Имя
- * Author URI: https://example.com
+ * Author: valentink2410
+ * Author URI: https://github.com/ValentinK2410
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: course-plugin
