@@ -99,6 +99,9 @@ class Course_Plugin {
      * Активация плагина
      */
     public function activate() {
+        // Подключаем файлы классов перед активацией
+        $this->includes();
+        
         // Регистрируем типы постов и таксономии
         $this->load_components();
         

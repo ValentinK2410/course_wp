@@ -78,4 +78,3 @@ course-plugin/
 ## Лицензия
 
 GPL v2 or later
-
