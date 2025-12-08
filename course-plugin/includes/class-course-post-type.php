@@ -36,6 +36,14 @@ class Course_Post_Type {
      * Регистрация Custom Post Type "Курсы"
      */
     public function register_post_type() {
+        // Проверяем, что функция register_post_type доступна
+        if (!function_exists('register_post_type')) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Course Plugin: функция register_post_type не доступна');
+            }
+            return;
+        }
+        
         $labels = array(
             'name'                  => _x('Курсы', 'Post Type General Name', 'course-plugin'),
             'singular_name'         => _x('Курс', 'Post Type Singular Name', 'course-plugin'),
@@ -90,7 +98,34 @@ class Course_Post_Type {
             'rewrite'               => array('slug' => 'courses'),
         );
         
-        register_post_type('course', $args);
+        // Проверяем, не зарегистрирован ли уже тип поста
+        if (post_type_exists('course')) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Course Plugin: Тип поста "course" уже зарегистрирован');
+            }
+            return;
+        }
+        
+        // Регистрируем тип поста
+        $result = register_post_type('course', $args);
+        
+        // Логируем результат регистрации
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (is_wp_error($result)) {
+                error_log('Course Plugin: Ошибка регистрации типа поста - ' . $result->get_error_message());
+            } elseif ($result === null || $result === false) {
+                error_log('Course Plugin: Регистрация типа поста вернула null или false');
+            } else {
+                error_log('Course Plugin: Тип поста "course" успешно зарегистрирован');
+            }
+        }
+        
+        // Дополнительная проверка после регистрации
+        if (!post_type_exists('course')) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Course Plugin: КРИТИЧЕСКАЯ ОШИБКА - тип поста не зарегистрирован после вызова register_post_type()');
+            }
+        }
     }
 }
 
