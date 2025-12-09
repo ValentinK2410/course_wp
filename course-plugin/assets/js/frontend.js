@@ -30,13 +30,32 @@
             $('.view-btn[data-view="' + savedView + '"]').addClass('active').siblings().removeClass('active');
         }
         
-        // Автоматическая отправка формы при изменении фильтров (опционально)
-        // Раскомментируйте, если хотите автоматическую фильтрацию
-        /*
-        $('#course-filters-form select').on('change', function() {
-            $('#course-filters-form').submit();
+        // Сортировка - автоматическая отправка формы при изменении
+        $('#course-sort-select').on('change', function() {
+            var form = $('#course-filters-form');
+            var sortValue = $(this).val();
+            
+            // Добавляем параметр сортировки к форме
+            if (form.length) {
+                var action = form.attr('action') || window.location.pathname;
+                var formData = form.serialize();
+                
+                // Добавляем сортировку
+                if (formData) {
+                    formData += '&sort=' + sortValue;
+                } else {
+                    formData = 'sort=' + sortValue;
+                }
+                
+                // Перенаправляем с параметрами
+                window.location.href = action + '?' + formData;
+            } else {
+                // Если формы нет, просто добавляем параметр к URL
+                var url = new URL(window.location.href);
+                url.searchParams.set('sort', sortValue);
+                window.location.href = url.toString();
+            }
         });
-        */
         
     });
     

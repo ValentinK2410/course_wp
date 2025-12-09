@@ -67,66 +67,96 @@ class Course_Frontend {
      */
     public function filter_courses_query($query) {
         if (!is_admin() && $query->is_main_query() && is_post_type_archive('course')) {
-            $posts_per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 12;
+            $posts_per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 15;
             $query->set('posts_per_page', $posts_per_page);
             
-            // Фильтр по специализации
+            $tax_query = array();
+            
+            // Фильтр по специализации (может быть массивом)
             if (isset($_GET['specialization']) && !empty($_GET['specialization'])) {
-                $query->set('tax_query', array(
-                    array(
-                        'taxonomy' => 'course_specialization',
-                        'field'    => 'slug',
-                        'terms'    => sanitize_text_field($_GET['specialization']),
-                    ),
-                ));
+                $specializations = is_array($_GET['specialization']) ? $_GET['specialization'] : array($_GET['specialization']);
+                $specializations = array_map('sanitize_text_field', $specializations);
+                $tax_query[] = array(
+                    'taxonomy' => 'course_specialization',
+                    'field'    => 'slug',
+                    'terms'    => $specializations,
+                    'operator' => 'IN',
+                );
             }
             
-            // Фильтр по уровню образования
+            // Фильтр по уровню образования (может быть массивом)
             if (isset($_GET['level']) && !empty($_GET['level'])) {
-                $tax_query = $query->get('tax_query');
-                if (!is_array($tax_query)) {
-                    $tax_query = array();
-                }
+                $levels = is_array($_GET['level']) ? $_GET['level'] : array($_GET['level']);
+                $levels = array_map('sanitize_text_field', $levels);
                 $tax_query[] = array(
                     'taxonomy' => 'course_level',
                     'field'    => 'slug',
-                    'terms'    => sanitize_text_field($_GET['level']),
+                    'terms'    => $levels,
+                    'operator' => 'IN',
                 );
-                $query->set('tax_query', $tax_query);
             }
             
-            // Фильтр по теме
+            // Фильтр по теме (может быть массивом)
             if (isset($_GET['topic']) && !empty($_GET['topic'])) {
-                $tax_query = $query->get('tax_query');
-                if (!is_array($tax_query)) {
-                    $tax_query = array();
-                }
+                $topics = is_array($_GET['topic']) ? $_GET['topic'] : array($_GET['topic']);
+                $topics = array_map('sanitize_text_field', $topics);
                 $tax_query[] = array(
                     'taxonomy' => 'course_topic',
                     'field'    => 'slug',
-                    'terms'    => sanitize_text_field($_GET['topic']),
+                    'terms'    => $topics,
+                    'operator' => 'IN',
                 );
-                $query->set('tax_query', $tax_query);
             }
             
             // Фильтр по преподавателю
             if (isset($_GET['teacher']) && !empty($_GET['teacher'])) {
-                $tax_query = $query->get('tax_query');
-                if (!is_array($tax_query)) {
-                    $tax_query = array();
-                }
                 $tax_query[] = array(
                     'taxonomy' => 'course_teacher',
                     'field'    => 'slug',
                     'terms'    => sanitize_text_field($_GET['teacher']),
                 );
+            }
+            
+            // Устанавливаем tax_query если есть фильтры
+            if (!empty($tax_query)) {
+                if (count($tax_query) > 1) {
+                    $tax_query['relation'] = 'AND';
+                }
                 $query->set('tax_query', $tax_query);
             }
             
-            // Добавляем relation для множественных фильтров
-            $tax_query = $query->get('tax_query');
-            if (is_array($tax_query) && count($tax_query) > 1) {
-                $query->set('tax_query', array_merge(array('relation' => 'AND'), $tax_query));
+            // Сортировка
+            if (isset($_GET['sort']) && !empty($_GET['sort'])) {
+                $sort = sanitize_text_field($_GET['sort']);
+                
+                switch ($sort) {
+                    case 'price_asc':
+                        $query->set('meta_key', '_course_price');
+                        $query->set('orderby', 'meta_value_num');
+                        $query->set('order', 'ASC');
+                        break;
+                    case 'price_desc':
+                        $query->set('meta_key', '_course_price');
+                        $query->set('orderby', 'meta_value_num');
+                        $query->set('order', 'DESC');
+                        break;
+                    case 'date_asc':
+                        $query->set('orderby', 'date');
+                        $query->set('order', 'ASC');
+                        break;
+                    case 'date_desc':
+                        $query->set('orderby', 'date');
+                        $query->set('order', 'DESC');
+                        break;
+                    case 'title_asc':
+                        $query->set('orderby', 'title');
+                        $query->set('order', 'ASC');
+                        break;
+                    case 'title_desc':
+                        $query->set('orderby', 'title');
+                        $query->set('order', 'DESC');
+                        break;
+                }
             }
         }
     }

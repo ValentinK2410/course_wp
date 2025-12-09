@@ -112,6 +112,9 @@ class Course_Meta_Boxes {
     public function render_course_duration_meta_box($post) {
         $course_duration = get_post_meta($post->ID, '_course_duration', true);
         $course_price = get_post_meta($post->ID, '_course_price', true);
+        $course_old_price = get_post_meta($post->ID, '_course_old_price', true);
+        $course_rating = get_post_meta($post->ID, '_course_rating', true);
+        $course_reviews_count = get_post_meta($post->ID, '_course_reviews_count', true);
         
         ?>
         <p>
@@ -121,6 +124,19 @@ class Course_Meta_Boxes {
         <p>
             <label for="course_price"><?php _e('Стоимость (руб.)', 'course-plugin'); ?></label>
             <input type="number" id="course_price" name="course_price" value="<?php echo esc_attr($course_price); ?>" class="small-text" min="0" step="0.01" />
+        </p>
+        <p>
+            <label for="course_old_price"><?php _e('Старая цена (руб.)', 'course-plugin'); ?></label>
+            <input type="number" id="course_old_price" name="course_old_price" value="<?php echo esc_attr($course_old_price); ?>" class="small-text" min="0" step="0.01" />
+            <span class="description"><?php _e('Для отображения скидки', 'course-plugin'); ?></span>
+        </p>
+        <p>
+            <label for="course_rating"><?php _e('Рейтинг (1-5)', 'course-plugin'); ?></label>
+            <input type="number" id="course_rating" name="course_rating" value="<?php echo esc_attr($course_rating); ?>" class="small-text" min="0" max="5" step="0.1" />
+        </p>
+        <p>
+            <label for="course_reviews_count"><?php _e('Количество отзывов', 'course-plugin'); ?></label>
+            <input type="number" id="course_reviews_count" name="course_reviews_count" value="<?php echo esc_attr($course_reviews_count); ?>" class="small-text" min="0" />
         </p>
         <?php
     }
@@ -153,10 +169,13 @@ class Course_Meta_Boxes {
         $fields = array(
             'course_duration',
             'course_price',
+            'course_old_price',
             'course_start_date',
             'course_end_date',
             'course_capacity',
             'course_enrolled',
+            'course_rating',
+            'course_reviews_count',
         );
         
         foreach ($fields as $field) {
