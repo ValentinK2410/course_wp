@@ -213,12 +213,19 @@ class Course_Plugin {
     /**
      * Деактивация плагина
      * Вызывается при деактивации плагина в админ-панели WordPress
-     * Очищает правила перезаписи URL
+     * Очищает правила перезаписи URL и удаляет cron задачи
      */
     public function deactivate() {
         // Сбрасываем правила перезаписи URL
         // Это необходимо для очистки правил после деактивации плагина
         flush_rewrite_rules();
+        
+        // Удаляем cron задачу синхронизации с Moodle, если она была зарегистрирована
+        // wp_clear_scheduled_hook() удаляет все запланированные события для указанного хука
+        $timestamp = wp_next_scheduled('moodle_sync_cron');
+        if ($timestamp) {
+            wp_unschedule_event($timestamp, 'moodle_sync_cron');
+        }
     }
     
     /**
