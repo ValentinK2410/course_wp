@@ -52,6 +52,25 @@ class Course_Teacher_Meta {
         // Добавляем колонку с фото в список преподавателей
         add_filter('manage_edit-course_teacher_columns', array($this, 'add_teacher_columns'));
         add_filter('manage_course_teacher_custom_column', array($this, 'render_teacher_columns'), 10, 3);
+        
+        // Подключаем скрипты WordPress Media для работы с медиа-библиотекой
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_media_scripts'));
+    }
+    
+    /**
+     * Подключение скриптов WordPress Media для выбора изображений
+     * 
+     * @param string $hook Название текущей страницы админ-панели
+     */
+    public function enqueue_media_scripts($hook) {
+        // Подключаем только на страницах редактирования таксономии преподавателей
+        if ($hook === 'edit-tags.php' || $hook === 'term.php') {
+            $screen = get_current_screen();
+            if ($screen && $screen->taxonomy === 'course_teacher') {
+                // Подключаем скрипты WordPress Media API
+                wp_enqueue_media();
+            }
+        }
     }
     
     /**
