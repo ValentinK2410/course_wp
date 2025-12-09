@@ -43,10 +43,16 @@ while (have_posts()) : the_post();
     $levels = get_the_terms(get_the_ID(), 'course_level');
     $topics = get_the_terms(get_the_ID(), 'course_topic');
     
-    // Получаем имя преподавателя (первый из списка)
+    // Получаем данные преподавателя (первый из списка)
     $teacher_name = '';
+    $teacher_photo = '';
+    $teacher_position = '';
     if ($teachers && !is_wp_error($teachers) && !empty($teachers)) {
-        $teacher_name = $teachers[0]->name;
+        $teacher = $teachers[0];
+        $teacher_name = $teacher->name;
+        // Получаем метаполя преподавателя
+        $teacher_photo = get_term_meta($teacher->term_id, 'teacher_photo', true);
+        $teacher_position = get_term_meta($teacher->term_id, 'teacher_position', true);
     }
     
     // Вычисляем скидку
@@ -307,19 +313,21 @@ while (have_posts()) : the_post();
                 <div class="course-instructor-box">
                     <h4><?php _e('Преподаватель', 'course-plugin'); ?></h4>
                     <div class="instructor-info">
-                        <?php
-                        // Пытаемся получить фото преподавателя из метаполя или таксономии
-                        $instructor_photo = '';
-                        if ($teachers && !is_wp_error($teachers) && !empty($teachers)) {
-                            $instructor_photo = get_term_meta($teachers[0]->term_id, 'instructor_photo', true);
-                        }
-                        ?>
-                        <?php if ($instructor_photo) : ?>
+                        <?php if ($teacher_photo) : ?>
                             <div class="instructor-photo">
-                                <img src="<?php echo esc_url($instructor_photo); ?>" alt="<?php echo esc_attr($teacher_name); ?>">
+                                <a href="<?php echo esc_url(get_term_link($teacher->term_id, 'course_teacher')); ?>">
+                                    <img src="<?php echo esc_url($teacher_photo); ?>" alt="<?php echo esc_attr($teacher_name); ?>">
+                                </a>
                             </div>
                         <?php endif; ?>
-                        <div class="instructor-name"><?php echo esc_html($teacher_name); ?></div>
+                        <div class="instructor-name">
+                            <a href="<?php echo esc_url(get_term_link($teacher->term_id, 'course_teacher')); ?>">
+                                <?php echo esc_html($teacher_name); ?>
+                            </a>
+                        </div>
+                        <?php if ($teacher_position) : ?>
+                            <div class="instructor-position"><?php echo esc_html($teacher_position); ?></div>
+                        <?php endif; ?>
                         <?php if ($specializations && !is_wp_error($specializations)) : ?>
                             <div class="instructor-specializations">
                                 <?php foreach ($specializations as $spec) : ?>
