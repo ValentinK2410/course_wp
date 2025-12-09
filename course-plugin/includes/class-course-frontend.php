@@ -42,9 +42,10 @@ class Course_Frontend {
     }
     
     /**
-     * Загрузка шаблонов для курсов
+     * Загрузка шаблонов для курсов и преподавателей
      */
     public function course_template_loader($template) {
+        // Шаблон архива курсов
         if (is_post_type_archive('course')) {
             $template_path = COURSE_PLUGIN_DIR . 'templates/archive-course.php';
             if (file_exists($template_path)) {
@@ -52,8 +53,17 @@ class Course_Frontend {
             }
         }
         
+        // Шаблон отдельного курса
         if (is_singular('course')) {
             $template_path = COURSE_PLUGIN_DIR . 'templates/single-course.php';
+            if (file_exists($template_path)) {
+                return $template_path;
+            }
+        }
+        
+        // Шаблон страницы преподавателя
+        if (is_tax('course_teacher')) {
+            $template_path = COURSE_PLUGIN_DIR . 'templates/taxonomy-course_teacher.php';
             if (file_exists($template_path)) {
                 return $template_path;
             }
@@ -165,7 +175,8 @@ class Course_Frontend {
      * Подключение стилей и скриптов
      */
     public function enqueue_assets() {
-        if (is_post_type_archive('course') || is_singular('course')) {
+        // Подключаем стили и скрипты на страницах курсов и преподавателей
+        if (is_post_type_archive('course') || is_singular('course') || is_tax('course_teacher')) {
             wp_enqueue_style(
                 'course-frontend-style',
                 COURSE_PLUGIN_URL . 'assets/css/frontend.css',

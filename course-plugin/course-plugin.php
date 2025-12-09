@@ -110,6 +110,7 @@ class Course_Plugin {
             'includes/class-course-admin.php',          // Класс для административного интерфейса (колонки, фильтры, дублирование)
             'includes/class-course-meta-boxes.php',    // Класс для метабоксов с дополнительными полями курсов
             'includes/class-course-frontend.php',       // Класс для фронтенда (шаблоны, фильтры, стили)
+            'includes/class-course-teacher-meta.php',  // Класс для метаполей преподавателей (фото, описание и т.д.)
         );
         
         // Проходим по каждому файлу в массиве
@@ -172,6 +173,12 @@ class Course_Plugin {
         // Загружает шаблоны, стили, скрипты для отображения курсов на сайте
         if (class_exists('Course_Frontend')) {
             Course_Frontend::get_instance();
+        }
+        
+        // Инициализируем метаполя преподавателей
+        // Добавляет поля для фото, описания и контактов преподавателя
+        if (class_exists('Course_Teacher_Meta')) {
+            Course_Teacher_Meta::get_instance();
         }
     }
     
