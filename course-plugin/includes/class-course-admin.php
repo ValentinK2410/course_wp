@@ -39,6 +39,10 @@ class Course_Admin {
         add_action('restrict_manage_posts', array($this, 'add_taxonomy_filters'));
         add_filter('parse_query', array($this, 'filter_courses_by_taxonomy'));
         
+        // Добавляем функцию дублирования курса
+        add_filter('post_row_actions', array($this, 'add_duplicate_link'), 10, 2);
+        add_action('admin_action_duplicate_course', array($this, 'duplicate_course'));
+        
         // Добавляем стили и скрипты для админки
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
     }
@@ -203,6 +207,112 @@ class Course_Admin {
                 }
             }
         }
+    }
+    
+    /**
+     * Добавление ссылки "Дублировать" в строку действий
+     */
+    public function add_duplicate_link($actions, $post) {
+        if ($post->post_type !== 'course') {
+            return $actions;
+        }
+        
+        if (!current_user_can('edit_posts')) {
+            return $actions;
+        }
+        
+        $duplicate_url = wp_nonce_url(
+            admin_url('admin.php?action=duplicate_course&post=' . $post->ID),
+            'duplicate_course_' . $post->ID,
+            'duplicate_nonce'
+        );
+        
+        $actions['duplicate'] = '<a href="' . esc_url($duplicate_url) . '" title="' . esc_attr__('Дублировать этот курс', 'course-plugin') . '">' . __('Дублировать', 'course-plugin') . '</a>';
+        
+        return $actions;
+    }
+    
+    /**
+     * Дублирование курса
+     */
+    public function duplicate_course() {
+        // Проверка nonce
+        if (!isset($_GET['duplicate_nonce']) || !wp_verify_nonce($_GET['duplicate_nonce'], 'duplicate_course_' . $_GET['post'])) {
+            wp_die(__('Ошибка безопасности. Пожалуйста, попробуйте снова.', 'course-plugin'));
+        }
+        
+        // Проверка прав
+        if (!current_user_can('edit_posts')) {
+            wp_die(__('У вас нет прав для выполнения этого действия.', 'course-plugin'));
+        }
+        
+        // Получаем ID оригинального курса
+        $post_id = isset($_GET['post']) ? intval($_GET['post']) : 0;
+        
+        if (!$post_id) {
+            wp_die(__('Курс не найден.', 'course-plugin'));
+        }
+        
+        // Получаем оригинальный курс
+        $original_post = get_post($post_id);
+        
+        if (!$original_post || $original_post->post_type !== 'course') {
+            wp_die(__('Курс не найден.', 'course-plugin'));
+        }
+        
+        // Подготавливаем данные для нового курса
+        $new_post_data = array(
+            'post_title'     => $original_post->post_title . ' (копия)',
+            'post_content'   => $original_post->post_content,
+            'post_excerpt'   => $original_post->post_excerpt,
+            'post_status'    => 'draft', // Создаем как черновик
+            'post_type'      => 'course',
+            'post_author'    => get_current_user_id(),
+            'post_date'      => current_time('mysql'),
+            'post_date_gmt'  => current_time('mysql', 1),
+        );
+        
+        // Создаем новый курс
+        $new_post_id = wp_insert_post($new_post_data);
+        
+        if (is_wp_error($new_post_id)) {
+            wp_die(__('Ошибка при создании копии курса.', 'course-plugin'));
+        }
+        
+        // Копируем метаполя
+        $meta_keys = get_post_custom_keys($post_id);
+        if ($meta_keys) {
+            foreach ($meta_keys as $meta_key) {
+                // Пропускаем служебные метаполя
+                if (strpos($meta_key, '_edit_') === 0 || strpos($meta_key, '_wp_') === 0) {
+                    continue;
+                }
+                
+                $meta_values = get_post_custom_values($meta_key, $post_id);
+                foreach ($meta_values as $meta_value) {
+                    add_post_meta($new_post_id, $meta_key, maybe_unserialize($meta_value));
+                }
+            }
+        }
+        
+        // Копируем таксономии
+        $taxonomies = get_object_taxonomies('course');
+        foreach ($taxonomies as $taxonomy) {
+            $terms = wp_get_post_terms($post_id, $taxonomy, array('fields' => 'slugs'));
+            if ($terms && !is_wp_error($terms)) {
+                wp_set_post_terms($new_post_id, $terms, $taxonomy);
+            }
+        }
+        
+        // Копируем миниатюру (featured image)
+        $thumbnail_id = get_post_thumbnail_id($post_id);
+        if ($thumbnail_id) {
+            set_post_thumbnail($new_post_id, $thumbnail_id);
+        }
+        
+        // Перенаправляем на страницу редактирования нового курса
+        wp_redirect(admin_url('post.php?action=edit&post=' . $new_post_id));
+        exit;
     }
     
     /**
