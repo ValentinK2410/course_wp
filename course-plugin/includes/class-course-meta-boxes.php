@@ -200,6 +200,77 @@ class Course_Meta_Boxes {
     }
     
     /**
+     * Добавление метабокса для ссылок на кнопки курса
+     */
+    public function add_meta_boxes() {
+        add_meta_box(
+            'course_details',
+            __('Детали курса', 'course-plugin'),
+            array($this, 'render_course_details_meta_box'),
+            'course',
+            'normal',
+            'high'
+        );
+        
+        add_meta_box(
+            'course_duration',
+            __('Продолжительность и стоимость', 'course-plugin'),
+            array($this, 'render_course_duration_meta_box'),
+            'course',
+            'side',
+            'default'
+        );
+        
+        // Добавляем метабокс для ссылок на кнопки
+        add_meta_box(
+            'course_action_buttons',
+            __('Ссылки на кнопки курса', 'course-plugin'),
+            array($this, 'render_course_action_buttons_meta_box'),
+            'course',
+            'side',
+            'default'
+        );
+    }
+    
+    /**
+     * Рендеринг метабокса со ссылками на кнопки курса
+     * 
+     * @param WP_Post $post Объект текущего курса
+     */
+    public function render_course_action_buttons_meta_box($post) {
+        // Получаем значения метаполей для ссылок кнопок
+        $course_seminary_new_url = get_post_meta($post->ID, '_course_seminary_new_url', true);
+        $course_seminary_student_url = get_post_meta($post->ID, '_course_seminary_student_url', true);
+        $course_lite_course_url = get_post_meta($post->ID, '_course_lite_course_url', true);
+        
+        ?>
+        <p>
+            <label for="course_seminary_new_url">
+                <strong><?php _e('Курс на семинарском уровне (не студент SEMINARY)', 'course-plugin'); ?></strong>
+            </label><br />
+            <input type="url" id="course_seminary_new_url" name="course_seminary_new_url" value="<?php echo esc_url($course_seminary_new_url); ?>" class="large-text" placeholder="https://..." />
+            <span class="description"><?php _e('Если поле пустое, кнопка не будет отображаться', 'course-plugin'); ?></span>
+        </p>
+        
+        <p>
+            <label for="course_seminary_student_url">
+                <strong><?php _e('Курс на семинарском уровне (студент SEMINARY)', 'course-plugin'); ?></strong>
+            </label><br />
+            <input type="url" id="course_seminary_student_url" name="course_seminary_student_url" value="<?php echo esc_url($course_seminary_student_url); ?>" class="large-text" placeholder="https://..." />
+            <span class="description"><?php _e('Если поле пустое, кнопка не будет отображаться', 'course-plugin'); ?></span>
+        </p>
+        
+        <p>
+            <label for="course_lite_course_url">
+                <strong><?php _e('Лайт курс', 'course-plugin'); ?></strong>
+            </label><br />
+            <input type="url" id="course_lite_course_url" name="course_lite_course_url" value="<?php echo esc_url($course_lite_course_url); ?>" class="large-text" placeholder="https://..." />
+            <span class="description"><?php _e('Если поле пустое, кнопка не будет отображаться', 'course-plugin'); ?></span>
+        </p>
+        <?php
+    }
+    
+    /**
      * Сохранение данных метабоксов при сохранении курса
      * Вызывается автоматически при нажатии кнопки "Сохранить" или "Опубликовать"
      * 
@@ -230,16 +301,40 @@ class Course_Meta_Boxes {
         
         // Массив названий полей, которые нужно сохранить
         $fields = array(
-            'course_duration',        // Продолжительность курса
-            'course_price',           // Стоимость курса
-            'course_old_price',       // Старая цена (для скидки)
-            'course_start_date',      // Дата начала курса
-            'course_end_date',        // Дата окончания курса
-            'course_capacity',        // Вместимость (количество мест)
-            'course_enrolled',        // Количество записанных студентов
-            'course_rating',          // Рейтинг курса (1-5)
-            'course_reviews_count',   // Количество отзывов
+            'course_duration',            // Продолжительность курса
+            'course_price',               // Стоимость курса
+            'course_old_price',           // Старая цена (для скидки)
+            'course_start_date',          // Дата начала курса
+            'course_end_date',            // Дата окончания курса
+            'course_capacity',            // Вместимость (количество мест)
+            'course_enrolled',            // Количество записанных студентов
+            'course_rating',              // Рейтинг курса (1-5)
+            'course_reviews_count',       // Количество отзывов
+            'course_seminary_new_url',    // Ссылка на кнопку "Курс на семинарском уровне (не студент)"
+            'course_seminary_student_url', // Ссылка на кнопку "Курс на семинарском уровне (студент)"
+            'course_lite_course_url',      // Ссылка на кнопку "Лайт курс"
         );
+        
+        // Обрабатываем URL поля отдельно (нужна специальная очистка)
+        $url_fields = array(
+            'course_seminary_new_url',
+            'course_seminary_student_url',
+            'course_lite_course_url',
+        );
+        
+        // Сохраняем URL поля с правильной очисткой
+        foreach ($url_fields as $field) {
+            if (isset($_POST[$field])) {
+                // esc_url_raw() очищает URL и сохраняет его в безопасном виде
+                $value = esc_url_raw($_POST[$field]);
+                update_post_meta($post_id, '_' . $field, $value);
+            } else {
+                delete_post_meta($post_id, '_' . $field);
+            }
+        }
+        
+        // Удаляем URL поля из основного массива, чтобы не обрабатывать их дважды
+        $fields = array_diff($fields, $url_fields);
         
         // Проходим по каждому полю
         foreach ($fields as $field) {

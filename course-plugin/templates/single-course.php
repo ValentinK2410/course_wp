@@ -47,6 +47,7 @@ while (have_posts()) : the_post();
     $teacher_name = '';
     $teacher_photo = '';
     $teacher_position = '';
+    $teacher = null;
     if ($teachers && !is_wp_error($teachers) && !empty($teachers)) {
         $teacher = $teachers[0];
         $teacher_name = $teacher->name;
@@ -54,6 +55,11 @@ while (have_posts()) : the_post();
         $teacher_photo = get_term_meta($teacher->term_id, 'teacher_photo', true);
         $teacher_position = get_term_meta($teacher->term_id, 'teacher_position', true);
     }
+    
+    // Получаем ссылки для кнопок курса
+    $course_seminary_new_url = get_post_meta(get_the_ID(), '_course_seminary_new_url', true);
+    $course_seminary_student_url = get_post_meta(get_the_ID(), '_course_seminary_student_url', true);
+    $course_lite_course_url = get_post_meta(get_the_ID(), '_course_lite_course_url', true);
     
     // Вычисляем скидку
     $discount = 0;
@@ -261,17 +267,27 @@ while (have_posts()) : the_post();
         <!-- Боковая панель справа -->
         <aside class="single-course-sidebar">
             <!-- Кнопки действий -->
-            <div class="course-action-buttons">
-                <a href="#" class="course-action-btn course-btn-seminary-new">
-                    <?php _e('Курс на семинарском уровне (если вы не студент SEMINARY)', 'course-plugin'); ?>
-                </a>
-                <a href="#" class="course-action-btn course-btn-seminary-student">
-                    <?php _e('Курс на семинарском уровне (если вы уже студент SEMINARY)', 'course-plugin'); ?>
-                </a>
-                <a href="#" class="course-action-btn course-btn-buy">
-                    <?php _e('Лайт курс', 'course-plugin'); ?>
-                </a>
-            </div>
+            <?php if ($course_seminary_new_url || $course_seminary_student_url || $course_lite_course_url) : ?>
+                <div class="course-action-buttons">
+                    <?php if ($course_seminary_new_url) : ?>
+                        <a href="<?php echo esc_url($course_seminary_new_url); ?>" target="_blank" rel="noopener" class="course-action-btn course-btn-seminary-new">
+                            <?php _e('Курс на семинарском уровне (если вы не студент SEMINARY)', 'course-plugin'); ?>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <?php if ($course_seminary_student_url) : ?>
+                        <a href="<?php echo esc_url($course_seminary_student_url); ?>" target="_blank" rel="noopener" class="course-action-btn course-btn-seminary-student">
+                            <?php _e('Курс на семинарском уровне (если вы уже студент SEMINARY)', 'course-plugin'); ?>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <?php if ($course_lite_course_url) : ?>
+                        <a href="<?php echo esc_url($course_lite_course_url); ?>" target="_blank" rel="noopener" class="course-action-btn course-btn-buy">
+                            <?php _e('Лайт курс', 'course-plugin'); ?>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
             
             <!-- Краткий обзор курса -->
             <div class="course-overview-box">
