@@ -48,7 +48,7 @@ class Course_Meta_Boxes {
     
     /**
      * Добавление метабоксов на страницу редактирования курса
-     * Создает два метабокса с дополнительными полями для курса
+     * Создает три метабокса с дополнительными полями для курса
      */
     public function add_meta_boxes() {
         // Добавляем метабокс "Детали курса"
@@ -67,6 +67,16 @@ class Course_Meta_Boxes {
             'course_duration',                                    // ID метабокса
             __('Продолжительность и стоимость', 'course-plugin'), // Заголовок
             array($this, 'render_course_duration_meta_box'),    // Функция для отображения
+            'course',                                             // Тип поста
+            'side',                                               // Контекст: 'side' - боковая панель (справа)
+            'default'                                             // Приоритет: 'default' - стандартный
+        );
+        
+        // Добавляем метабокс "Ссылки на кнопки курса"
+        add_meta_box(
+            'course_action_buttons',                              // ID метабокса
+            __('Ссылки на кнопки курса', 'course-plugin'),      // Заголовок
+            array($this, 'render_course_action_buttons_meta_box'), // Функция для отображения
             'course',                                             // Тип поста
             'side',                                               // Контекст: 'side' - боковая панель (справа)
             'default'                                             // Приоритет: 'default' - стандартный
@@ -197,39 +207,6 @@ class Course_Meta_Boxes {
             <input type="number" id="course_reviews_count" name="course_reviews_count" value="<?php echo esc_attr($course_reviews_count); ?>" class="small-text" min="0" />
         </p>
         <?php
-    }
-    
-    /**
-     * Добавление метабокса для ссылок на кнопки курса
-     */
-    public function add_meta_boxes() {
-        add_meta_box(
-            'course_details',
-            __('Детали курса', 'course-plugin'),
-            array($this, 'render_course_details_meta_box'),
-            'course',
-            'normal',
-            'high'
-        );
-        
-        add_meta_box(
-            'course_duration',
-            __('Продолжительность и стоимость', 'course-plugin'),
-            array($this, 'render_course_duration_meta_box'),
-            'course',
-            'side',
-            'default'
-        );
-        
-        // Добавляем метабокс для ссылок на кнопки
-        add_meta_box(
-            'course_action_buttons',
-            __('Ссылки на кнопки курса', 'course-plugin'),
-            array($this, 'render_course_action_buttons_meta_box'),
-            'course',
-            'side',
-            'default'
-        );
     }
     
     /**
