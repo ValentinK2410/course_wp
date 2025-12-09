@@ -97,7 +97,7 @@ class Course_Post_Type {
             'map_meta_cap'          => true,
             'show_in_rest'          => true,
             'rest_base'             => 'courses',
-            'rewrite'               => array('slug' => 'courses'),
+            'rewrite'               => array('slug' => 'course'),
         );
         
         // Регистрируем тип поста

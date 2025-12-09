@@ -77,6 +77,7 @@ class Course_Plugin {
             'includes/class-course-taxonomies.php',
             'includes/class-course-admin.php',
             'includes/class-course-meta-boxes.php',
+            'includes/class-course-frontend.php',
         );
         
         foreach ($files as $file) {
@@ -120,6 +121,11 @@ class Course_Plugin {
         // Инициализируем метабоксы
         if (class_exists('Course_Meta_Boxes')) {
             Course_Meta_Boxes::get_instance();
+        }
+        
+        // Инициализируем фронтенд
+        if (class_exists('Course_Frontend')) {
+            Course_Frontend::get_instance();
         }
     }
     
