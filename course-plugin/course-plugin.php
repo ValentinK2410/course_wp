@@ -12,39 +12,58 @@
  * Domain Path: /languages
  */
 
-// Если файл вызывается напрямую, выходим
+// Проверка безопасности: если файл вызывается напрямую (не через WordPress), прекращаем выполнение
+// ABSPATH - константа WordPress, которая определена только при загрузке через WordPress
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Определяем константы плагина
+// Определяем константы плагина для использования в других файлах
+// COURSE_PLUGIN_VERSION - версия плагина для версионирования стилей и скриптов
 define('COURSE_PLUGIN_VERSION', '1.0.0');
+
+// COURSE_PLUGIN_DIR - абсолютный путь к директории плагина (например: /var/www/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_DIR', plugin_dir_path(__FILE__));
+
+// COURSE_PLUGIN_URL - URL путь к директории плагина (например: https://site.com/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+// COURSE_PLUGIN_BASENAME - базовое имя плагина (например: course-plugin/course-plugin.php)
 define('COURSE_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 /**
  * Основной класс плагина
+ * Использует паттерн Singleton для обеспечения единственного экземпляра класса
  */
 class Course_Plugin {
     
     /**
-     * Единственный экземпляр класса
+     * Единственный экземпляр класса (статическое свойство)
+     * Хранит объект класса, если он уже был создан
      */
     private static $instance = null;
     
     /**
      * Получить экземпляр класса (Singleton)
+     * Если экземпляр еще не создан, создает его и возвращает
+     * Если уже создан, возвращает существующий экземпляр
+     * 
+     * @return Course_Plugin Экземпляр класса
      */
     public static function get_instance() {
+        // Проверяем, создан ли уже экземпляр класса
         if (null === self::$instance) {
+            // Создаем новый экземпляр класса
             self::$instance = new self();
         }
+        // Возвращаем существующий или только что созданный экземпляр
         return self::$instance;
     }
     
     /**
-     * Конструктор
+     * Конструктор класса
+     * Приватный, чтобы предотвратить создание экземпляра напрямую (только через get_instance)
+     * Автоматически вызывает метод init() при создании объекта
      */
     private function __construct() {
         $this->init();
@@ -52,40 +71,58 @@ class Course_Plugin {
     
     /**
      * Инициализация плагина
+     * Выполняется при создании экземпляра класса
+     * Регистрирует все необходимые хуки WordPress
      */
     private function init() {
-        // Подключаем файлы классов
+        // Подключаем файлы с классами плагина (Custom Post Type, таксономии, админка и т.д.)
         $this->includes();
         
-        // Хуки активации и деактивации
+        // Регистрируем функцию активации плагина
+        // Вызывается при активации плагина в админ-панели WordPress
         register_activation_hook(__FILE__, array($this, 'activate'));
+        
+        // Регистрируем функцию деактивации плагина
+        // Вызывается при деактивации плагина в админ-панели WordPress
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
         
-        // Инициализация компонентов
+        // Регистрируем загрузку компонентов на хук 'init'
+        // Хук 'init' срабатывает после загрузки WordPress, но до отправки заголовков
+        // Это правильное место для регистрации типов постов и таксономий
         add_action('init', array($this, 'load_components'));
         
-        // Загрузка текстового домена
+        // Регистрируем загрузку текстового домена для переводов
+        // Хук 'plugins_loaded' срабатывает после загрузки всех плагинов
+        // Это нужно для правильной загрузки переводов
         add_action('plugins_loaded', array($this, 'load_textdomain'));
     }
     
     /**
-     * Подключение файлов классов
+     * Подключение файлов классов плагина
+     * Загружает все необходимые классы перед их использованием
+     * Проверяет существование файлов перед подключением
      */
     private function includes() {
+        // Массив путей к файлам классов относительно директории плагина
         $files = array(
-            'includes/class-course-post-type.php',
-            'includes/class-course-taxonomies.php',
-            'includes/class-course-admin.php',
-            'includes/class-course-meta-boxes.php',
-            'includes/class-course-frontend.php',
+            'includes/class-course-post-type.php',      // Класс для регистрации Custom Post Type "Курсы"
+            'includes/class-course-taxonomies.php',    // Класс для регистрации таксономий (специализация, уровень, тема, преподаватель)
+            'includes/class-course-admin.php',          // Класс для административного интерфейса (колонки, фильтры, дублирование)
+            'includes/class-course-meta-boxes.php',    // Класс для метабоксов с дополнительными полями курсов
+            'includes/class-course-frontend.php',       // Класс для фронтенда (шаблоны, фильтры, стили)
         );
         
+        // Проходим по каждому файлу в массиве
         foreach ($files as $file) {
+            // Формируем полный путь к файлу
             $file_path = COURSE_PLUGIN_DIR . $file;
+            
+            // Проверяем, существует ли файл
             if (file_exists($file_path)) {
+                // Подключаем файл (require_once гарантирует, что файл будет подключен только один раз)
                 require_once $file_path;
             } else {
-                // Логируем ошибку, если файл не найден
+                // Если файл не найден и включен режим отладки WordPress, записываем ошибку в лог
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log('Course Plugin: Файл не найден - ' . $file_path);
                 }
@@ -94,36 +131,45 @@ class Course_Plugin {
     }
     
     /**
-     * Загрузка компонентов
+     * Загрузка компонентов плагина
+     * Инициализирует все классы плагина после их загрузки
+     * Вызывается на хуке 'init'
      */
     public function load_components() {
-        // Проверяем, что классы загружены
+        // Проверяем, что класс Course_Post_Type загружен
+        // Если класс не найден, выходим из функции (плагин не будет работать)
         if (!class_exists('Course_Post_Type')) {
+            // Если включен режим отладки, записываем ошибку в лог
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('Course Plugin: Класс Course_Post_Type не найден');
             }
-            return;
+            return; // Прекращаем выполнение функции
         }
         
-        // Инициализируем Custom Post Type
+        // Инициализируем Custom Post Type "Курсы"
+        // Вызываем статический метод get_instance() для создания/получения экземпляра класса
         Course_Post_Type::get_instance();
         
-        // Инициализируем таксономии
+        // Инициализируем таксономии (специализация, уровень, тема, преподаватель)
+        // Проверяем существование класса перед инициализацией
         if (class_exists('Course_Taxonomies')) {
             Course_Taxonomies::get_instance();
         }
         
         // Инициализируем административный интерфейс
+        // Добавляет колонки в список курсов, фильтры, функцию дублирования
         if (class_exists('Course_Admin')) {
             Course_Admin::get_instance();
         }
         
         // Инициализируем метабоксы
+        // Добавляет дополнительные поля при редактировании курса
         if (class_exists('Course_Meta_Boxes')) {
             Course_Meta_Boxes::get_instance();
         }
         
         // Инициализируем фронтенд
+        // Загружает шаблоны, стили, скрипты для отображения курсов на сайте
         if (class_exists('Course_Frontend')) {
             Course_Frontend::get_instance();
         }
@@ -131,45 +177,61 @@ class Course_Plugin {
     
     /**
      * Активация плагина
+     * Вызывается при активации плагина в админ-панели WordPress
+     * Регистрирует типы постов и таксономии, сбрасывает правила перезаписи URL
      */
     public function activate() {
         // Подключаем файлы классов перед активацией
+        // Это необходимо, чтобы классы были доступны для регистрации
         $this->includes();
         
         // Регистрируем типы постов и таксономии
+        // Вызываем метод load_components() для инициализации всех компонентов
         $this->load_components();
         
-        // Сбрасываем правила перезаписи
+        // Сбрасываем правила перезаписи URL (rewrite rules)
+        // Это необходимо для правильной работы постоянных ссылок (permalink) для курсов
+        // После активации плагина URL /course/ будет работать корректно
         flush_rewrite_rules();
     }
     
     /**
      * Деактивация плагина
+     * Вызывается при деактивации плагина в админ-панели WordPress
+     * Очищает правила перезаписи URL
      */
     public function deactivate() {
-        // Сбрасываем правила перезаписи
+        // Сбрасываем правила перезаписи URL
+        // Это необходимо для очистки правил после деактивации плагина
         flush_rewrite_rules();
     }
     
     /**
      * Загрузка текстового домена для переводов
+     * Позволяет переводить плагин на другие языки
+     * Вызывается на хуке 'plugins_loaded'
      */
     public function load_textdomain() {
+        // Загружаем файлы переводов из папки /languages/
         load_plugin_textdomain(
-            'course-plugin',
-            false,
-            dirname(COURSE_PLUGIN_BASENAME) . '/languages'
+            'course-plugin',                                    // Текстовый домен плагина (используется в функциях __(), _e() и т.д.)
+            false,                                              // Не добавлять путь к языкам WordPress по умолчанию
+            dirname(COURSE_PLUGIN_BASENAME) . '/languages'     // Относительный путь к папке с переводами
         );
     }
 }
 
 /**
- * Инициализация плагина
+ * Функция инициализации плагина
+ * Вызывается в конце файла для запуска плагина
+ * 
+ * @return Course_Plugin Экземпляр основного класса плагина
  */
 function course_plugin_init() {
+    // Создаем и возвращаем единственный экземпляр класса Course_Plugin
     return Course_Plugin::get_instance();
 }
 
-// Запускаем плагин
+// Запускаем плагин сразу после загрузки файла
+// Это точка входа в плагин
 course_plugin_init();
-

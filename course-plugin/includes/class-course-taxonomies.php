@@ -1,8 +1,18 @@
 <?php
 /**
  * Класс для регистрации таксономий курсов
+ * 
+ * Таксономии - это способ группировки и классификации записей в WordPress
+ * Например: категории и метки для записей
+ * 
+ * Этот класс регистрирует 4 таксономии для курсов:
+ * 1. Специализация и программы (иерархическая, как категории)
+ * 2. Уровень образования (иерархическая, как категории)
+ * 3. Тема (иерархическая, как категории)
+ * 4. Преподаватель (неиерархическая, как метки)
  */
 
+// Проверка безопасности: если файл вызывается напрямую, прекращаем выполнение
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -10,12 +20,14 @@ if (!defined('ABSPATH')) {
 class Course_Taxonomies {
     
     /**
-     * Единственный экземпляр класса
+     * Единственный экземпляр класса (Singleton)
      */
     private static $instance = null;
     
     /**
      * Получить экземпляр класса
+     * 
+     * @return Course_Taxonomies Экземпляр класса
      */
     public static function get_instance() {
         if (null === self::$instance) {
@@ -25,27 +37,42 @@ class Course_Taxonomies {
     }
     
     /**
-     * Конструктор
+     * Конструктор класса
+     * Регистрирует хук для регистрации всех таксономий
      */
     private function __construct() {
-        // Регистрируем таксономии после типа поста (приоритет 25, чтобы быть после типа поста с приоритетом 20)
+        // Регистрируем метод register_taxonomies() на хук 'init' с приоритетом 25
+        // Приоритет 25 означает, что таксономии будут зарегистрированы после типа поста (который имеет приоритет 20)
+        // Это важно, так как таксономии должны быть связаны с уже существующим типом поста
         add_action('init', array($this, 'register_taxonomies'), 25);
     }
     
     /**
      * Регистрация всех таксономий
+     * Вызывает методы регистрации для каждой таксономии
+     * Вызывается на хуке 'init'
      */
     public function register_taxonomies() {
+        // Регистрируем таксономию "Специализация и программы"
         $this->register_specialization_taxonomy();
+        
+        // Регистрируем таксономию "Уровень образования"
         $this->register_level_taxonomy();
+        
+        // Регистрируем таксономию "Тема"
         $this->register_topic_taxonomy();
+        
+        // Регистрируем таксономию "Преподаватель"
         $this->register_teacher_taxonomy();
     }
     
     /**
      * Регистрация таксономии "Специализация и программы"
+     * Иерархическая таксономия (можно создавать подкатегории)
+     * Пример: Программирование -> Веб-разработка -> Backend
      */
     private function register_specialization_taxonomy() {
+        // Массив с переводами названий для таксономии
         $labels = array(
             'name'                       => _x('Специализации и программы', 'Taxonomy General Name', 'course-plugin'),
             'singular_name'              => _x('Специализация и программа', 'Taxonomy Singular Name', 'course-plugin'),
@@ -69,25 +96,29 @@ class Course_Taxonomies {
             'items_list_navigation'      => __('Навигация по списку специализаций', 'course-plugin'),
         );
         
+        // Массив с параметрами регистрации таксономии
         $args = array(
-            'labels'                     => $labels,
-            'hierarchical'               => true,
-            'public'                     => true,
-            'show_ui'                    => true,
-            'show_admin_column'          => true,
-            'show_in_nav_menus'          => true,
-            'show_tagcloud'              => true,
-            'show_in_rest'               => true,
-            'show_in_quick_edit'         => true,
-            'meta_box_cb'                => 'post_categories_meta_box',
-            'rewrite'                    => array('slug' => 'specialization'),
+            'labels'                     => $labels,                                                         // Массив с переводами
+            'hierarchical'               => true,                                                            // Иерархическая таксономия (как категории)
+            'public'                     => true,                                                           // Публичная таксономия (доступна на фронтенде)
+            'show_ui'                    => true,                                                            // Показывать интерфейс в админ-панели
+            'show_admin_column'          => true,                                                            // Показывать колонку в списке курсов
+            'show_in_nav_menus'          => true,                                                            // Можно добавлять в меню навигации
+            'show_tagcloud'              => true,                                                            // Показывать в облаке тегов
+            'show_in_rest'               => true,                                                            // Поддержка REST API (Gutenberg)
+            'show_in_quick_edit'         => true,                                                            // Показывать в быстром редактировании
+            'meta_box_cb'                => 'post_categories_meta_box',                                    // Использовать стандартный метабокс категорий WordPress
+            'rewrite'                    => array('slug' => 'specialization'),                              // Slug для URL (например: /specialization/programming/)
         );
         
+        // Регистрируем таксономию 'course_specialization' для типа поста 'course'
         register_taxonomy('course_specialization', array('course'), $args);
     }
     
     /**
      * Регистрация таксономии "Уровень образования"
+     * Иерархическая таксономия
+     * Пример: Высшее образование -> Бакалавриат
      */
     private function register_level_taxonomy() {
         $labels = array(
@@ -115,7 +146,7 @@ class Course_Taxonomies {
         
         $args = array(
             'labels'                     => $labels,
-            'hierarchical'               => true,
+            'hierarchical'               => true,                                                            // Иерархическая таксономия
             'public'                     => true,
             'show_ui'                    => true,
             'show_admin_column'          => true,
@@ -123,15 +154,18 @@ class Course_Taxonomies {
             'show_tagcloud'              => true,
             'show_in_rest'               => true,
             'show_in_quick_edit'         => true,
-            'meta_box_cb'                => 'post_categories_meta_box',
-            'rewrite'                    => array('slug' => 'education-level'),
+            'meta_box_cb'                => 'post_categories_meta_box',                                    // Стандартный метабокс категорий
+            'rewrite'                    => array('slug' => 'education-level'),                             // Slug для URL
         );
         
+        // Регистрируем таксономию 'course_level' для типа поста 'course'
         register_taxonomy('course_level', array('course'), $args);
     }
     
     /**
      * Регистрация таксономии "Тема"
+     * Иерархическая таксономия
+     * Пример: Программирование -> Языки -> PHP
      */
     private function register_topic_taxonomy() {
         $labels = array(
@@ -159,7 +193,7 @@ class Course_Taxonomies {
         
         $args = array(
             'labels'                     => $labels,
-            'hierarchical'               => true,
+            'hierarchical'               => true,                                                            // Иерархическая таксономия
             'public'                     => true,
             'show_ui'                    => true,
             'show_admin_column'          => true,
@@ -167,15 +201,18 @@ class Course_Taxonomies {
             'show_tagcloud'              => true,
             'show_in_rest'               => true,
             'show_in_quick_edit'         => true,
-            'meta_box_cb'                => 'post_categories_meta_box',
-            'rewrite'                    => array('slug' => 'topic'),
+            'meta_box_cb'                => 'post_categories_meta_box',                                    // Стандартный метабокс категорий
+            'rewrite'                    => array('slug' => 'topic'),                                       // Slug для URL
         );
         
+        // Регистрируем таксономию 'course_topic' для типа поста 'course'
         register_taxonomy('course_topic', array('course'), $args);
     }
     
     /**
      * Регистрация таксономии "Преподаватель"
+     * Неиерархическая таксономия (как метки)
+     * К одному курсу можно добавить несколько преподавателей
      */
     private function register_teacher_taxonomy() {
         $labels = array(
@@ -203,7 +240,7 @@ class Course_Taxonomies {
         
         $args = array(
             'labels'                     => $labels,
-            'hierarchical'               => false,
+            'hierarchical'               => false,                                                           // НЕ иерархическая таксономия (как метки)
             'public'                     => true,
             'show_ui'                    => true,
             'show_admin_column'          => true,
@@ -211,11 +248,11 @@ class Course_Taxonomies {
             'show_tagcloud'              => true,
             'show_in_rest'               => true,
             'show_in_quick_edit'         => true,
-            'meta_box_cb'                => 'post_tags_meta_box',
-            'rewrite'                    => array('slug' => 'teacher'),
+            'meta_box_cb'                => 'post_tags_meta_box',                                          // Стандартный метабокс меток (тегов)
+            'rewrite'                    => array('slug' => 'teacher'),                                     // Slug для URL
         );
         
+        // Регистрируем таксономию 'course_teacher' для типа поста 'course'
         register_taxonomy('course_teacher', array('course'), $args);
     }
 }
-
