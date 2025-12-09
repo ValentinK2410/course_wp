@@ -257,13 +257,13 @@ while (have_posts()) : the_post();
             <!-- Кнопки действий -->
             <div class="course-action-buttons">
                 <a href="#" class="course-action-btn course-btn-seminary-new">
-                    <?php _e('Курс на семинарском уровне (если вы не студент TVSEMINARY)', 'course-plugin'); ?>
+                    <?php _e('Курс на семинарском уровне (если вы не студент SEMINARY)', 'course-plugin'); ?>
                 </a>
                 <a href="#" class="course-action-btn course-btn-seminary-student">
-                    <?php _e('Курс на семинарском уровне (если вы уже студент TVSEMINARY)', 'course-plugin'); ?>
+                    <?php _e('Курс на семинарском уровне (если вы уже студент SEMINARY)', 'course-plugin'); ?>
                 </a>
                 <a href="#" class="course-action-btn course-btn-buy">
-                    <?php _e('Купить курс', 'course-plugin'); ?>
+                    <?php _e('Лайт курс', 'course-plugin'); ?>
                 </a>
             </div>
             
