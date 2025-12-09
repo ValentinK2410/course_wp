@@ -528,3 +528,580 @@
         flex: 1;
     }
 }
+
+/* ============================================
+   СТИЛИ ДЛЯ СТРАНИЦЫ ОТДЕЛЬНОГО КУРСА
+   ============================================ */
+
+/* Обертка для страницы курса */
+.single-course-wrapper {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* Большой синий баннер с названием курса */
+.course-hero-banner {
+    background: linear-gradient(135deg, #0073aa 0%, #005a87 100%);
+    color: #fff;
+    padding: 80px 40px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 40px;
+}
+
+.course-hero-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.course-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.course-hero-title {
+    font-size: 3em;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.course-hero-teacher {
+    font-size: 1.5em;
+    margin: 0 0 10px 0;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.course-hero-code {
+    font-size: 1.1em;
+    margin: 0;
+    opacity: 0.8;
+    position: absolute;
+    top: 20px;
+    right: 40px;
+}
+
+.course-hero-image {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    opacity: 0.2;
+    z-index: 1;
+}
+
+.course-hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.course-hero-video-overlay {
+    position: absolute;
+    top: 50%;
+    right: 40px;
+    transform: translateY(-50%);
+    z-index: 3;
+}
+
+.course-play-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.3s;
+}
+
+.course-play-button:hover {
+    transform: scale(1.1);
+}
+
+/* Контейнер для основного контента и боковой панели */
+.single-course-container {
+    display: flex;
+    gap: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+}
+
+.single-course-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.single-course-sidebar {
+    width: 350px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Код курса и название */
+.course-code-title {
+    margin-bottom: 30px;
+}
+
+.course-code {
+    display: inline-block;
+    background: #f0f0f0;
+    padding: 5px 15px;
+    border-radius: 4px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.course-code-title h2 {
+    margin: 0;
+    font-size: 2em;
+    color: #333;
+}
+
+/* Секции контента */
+.course-description-section,
+.course-goals-section,
+.course-content-section {
+    margin-bottom: 40px;
+}
+
+.course-description-section h3,
+.course-goals-section h3,
+.course-content-section h3 {
+    font-size: 1.8em;
+    margin: 0 0 20px 0;
+    color: #333;
+    border-bottom: 2px solid #0073aa;
+    padding-bottom: 10px;
+}
+
+.course-description {
+    font-size: 1.1em;
+    line-height: 1.8;
+    color: #555;
+}
+
+.goals-intro {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.goal-category {
+    margin-bottom: 25px;
+}
+
+.goal-category h4 {
+    font-size: 1.3em;
+    margin: 0 0 15px 0;
+    color: #0073aa;
+}
+
+.goal-content {
+    line-height: 1.8;
+    color: #555;
+}
+
+.goal-content ol,
+.goal-content ul {
+    margin-left: 20px;
+}
+
+.goal-content li {
+    margin-bottom: 10px;
+}
+
+.course-content-outline {
+    line-height: 1.8;
+    color: #555;
+}
+
+/* Видео секция */
+.course-video-section {
+    margin-bottom: 40px;
+}
+
+.course-video-wrapper {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 соотношение */
+    height: 0;
+    overflow: hidden;
+    background: #000;
+    border-radius: 8px;
+}
+
+.course-video-wrapper iframe,
+.course-video-wrapper video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.video-youtube-link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.video-youtube-link a {
+    color: #0073aa;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.video-youtube-link a:hover {
+    text-decoration: underline;
+}
+
+/* Боковая панель - кнопки действий */
+.course-action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.course-action-btn {
+    display: block;
+    padding: 15px 20px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.course-btn-seminary-new {
+    background: #87ceeb;
+    color: #333;
+}
+
+.course-btn-seminary-new:hover {
+    background: #6bb6d6;
+}
+
+.course-btn-seminary-student {
+    background: #ffd700;
+    color: #333;
+}
+
+.course-btn-seminary-student:hover {
+    background: #e6c200;
+}
+
+.course-btn-buy {
+    background: #28a745;
+}
+
+.course-btn-buy:hover {
+    background: #218838;
+}
+
+/* Боковая панель - обзор курса */
+.course-overview-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.course-overview-box h4 {
+    margin: 0 0 15px 0;
+    font-size: 1.3em;
+    color: #333;
+}
+
+.course-overview-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.course-overview-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.course-overview-list li:last-child {
+    border-bottom: none;
+}
+
+.overview-label {
+    font-weight: 600;
+    color: #666;
+}
+
+.overview-value {
+    color: #333;
+}
+
+/* Боковая панель - преподаватель */
+.course-instructor-box {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.course-instructor-box h4 {
+    margin: 0 0 15px 0;
+    font-size: 1.3em;
+    color: #333;
+}
+
+.instructor-info {
+    text-align: center;
+}
+
+.instructor-photo {
+    margin-bottom: 15px;
+}
+
+.instructor-photo img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #0073aa;
+}
+
+.instructor-name {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.instructor-specializations {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.instructor-spec-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.instructor-spec-item .dashicons {
+    color: #0073aa;
+}
+
+/* Боковая панель - цена */
+.course-price-box {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+    position: relative;
+}
+
+.course-price-old {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 1em;
+    margin-bottom: 5px;
+}
+
+.course-price-discount {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #ff4444;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.course-price-current {
+    font-size: 2em;
+    font-weight: 700;
+    color: #0073aa;
+}
+
+/* Боковая панель - рейтинг */
+.course-rating-box {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+.course-rating-stars {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.course-rating-stars .star {
+    font-size: 24px;
+    color: #ddd;
+}
+
+.course-rating-stars .star.star-filled {
+    color: #ffc107;
+}
+
+.course-reviews-count {
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Другие курсы по теме */
+.related-courses-section {
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 2px solid #e0e0e0;
+}
+
+.related-courses-section h3 {
+    font-size: 1.8em;
+    margin: 0 0 30px 0;
+    color: #333;
+}
+
+.related-courses-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.related-course-item {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.related-course-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.related-course-item a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.related-course-thumbnail {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.related-course-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.related-course-item h4 {
+    padding: 15px;
+    margin: 0;
+    font-size: 1em;
+    color: #333;
+    line-height: 1.4;
+}
+
+/* Футер с призывом к действию */
+.course-footer-cta {
+    background: #333;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+    margin-top: 60px;
+}
+
+.course-footer-cta a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.2em;
+    font-weight: 600;
+    transition: opacity 0.3s;
+}
+
+.course-footer-cta a:hover {
+    opacity: 0.8;
+}
+
+/* Адаптивность для страницы курса */
+@media (max-width: 1024px) {
+    .single-course-container {
+        flex-direction: column;
+    }
+    
+    .single-course-sidebar {
+        width: 100%;
+    }
+    
+    .course-hero-code {
+        position: static;
+        margin-top: 20px;
+    }
+    
+    .related-courses-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .course-hero-banner {
+        padding: 40px 20px;
+    }
+    
+    .course-hero-title {
+        font-size: 2em;
+    }
+    
+    .course-hero-teacher {
+        font-size: 1.2em;
+    }
+    
+    .single-course-container {
+        padding: 0 15px 30px;
+    }
+    
+    .related-courses-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .course-hero-video-overlay {
+        position: static;
+        transform: none;
+        margin-top: 20px;
+    }
+}
