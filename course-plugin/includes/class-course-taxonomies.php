@@ -28,8 +28,8 @@ class Course_Taxonomies {
      * Конструктор
      */
     private function __construct() {
-        // Регистрируем таксономии после типа поста (приоритет 20)
-        add_action('init', array($this, 'register_taxonomies'), 20);
+        // Регистрируем таксономии после типа поста (приоритет 25, чтобы быть после типа поста с приоритетом 20)
+        add_action('init', array($this, 'register_taxonomies'), 25);
     }
     
     /**

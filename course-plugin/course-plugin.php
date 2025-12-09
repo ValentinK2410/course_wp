@@ -133,15 +133,6 @@ class Course_Plugin {
         // Регистрируем типы постов и таксономии
         $this->load_components();
         
-        // Принудительно регистрируем тип поста при активации
-        if (class_exists('Course_Post_Type')) {
-            $post_type = Course_Post_Type::get_instance();
-            // Вызываем метод регистрации напрямую
-            if (method_exists($post_type, 'register_post_type')) {
-                $post_type->register_post_type();
-            }
-        }
-        
         // Сбрасываем правила перезаписи
         flush_rewrite_rules();
     }
