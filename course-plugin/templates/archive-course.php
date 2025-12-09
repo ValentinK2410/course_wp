@@ -134,18 +134,13 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                 
                 <button type="submit" class="filter-submit-btn"><?php _e('Применить', 'course-plugin'); ?></button>
                 <a href="<?php echo get_post_type_archive_link('course'); ?>" class="filter-reset-btn"><?php _e('Сбросить', 'course-plugin'); ?></a>
-            </form>
-        </aside>
-        
-        <!-- Основная область -->
-        <main class="course-main-content">
-            <!-- Верхняя панель -->
-            <div class="course-top-bar">
-                <div class="course-pagination-info">
-                    <?php printf(__('Показаны %d-%d из %d', 'course-plugin'), $showing_from, $showing_to, $found_posts); ?>
-                </div>
                 
-                <div class="course-controls">
+                <!-- Элементы управления в левой панели -->
+                <div class="filters-controls">
+                    <div class="course-pagination-info">
+                        <?php printf(__('Показаны %d-%d из %d', 'course-plugin'), $showing_from, $showing_to, $found_posts); ?>
+                    </div>
+                    
                     <div class="view-toggle">
                         <span class="control-label"><?php _e('Показать:', 'course-plugin'); ?></span>
                         <button class="view-btn active" data-view="grid" title="<?php _e('Сетка', 'course-plugin'); ?>">
@@ -178,7 +173,11 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                         </select>
                     </div>
                 </div>
-            </div>
+            </form>
+        </aside>
+        
+        <!-- Основная область -->
+        <main class="course-main-content">
             
             <!-- Список курсов -->
             <?php if (have_posts()) : ?>
@@ -212,6 +211,11 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                             </div>
                                         </a>
                                     <?php endif; ?>
+                                    
+                                    <!-- Название поверх изображения -->
+                                    <h2 class="course-title-overlay">
+                                        <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+                                    </h2>
                                 </div>
                                 
                                 <div class="course-content">
@@ -227,10 +231,6 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                             <span class="course-price">0,00 Р</span>
                                         <?php endif; ?>
                                     </div>
-                                    
-                                    <h2 class="course-title">
-                                        <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
-                                    </h2>
                                     
                                     <?php if ($rating > 0) : ?>
                                         <div class="course-rating">
