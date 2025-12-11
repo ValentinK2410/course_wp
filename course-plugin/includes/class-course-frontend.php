@@ -43,9 +43,11 @@ class Course_Frontend {
     
     /**
      * Загрузка шаблонов для курсов и преподавателей
+     * Определяет, какой шаблон использовать для отображения курсов
      */
     public function course_template_loader($template) {
         // Шаблон архива курсов
+        // is_post_type_archive('course') проверяет, является ли текущая страница архивом типа поста 'course'
         if (is_post_type_archive('course')) {
             $template_path = COURSE_PLUGIN_DIR . 'templates/archive-course.php';
             if (file_exists($template_path)) {
@@ -74,9 +76,22 @@ class Course_Frontend {
     
     /**
      * Фильтрация запроса курсов
+     * Настраивает запрос для правильного отображения курсов на странице архива
      */
     public function filter_courses_query($query) {
-        if (!is_admin() && $query->is_main_query() && is_post_type_archive('course')) {
+        // Проверяем, что это не админка и основной запрос
+        if (is_admin() || !$query->is_main_query()) {
+            return;
+        }
+        
+        // Проверяем, является ли это архивом курсов
+        // is_post_type_archive('course') проверяет, является ли текущая страница архивом типа поста 'course'
+        if (is_post_type_archive('course')) {
+            // Устанавливаем параметры запроса для курсов
+            $query->set('post_type', 'course');
+            $query->set('post_status', 'publish');  // Только опубликованные курсы
+            
+            // Количество курсов на странице (из GET параметра или по умолчанию 15)
             $posts_per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 15;
             $query->set('posts_per_page', $posts_per_page);
             

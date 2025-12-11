@@ -6,11 +6,26 @@
 get_header(); 
 
 global $wp_query;
+
+// Проверяем, что это действительно архив курсов
+if (!is_post_type_archive('course')) {
+    // Если это не архив курсов, используем стандартный шаблон
+    return;
+}
+
+// Получаем параметры пагинации
 $paged = get_query_var('paged') ? get_query_var('paged') : 1;
-$posts_per_page = get_option('posts_per_page', 15);
+$posts_per_page = isset($wp_query->query_vars['posts_per_page']) ? $wp_query->query_vars['posts_per_page'] : get_option('posts_per_page', 15);
 $found_posts = $wp_query->found_posts;
 $showing_from = ($paged - 1) * $posts_per_page + 1;
 $showing_to = min($paged * $posts_per_page, $found_posts);
+
+// Отладочная информация (можно удалить после проверки)
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    error_log('Course Archive Debug: found_posts = ' . $found_posts);
+    error_log('Course Archive Debug: post_type = ' . $wp_query->get('post_type'));
+    error_log('Course Archive Debug: post_status = ' . (isset($wp_query->query_vars['post_status']) ? $wp_query->query_vars['post_status'] : 'not set'));
+}
 ?>
 
 <div class="course-archive-wrapper">
