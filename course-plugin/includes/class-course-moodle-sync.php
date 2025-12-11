@@ -133,6 +133,18 @@ class Course_Moodle_Sync {
             'type' => 'boolean',
             'default' => false
         ));
+        
+        // Регистрируем опцию для управления обновлением существующих курсов
+        register_setting('moodle_sync_settings', 'moodle_sync_update_courses', array(
+            'type' => 'boolean',
+            'default' => true  // По умолчанию обновляем существующие курсы
+        ));
+        
+        // Регистрируем опцию для управления обновлением существующих категорий
+        register_setting('moodle_sync_settings', 'moodle_sync_update_categories', array(
+            'type' => 'boolean',
+            'default' => true  // По умолчанию обновляем существующие категории
+        ));
     }
     
     /**
@@ -166,9 +178,40 @@ class Course_Moodle_Sync {
             
             // Выводим сообщение о результате
             if ($result['success']) {
+                $courses_info = '';
+                $categories_info = '';
+                
+                // Формируем информацию о курсах
+                if (isset($result['courses_result'])) {
+                    $cr = $result['courses_result'];
+                    $courses_info = sprintf(
+                        __('Курсов: %d (создано: %d, обновлено: %d, пропущено: %d)', 'course-plugin'),
+                        $cr['count'],
+                        isset($cr['created']) ? $cr['created'] : 0,
+                        isset($cr['updated']) ? $cr['updated'] : 0,
+                        isset($cr['skipped']) ? $cr['skipped'] : 0
+                    );
+                } else {
+                    $courses_info = sprintf(__('Курсов: %d', 'course-plugin'), $result['courses']);
+                }
+                
+                // Формируем информацию о категориях
+                if (isset($result['categories_result'])) {
+                    $catr = $result['categories_result'];
+                    $categories_info = sprintf(
+                        __('Категорий: %d (создано: %d, обновлено: %d, пропущено: %d)', 'course-plugin'),
+                        $catr['count'],
+                        isset($catr['created']) ? $catr['created'] : 0,
+                        isset($catr['updated']) ? $catr['updated'] : 0,
+                        isset($catr['skipped']) ? $catr['skipped'] : 0
+                    );
+                } else {
+                    $categories_info = sprintf(__('Категорий: %d', 'course-plugin'), $result['categories']);
+                }
+                
                 echo '<div class="notice notice-success is-dismissible"><p>' . 
-                     sprintf(__('Синхронизация завершена! Обработано курсов: %d, категорий: %d', 'course-plugin'), 
-                             $result['courses'], $result['categories']) . 
+                     __('Синхронизация завершена!', 'course-plugin') . ' ' . 
+                     $courses_info . ', ' . $categories_info . 
                      '</p></div>';
             } else {
                 echo '<div class="notice notice-error is-dismissible"><p>' . 
@@ -181,6 +224,8 @@ class Course_Moodle_Sync {
         $moodle_url = get_option('moodle_sync_url', '');
         $moodle_token = get_option('moodle_sync_token', '');
         $moodle_enabled = get_option('moodle_sync_enabled', false);
+        $moodle_update_courses = get_option('moodle_sync_update_courses', true);
+        $moodle_update_categories = get_option('moodle_sync_update_categories', true);
         
         ?>
         <div class="wrap">
@@ -242,6 +287,40 @@ class Course_Moodle_Sync {
                                    <?php checked(1, $moodle_enabled); ?> />
                             <p class="description">
                                 <?php _e('Включить автоматическую синхронизацию каждый час', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Чекбокс для управления обновлением существующих курсов -->
+                    <tr>
+                        <th scope="row">
+                            <label for="moodle_sync_update_courses"><?php _e('Обновлять существующие курсы', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="checkbox" 
+                                   id="moodle_sync_update_courses" 
+                                   name="moodle_sync_update_courses" 
+                                   value="1" 
+                                   <?php checked(1, $moodle_update_courses); ?> />
+                            <p class="description">
+                                <?php _e('Если включено, существующие курсы будут обновляться данными из Moodle. Если выключено, существующие курсы будут пропускаться.', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Чекбокс для управления обновлением существующих категорий -->
+                    <tr>
+                        <th scope="row">
+                            <label for="moodle_sync_update_categories"><?php _e('Обновлять существующие категории', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="checkbox" 
+                                   id="moodle_sync_update_categories" 
+                                   name="moodle_sync_update_categories" 
+                                   value="1" 
+                                   <?php checked(1, $moodle_update_categories); ?> />
+                            <p class="description">
+                                <?php _e('Если включено, существующие категории будут обновляться данными из Moodle. Если выключено, существующие категории будут пропускаться.', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
@@ -319,12 +398,16 @@ class Course_Moodle_Sync {
         $categories_result = $this->sync_categories();
         if (is_array($categories_result)) {
             $categories_count = $categories_result['count'];
+        } else {
+            $categories_count = 0;
         }
         
         // Синхронизируем курсы
         $courses_result = $this->sync_courses();
         if (is_array($courses_result)) {
             $courses_count = $courses_result['count'];
+        } else {
+            $courses_count = 0;
         }
         
         // Синхронизируем студентов
@@ -335,7 +418,9 @@ class Course_Moodle_Sync {
             'success' => true,
             'message' => __('Синхронизация успешно завершена', 'course-plugin'),
             'courses' => $courses_count,
-            'categories' => $categories_count
+            'categories' => $categories_count,
+            'courses_result' => $courses_result,
+            'categories_result' => $categories_result
         );
     }
     
@@ -360,18 +445,45 @@ class Course_Moodle_Sync {
         }
         
         $count = 0;
+        $created = 0;
+        $updated = 0;
+        $skipped = 0;
         
         // Проходим по каждой категории из Moodle
         foreach ($categories as $category) {
             // Сохраняем категорию в WordPress
-            if ($this->save_category($category)) {
+            $result = $this->save_category($category);
+            if ($result) {
+                // Проверяем, была ли категория создана или обновлена
+                // Для этого ищем существующую категорию
+                $args = array(
+                    'taxonomy' => 'course_specialization',
+                    'meta_query' => array(
+                        array(
+                            'key' => 'moodle_category_id',
+                            'value' => $category['id'],
+                            'compare' => '='
+                        )
+                    ),
+                    'hide_empty' => false
+                );
+                $existing = get_terms($args);
+                
+                if (!empty($existing) && !is_wp_error($existing)) {
+                    $updated++;
+                } else {
+                    $created++;
+                }
                 $count++;
+            } else {
+                // Если save_category вернул false, возможно категория была пропущена
+                $skipped++;
             }
         }
         
-        error_log('Moodle Sync: Синхронизировано категорий: ' . $count);
+        error_log('Moodle Sync: Синхронизировано категорий: ' . $count . ' (создано: ' . $created . ', обновлено: ' . $updated . ', пропущено: ' . $skipped . ')');
         
-        return array('count' => $count);
+        return array('count' => $count, 'created' => $created, 'updated' => $updated, 'skipped' => $skipped);
     }
     
     /**
@@ -397,6 +509,7 @@ class Course_Moodle_Sync {
         $count = 0;
         $created = 0;
         $updated = 0;
+        $skipped = 0;
         
         // Проходим по каждому курсу из Moodle
         foreach ($courses as $course) {
@@ -408,18 +521,21 @@ class Course_Moodle_Sync {
             // Сохраняем курс в WordPress
             $result = $this->save_course($course);
             if ($result) {
-                $count++;
                 if ($result === 'created') {
                     $created++;
+                    $count++;
                 } elseif ($result === 'updated') {
                     $updated++;
+                    $count++;
+                } elseif ($result === 'skipped') {
+                    $skipped++;
                 }
             }
         }
         
-        error_log('Moodle Sync: Синхронизировано курсов: ' . $count . ' (создано: ' . $created . ', обновлено: ' . $updated . ')');
+        error_log('Moodle Sync: Синхронизировано курсов: ' . $count . ' (создано: ' . $created . ', обновлено: ' . $updated . ', пропущено: ' . $skipped . ')');
         
-        return array('count' => $count, 'created' => $created, 'updated' => $updated);
+        return array('count' => $count, 'created' => $created, 'updated' => $updated, 'skipped' => $skipped);
     }
     
     /**
@@ -462,9 +578,10 @@ class Course_Moodle_Sync {
     /**
      * Сохранение категории в WordPress
      * Создает или обновляет категорию курса в таксономии "course_specialization"
+     * Учитывает настройку обновления существующих категорий
      * 
      * @param array $category Массив с данными категории из Moodle
-     * @return bool true если успешно, false в случае ошибки
+     * @return bool true если успешно, false в случае ошибки или пропуска
      */
     private function save_category($category) {
         // Проверяем, что категория содержит необходимые данные
@@ -488,19 +605,34 @@ class Course_Moodle_Sync {
         
         $existing_terms = get_terms($args);
         
+        // Проверяем настройку обновления существующих категорий
+        // Если категория существует и обновление отключено, пропускаем её
+        $update_categories = get_option('moodle_sync_update_categories', true);
+        if (!empty($existing_terms) && !is_wp_error($existing_terms) && !$update_categories) {
+            // Категория существует, но обновление отключено - пропускаем
+            return false;
+        }
+        
         // Подготавливаем данные для создания/обновления термина
         $term_data = array(
             'description' => isset($category['description']) ? $category['description'] : '',
             'slug' => sanitize_title($category['name'])
         );
         
-        // Если термин уже существует, обновляем его
+        // Если термин уже существует, обновляем его (если обновление разрешено)
         if (!empty($existing_terms) && !is_wp_error($existing_terms)) {
             $term_id = $existing_terms[0]->term_id;
-            wp_update_term($term_id, 'course_specialization', array(
-                'name' => $category['name'],
-                'description' => $term_data['description']
-            ));
+            
+            // Обновляем категорию только если настройка разрешает
+            if ($update_categories) {
+                wp_update_term($term_id, 'course_specialization', array(
+                    'name' => $category['name'],
+                    'description' => $term_data['description']
+                ));
+            } else {
+                // Если обновление отключено, просто возвращаем успех без изменений
+                return true;
+            }
         } else {
             // Если термин не существует, создаем новый
             $result = wp_insert_term($category['name'], 'course_specialization', $term_data);
@@ -515,8 +647,6 @@ class Course_Moodle_Sync {
         
         // Сохраняем ID категории из Moodle в метаполе термина
         update_term_meta($term_id, 'moodle_category_id', absint($category['id']));
-        
-        return true;
         
         // Сохраняем ID родительской категории, если она есть
         if (isset($category['parent']) && $category['parent'] > 0) {
@@ -540,14 +670,17 @@ class Course_Moodle_Sync {
                 ));
             }
         }
+        
+        return true;
     }
     
     /**
      * Сохранение курса в WordPress
      * Создает или обновляет курс как запись типа "course"
+     * Учитывает настройку обновления существующих курсов
      * 
      * @param array $course Массив с данными курса из Moodle
-     * @return string|false 'created' если создан новый, 'updated' если обновлен существующий, false в случае ошибки
+     * @return string|false 'created' если создан новый, 'updated' если обновлен существующий, 'skipped' если пропущен, false в случае ошибки
      */
     private function save_course($course) {
         // Проверяем, что курс содержит необходимые данные
@@ -573,6 +706,14 @@ class Course_Moodle_Sync {
         
         $existing_posts = get_posts($args);
         
+        // Проверяем настройку обновления существующих курсов
+        // Если курс существует и обновление отключено, пропускаем его
+        $update_courses = get_option('moodle_sync_update_courses', true);
+        if (!empty($existing_posts) && !$update_courses) {
+            // Курс существует, но обновление отключено - пропускаем
+            return 'skipped';
+        }
+        
         // Очищаем HTML теги из описания курса для безопасности
         $summary = isset($course['summary']) ? wp_strip_all_tags($course['summary']) : '';
         
@@ -587,18 +728,25 @@ class Course_Moodle_Sync {
         
         $is_new = false;
         
-        // Если курс уже существует, обновляем его
+        // Если курс уже существует, обновляем его (если обновление разрешено)
         if (!empty($existing_posts)) {
             $post_id = $existing_posts[0]->ID;
-            $post_data['ID'] = $post_id;
-            $result = wp_update_post($post_data, true);
             
-            if (is_wp_error($result)) {
-                error_log('Moodle Sync: Ошибка при обновлении курса ID ' . $post_id . ' - ' . $result->get_error_message());
-                return false;
+            // Обновляем курс только если настройка разрешает
+            if ($update_courses) {
+                $post_data['ID'] = $post_id;
+                $result = wp_update_post($post_data, true);
+                
+                if (is_wp_error($result)) {
+                    error_log('Moodle Sync: Ошибка при обновлении курса ID ' . $post_id . ' - ' . $result->get_error_message());
+                    return false;
+                }
+                
+                $action = 'updated';
+            } else {
+                // Если обновление отключено, просто возвращаем 'skipped'
+                return 'skipped';
             }
-            
-            $action = 'updated';
         } else {
             // Если курс не существует, создаем новый
             $post_id = wp_insert_post($post_data, true);
