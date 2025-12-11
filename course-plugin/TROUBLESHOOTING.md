@@ -109,3 +109,4 @@ https://github.com/ValentinK2410/course_wp/issues
 - Список активных плагинов
 - Сообщения об ошибках (если есть)
 
+

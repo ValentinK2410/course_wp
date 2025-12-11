@@ -113,6 +113,7 @@ class Course_Plugin {
             'includes/class-course-teacher-meta.php',  // Класс для метаполей преподавателей (фото, описание и т.д.)
             'includes/class-course-moodle-api.php',    // Класс для работы с Moodle REST API
             'includes/class-course-moodle-sync.php',   // Класс для синхронизации данных из Moodle в WordPress
+            'includes/class-course-transliteration.php', // Класс для транслитерации кириллицы в латиницу
         );
         
         // Проходим по каждому файлу в массиве
@@ -187,6 +188,12 @@ class Course_Plugin {
         // Добавляет страницу настроек и автоматическую синхронизацию курсов из Moodle
         if (class_exists('Course_Moodle_Sync')) {
             Course_Moodle_Sync::get_instance();
+        }
+        
+        // Инициализируем транслитерацию кириллицы в латиницу
+        // Автоматически переводит кириллические символы в латиницу при создании курсов и категорий
+        if (class_exists('Course_Transliteration')) {
+            Course_Transliteration::get_instance();
         }
     }
     

@@ -72,3 +72,4 @@ if ($courses->have_posts()) : ?>
     <p><?php _e('Курсы не найдены.', 'course-plugin'); ?></p>
 <?php endif; ?>
 
+
