@@ -226,6 +226,7 @@ class Course_Moodle_Sync {
         $moodle_enabled = get_option('moodle_sync_enabled', false);
         $moodle_update_courses = get_option('moodle_sync_update_courses', true);
         $moodle_update_categories = get_option('moodle_sync_update_categories', true);
+        $moodle_sync_users_enabled = get_option('moodle_sync_users_enabled', true);
         
         ?>
         <div class="wrap">
@@ -321,6 +322,23 @@ class Course_Moodle_Sync {
                                    <?php checked(1, $moodle_update_categories); ?> />
                             <p class="description">
                                 <?php _e('Если включено, существующие категории будут обновляться данными из Moodle. Если выключено, существующие категории будут пропускаться.', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Чекбокс для включения синхронизации пользователей -->
+                    <tr>
+                        <th scope="row">
+                            <label for="moodle_sync_users_enabled"><?php _e('Синхронизировать пользователей', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="checkbox" 
+                                   id="moodle_sync_users_enabled" 
+                                   name="moodle_sync_users_enabled" 
+                                   value="1" 
+                                   <?php checked(1, $moodle_sync_users_enabled); ?> />
+                            <p class="description">
+                                <?php _e('Если включено, при регистрации и обновлении профиля в WordPress пользователь будет автоматически создаваться/обновляться в Moodle. Это позволит использовать один логин и пароль на обоих сайтах.', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>

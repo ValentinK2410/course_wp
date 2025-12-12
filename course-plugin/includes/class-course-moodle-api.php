@@ -176,6 +176,131 @@ class Course_Moodle_API {
             'value' => $courseid     // Значение (ID курса)
         ));
     }
+    
+    /**
+     * Создать пользователя в Moodle
+     * Создает нового пользователя в системе Moodle с указанными данными
+     * 
+     * @param array $user_data Массив с данными пользователя:
+     *                        - username (обязательно) - логин пользователя
+     *                        - password (обязательно) - пароль пользователя
+     *                        - firstname (обязательно) - имя пользователя
+     *                        - lastname (обязательно) - фамилия пользователя
+     *                        - email (обязательно) - email пользователя
+     *                        - city (опционально) - город
+     *                        - country (опционально) - код страны (например: 'RU')
+     * @return array|false Массив с данными созданного пользователя или false в случае ошибки
+     */
+    public function create_user($user_data) {
+        // Вызываем функцию Moodle API 'core_user_create_users'
+        // Эта функция создает нового пользователя в Moodle
+        return $this->call('core_user_create_users', array(
+            'users' => array(
+                array(
+                    'username' => $user_data['username'],
+                    'password' => $user_data['password'],
+                    'firstname' => $user_data['firstname'],
+                    'lastname' => $user_data['lastname'],
+                    'email' => $user_data['email'],
+                    'city' => isset($user_data['city']) ? $user_data['city'] : '',
+                    'country' => isset($user_data['country']) ? $user_data['country'] : 'RU',
+                    'auth' => 'manual',  // Тип аутентификации (manual = стандартная аутентификация)
+                    'preferences' => array(
+                        array(
+                            'type' => 'auth_forcepasswordchange',
+                            'value' => '0'  // Не требовать смену пароля при первом входе
+                        )
+                    )
+                )
+            )
+        ));
+    }
+    
+    /**
+     * Обновить данные пользователя в Moodle
+     * Обновляет информацию о существующем пользователе в Moodle
+     * 
+     * @param int $user_id ID пользователя в Moodle
+     * @param array $user_data Массив с данными для обновления (те же поля, что и в create_user)
+     * @return array|false Массив с результатом обновления или false в случае ошибки
+     */
+    public function update_user($user_id, $user_data) {
+        // Вызываем функцию Moodle API 'core_user_update_users'
+        // Эта функция обновляет данные пользователя в Moodle
+        $update_data = array(
+            'id' => $user_id
+        );
+        
+        // Добавляем только те поля, которые нужно обновить
+        if (isset($user_data['firstname'])) {
+            $update_data['firstname'] = $user_data['firstname'];
+        }
+        if (isset($user_data['lastname'])) {
+            $update_data['lastname'] = $user_data['lastname'];
+        }
+        if (isset($user_data['email'])) {
+            $update_data['email'] = $user_data['email'];
+        }
+        if (isset($user_data['password'])) {
+            $update_data['password'] = $user_data['password'];
+        }
+        if (isset($user_data['city'])) {
+            $update_data['city'] = $user_data['city'];
+        }
+        if (isset($user_data['country'])) {
+            $update_data['country'] = $user_data['country'];
+        }
+        
+        return $this->call('core_user_update_users', array(
+            'users' => array($update_data)
+        ));
+    }
+    
+    /**
+     * Найти пользователя в Moodle по email
+     * Ищет пользователя в Moodle по его email адресу
+     * 
+     * @param string $email Email адрес пользователя
+     * @return array|false Массив с данными пользователя или false, если не найден
+     */
+    public function get_user_by_email($email) {
+        // Вызываем функцию Moodle API 'core_user_get_users_by_field'
+        // Эта функция ищет пользователей по указанному полю
+        $result = $this->call('core_user_get_users_by_field', array(
+            'field' => 'email',  // Поле для поиска (email)
+            'values' => array($email)  // Значение для поиска
+        ));
+        
+        // Если пользователь найден, возвращаем первого из результатов
+        if (is_array($result) && !empty($result)) {
+            return $result[0];
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Найти пользователя в Moodle по username
+     * Ищет пользователя в Moodle по его логину
+     * 
+     * @param string $username Логин пользователя
+     * @return array|false Массив с данными пользователя или false, если не найден
+     */
+    public function get_user_by_username($username) {
+        // Вызываем функцию Moodle API 'core_user_get_users_by_field'
+        // Эта функция ищет пользователей по указанному полю
+        $result = $this->call('core_user_get_users_by_field', array(
+            'field' => 'username',  // Поле для поиска (username)
+            'values' => array($username)  // Значение для поиска
+        ));
+        
+        // Если пользователь найден, возвращаем первого из результатов
+        if (is_array($result) && !empty($result)) {
+            return $result[0];
+        }
+        
+        return false;
+    }
 }
 
 

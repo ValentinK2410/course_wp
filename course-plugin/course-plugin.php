@@ -114,6 +114,7 @@ class Course_Plugin {
             'includes/class-course-moodle-api.php',    // Класс для работы с Moodle REST API
             'includes/class-course-moodle-sync.php',   // Класс для синхронизации данных из Moodle в WordPress
             'includes/class-course-transliteration.php', // Класс для транслитерации кириллицы в латиницу
+            'includes/class-course-moodle-user-sync.php', // Класс для синхронизации пользователей между WordPress и Moodle
         );
         
         // Проходим по каждому файлу в массиве
@@ -194,6 +195,12 @@ class Course_Plugin {
         // Автоматически переводит кириллические символы в латиницу при создании курсов и категорий
         if (class_exists('Course_Transliteration')) {
             Course_Transliteration::get_instance();
+        }
+        
+        // Инициализируем синхронизацию пользователей с Moodle
+        // Автоматически создает и обновляет пользователей в Moodle при регистрации и изменении профиля в WordPress
+        if (class_exists('Course_Moodle_User_Sync')) {
+            Course_Moodle_User_Sync::get_instance();
         }
     }
     
