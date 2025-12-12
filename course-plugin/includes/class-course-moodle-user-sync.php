@@ -74,6 +74,11 @@ class Course_Moodle_User_Sync {
             $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
         }
         
+        // Регистрируем хук для перехвата пароля при регистрации (до хэширования)
+        // Хук 'user_register' срабатывает после успешной регистрации, но пароль уже захэширован
+        // Поэтому используем фильтр 'wp_insert_user_data' для перехвата пароля до хэширования
+        add_filter('wp_insert_user_data', array($this, 'capture_password_before_hash'), 10, 3);
+        
         // Регистрируем хук для синхронизации при регистрации нового пользователя
         // Хук 'user_register' срабатывает после успешной регистрации пользователя в WordPress
         add_action('user_register', array($this, 'sync_user_on_register'), 10, 1);
@@ -82,9 +87,8 @@ class Course_Moodle_User_Sync {
         // Хук 'profile_update' срабатывает при обновлении данных пользователя
         add_action('profile_update', array($this, 'sync_user_on_update'), 10, 2);
         
-        // Регистрируем хук для синхронизации при смене пароля
-        // Хук 'password_reset' срабатывает при сбросе пароля пользователя
-        add_action('password_reset', array($this, 'sync_user_password'), 10, 2);
+        // Регистрируем хук для перехвата пароля при сбросе
+        add_action('after_password_reset', array($this, 'sync_user_password_after_reset'), 10, 2);
         
         // Регистрируем хук для добавления настроек в админку
         add_action('admin_init', array($this, 'register_user_sync_settings'));
@@ -100,6 +104,30 @@ class Course_Moodle_User_Sync {
             'type' => 'boolean',
             'default' => true  // По умолчанию синхронизация включена
         ));
+    }
+    
+    /**
+     * Перехват пароля до хэширования при регистрации
+     * Сохраняет незахэшированный пароль во временное хранилище для последующей синхронизации с Moodle
+     * 
+     * @param array $data Данные пользователя перед сохранением
+     * @param bool $update Флаг обновления (true = обновление, false = создание)
+     * @param int $user_id ID пользователя (если обновление)
+     * @return array Данные пользователя
+     */
+    public function capture_password_before_hash($data, $update, $user_id) {
+        // Сохраняем незахэшированный пароль только при создании нового пользователя
+        if (!$update && isset($data['user_pass']) && !empty($data['user_pass'])) {
+            // Сохраняем пароль во временное хранилище (в памяти, через статическую переменную)
+            // Это безопасно, так как данные не сохраняются в базе данных
+            static $passwords = array();
+            $passwords[$data['user_login']] = $data['user_pass'];
+            
+            // Сохраняем пароль в глобальной переменной для доступа из других методов
+            $GLOBALS['moodle_user_sync_password'][$data['user_login']] = $data['user_pass'];
+        }
+        
+        return $data;
     }
     
     /**
@@ -129,17 +157,29 @@ class Course_Moodle_User_Sync {
             // Сохраняем ID пользователя Moodle в метаполе WordPress пользователя
             update_user_meta($user_id, 'moodle_user_id', $moodle_user['id']);
             
-            // Обновляем пароль в Moodle, если он был изменен
-            $this->sync_user_password($user, $user->user_pass);
-            
             error_log('Moodle User Sync: Пользователь ' . $user->user_email . ' уже существует в Moodle, обновлены данные');
             return;
+        }
+        
+        // Получаем незахэшированный пароль из временного хранилища
+        $plain_password = '';
+        if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
+            $plain_password = $GLOBALS['moodle_user_sync_password'][$user->user_login];
+            // Удаляем пароль из памяти после использования
+            unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
+        }
+        
+        // Если пароль не найден, используем случайный пароль
+        // Это может произойти, если пользователь был создан не через стандартную регистрацию
+        if (empty($plain_password)) {
+            $plain_password = wp_generate_password(12, false);
+            error_log('Moodle User Sync: Пароль не найден для ' . $user->user_email . ', используется случайный пароль');
         }
         
         // Подготавливаем данные для создания пользователя в Moodle
         $user_data = array(
             'username' => $user->user_login,  // Логин пользователя
-            'password' => $user->user_pass,    // Пароль пользователя (хэш)
+            'password' => $plain_password,    // Незахэшированный пароль
             'firstname' => $user->first_name ? $user->first_name : $user->display_name,  // Имя
             'lastname' => $user->last_name ? $user->last_name : '',  // Фамилия
             'email' => $user->user_email,     // Email
@@ -227,21 +267,16 @@ class Course_Moodle_User_Sync {
     }
     
     /**
-     * Синхронизация пароля пользователя
-     * Обновляет пароль пользователя в Moodle при смене пароля в WordPress
+     * Синхронизация пароля пользователя после сброса
+     * Обновляет пароль пользователя в Moodle при сбросе пароля в WordPress
      * 
      * @param WP_User $user Объект пользователя WordPress
-     * @param string $new_pass Новый пароль (хэш)
+     * @param string $new_pass Новый пароль (незахэшированный)
      */
-    public function sync_user_password($user, $new_pass = '') {
+    public function sync_user_password_after_reset($user, $new_pass) {
         // Проверяем, что API настроен
         if (!$this->api) {
             return;
-        }
-        
-        // Если пароль не передан, получаем его из объекта пользователя
-        if (empty($new_pass) && isset($user->user_pass)) {
-            $new_pass = $user->user_pass;
         }
         
         if (empty($new_pass)) {
@@ -259,23 +294,22 @@ class Course_Moodle_User_Sync {
                 $moodle_user_id = $moodle_user['id'];
                 update_user_meta($user->ID, 'moodle_user_id', $moodle_user_id);
             } else {
-                return; // Если пользователь не найден в Moodle, прекращаем выполнение
+                // Если пользователь не найден в Moodle, создаем его
+                $this->sync_user_on_register($user->ID);
+                return;
             }
         }
         
         // Обновляем пароль в Moodle
-        // ВАЖНО: Moodle требует незахэшированный пароль, но WordPress хранит хэш
-        // Поэтому мы не можем напрямую синхронизировать хэш пароля
-        // Вместо этого нужно либо использовать SSO, либо хранить пароль отдельно (не рекомендуется)
-        // Для безопасности лучше использовать SSO или не синхронизировать пароли напрямую
+        $result = $this->api->update_user($moodle_user_id, array(
+            'password' => $new_pass
+        ));
         
-        // ВНИМАНИЕ: Этот код требует, чтобы пароль был передан в открытом виде
-        // Это небезопасно! Рекомендуется использовать SSO вместо синхронизации паролей
-        // Для демонстрации оставляем этот код, но в продакшене лучше использовать SSO
-        
-        error_log('Moodle User Sync: Попытка обновления пароля для пользователя ' . $user->user_email);
-        // Пароли не синхронизируются напрямую из соображений безопасности
-        // Используйте SSO для единого входа
+        if ($result !== false) {
+            error_log('Moodle User Sync: Пароль пользователя ' . $user->user_email . ' обновлен в Moodle');
+        } else {
+            error_log('Moodle User Sync: Ошибка при обновлении пароля пользователя ' . $user->user_email . ' в Moodle');
+        }
     }
 }
 
