@@ -47,8 +47,23 @@ class Course_Frontend {
      */
     public function course_template_loader($template) {
         // Шаблон архива курсов
-        // is_post_type_archive('course') проверяет, является ли текущая страница архивом типа поста 'course'
+        // Проверяем несколько условий для определения архива курсов
+        $is_course_archive = false;
+        
+        // Проверка через is_post_type_archive
         if (is_post_type_archive('course')) {
+            $is_course_archive = true;
+        }
+        // Проверка через URL (если URL содержит /course/)
+        elseif (isset($_SERVER['REQUEST_URI']) && preg_match('#/course/?$#', $_SERVER['REQUEST_URI'])) {
+            $is_course_archive = true;
+        }
+        // Проверка через query_var
+        elseif (get_query_var('post_type') === 'course' && !is_singular()) {
+            $is_course_archive = true;
+        }
+        
+        if ($is_course_archive) {
             $template_path = COURSE_PLUGIN_DIR . 'templates/archive-course.php';
             if (file_exists($template_path)) {
                 return $template_path;
@@ -84,9 +99,24 @@ class Course_Frontend {
             return;
         }
         
-        // Проверяем, является ли это архивом курсов
-        // is_post_type_archive('course') проверяет, является ли текущая страница архивом типа поста 'course'
-        if (is_post_type_archive('course')) {
+        // Проверяем несколько условий для определения архива курсов
+        // 1. Проверяем через is_post_type_archive
+        // 2. Проверяем через query_vars (post_type = 'course')
+        // 3. Проверяем через URL (если URL содержит /course/)
+        $is_course_archive = false;
+        
+        // Проверка через URL (самый надежный способ)
+        if (isset($_SERVER['REQUEST_URI']) && preg_match('#/course/?$#', $_SERVER['REQUEST_URI'])) {
+            $is_course_archive = true;
+            // Принудительно устанавливаем post_type для запроса
+            $query->set('post_type', 'course');
+        } elseif (is_post_type_archive('course')) {
+            $is_course_archive = true;
+        } elseif ($query->get('post_type') === 'course') {
+            $is_course_archive = true;
+        }
+        
+        if ($is_course_archive) {
             // Устанавливаем параметры запроса для курсов
             $query->set('post_type', 'course');
             $query->set('post_status', 'publish');  // Только опубликованные курсы

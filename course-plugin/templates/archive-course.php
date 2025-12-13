@@ -8,9 +8,22 @@ get_header();
 global $wp_query;
 
 // Проверяем, что это действительно архив курсов
-if (!is_post_type_archive('course')) {
+// Используем несколько проверок для надежности
+$is_course_archive = false;
+
+if (is_post_type_archive('course')) {
+    $is_course_archive = true;
+} elseif (isset($_SERVER['REQUEST_URI']) && preg_match('#/course/?$#', $_SERVER['REQUEST_URI'])) {
+    $is_course_archive = true;
+} elseif (get_query_var('post_type') === 'course' && !is_singular()) {
+    $is_course_archive = true;
+} elseif ($wp_query->get('post_type') === 'course') {
+    $is_course_archive = true;
+}
+
+if (!$is_course_archive) {
     // Если это не архив курсов, используем стандартный шаблон
-    return;
+    // Но не делаем return, чтобы не сломать вывод
 }
 
 // Получаем параметры пагинации
