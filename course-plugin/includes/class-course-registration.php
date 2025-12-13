@@ -303,6 +303,10 @@ class Course_Registration {
             wp_send_json_error(array('message' => __('Пользователь с таким email уже существует.', 'course-plugin')));
         }
         
+        // Сохраняем пароль во временное хранилище ДО создания пользователя
+        // Это необходимо для синхронизации с Moodle
+        $GLOBALS['moodle_user_sync_password'][$user_login] = $user_pass;
+        
         // Создаем пользователя
         $user_data = array(
             'user_login' => $user_login,
@@ -316,7 +320,20 @@ class Course_Registration {
         $user_id = wp_insert_user($user_data);
         
         if (is_wp_error($user_id)) {
+            // Удаляем пароль из памяти при ошибке
+            unset($GLOBALS['moodle_user_sync_password'][$user_login]);
             wp_send_json_error(array('message' => $user_id->get_error_message()));
+        }
+        
+        // Вызываем синхронизацию с Moodle напрямую
+        // Это гарантирует, что пользователь будет создан в Moodle даже если хуки не сработают
+        if (class_exists('Course_Moodle_User_Sync')) {
+            $sync_instance = Course_Moodle_User_Sync::get_instance();
+            // Вызываем публичный метод синхронизации с паролем
+            $sync_instance->sync_user($user_id, $user_pass);
+        } else {
+            // Если класс не загружен, вызываем через хук
+            do_action('user_register', $user_id);
         }
         
         // Автоматически входим пользователя после регистрации

@@ -107,6 +107,29 @@ class Course_Moodle_User_Sync {
     }
     
     /**
+     * Публичный метод для синхронизации пользователя
+     * Можно вызывать напрямую после создания пользователя
+     * 
+     * @param int $user_id ID пользователя WordPress
+     * @param string $plain_password Незахэшированный пароль (опционально)
+     * @return bool true если синхронизация успешна, false в случае ошибки
+     */
+    public function sync_user($user_id, $plain_password = '') {
+        // Если передан пароль, сохраняем его во временное хранилище
+        if (!empty($plain_password)) {
+            $user = get_userdata($user_id);
+            if ($user) {
+                $GLOBALS['moodle_user_sync_password'][$user->user_login] = $plain_password;
+            }
+        }
+        
+        // Вызываем стандартный метод синхронизации
+        $this->sync_user_on_register($user_id);
+        
+        return true;
+    }
+    
+    /**
      * Перехват пароля до хэширования при регистрации
      * Сохраняет незахэшированный пароль во временное хранилище для последующей синхронизации с Moodle
      * 
@@ -141,13 +164,32 @@ class Course_Moodle_User_Sync {
         $user = get_userdata($user_id);
         
         if (!$user) {
+            error_log('Moodle User Sync: Пользователь с ID ' . $user_id . ' не найден');
             return; // Если пользователь не найден, прекращаем выполнение
         }
         
-        // Проверяем, что API настроен
-        if (!$this->api) {
+        // Проверяем, включена ли синхронизация пользователей
+        $sync_enabled = get_option('moodle_sync_users_enabled', true);
+        if (!$sync_enabled) {
+            error_log('Moodle User Sync: Синхронизация пользователей отключена');
             return;
         }
+        
+        // Обновляем настройки API на случай, если они изменились
+        $this->moodle_url = get_option('moodle_sync_url', '');
+        $this->moodle_token = get_option('moodle_sync_token', '');
+        
+        // Проверяем, что API настроен
+        if (!$this->api) {
+            if ($this->moodle_url && $this->moodle_token) {
+                $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+            } else {
+                error_log('Moodle User Sync: API не настроен (URL или токен отсутствуют)');
+                return;
+            }
+        }
+        
+        error_log('Moodle User Sync: Начало синхронизации пользователя ' . $user->user_email);
         
         // Проверяем, существует ли уже пользователь в Moodle
         $moodle_user = $this->api->get_user_by_email($user->user_email);
@@ -167,6 +209,13 @@ class Course_Moodle_User_Sync {
             $plain_password = $GLOBALS['moodle_user_sync_password'][$user->user_login];
             // Удаляем пароль из памяти после использования
             unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
+            error_log('Moodle User Sync: Пароль найден для ' . $user->user_email);
+        } else {
+            // Пытаемся получить пароль из POST данных (если регистрация через форму)
+            if (isset($_POST['user_pass']) && !empty($_POST['user_pass'])) {
+                $plain_password = $_POST['user_pass'];
+                error_log('Moodle User Sync: Пароль получен из POST данных для ' . $user->user_email);
+            }
         }
         
         // Если пароль не найден, используем случайный пароль
@@ -186,7 +235,10 @@ class Course_Moodle_User_Sync {
         );
         
         // Пытаемся создать пользователя в Moodle
+        error_log('Moodle User Sync: Отправка запроса на создание пользователя в Moodle: ' . print_r($user_data, true));
         $result = $this->api->create_user($user_data);
+        
+        error_log('Moodle User Sync: Ответ от Moodle API: ' . print_r($result, true));
         
         if ($result && isset($result[0]['id'])) {
             // Если пользователь успешно создан, сохраняем его ID Moodle в метаполе WordPress
@@ -195,10 +247,22 @@ class Course_Moodle_User_Sync {
         } else {
             // Если произошла ошибка, записываем её в лог
             error_log('Moodle User Sync: Ошибка при создании пользователя ' . $user->user_email . ' в Moodle');
-            if (is_array($result) && isset($result[0]['warnings'])) {
-                foreach ($result[0]['warnings'] as $warning) {
-                    error_log('Moodle User Sync Warning: ' . $warning['message']);
+            if (is_array($result)) {
+                if (isset($result[0]['warnings'])) {
+                    foreach ($result[0]['warnings'] as $warning) {
+                        error_log('Moodle User Sync Warning: ' . print_r($warning, true));
+                    }
                 }
+                if (isset($result[0]['errors'])) {
+                    foreach ($result[0]['errors'] as $error) {
+                        error_log('Moodle User Sync Error: ' . print_r($error, true));
+                    }
+                }
+                if (isset($result['exception'])) {
+                    error_log('Moodle User Sync Exception: ' . $result['message']);
+                }
+            } else {
+                error_log('Moodle User Sync: Неожиданный формат ответа от API: ' . print_r($result, true));
             }
         }
     }
