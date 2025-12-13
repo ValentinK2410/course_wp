@@ -115,6 +115,7 @@ class Course_Plugin {
             'includes/class-course-moodle-sync.php',   // Класс для синхронизации данных из Moodle в WordPress
             'includes/class-course-transliteration.php', // Класс для транслитерации кириллицы в латиницу
             'includes/class-course-moodle-user-sync.php', // Класс для синхронизации пользователей между WordPress и Moodle
+            'includes/class-course-registration.php',   // Класс для формы регистрации пользователей
         );
         
         // Проходим по каждому файлу в массиве
@@ -201,6 +202,12 @@ class Course_Plugin {
         // Автоматически создает и обновляет пользователей в Moodle при регистрации и изменении профиля в WordPress
         if (class_exists('Course_Moodle_User_Sync')) {
             Course_Moodle_User_Sync::get_instance();
+        }
+        
+        // Инициализируем форму регистрации
+        // Добавляет шорткод [course_register] для отображения формы регистрации на любой странице
+        if (class_exists('Course_Registration')) {
+            Course_Registration::get_instance();
         }
     }
     
