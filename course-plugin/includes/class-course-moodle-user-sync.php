@@ -144,14 +144,19 @@ class Course_Moodle_User_Sync {
             return false;
         }
         
-        // Инициализируем API если еще не инициализирован
-        if (!$this->api) {
-            $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
-            error_log('Moodle User Sync: API объект создан');
-        }
+        // Инициализируем API если еще не инициализирован или пересоздаем с новыми настройками
+        // Всегда пересоздаем API объект, чтобы использовать актуальные настройки
+        $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+        error_log('Moodle User Sync: API объект создан/обновлен с URL: ' . $this->moodle_url);
         
         // Вызываем стандартный метод синхронизации
-        $this->sync_user_on_register($user_id);
+        try {
+            $this->sync_user_on_register($user_id);
+            error_log('Moodle User Sync: Метод sync_user_on_register завершен для пользователя ID: ' . $user_id);
+        } catch (Exception $e) {
+            error_log('Moodle User Sync: Исключение при синхронизации: ' . $e->getMessage());
+            return false;
+        }
         
         return true;
     }
@@ -211,15 +216,21 @@ class Course_Moodle_User_Sync {
         
         error_log('Moodle User Sync: Настройки - URL: ' . $this->moodle_url . ', Token установлен: ' . (!empty($this->moodle_token) ? 'да' : 'нет'));
         
-        // Проверяем, что API настроен
+        // Проверяем, что API настроен (должен быть установлен в sync_user, но проверяем на всякий случай)
         if (!$this->api) {
             if ($this->moodle_url && $this->moodle_token) {
                 $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
-                error_log('Moodle User Sync: API объект создан с URL: ' . $this->moodle_url);
+                error_log('Moodle User Sync: API объект создан в sync_user_on_register с URL: ' . $this->moodle_url);
             } else {
                 error_log('Moodle User Sync: API не настроен (URL: ' . $this->moodle_url . ', Token: ' . (!empty($this->moodle_token) ? 'установлен' : 'не установлен') . ')');
                 return;
             }
+        }
+        
+        // Дополнительная проверка: убеждаемся, что API объект имеет правильные настройки
+        if (empty($this->moodle_url) || empty($this->moodle_token)) {
+            error_log('Moodle User Sync: КРИТИЧЕСКАЯ ОШИБКА - URL или токен пусты в sync_user_on_register');
+            return;
         }
         
         error_log('Moodle User Sync: Начало синхронизации пользователя ' . $user->user_email . ' (ID: ' . $user_id . ')');
@@ -268,34 +279,60 @@ class Course_Moodle_User_Sync {
         );
         
         // Пытаемся создать пользователя в Moodle
-        error_log('Moodle User Sync: Отправка запроса на создание пользователя в Moodle: ' . print_r($user_data, true));
+        error_log('Moodle User Sync: Отправка запроса на создание пользователя в Moodle');
+        error_log('Moodle User Sync: Данные пользователя (без пароля): username=' . $user_data['username'] . ', email=' . $user_data['email'] . ', firstname=' . $user_data['firstname'] . ', lastname=' . $user_data['lastname']);
+        
+        if (empty($user_data['password'])) {
+            error_log('Moodle User Sync: КРИТИЧЕСКАЯ ОШИБКА - пароль пустой!');
+        }
+        
         $result = $this->api->create_user($user_data);
         
-        error_log('Moodle User Sync: Ответ от Moodle API: ' . print_r($result, true));
+        error_log('Moodle User Sync: Ответ от Moodle API получен. Тип: ' . gettype($result));
+        if (is_array($result)) {
+            error_log('Moodle User Sync: Размер массива ответа: ' . count($result));
+            error_log('Moodle User Sync: Содержимое ответа: ' . print_r($result, true));
+        } else {
+            error_log('Moodle User Sync: Ответ не является массивом: ' . print_r($result, true));
+        }
         
-        if ($result && isset($result[0]['id'])) {
+        if ($result === false) {
+            error_log('Moodle User Sync: КРИТИЧЕСКАЯ ОШИБКА - API вернул false');
+            return;
+        }
+        
+        if ($result && is_array($result) && !empty($result) && isset($result[0]['id'])) {
             // Если пользователь успешно создан, сохраняем его ID Moodle в метаполе WordPress
-            update_user_meta($user_id, 'moodle_user_id', $result[0]['id']);
-            error_log('Moodle User Sync: Пользователь ' . $user->user_email . ' успешно создан в Moodle (ID: ' . $result[0]['id'] . ')');
+            $moodle_user_id = $result[0]['id'];
+            update_user_meta($user_id, 'moodle_user_id', $moodle_user_id);
+            error_log('Moodle User Sync: УСПЕХ! Пользователь ' . $user->user_email . ' успешно создан в Moodle (ID: ' . $moodle_user_id . ')');
         } else {
             // Если произошла ошибка, записываем её в лог
-            error_log('Moodle User Sync: Ошибка при создании пользователя ' . $user->user_email . ' в Moodle');
-            if (is_array($result)) {
-                if (isset($result[0]['warnings'])) {
+            error_log('Moodle User Sync: ОШИБКА при создании пользователя ' . $user->user_email . ' в Moodle');
+            
+            if (is_array($result) && !empty($result)) {
+                if (isset($result[0]['warnings']) && is_array($result[0]['warnings'])) {
                     foreach ($result[0]['warnings'] as $warning) {
                         error_log('Moodle User Sync Warning: ' . print_r($warning, true));
                     }
                 }
-                if (isset($result[0]['errors'])) {
+                if (isset($result[0]['errors']) && is_array($result[0]['errors'])) {
                     foreach ($result[0]['errors'] as $error) {
                         error_log('Moodle User Sync Error: ' . print_r($error, true));
                     }
                 }
-                if (isset($result['exception'])) {
-                    error_log('Moodle User Sync Exception: ' . $result['message']);
+                if (isset($result[0]['id'])) {
+                    error_log('Moodle User Sync: Пользователь создан, но структура ответа неожиданная. ID: ' . $result[0]['id']);
+                    update_user_meta($user_id, 'moodle_user_id', $result[0]['id']);
                 }
-            } else {
-                error_log('Moodle User Sync: Неожиданный формат ответа от API: ' . print_r($result, true));
+            }
+            
+            if (isset($result['exception'])) {
+                error_log('Moodle User Sync Exception: ' . (isset($result['message']) ? $result['message'] : 'неизвестная ошибка'));
+            }
+            
+            if (!is_array($result) || empty($result)) {
+                error_log('Moodle User Sync: Неожиданный формат ответа от API. Результат: ' . print_r($result, true));
             }
         }
     }

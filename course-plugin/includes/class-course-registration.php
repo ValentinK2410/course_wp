@@ -327,11 +327,16 @@ class Course_Registration {
         
         // Вызываем синхронизацию с Moodle напрямую
         // Это гарантирует, что пользователь будет создан в Moodle даже если хуки не сработают
+        error_log('Course Registration: Попытка синхронизации пользователя ID: ' . $user_id);
+        
         if (class_exists('Course_Moodle_User_Sync')) {
+            error_log('Course Registration: Класс Course_Moodle_User_Sync найден');
             $sync_instance = Course_Moodle_User_Sync::get_instance();
             // Вызываем публичный метод синхронизации с паролем
-            $sync_instance->sync_user($user_id, $user_pass);
+            $result = $sync_instance->sync_user($user_id, $user_pass);
+            error_log('Course Registration: Результат синхронизации: ' . ($result ? 'успешно' : 'ошибка'));
         } else {
+            error_log('Course Registration: Класс Course_Moodle_User_Sync не найден, используем хук user_register');
             // Если класс не загружен, вызываем через хук
             do_action('user_register', $user_id);
         }
