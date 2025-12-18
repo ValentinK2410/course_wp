@@ -115,12 +115,39 @@ class Course_Moodle_User_Sync {
      * @return bool true если синхронизация успешна, false в случае ошибки
      */
     public function sync_user($user_id, $plain_password = '') {
+        error_log('Moodle User Sync: sync_user вызван для пользователя ID: ' . $user_id);
+        
         // Если передан пароль, сохраняем его во временное хранилище
         if (!empty($plain_password)) {
             $user = get_userdata($user_id);
             if ($user) {
                 $GLOBALS['moodle_user_sync_password'][$user->user_login] = $plain_password;
+                error_log('Moodle User Sync: Пароль сохранен для ' . $user->user_login);
             }
+        }
+        
+        // Обновляем настройки API перед синхронизацией
+        $this->moodle_url = get_option('moodle_sync_url', '');
+        $this->moodle_token = get_option('moodle_sync_token', '');
+        $sync_enabled = get_option('moodle_sync_users_enabled', true);
+        
+        error_log('Moodle User Sync: Настройки - URL: ' . $this->moodle_url . ', Token: ' . (empty($this->moodle_token) ? 'не установлен' : 'установлен') . ', Включено: ' . ($sync_enabled ? 'да' : 'нет'));
+        
+        // Проверяем настройки перед синхронизацией
+        if (!$sync_enabled) {
+            error_log('Moodle User Sync: Синхронизация пользователей отключена в настройках');
+            return false;
+        }
+        
+        if (empty($this->moodle_url) || empty($this->moodle_token)) {
+            error_log('Moodle User Sync: URL или токен не настроены');
+            return false;
+        }
+        
+        // Инициализируем API если еще не инициализирован
+        if (!$this->api) {
+            $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+            error_log('Moodle User Sync: API объект создан');
         }
         
         // Вызываем стандартный метод синхронизации
@@ -179,17 +206,23 @@ class Course_Moodle_User_Sync {
         $this->moodle_url = get_option('moodle_sync_url', '');
         $this->moodle_token = get_option('moodle_sync_token', '');
         
+        // Нормализуем URL (убираем слеш в конце)
+        $this->moodle_url = rtrim($this->moodle_url, '/');
+        
+        error_log('Moodle User Sync: Настройки - URL: ' . $this->moodle_url . ', Token установлен: ' . (!empty($this->moodle_token) ? 'да' : 'нет'));
+        
         // Проверяем, что API настроен
         if (!$this->api) {
             if ($this->moodle_url && $this->moodle_token) {
                 $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+                error_log('Moodle User Sync: API объект создан с URL: ' . $this->moodle_url);
             } else {
-                error_log('Moodle User Sync: API не настроен (URL или токен отсутствуют)');
+                error_log('Moodle User Sync: API не настроен (URL: ' . $this->moodle_url . ', Token: ' . (!empty($this->moodle_token) ? 'установлен' : 'не установлен') . ')');
                 return;
             }
         }
         
-        error_log('Moodle User Sync: Начало синхронизации пользователя ' . $user->user_email);
+        error_log('Moodle User Sync: Начало синхронизации пользователя ' . $user->user_email . ' (ID: ' . $user_id . ')');
         
         // Проверяем, существует ли уже пользователь в Moodle
         $moodle_user = $this->api->get_user_by_email($user->user_email);

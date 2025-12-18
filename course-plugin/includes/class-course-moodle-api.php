@@ -60,6 +60,17 @@ class Course_Moodle_API {
         $params['wsfunction'] = $function;                    // Название функции API
         $params['moodlewsrestformat'] = 'json';               // Формат ответа (JSON)
         
+        // Логируем запрос (без пароля для безопасности)
+        $log_params = $params;
+        if (isset($log_params['users']) && is_array($log_params['users'])) {
+            foreach ($log_params['users'] as &$user) {
+                if (isset($user['password'])) {
+                    $user['password'] = '***скрыто***';
+                }
+            }
+        }
+        error_log('Moodle API Call: URL=' . $url . ', Function=' . $function . ', Params=' . print_r($log_params, true));
+        
         // Выполняем POST запрос к Moodle API
         // wp_remote_post() - стандартная функция WordPress для выполнения HTTP POST запросов
         $response = wp_remote_post($url, array(
@@ -72,13 +83,18 @@ class Course_Moodle_API {
         if (is_wp_error($response)) {
             // Записываем ошибку в лог WordPress
             // error_log() записывает сообщение в файл debug.log (если включен WP_DEBUG)
-            error_log('Moodle API Error: ' . $response->get_error_message());
+            error_log('Moodle API Error: ' . $response->get_error_message() . ' (Code: ' . $response->get_error_code() . ')');
             return false; // Возвращаем false в случае ошибки
         }
+        
+        // Получаем код ответа HTTP
+        $response_code = wp_remote_retrieve_response_code($response);
+        error_log('Moodle API Response Code: ' . $response_code);
         
         // Получаем тело ответа (JSON строка)
         // wp_remote_retrieve_body() извлекает тело ответа из объекта ответа
         $body = wp_remote_retrieve_body($response);
+        error_log('Moodle API Response Body: ' . substr($body, 0, 500)); // Логируем первые 500 символов
         
         // Декодируем JSON строку в массив PHP
         // json_decode() преобразует JSON в массив (второй параметр true означает массив, а не объект)
@@ -88,7 +104,10 @@ class Course_Moodle_API {
         // Moodle возвращает ошибки в формате: {"exception": "...", "message": "..."}
         if (isset($data['exception'])) {
             // Записываем ошибку в лог
-            error_log('Moodle API Exception: ' . $data['message']);
+            error_log('Moodle API Exception: ' . $data['message'] . ' (Type: ' . (isset($data['exception']) ? $data['exception'] : 'unknown') . ')');
+            if (isset($data['debuginfo'])) {
+                error_log('Moodle API Debug Info: ' . $data['debuginfo']);
+            }
             return false; // Возвращаем false в случае ошибки
         }
         
