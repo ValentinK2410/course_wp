@@ -336,6 +336,19 @@ class Course_Registration {
             do_action('user_register', $user_id);
         }
         
+        // Отправляем письмо пользователю о регистрации
+        // Проверяем версию WordPress для использования правильной функции
+        if (function_exists('wp_send_new_user_notifications')) {
+            // WordPress 5.9+ - используем новую функцию
+            wp_send_new_user_notifications($user_id, 'user');
+        } elseif (function_exists('wp_new_user_notification')) {
+            // Старые версии WordPress - используем старую функцию
+            wp_new_user_notification($user_id, null, 'user');
+        } else {
+            // Если функции недоступны, отправляем письмо вручную
+            $this->send_registration_email($user_id, $user_pass);
+        }
+        
         // Автоматически входим пользователя после регистрации
         wp_set_current_user($user_id);
         wp_set_auth_cookie($user_id);
@@ -345,6 +358,47 @@ class Course_Registration {
             'message' => __('Регистрация успешно завершена! Вы будете перенаправлены...', 'course-plugin'),
             'redirect' => $redirect_to
         ));
+    }
+    
+    /**
+     * Отправка письма пользователю о регистрации
+     * Используется, если стандартные функции WordPress недоступны
+     * 
+     * @param int $user_id ID пользователя
+     * @param string $password Пароль пользователя
+     */
+    private function send_registration_email($user_id, $password) {
+        $user = get_userdata($user_id);
+        
+        if (!$user) {
+            return;
+        }
+        
+        // Получаем настройки сайта
+        $blogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+        $admin_email = get_option('admin_email');
+        
+        // Формируем тему письма
+        $subject = sprintf(__('[%s] Добро пожаловать!', 'course-plugin'), $blogname);
+        
+        // Формируем текст письма
+        $message = sprintf(__('Здравствуйте, %s!', 'course-plugin'), $user->display_name) . "\r\n\r\n";
+        $message .= sprintf(__('Добро пожаловать на сайт %s!', 'course-plugin'), $blogname) . "\r\n\r\n";
+        $message .= __('Ваши данные для входа:', 'course-plugin') . "\r\n";
+        $message .= sprintf(__('Логин: %s', 'course-plugin'), $user->user_login) . "\r\n";
+        $message .= sprintf(__('Пароль: %s', 'course-plugin'), $password) . "\r\n\r\n";
+        $message .= sprintf(__('Войти на сайт: %s', 'course-plugin'), wp_login_url()) . "\r\n\r\n";
+        $message .= __('С уважением,', 'course-plugin') . "\r\n";
+        $message .= sprintf(__('Команда %s', 'course-plugin'), $blogname) . "\r\n";
+        
+        // Заголовки письма
+        $headers = array(
+            'Content-Type: text/plain; charset=UTF-8',
+            'From: ' . $blogname . ' <' . $admin_email . '>'
+        );
+        
+        // Отправляем письмо
+        wp_mail($user->user_email, $subject, $message, $headers);
     }
 }
 
