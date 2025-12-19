@@ -66,9 +66,9 @@ class Course_Moodle_User_Sync {
         // Поэтому используем фильтр 'wp_insert_user_data' для перехвата пароля до хэширования
         add_filter('wp_insert_user_data', array($this, 'capture_password_before_hash'), 10, 3);
         
-        // Регистрируем хук для синхронизации при регистрации нового пользователя
-        // Хук 'user_register' срабатывает после успешной регистрации пользователя в WordPress
-        add_action('user_register', array($this, 'sync_user_on_register'), 10, 1);
+        // НЕ регистрируем хук 'user_register', так как синхронизация вызывается напрямую из формы регистрации
+        // Это позволяет передать пароль до того, как он будет захэширован
+        // add_action('user_register', array($this, 'sync_user_on_register'), 10, 1);
         
         // Регистрируем хук для синхронизации при обновлении профиля пользователя
         // Хук 'profile_update' срабатывает при обновлении данных пользователя

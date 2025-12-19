@@ -443,17 +443,33 @@ class Course_Registration {
             do_action('user_register', $user_id);
         }
         
+        // Получаем пароль, который был использован при создании пользователя в Moodle
+        // Если синхронизация прошла успешно, используем сохраненный пароль
+        $moodle_password = get_user_meta($user_id, 'moodle_password_used', true);
+        $password_for_email = !empty($moodle_password) ? $moodle_password : $user_pass;
+        
+        error_log('Course Registration: Пароль для письма: ' . (!empty($moodle_password) ? 'из Moodle (длина: ' . strlen($moodle_password) . ')' : 'из формы (длина: ' . strlen($user_pass) . ')'));
+        
         // Отправляем письмо пользователю о регистрации
         // Проверяем версию WordPress для использования правильной функции
         if (function_exists('wp_send_new_user_notifications')) {
             // WordPress 5.9+ - используем новую функцию
-            wp_send_new_user_notifications($user_id, 'user');
+            // Но сначала нужно обновить пароль пользователя для отправки в письме
+            // К сожалению, стандартные функции WordPress не позволяют передать пароль
+            // Поэтому отправляем письмо вручную с правильным паролем
+            $this->send_registration_email($user_id, $password_for_email);
         } elseif (function_exists('wp_new_user_notification')) {
             // Старые версии WordPress - используем старую функцию
-            wp_new_user_notification($user_id, null, 'user');
+            // Также отправляем письмо вручную с правильным паролем
+            $this->send_registration_email($user_id, $password_for_email);
         } else {
             // Если функции недоступны, отправляем письмо вручную
-            $this->send_registration_email($user_id, $user_pass);
+            $this->send_registration_email($user_id, $password_for_email);
+        }
+        
+        // Удаляем сохраненный пароль из метаполя после отправки письма
+        if (!empty($moodle_password)) {
+            delete_user_meta($user_id, 'moodle_password_used');
         }
         
         // Автоматически входим пользователя после регистрации
