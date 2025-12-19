@@ -58,21 +58,8 @@ class Course_Moodle_User_Sync {
      * Инициализирует настройки и регистрирует хуки WordPress
      */
     private function __construct() {
-        // Получаем настройки синхронизации из базы данных WordPress
-        $this->moodle_url = get_option('moodle_sync_url', '');
-        $this->moodle_token = get_option('moodle_sync_token', '');
-        
-        // Проверяем, включена ли синхронизация пользователей
-        $sync_enabled = get_option('moodle_sync_users_enabled', true);
-        
-        if (!$sync_enabled || !$this->moodle_url || !$this->moodle_token) {
-            return; // Если синхронизация отключена или не настроена, не регистрируем хуки
-        }
-        
-        // Создаем объект для работы с Moodle API
-        if ($this->moodle_url && $this->moodle_token) {
-            $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
-        }
+        // ВСЕГДА регистрируем хуки, даже если настройки не заполнены
+        // Проверка настроек будет происходить внутри методов синхронизации
         
         // Регистрируем хук для перехвата пароля при регистрации (до хэширования)
         // Хук 'user_register' срабатывает после успешной регистрации, но пароль уже захэширован
@@ -92,6 +79,8 @@ class Course_Moodle_User_Sync {
         
         // Регистрируем хук для добавления настроек в админку
         add_action('admin_init', array($this, 'register_user_sync_settings'));
+        
+        error_log('Moodle User Sync: Класс инициализирован, хуки зарегистрированы');
     }
     
     /**

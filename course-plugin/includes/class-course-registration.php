@@ -327,16 +327,30 @@ class Course_Registration {
         
         // Вызываем синхронизацию с Moodle напрямую
         // Это гарантирует, что пользователь будет создан в Moodle даже если хуки не сработают
-        error_log('Course Registration: Попытка синхронизации пользователя ID: ' . $user_id);
+        error_log('Course Registration: Попытка синхронизации пользователя ID: ' . $user_id . ', логин: ' . $user_login);
+        
+        // Сохраняем пароль в глобальную переменную ДО вызова синхронизации
+        $GLOBALS['moodle_user_sync_password'][$user_login] = $user_pass;
+        error_log('Course Registration: Пароль сохранен в глобальную переменную для логина: ' . $user_login);
         
         if (class_exists('Course_Moodle_User_Sync')) {
             error_log('Course Registration: Класс Course_Moodle_User_Sync найден');
-            $sync_instance = Course_Moodle_User_Sync::get_instance();
-            // Вызываем публичный метод синхронизации с паролем
-            $result = $sync_instance->sync_user($user_id, $user_pass);
-            error_log('Course Registration: Результат синхронизации: ' . ($result ? 'успешно' : 'ошибка'));
+            try {
+                $sync_instance = Course_Moodle_User_Sync::get_instance();
+                error_log('Course Registration: Экземпляр класса получен');
+                
+                // Вызываем публичный метод синхронизации с паролем
+                $result = $sync_instance->sync_user($user_id, $user_pass);
+                error_log('Course Registration: Результат синхронизации: ' . ($result ? 'успешно (true)' : 'ошибка (false)'));
+                
+                if (!$result) {
+                    error_log('Course Registration: ВНИМАНИЕ! Синхронизация вернула false. Проверьте логи Moodle User Sync выше.');
+                }
+            } catch (Exception $e) {
+                error_log('Course Registration: ИСКЛЮЧЕНИЕ при синхронизации: ' . $e->getMessage());
+            }
         } else {
-            error_log('Course Registration: Класс Course_Moodle_User_Sync не найден, используем хук user_register');
+            error_log('Course Registration: КРИТИЧЕСКАЯ ОШИБКА - Класс Course_Moodle_User_Sync не найден!');
             // Если класс не загружен, вызываем через хук
             do_action('user_register', $user_id);
         }
