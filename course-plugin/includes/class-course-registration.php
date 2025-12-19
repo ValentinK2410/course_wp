@@ -40,6 +40,10 @@ class Course_Registration {
         // Обработка формы регистрации
         add_action('wp_ajax_course_register', array($this, 'process_registration'));
         add_action('wp_ajax_nopriv_course_register', array($this, 'process_registration'));
+        
+        // Проверка существования пользователя в Moodle по email
+        add_action('wp_ajax_course_check_moodle_email', array($this, 'check_moodle_email'));
+        add_action('wp_ajax_nopriv_course_check_moodle_email', array($this, 'check_moodle_email'));
     }
     
     /**
@@ -97,6 +101,7 @@ class Course_Registration {
                 <p>
                     <label for="user_email"><?php _e('Email', 'course-plugin'); ?> <span class="required">*</span></label>
                     <input type="email" name="user_email" id="user_email" class="input" value="" size="25" required />
+                    <small id="email-check-message" style="display: none; margin-top: 5px;"></small>
                 </p>
                 
                 <p>
@@ -133,6 +138,74 @@ class Course_Registration {
         
         <script>
         jQuery(document).ready(function($) {
+            var emailCheckTimeout;
+            var $emailInput = $('#user_email');
+            var $emailMessage = $('#email-check-message');
+            
+            // Проверка email в Moodle при вводе (с задержкой 500мс после последнего символа)
+            $emailInput.on('blur', function() {
+                var email = $(this).val();
+                if (email && isValidEmail(email)) {
+                    checkMoodleEmail(email);
+                } else {
+                    $emailMessage.hide();
+                }
+            });
+            
+            // Проверка при вводе с задержкой
+            $emailInput.on('input', function() {
+                clearTimeout(emailCheckTimeout);
+                var email = $(this).val();
+                if (email && isValidEmail(email)) {
+                    emailCheckTimeout = setTimeout(function() {
+                        checkMoodleEmail(email);
+                    }, 1000); // Проверка через 1 секунду после последнего символа
+                } else {
+                    $emailMessage.hide();
+                }
+            });
+            
+            // Функция проверки валидности email
+            function isValidEmail(email) {
+                var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }
+            
+            // Функция проверки существования email в Moodle
+            function checkMoodleEmail(email) {
+                $emailMessage.hide();
+                
+                $.ajax({
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    type: 'POST',
+                    data: {
+                        action: 'course_check_moodle_email',
+                        email: email,
+                        nonce: '<?php echo wp_create_nonce('course_check_moodle_email'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            if (response.data.exists) {
+                                $emailMessage
+                                    .html('<?php echo esc_js(__('⚠ Пользователь с таким email уже существует в Moodle. Вы можете зарегистрироваться, но ваш аккаунт будет связан с существующим пользователем Moodle.', 'course-plugin')); ?>')
+                                    .css({
+                                        'color': '#d63638',
+                                        'font-weight': 'bold',
+                                        'display': 'block'
+                                    })
+                                    .show();
+                            } else {
+                                $emailMessage.hide();
+                            }
+                        }
+                    },
+                    error: function() {
+                        // Не показываем ошибку, если проверка не удалась
+                        $emailMessage.hide();
+                    }
+                });
+            }
+            
             $('#course-registration-form').on('submit', function(e) {
                 e.preventDefault();
                 
@@ -167,6 +240,7 @@ class Course_Registration {
                         if (response.success) {
                             $messages.html('<div class="success">' + response.data.message + '</div>').addClass('success');
                             $form[0].reset();
+                            $emailMessage.hide();
                             
                             // Редирект через 2 секунды
                             if (response.data.redirect) {
@@ -418,6 +492,63 @@ class Course_Registration {
         
         // Отправляем письмо
         wp_mail($user->user_email, $subject, $message, $headers);
+    }
+    
+    /**
+     * Проверка существования пользователя в Moodle по email
+     * Вызывается через AJAX при вводе email в форме регистрации
+     */
+    public function check_moodle_email() {
+        // Проверяем nonce для безопасности
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'course_check_moodle_email')) {
+            wp_send_json_error(array('message' => __('Ошибка безопасности.', 'course-plugin')));
+        }
+        
+        // Получаем email из запроса
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        
+        // Валидация email
+        if (empty($email) || !is_email($email)) {
+            wp_send_json_error(array('message' => __('Некорректный email адрес.', 'course-plugin')));
+        }
+        
+        // Проверяем, настроена ли синхронизация с Moodle
+        $moodle_url = get_option('moodle_sync_url', '');
+        $moodle_token = get_option('moodle_sync_token', '');
+        $sync_enabled = get_option('moodle_sync_users_enabled', true);
+        
+        // Если синхронизация не настроена или отключена, не проверяем
+        if (!$sync_enabled || empty($moodle_url) || empty($moodle_token)) {
+            wp_send_json_success(array('exists' => false, 'message' => ''));
+        }
+        
+        // Создаем объект API для проверки
+        if (class_exists('Course_Moodle_API')) {
+            try {
+                $api = new Course_Moodle_API($moodle_url, $moodle_token);
+                $moodle_user = $api->get_user_by_email($email);
+                
+                if ($moodle_user) {
+                    // Пользователь существует в Moodle
+                    wp_send_json_success(array(
+                        'exists' => true,
+                        'message' => __('Пользователь с таким email уже существует в Moodle.', 'course-plugin')
+                    ));
+                } else {
+                    // Пользователь не найден в Moodle
+                    wp_send_json_success(array(
+                        'exists' => false,
+                        'message' => ''
+                    ));
+                }
+            } catch (Exception $e) {
+                // В случае ошибки не показываем сообщение пользователю
+                wp_send_json_success(array('exists' => false, 'message' => ''));
+            }
+        } else {
+            // Класс API не найден
+            wp_send_json_success(array('exists' => false, 'message' => ''));
+        }
     }
 }
 
