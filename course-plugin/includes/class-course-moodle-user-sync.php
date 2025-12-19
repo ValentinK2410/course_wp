@@ -249,9 +249,8 @@ class Course_Moodle_User_Sync {
         // Сначала проверяем глобальную переменную (устанавливается в sync_user или capture_password_before_hash)
         if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
             $plain_password = $GLOBALS['moodle_user_sync_password'][$user->user_login];
-            // Удаляем пароль из памяти после использования
-            unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
-            error_log('Moodle User Sync: Пароль найден в глобальной переменной для ' . $user->user_email);
+            // НЕ удаляем пароль сразу - он может понадобиться для повторных попыток
+            error_log('Moodle User Sync: Пароль найден в глобальной переменной для ' . $user->user_email . ' (длина: ' . strlen($plain_password) . ' символов)');
         } 
         // Если не найден, пытаемся получить из POST данных (если регистрация через форму)
         elseif (isset($_POST['user_pass']) && !empty($_POST['user_pass'])) {
@@ -262,6 +261,7 @@ class Course_Moodle_User_Sync {
         else {
             // Пытаемся найти пароль в других возможных местах
             error_log('Moodle User Sync: Пароль не найден в стандартных местах для ' . $user->user_email . ', логин: ' . $user->user_login);
+            error_log('Moodle User Sync: Доступные ключи в глобальной переменной: ' . (isset($GLOBALS['moodle_user_sync_password']) && is_array($GLOBALS['moodle_user_sync_password']) ? print_r(array_keys($GLOBALS['moodle_user_sync_password']), true) : 'переменная не существует или не массив'));
         }
         
         // Если пароль не найден, используем случайный пароль
@@ -313,6 +313,10 @@ class Course_Moodle_User_Sync {
             // Если пользователь успешно создан, сохраняем его ID Moodle в метаполе WordPress
             $moodle_user_id = $result[0]['id'];
             update_user_meta($user_id, 'moodle_user_id', $moodle_user_id);
+            // Удаляем пароль из памяти после успешного создания
+            if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
+                unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
+            }
             error_log('Moodle User Sync: УСПЕХ! Пользователь ' . $user->user_email . ' успешно создан в Moodle (ID: ' . $moodle_user_id . ')');
         } else {
             // Если произошла ошибка, записываем её в лог
