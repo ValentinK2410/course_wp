@@ -187,15 +187,12 @@ class Course_Registration {
                         if (response.success) {
                             if (response.data.exists) {
                                 $emailMessage
-                                    .html('<?php echo esc_js(__('⚠ Пользователь с таким email уже существует в Moodle. Вы можете зарегистрироваться, но ваш аккаунт будет связан с существующим пользователем Moodle.', 'course-plugin')); ?>')
-                                    .css({
-                                        'color': '#d63638',
-                                        'font-weight': 'bold',
-                                        'display': 'block'
-                                    })
+                                    .html('⚠ <?php echo esc_js(__('Пользователь с таким email уже существует в Moodle. Вы можете зарегистрироваться, но ваш аккаунт будет связан с существующим пользователем Moodle.', 'course-plugin')); ?>')
+                                    .removeClass('warning')
+                                    .addClass('warning')
                                     .show();
                             } else {
-                                $emailMessage.hide();
+                                $emailMessage.hide().removeClass('warning');
                             }
                         }
                     },
@@ -317,6 +314,19 @@ class Course_Registration {
         .course-registration-login-link {
             text-align: center;
             margin-top: 15px;
+        }
+        #email-check-message {
+            display: block;
+            margin-top: 5px;
+            padding: 5px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        #email-check-message.warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
         }
         </style>
         <?php
