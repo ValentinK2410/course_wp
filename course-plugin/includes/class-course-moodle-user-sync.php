@@ -80,7 +80,11 @@ class Course_Moodle_User_Sync {
         // Регистрируем хук для добавления настроек в админку
         add_action('admin_init', array($this, 'register_user_sync_settings'));
         
-        error_log('Moodle User Sync: Класс инициализирован, хуки зарегистрированы');
+        // Логируем только в режиме отладки и только один раз
+        if (defined('WP_DEBUG') && WP_DEBUG && !get_option('moodle_user_sync_logged_init')) {
+            error_log('Moodle User Sync: Класс инициализирован, хуки зарегистрированы');
+            update_option('moodle_user_sync_logged_init', true);
+        }
     }
     
     /**
