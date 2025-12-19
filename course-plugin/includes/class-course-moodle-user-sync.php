@@ -272,13 +272,19 @@ class Course_Moodle_User_Sync {
         }
         
         // Подготавливаем данные для создания пользователя в Moodle
+        // Важно: Moodle требует, чтобы lastname не был пустым, поэтому используем пробел если пусто
+        $firstname = !empty($user->first_name) ? $user->first_name : (!empty($user->display_name) ? $user->display_name : $user->user_login);
+        $lastname = !empty($user->last_name) ? $user->last_name : ' ';  // Пробел вместо пустой строки
+        
         $user_data = array(
             'username' => $user->user_login,  // Логин пользователя
             'password' => $plain_password,    // Незахэшированный пароль
-            'firstname' => $user->first_name ? $user->first_name : $user->display_name,  // Имя
-            'lastname' => $user->last_name ? $user->last_name : '',  // Фамилия
-            'email' => $user->user_email,     // Email
+            'firstname' => $firstname,        // Имя (обязательно)
+            'lastname' => $lastname,          // Фамилия (обязательно, минимум пробел)
+            'email' => $user->user_email,     // Email (обязательно)
         );
+        
+        error_log('Moodle User Sync: Подготовленные данные пользователя: username=' . $user_data['username'] . ', firstname=' . $user_data['firstname'] . ', lastname="' . $user_data['lastname'] . '", email=' . $user_data['email']);
         
         // Пытаемся создать пользователя в Moodle
         error_log('Moodle User Sync: Отправка запроса на создание пользователя в Moodle');

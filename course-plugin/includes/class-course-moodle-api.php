@@ -213,25 +213,41 @@ class Course_Moodle_API {
     public function create_user($user_data) {
         // Вызываем функцию Moodle API 'core_user_create_users'
         // Эта функция создает нового пользователя в Moodle
+        
+        // Подготавливаем данные пользователя
+        // Moodle требует, чтобы lastname не был пустым, поэтому используем пробел если пусто
+        $lastname = !empty($user_data['lastname']) ? $user_data['lastname'] : ' ';
+        
+        // Формируем массив данных для создания пользователя
+        $moodle_user_data = array(
+            'username' => $user_data['username'],
+            'password' => $user_data['password'],
+            'firstname' => $user_data['firstname'],
+            'lastname' => $lastname,  // Используем пробел вместо пустой строки
+            'email' => $user_data['email'],
+        );
+        
+        // Добавляем опциональные поля только если они не пустые
+        if (isset($user_data['city']) && !empty($user_data['city'])) {
+            $moodle_user_data['city'] = $user_data['city'];
+        }
+        
+        if (isset($user_data['country']) && !empty($user_data['country'])) {
+            $moodle_user_data['country'] = $user_data['country'];
+        } else {
+            $moodle_user_data['country'] = 'RU';  // Страна по умолчанию
+        }
+        
+        // Тип аутентификации
+        $moodle_user_data['auth'] = 'manual';
+        
+        // Логируем данные перед отправкой (без пароля)
+        $log_data = $moodle_user_data;
+        $log_data['password'] = '***скрыто***';
+        error_log('Moodle API: Данные для создания пользователя: ' . print_r($log_data, true));
+        
         return $this->call('core_user_create_users', array(
-            'users' => array(
-                array(
-                    'username' => $user_data['username'],
-                    'password' => $user_data['password'],
-                    'firstname' => $user_data['firstname'],
-                    'lastname' => $user_data['lastname'],
-                    'email' => $user_data['email'],
-                    'city' => isset($user_data['city']) ? $user_data['city'] : '',
-                    'country' => isset($user_data['country']) ? $user_data['country'] : 'RU',
-                    'auth' => 'manual',  // Тип аутентификации (manual = стандартная аутентификация)
-                    'preferences' => array(
-                        array(
-                            'type' => 'auth_forcepasswordchange',
-                            'value' => '0'  // Не требовать смену пароля при первом входе
-                        )
-                    )
-                )
-            )
+            'users' => array($moodle_user_data)
         ));
     }
     
