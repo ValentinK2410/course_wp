@@ -411,11 +411,14 @@ class Course_Registration {
         
         // Вызываем синхронизацию с Moodle напрямую
         // Это гарантирует, что пользователь будет создан в Moodle даже если хуки не сработают
+        error_log('Course Registration: ========== НАЧАЛО РЕГИСТРАЦИИ ==========');
         error_log('Course Registration: Попытка синхронизации пользователя ID: ' . $user_id . ', логин: ' . $user_login);
+        error_log('Course Registration: Пароль из формы (длина): ' . strlen($user_pass) . ' символов');
         
         // Сохраняем пароль в глобальную переменную ДО вызова синхронизации
         $GLOBALS['moodle_user_sync_password'][$user_login] = $user_pass;
-        error_log('Course Registration: Пароль сохранен в глобальную переменную для логина: ' . $user_login);
+        error_log('Course Registration: Пароль сохранен в глобальную переменную для логина: ' . $user_login . ' (длина: ' . strlen($user_pass) . ' символов)');
+        error_log('Course Registration: Проверка глобальной переменной после сохранения: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ')' : 'НЕ НАЙДЕН!'));
         
         if (class_exists('Course_Moodle_User_Sync')) {
             error_log('Course Registration: Класс Course_Moodle_User_Sync найден');
@@ -424,6 +427,7 @@ class Course_Registration {
                 error_log('Course Registration: Экземпляр класса получен');
                 
                 // Вызываем публичный метод синхронизации с паролем
+                error_log('Course Registration: Вызов sync_user с паролем (длина: ' . strlen($user_pass) . ' символов)');
                 $result = $sync_instance->sync_user($user_id, $user_pass);
                 error_log('Course Registration: Результат синхронизации: ' . ($result ? 'успешно (true)' : 'ошибка (false)'));
                 
