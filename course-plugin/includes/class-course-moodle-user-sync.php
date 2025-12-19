@@ -226,9 +226,10 @@ class Course_Moodle_User_Sync {
             return;
         }
         
-        error_log('Moodle User Sync: Начало синхронизации пользователя ' . $user->user_email . ' (ID: ' . $user_id . ')');
+        error_log('Moodle User Sync: Начало синхронизации пользователя ' . $user->user_email . ' (ID: ' . $user_id . ', логин: ' . $user->user_login . ')');
         
         // Проверяем, существует ли уже пользователь в Moodle
+        error_log('Moodle User Sync: Проверка существования пользователя в Moodle по email: ' . $user->user_email);
         $moodle_user = $this->api->get_user_by_email($user->user_email);
         
         if ($moodle_user) {
@@ -236,9 +237,11 @@ class Course_Moodle_User_Sync {
             // Сохраняем ID пользователя Moodle в метаполе WordPress пользователя
             update_user_meta($user_id, 'moodle_user_id', $moodle_user['id']);
             
-            error_log('Moodle User Sync: Пользователь ' . $user->user_email . ' уже существует в Moodle, обновлены данные');
+            error_log('Moodle User Sync: Пользователь ' . $user->user_email . ' уже существует в Moodle (ID: ' . $moodle_user['id'] . ', username: ' . (isset($moodle_user['username']) ? $moodle_user['username'] : 'неизвестно') . '), данные обновлены. Новый пользователь не создается.');
             return;
         }
+        
+        error_log('Moodle User Sync: Пользователь ' . $user->user_email . ' НЕ найден в Moodle, продолжаем создание нового пользователя');
         
         // Получаем незахэшированный пароль из временного хранилища
         $plain_password = '';
