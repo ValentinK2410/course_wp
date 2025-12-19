@@ -108,14 +108,28 @@ class Course_Moodle_User_Sync {
      * @return bool true если синхронизация успешна, false в случае ошибки
      */
     public function sync_user($user_id, $plain_password = '') {
+        error_log('Moodle User Sync: ========== НАЧАЛО СИНХРОНИЗАЦИИ ==========');
         error_log('Moodle User Sync: sync_user вызван для пользователя ID: ' . $user_id);
+        
+        // Получаем данные пользователя
+        $user = get_userdata($user_id);
+        if (!$user) {
+            error_log('Moodle User Sync: ОШИБКА - не удалось получить данные пользователя ID: ' . $user_id);
+            return false;
+        }
         
         // Если передан пароль, сохраняем его во временное хранилище
         if (!empty($plain_password)) {
-            $user = get_userdata($user_id);
-            if ($user) {
-                $GLOBALS['moodle_user_sync_password'][$user->user_login] = $plain_password;
-                error_log('Moodle User Sync: Пароль сохранен для ' . $user->user_login);
+            $GLOBALS['moodle_user_sync_password'][$user->user_login] = $plain_password;
+            error_log('Moodle User Sync: Пароль сохранен в глобальную переменную для логина: ' . $user->user_login . ' (длина пароля: ' . strlen($plain_password) . ' символов)');
+        } else {
+            error_log('Moodle User Sync: ВНИМАНИЕ - пароль не передан в sync_user! Проверяю глобальную переменную...');
+            // Проверяем, может пароль уже сохранен в глобальной переменной
+            if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
+                error_log('Moodle User Sync: Пароль найден в глобальной переменной для логина: ' . $user->user_login);
+            } else {
+                error_log('Moodle User Sync: Пароль не найден ни в параметрах, ни в глобальной переменной!');
+                error_log('Moodle User Sync: Доступные ключи в глобальной переменной: ' . (isset($GLOBALS['moodle_user_sync_password']) && is_array($GLOBALS['moodle_user_sync_password']) ? print_r(array_keys($GLOBALS['moodle_user_sync_password']), true) : 'переменная не существует или не массив'));
             }
         }
         
@@ -272,9 +286,10 @@ class Course_Moodle_User_Sync {
         }
         
         // Подготавливаем данные для создания пользователя в Moodle
-        // Важно: Moodle требует, чтобы lastname не был пустым, поэтому используем пробел если пусто
-        $firstname = !empty($user->first_name) ? $user->first_name : (!empty($user->display_name) ? $user->display_name : $user->user_login);
-        $lastname = !empty($user->last_name) ? $user->last_name : ' ';  // Пробел вместо пустой строки
+        // Важно: Moodle требует, чтобы lastname не был пустым, поэтому используем дефис если пусто
+        // Пробел может вызывать ошибку "Invalid parameter value detected"
+        $firstname = !empty($user->first_name) ? trim($user->first_name) : (!empty($user->display_name) ? trim($user->display_name) : $user->user_login);
+        $lastname = !empty($user->last_name) && trim($user->last_name) !== '' ? trim($user->last_name) : '-';  // Дефис вместо пустой строки
         
         $user_data = array(
             'username' => $user->user_login,  // Логин пользователя

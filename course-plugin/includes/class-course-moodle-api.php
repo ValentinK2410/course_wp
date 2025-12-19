@@ -215,8 +215,9 @@ class Course_Moodle_API {
         // Эта функция создает нового пользователя в Moodle
         
         // Подготавливаем данные пользователя
-        // Moodle требует, чтобы lastname не был пустым, поэтому используем пробел если пусто
-        $lastname = !empty($user_data['lastname']) ? $user_data['lastname'] : ' ';
+        // Moodle требует, чтобы lastname не был пустым, поэтому используем дефис если пусто
+        // Пробел может вызывать ошибку "Invalid parameter value detected"
+        $lastname = !empty($user_data['lastname']) && trim($user_data['lastname']) !== '' ? trim($user_data['lastname']) : '-';
         
         // Формируем массив данных для создания пользователя
         $moodle_user_data = array(
