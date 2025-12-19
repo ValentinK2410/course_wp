@@ -238,17 +238,23 @@ class Course_Moodle_User_Sync {
         
         // Получаем незахэшированный пароль из временного хранилища
         $plain_password = '';
+        
+        // Сначала проверяем глобальную переменную (устанавливается в sync_user или capture_password_before_hash)
         if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
             $plain_password = $GLOBALS['moodle_user_sync_password'][$user->user_login];
             // Удаляем пароль из памяти после использования
             unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
-            error_log('Moodle User Sync: Пароль найден для ' . $user->user_email);
-        } else {
-            // Пытаемся получить пароль из POST данных (если регистрация через форму)
-            if (isset($_POST['user_pass']) && !empty($_POST['user_pass'])) {
-                $plain_password = $_POST['user_pass'];
-                error_log('Moodle User Sync: Пароль получен из POST данных для ' . $user->user_email);
-            }
+            error_log('Moodle User Sync: Пароль найден в глобальной переменной для ' . $user->user_email);
+        } 
+        // Если не найден, пытаемся получить из POST данных (если регистрация через форму)
+        elseif (isset($_POST['user_pass']) && !empty($_POST['user_pass'])) {
+            $plain_password = $_POST['user_pass'];
+            error_log('Moodle User Sync: Пароль получен из POST данных для ' . $user->user_email);
+        }
+        // Если все еще не найден, проверяем статическую переменную из capture_password_before_hash
+        else {
+            // Пытаемся найти пароль в других возможных местах
+            error_log('Moodle User Sync: Пароль не найден в стандартных местах для ' . $user->user_email . ', логин: ' . $user->user_login);
         }
         
         // Если пароль не найден, используем случайный пароль
