@@ -388,8 +388,16 @@ class Course_Registration {
         }
         
         // Сохраняем пароль во временное хранилище ДО создания пользователя
-        // Это необходимо для синхронизации с Moodle
+        // Это необходимо для синхронизации с Moodle через хук user_register
+        // ВАЖНО: Пароль должен быть сохранен ДО вызова wp_insert_user(), чтобы хук user_register мог его найти
         $GLOBALS['moodle_user_sync_password'][$user_login] = $user_pass;
+        
+        // Логируем сохранение пароля
+        if (class_exists('Course_Logger')) {
+            Course_Logger::info('Пароль сохранен ДО создания пользователя: логин=' . $user_login . ', длина=' . strlen($user_pass));
+        }
+        error_log('Course Registration: Пароль сохранен в глобальную переменную ДО создания пользователя: логин=' . $user_login . ', длина=' . strlen($user_pass));
+        error_log('Course Registration: Проверка глобальной переменной: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ')' : 'НЕ НАЙДЕН!'));
         
         // Создаем пользователя
         $user_data = array(
@@ -409,15 +417,12 @@ class Course_Registration {
             wp_send_json_error(array('message' => $user_id->get_error_message()));
         }
         
-        // Сохраняем пароль в глобальную переменную ДО создания пользователя
-        // Это необходимо для синхронизации с Moodle через хук user_register
-        $GLOBALS['moodle_user_sync_password'][$user_login] = $user_pass;
-        
-        // Логируем для отладки
+        // Логируем создание пользователя
         if (class_exists('Course_Logger')) {
-            Course_Logger::info('Регистрация пользователя: логин=' . $user_login . ', email=' . $user_email . ', пароль сохранен (длина: ' . strlen($user_pass) . ')');
+            Course_Logger::info('Пользователь создан в WordPress: ID=' . $user_id . ', логин=' . $user_login . ', email=' . $user_email);
         }
-        error_log('Course Registration: Пользователь создан, пароль сохранен для синхронизации с Moodle');
+        error_log('Course Registration: Пользователь создан в WordPress: ID=' . $user_id . ', логин=' . $user_login);
+        error_log('Course Registration: Проверка пароля ПОСЛЕ создания пользователя: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ')' : 'НЕ НАЙДЕН!'));
         
         // Синхронизация произойдет автоматически через хук 'user_register'
         // Хук зарегистрирован в классе Course_Moodle_User_Sync

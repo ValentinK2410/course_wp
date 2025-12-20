@@ -290,6 +290,13 @@ class Course_Moodle_User_Sync {
         // Получаем незахэшированный пароль из временного хранилища
         $plain_password = '';
         
+        // Логируем состояние глобальной переменной перед поиском пароля
+        error_log('Moodle User Sync: Поиск пароля для логина: ' . $user->user_login);
+        error_log('Moodle User Sync: Глобальная переменная существует: ' . (isset($GLOBALS['moodle_user_sync_password']) ? 'да' : 'нет'));
+        if (isset($GLOBALS['moodle_user_sync_password']) && is_array($GLOBALS['moodle_user_sync_password'])) {
+            error_log('Moodle User Sync: Доступные ключи в глобальной переменной: ' . print_r(array_keys($GLOBALS['moodle_user_sync_password']), true));
+        }
+        
         // Сначала проверяем глобальную переменную (устанавливается в sync_user или capture_password_before_hash)
         if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
             $plain_password = $GLOBALS['moodle_user_sync_password'][$user->user_login];
