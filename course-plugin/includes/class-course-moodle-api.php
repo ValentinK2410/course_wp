@@ -104,11 +104,12 @@ class Course_Moodle_API {
         // Moodle возвращает ошибки в формате: {"exception": "...", "message": "..."}
         if (isset($data['exception'])) {
             // Записываем ошибку в лог
-            error_log('Moodle API Exception: ' . $data['message'] . ' (Type: ' . (isset($data['exception']) ? $data['exception'] : 'unknown') . ')');
+            error_log('Moodle API Exception: ' . (isset($data['message']) ? $data['message'] : 'неизвестная ошибка') . ' (Type: ' . (isset($data['errorcode']) ? $data['errorcode'] : (isset($data['exception']) ? $data['exception'] : 'unknown')) . ')');
             if (isset($data['debuginfo'])) {
                 error_log('Moodle API Debug Info: ' . $data['debuginfo']);
             }
-            return false; // Возвращаем false в случае ошибки
+            // Возвращаем массив с ошибкой, чтобы вызывающий код мог обработать её
+            return array('exception' => $data['exception'], 'message' => isset($data['message']) ? $data['message'] : '', 'errorcode' => isset($data['errorcode']) ? $data['errorcode'] : '');
         }
         
         // Возвращаем успешно полученные данные
