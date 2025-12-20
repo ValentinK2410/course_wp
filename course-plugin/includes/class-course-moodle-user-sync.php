@@ -331,15 +331,30 @@ class Course_Moodle_User_Sync {
             return;
         }
         
-        if ($result && is_array($result) && !empty($result) && isset($result[0]['id'])) {
-            // Если пользователь успешно создан, сохраняем его ID Moodle в метаполе WordPress
-            $moodle_user_id = $result[0]['id'];
-            update_user_meta($user_id, 'moodle_user_id', $moodle_user_id);
-            // Удаляем пароль из памяти после успешного создания
-            if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
-                unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
+        // Проверяем результат создания пользователя
+        // Moodle API может вернуть массив с данными пользователя или объект с ошибкой
+        if ($result && is_array($result) && !empty($result)) {
+            // Проверяем, есть ли ID пользователя в результате
+            if (isset($result[0]['id'])) {
+                // Если пользователь успешно создан, сохраняем его ID Moodle в метаполе WordPress
+                $moodle_user_id = $result[0]['id'];
+                update_user_meta($user_id, 'moodle_user_id', $moodle_user_id);
+                
+                // Сохраняем пароль, который был использован при создании пользователя в Moodle
+                // Это нужно для отправки пользователю в письме
+                update_user_meta($user_id, 'moodle_password_used', $plain_password);
+                error_log('Moodle User Sync: Пароль сохранен в метаполе пользователя для отправки в письме');
+                
+                // Удаляем пароль из памяти после успешного создания
+                if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
+                    unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
+                }
+                error_log('Moodle User Sync: УСПЕХ! Пользователь ' . $user->user_email . ' успешно создан в Moodle (ID: ' . $moodle_user_id . ') с паролем длиной ' . strlen($plain_password) . ' символов');
+            } else {
+                // Пользователь не создан, но результат есть - проверяем ошибки
+                error_log('Moodle User Sync: ОШИБКА при создании пользователя ' . $user->user_email . ' в Moodle - ID не найден в результате');
+                error_log('Moodle User Sync: Структура результата: ' . print_r($result, true));
             }
-            error_log('Moodle User Sync: УСПЕХ! Пользователь ' . $user->user_email . ' успешно создан в Moodle (ID: ' . $moodle_user_id . ')');
         } else {
             // Если произошла ошибка, записываем её в лог
             error_log('Moodle User Sync: ОШИБКА при создании пользователя ' . $user->user_email . ' в Moodle');
