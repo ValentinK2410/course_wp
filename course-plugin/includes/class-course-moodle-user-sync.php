@@ -209,14 +209,21 @@ class Course_Moodle_User_Sync {
      */
     public function capture_password_before_hash($data, $update, $user_id) {
         // Сохраняем незахэшированный пароль только при создании нового пользователя
-        if (!$update && isset($data['user_pass']) && !empty($data['user_pass'])) {
+        if (!$update && isset($data['user_pass']) && !empty($data['user_pass']) && isset($data['user_login'])) {
             // Сохраняем пароль во временное хранилище (в памяти, через статическую переменную)
             // Это безопасно, так как данные не сохраняются в базе данных
             static $passwords = array();
             $passwords[$data['user_login']] = $data['user_pass'];
             
             // Сохраняем пароль в глобальной переменной для доступа из других методов
+            // ВАЖНО: Используем глобальную переменную, чтобы пароль был доступен в хуке user_register
             $GLOBALS['moodle_user_sync_password'][$data['user_login']] = $data['user_pass'];
+            
+            // Логируем для отладки
+            error_log('Moodle User Sync: Пароль перехвачен через фильтр wp_insert_user_data для логина: ' . $data['user_login'] . ' (длина: ' . strlen($data['user_pass']) . ' символов)');
+            if (class_exists('Course_Logger')) {
+                Course_Logger::info('Пароль перехвачен через фильтр wp_insert_user_data: логин=' . $data['user_login'] . ', длина=' . strlen($data['user_pass']));
+            }
         }
         
         return $data;
