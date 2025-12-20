@@ -323,23 +323,45 @@ class Course_Moodle_User_Sync {
             error_log('Moodle User Sync: Доступные ключи в глобальной переменной: ' . (isset($GLOBALS['moodle_user_sync_password']) && is_array($GLOBALS['moodle_user_sync_password']) ? print_r(array_keys($GLOBALS['moodle_user_sync_password']), true) : 'переменная не существует или не массив'));
         }
         
-        // Если пароль не найден, используем случайный пароль
-        // Это может произойти, если пользователь был создан не через стандартную регистрацию
-        // Важно: Moodle требует хотя бы один специальный символ (*, -, или #) И хотя бы одну цифру
+        // Если пароль не найден, это критическая ошибка
+        // Пользователь должен быть создан с паролем из формы, а не со случайным
         if (empty($plain_password)) {
-            // Генерируем пароль с специальными символами и цифрами для Moodle
-            $plain_password = wp_generate_password(12, true);  // true = включить специальные символы
-            // Убеждаемся, что пароль содержит хотя бы один специальный символ для Moodle (*, -, или #)
-            if (!preg_match('/[*\-#]/', $plain_password)) {
-                // Если специальных символов нет, добавляем дефис
-                $plain_password = substr($plain_password, 0, 11) . '-';
+            error_log('Moodle User Sync: КРИТИЧЕСКАЯ ОШИБКА! Пароль не найден для ' . $user->user_email . '. Пользователь НЕ будет создан в Moodle!');
+            if (class_exists('Course_Logger')) {
+                Course_Logger::error('Пароль не найден для пользователя ID: ' . $user_id . ', логин: ' . $user->user_login);
             }
-            // Убеждаемся, что пароль содержит хотя бы одну цифру (Moodle требует)
-            if (!preg_match('/[0-9]/', $plain_password)) {
-                // Если цифр нет, заменяем последний символ на цифру
-                $plain_password = substr($plain_password, 0, 11) . '1';
-            }
-            error_log('Moodle User Sync: ВНИМАНИЕ! Пароль не найден для ' . $user->user_email . ', используется случайный пароль с специальными символами и цифрой. Пользователь не сможет войти в Moodle с тем же паролем!');
+            return; // Прекращаем создание пользователя в Moodle, если пароль не найден
+        }
+        
+        // Проверяем, соответствует ли пароль требованиям Moodle
+        // Moodle требует: хотя бы один специальный символ (*, -, или #) И хотя бы одну цифру
+        $password_needs_modification = false;
+        $modified_password = $plain_password;
+        
+        // Проверяем наличие специальных символов
+        if (!preg_match('/[*\-#]/', $modified_password)) {
+            $password_needs_modification = true;
+            // Добавляем дефис в конец пароля
+            $modified_password = $modified_password . '-';
+            error_log('Moodle User Sync: Пароль не содержит специальных символов, добавлен дефис');
+        }
+        
+        // Проверяем наличие цифр
+        if (!preg_match('/[0-9]/', $modified_password)) {
+            $password_needs_modification = true;
+            // Добавляем цифру в конец пароля
+            $modified_password = $modified_password . '1';
+            error_log('Moodle User Sync: Пароль не содержит цифр, добавлена цифра 1');
+        }
+        
+        // Если пароль был модифицирован, используем модифицированную версию
+        if ($password_needs_modification) {
+            error_log('Moodle User Sync: Пароль был модифицирован для соответствия требованиям Moodle');
+            error_log('Moodle User Sync: Оригинальный пароль (длина: ' . strlen($plain_password) . '): ' . substr($plain_password, 0, 3) . '***');
+            error_log('Moodle User Sync: Модифицированный пароль (длина: ' . strlen($modified_password) . '): ' . substr($modified_password, 0, 3) . '***');
+            $plain_password = $modified_password;
+        } else {
+            error_log('Moodle User Sync: Пароль соответствует требованиям Moodle, используется без изменений');
         }
         
         // Подготавливаем данные для создания пользователя в Moodle
