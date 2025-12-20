@@ -440,14 +440,15 @@ class Course_Registration {
         // Сохраняем пароль во временное хранилище ДО создания пользователя
         // Это необходимо для синхронизации с Moodle через хук user_register
         // ВАЖНО: Пароль должен быть сохранен ДО вызова wp_insert_user(), чтобы хук user_register мог его найти
+        // Используем модифицированный пароль (если был модифицирован) для синхронизации с Moodle
         $GLOBALS['moodle_user_sync_password'][$user_login] = $user_pass;
         
         // Логируем сохранение пароля
         if (class_exists('Course_Logger')) {
-            Course_Logger::info('Пароль сохранен ДО создания пользователя: логин=' . $user_login . ', длина=' . strlen($user_pass));
+            Course_Logger::info('Пароль сохранен ДО создания пользователя: логин=' . $user_login . ', длина=' . strlen($user_pass) . ', первые 3 символа: ' . substr($user_pass, 0, 3) . '***');
         }
-        error_log('Course Registration: Пароль сохранен в глобальную переменную ДО создания пользователя: логин=' . $user_login . ', длина=' . strlen($user_pass));
-        error_log('Course Registration: Проверка глобальной переменной: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ')' : 'НЕ НАЙДЕН!'));
+        error_log('Course Registration: Пароль сохранен в глобальную переменную ДО создания пользователя: логин=' . $user_login . ', длина=' . strlen($user_pass) . ', первые 3 символа: ' . substr($user_pass, 0, 3) . '***');
+        error_log('Course Registration: Проверка глобальной переменной: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ', первые 3 символа: ' . substr($GLOBALS['moodle_user_sync_password'][$user_login], 0, 3) . '***)' : 'НЕ НАЙДЕН!'));
         
         // Создаем пользователя
         $user_data = array(
