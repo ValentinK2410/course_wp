@@ -105,6 +105,7 @@ class Course_Plugin {
     private function includes() {
         // Массив путей к файлам классов относительно директории плагина
         $files = array(
+            'includes/class-course-logger.php',        // Класс для логирования (должен быть первым)
             'includes/class-course-post-type.php',      // Класс для регистрации Custom Post Type "Курсы"
             'includes/class-course-taxonomies.php',    // Класс для регистрации таксономий (специализация, уровень, тема, преподаватель)
             'includes/class-course-admin.php',          // Класс для административного интерфейса (колонки, фильтры, дублирование)
