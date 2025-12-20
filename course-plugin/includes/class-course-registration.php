@@ -399,38 +399,33 @@ class Course_Registration {
             wp_send_json_error(array('message' => __('Пароль должен содержать минимум 8 символов.', 'course-plugin')));
         }
         
+        // Сохраняем оригинальный пароль для логирования
+        $original_password = $user_pass;
+        
         // Проверяем, соответствует ли пароль требованиям Moodle
         // Moodle требует: хотя бы один специальный символ (*, -, или #) И хотя бы одну цифру
-        $moodle_password_warning = '';
-        if (!preg_match('/[*\-#]/', $user_pass)) {
-            $moodle_password_warning = __('Внимание: для входа в Moodle пароль должен содержать специальные символы (*, -, или #).', 'course-plugin');
-        }
-        if (!preg_match('/[0-9]/', $user_pass)) {
-            if (!empty($moodle_password_warning)) {
-                $moodle_password_warning .= ' ';
-            }
-            $moodle_password_warning .= __('Также требуется хотя бы одна цифра.', 'course-plugin');
-        }
-        
-        // Если пароль не соответствует требованиям Moodle, модифицируем его
-        // Но сохраняем оригинальный для логирования
-        $original_password = $user_pass;
+        // Модифицируем пароль для соответствия требованиям Moodle
         $moodle_compatible_password = $user_pass;
+        $password_modified = false;
         
         if (!preg_match('/[*\-#]/', $moodle_compatible_password)) {
             $moodle_compatible_password = $moodle_compatible_password . '-';
+            $password_modified = true;
         }
         if (!preg_match('/[0-9]/', $moodle_compatible_password)) {
             $moodle_compatible_password = $moodle_compatible_password . '1';
+            $password_modified = true;
         }
         
-        // Используем модифицированный пароль для Moodle, но сохраняем оригинальный для логирования
-        if ($moodle_compatible_password !== $original_password) {
+        // Используем модифицированный пароль для Moodle
+        if ($password_modified) {
             error_log('Course Registration: Пароль был модифицирован для соответствия требованиям Moodle');
             error_log('Course Registration: Оригинальный пароль (длина: ' . strlen($original_password) . '): ' . substr($original_password, 0, 3) . '***');
             error_log('Course Registration: Модифицированный пароль (длина: ' . strlen($moodle_compatible_password) . '): ' . substr($moodle_compatible_password, 0, 3) . '***');
             // Используем модифицированный пароль для синхронизации с Moodle
             $user_pass = $moodle_compatible_password;
+        } else {
+            error_log('Course Registration: Пароль соответствует требованиям Moodle, используется без изменений');
         }
         
         // Проверяем, не существует ли уже пользователь с таким логином или email

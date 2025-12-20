@@ -333,7 +333,8 @@ class Course_Moodle_User_Sync {
             return; // Прекращаем создание пользователя в Moodle, если пароль не найден
         }
         
-        // Проверяем, соответствует ли пароль требованиям Moodle
+        // Пароль уже должен быть модифицирован в Course_Registration для соответствия требованиям Moodle
+        // Но на всякий случай проверяем и модифицируем здесь тоже
         // Moodle требует: хотя бы один специальный символ (*, -, или #) И хотя бы одну цифру
         $password_needs_modification = false;
         $modified_password = $plain_password;
@@ -361,8 +362,11 @@ class Course_Moodle_User_Sync {
             error_log('Moodle User Sync: Модифицированный пароль (длина: ' . strlen($modified_password) . '): ' . substr($modified_password, 0, 3) . '***');
             $plain_password = $modified_password;
         } else {
-            error_log('Moodle User Sync: Пароль соответствует требованиям Moodle, используется без изменений');
+            error_log('Moodle User Sync: Пароль соответствует требованиям Moodle, используется без изменений (длина: ' . strlen($plain_password) . ')');
         }
+        
+        // Логируем финальный пароль перед отправкой в Moodle
+        error_log('Moodle User Sync: Финальный пароль для отправки в Moodle (длина: ' . strlen($plain_password) . ', первые 3 символа: ' . substr($plain_password, 0, 3) . '***)');
         
         // Подготавливаем данные для создания пользователя в Moodle
         // Важно: Moodle требует, чтобы lastname не был пустым, поэтому используем дефис если пусто
