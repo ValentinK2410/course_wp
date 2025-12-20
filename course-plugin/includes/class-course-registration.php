@@ -421,6 +421,16 @@ class Course_Registration {
         
         // Синхронизация произойдет автоматически через хук 'user_register'
         // Хук зарегистрирован в классе Course_Moodle_User_Sync
+        // Также вызываем синхронизацию напрямую для гарантии
+        if (class_exists('Course_Moodle_User_Sync')) {
+            try {
+                $sync_instance = Course_Moodle_User_Sync::get_instance();
+                // Вызываем синхронизацию напрямую с паролем
+                $sync_instance->sync_user($user_id, $user_pass);
+            } catch (Exception $e) {
+                error_log('Course Registration: Ошибка при прямой синхронизации: ' . $e->getMessage());
+            }
+        }
         
         // Получаем пароль, который был использован при создании пользователя в Moodle
         // Если синхронизация прошла успешно, используем сохраненный пароль
