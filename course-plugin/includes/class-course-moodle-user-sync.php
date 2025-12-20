@@ -108,12 +108,21 @@ class Course_Moodle_User_Sync {
      * @return bool true если синхронизация успешна, false в случае ошибки
      */
     public function sync_user($user_id, $plain_password = '') {
+        // Используем альтернативное логирование
+        if (class_exists('Course_Logger')) {
+            Course_Logger::info('========== НАЧАЛО СИНХРОНИЗАЦИИ ==========');
+            Course_Logger::info('sync_user вызван для пользователя ID: ' . $user_id);
+        }
+        
         error_log('Moodle User Sync: ========== НАЧАЛО СИНХРОНИЗАЦИИ ==========');
         error_log('Moodle User Sync: sync_user вызван для пользователя ID: ' . $user_id);
         
         // Получаем данные пользователя
         $user = get_userdata($user_id);
         if (!$user) {
+            if (class_exists('Course_Logger')) {
+                Course_Logger::error('ОШИБКА - не удалось получить данные пользователя ID: ' . $user_id);
+            }
             error_log('Moodle User Sync: ОШИБКА - не удалось получить данные пользователя ID: ' . $user_id);
             return false;
         }
@@ -121,13 +130,25 @@ class Course_Moodle_User_Sync {
         // Если передан пароль, сохраняем его во временное хранилище
         if (!empty($plain_password)) {
             $GLOBALS['moodle_user_sync_password'][$user->user_login] = $plain_password;
+            if (class_exists('Course_Logger')) {
+                Course_Logger::info('Пароль сохранен в глобальную переменную для логина: ' . $user->user_login . ' (длина пароля: ' . strlen($plain_password) . ' символов)');
+            }
             error_log('Moodle User Sync: Пароль сохранен в глобальную переменную для логина: ' . $user->user_login . ' (длина пароля: ' . strlen($plain_password) . ' символов)');
         } else {
+            if (class_exists('Course_Logger')) {
+                Course_Logger::warning('Пароль не передан в sync_user! Проверяю глобальную переменную...');
+            }
             error_log('Moodle User Sync: ВНИМАНИЕ - пароль не передан в sync_user! Проверяю глобальную переменную...');
             // Проверяем, может пароль уже сохранен в глобальной переменной
             if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
+                if (class_exists('Course_Logger')) {
+                    Course_Logger::info('Пароль найден в глобальной переменной для логина: ' . $user->user_login);
+                }
                 error_log('Moodle User Sync: Пароль найден в глобальной переменной для логина: ' . $user->user_login);
             } else {
+                if (class_exists('Course_Logger')) {
+                    Course_Logger::error('Пароль не найден ни в параметрах, ни в глобальной переменной!');
+                }
                 error_log('Moodle User Sync: Пароль не найден ни в параметрах, ни в глобальной переменной!');
                 error_log('Moodle User Sync: Доступные ключи в глобальной переменной: ' . (isset($GLOBALS['moodle_user_sync_password']) && is_array($GLOBALS['moodle_user_sync_password']) ? print_r(array_keys($GLOBALS['moodle_user_sync_password']), true) : 'переменная не существует или не массив'));
             }
@@ -138,15 +159,24 @@ class Course_Moodle_User_Sync {
         $this->moodle_token = get_option('moodle_sync_token', '');
         $sync_enabled = get_option('moodle_sync_users_enabled', true);
         
+        if (class_exists('Course_Logger')) {
+            Course_Logger::info('Настройки - URL: ' . $this->moodle_url . ', Token: ' . (empty($this->moodle_token) ? 'не установлен' : 'установлен') . ', Включено: ' . ($sync_enabled ? 'да' : 'нет'));
+        }
         error_log('Moodle User Sync: Настройки - URL: ' . $this->moodle_url . ', Token: ' . (empty($this->moodle_token) ? 'не установлен' : 'установлен') . ', Включено: ' . ($sync_enabled ? 'да' : 'нет'));
         
         // Проверяем настройки перед синхронизацией
         if (!$sync_enabled) {
+            if (class_exists('Course_Logger')) {
+                Course_Logger::warning('Синхронизация пользователей отключена в настройках');
+            }
             error_log('Moodle User Sync: Синхронизация пользователей отключена в настройках');
             return false;
         }
         
         if (empty($this->moodle_url) || empty($this->moodle_token)) {
+            if (class_exists('Course_Logger')) {
+                Course_Logger::error('URL или токен не настроены');
+            }
             error_log('Moodle User Sync: URL или токен не настроены');
             return false;
         }
