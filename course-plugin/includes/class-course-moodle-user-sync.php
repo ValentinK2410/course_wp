@@ -327,8 +327,14 @@ class Course_Moodle_User_Sync {
         }
         
         if ($result === false) {
-            error_log('Moodle User Sync: КРИТИЧЕСКАЯ ОШИБКА - API вернул false');
+            error_log('Moodle User Sync: КРИТИЧЕСКАЯ ОШИБКА - API вернул false (возможно, ошибка сети или неправильный URL)');
             return;
+        }
+        
+        // Проверяем, есть ли исключение в ответе (ошибка от Moodle)
+        if (isset($result['exception'])) {
+            error_log('Moodle User Sync: ОШИБКА от Moodle API - ' . (isset($result['message']) ? $result['message'] : 'неизвестная ошибка') . ' (Код: ' . (isset($result['errorcode']) ? $result['errorcode'] : 'неизвестно') . ')');
+            // Продолжаем обработку для логирования всех деталей ошибки
         }
         
         // Проверяем результат создания пользователя
