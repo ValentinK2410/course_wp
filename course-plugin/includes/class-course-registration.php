@@ -409,75 +409,18 @@ class Course_Registration {
             wp_send_json_error(array('message' => $user_id->get_error_message()));
         }
         
-        // Вызываем синхронизацию с Moodle напрямую
-        // Это гарантирует, что пользователь будет создан в Moodle даже если хуки не сработают
-        
-        // Используем альтернативное логирование
-        if (class_exists('Course_Logger')) {
-            Course_Logger::info('========== НАЧАЛО РЕГИСТРАЦИИ ==========');
-            Course_Logger::info('Попытка синхронизации пользователя ID: ' . $user_id . ', логин: ' . $user_login);
-            Course_Logger::info('Пароль из формы (длина): ' . strlen($user_pass) . ' символов');
-        }
-        
-        error_log('Course Registration: ========== НАЧАЛО РЕГИСТРАЦИИ ==========');
-        error_log('Course Registration: Попытка синхронизации пользователя ID: ' . $user_id . ', логин: ' . $user_login);
-        error_log('Course Registration: Пароль из формы (длина): ' . strlen($user_pass) . ' символов');
-        
-        // Сохраняем пароль в глобальную переменную ДО вызова синхронизации
+        // Сохраняем пароль в глобальную переменную ДО создания пользователя
+        // Это необходимо для синхронизации с Moodle через хук user_register
         $GLOBALS['moodle_user_sync_password'][$user_login] = $user_pass;
         
+        // Логируем для отладки
         if (class_exists('Course_Logger')) {
-            Course_Logger::info('Пароль сохранен в глобальную переменную для логина: ' . $user_login . ' (длина: ' . strlen($user_pass) . ' символов)');
-            Course_Logger::info('Проверка глобальной переменной после сохранения: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ')' : 'НЕ НАЙДЕН!'));
+            Course_Logger::info('Регистрация пользователя: логин=' . $user_login . ', email=' . $user_email . ', пароль сохранен (длина: ' . strlen($user_pass) . ')');
         }
+        error_log('Course Registration: Пользователь создан, пароль сохранен для синхронизации с Moodle');
         
-        error_log('Course Registration: Пароль сохранен в глобальную переменную для логина: ' . $user_login . ' (длина: ' . strlen($user_pass) . ' символов)');
-        error_log('Course Registration: Проверка глобальной переменной после сохранения: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ')' : 'НЕ НАЙДЕН!'));
-        
-        if (class_exists('Course_Moodle_User_Sync')) {
-            if (class_exists('Course_Logger')) {
-                Course_Logger::info('Класс Course_Moodle_User_Sync найден');
-            }
-            error_log('Course Registration: Класс Course_Moodle_User_Sync найден');
-            
-            try {
-                $sync_instance = Course_Moodle_User_Sync::get_instance();
-                
-                if (class_exists('Course_Logger')) {
-                    Course_Logger::info('Экземпляр класса получен');
-                    Course_Logger::info('Вызов sync_user с паролем (длина: ' . strlen($user_pass) . ' символов)');
-                }
-                error_log('Course Registration: Экземпляр класса получен');
-                
-                // Вызываем публичный метод синхронизации с паролем
-                error_log('Course Registration: Вызов sync_user с паролем (длина: ' . strlen($user_pass) . ' символов)');
-                $result = $sync_instance->sync_user($user_id, $user_pass);
-                
-                if (class_exists('Course_Logger')) {
-                    Course_Logger::info('Результат синхронизации: ' . ($result ? 'успешно (true)' : 'ошибка (false)'));
-                    if (!$result) {
-                        Course_Logger::error('Синхронизация вернула false. Проверьте логи Moodle User Sync выше.');
-                    }
-                }
-                error_log('Course Registration: Результат синхронизации: ' . ($result ? 'успешно (true)' : 'ошибка (false)'));
-                
-                if (!$result) {
-                    error_log('Course Registration: ВНИМАНИЕ! Синхронизация вернула false. Проверьте логи Moodle User Sync выше.');
-                }
-            } catch (Exception $e) {
-                if (class_exists('Course_Logger')) {
-                    Course_Logger::error('ИСКЛЮЧЕНИЕ при синхронизации: ' . $e->getMessage());
-                }
-                error_log('Course Registration: ИСКЛЮЧЕНИЕ при синхронизации: ' . $e->getMessage());
-            }
-        } else {
-            if (class_exists('Course_Logger')) {
-                Course_Logger::error('КРИТИЧЕСКАЯ ОШИБКА - Класс Course_Moodle_User_Sync не найден!');
-            }
-            error_log('Course Registration: КРИТИЧЕСКАЯ ОШИБКА - Класс Course_Moodle_User_Sync не найден!');
-            // Если класс не загружен, вызываем через хук
-            do_action('user_register', $user_id);
-        }
+        // Синхронизация произойдет автоматически через хук 'user_register'
+        // Хук зарегистрирован в классе Course_Moodle_User_Sync
         
         // Получаем пароль, который был использован при создании пользователя в Moodle
         // Если синхронизация прошла успешно, используем сохраненный пароль
