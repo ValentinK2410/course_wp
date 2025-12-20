@@ -398,8 +398,14 @@ class Course_Moodle_User_Sync {
                 
                 // Сохраняем пароль, который был использован при создании пользователя в Moodle
                 // Это нужно для отправки пользователю в письме
+                // ВАЖНО: Сохраняем именно тот пароль, который был отправлен в Moodle
                 update_user_meta($user_id, 'moodle_password_used', $plain_password);
-                error_log('Moodle User Sync: Пароль сохранен в метаполе пользователя для отправки в письме');
+                error_log('Moodle User Sync: Пароль сохранен в метаполе пользователя для отправки в письме (длина: ' . strlen($plain_password) . ' символов)');
+                error_log('Moodle User Sync: Пароль (первые 3 символа): ' . substr($plain_password, 0, 3) . '***');
+                
+                if (class_exists('Course_Logger')) {
+                    Course_Logger::info('Пароль сохранен в метаполе для пользователя ID: ' . $user_id . ' (длина: ' . strlen($plain_password) . ')');
+                }
                 
                 // Удаляем пароль из памяти после успешного создания
                 if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {

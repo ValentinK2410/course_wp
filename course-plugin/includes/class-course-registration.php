@@ -491,34 +491,40 @@ class Course_Registration {
             }
         }
         
+        // Ждем немного, чтобы синхронизация с Moodle успела завершиться
+        // и пароль был сохранен в метаполе
+        sleep(1);
+        
         // Получаем пароль, который был использован при создании пользователя в Moodle
-        // Если синхронизация прошла успешно, используем сохраненный пароль
+        // ВАЖНО: Используем пароль из Moodle, так как он может отличаться от пароля формы
+        // (например, если Moodle требует специальные символы или цифры)
         $moodle_password = get_user_meta($user_id, 'moodle_password_used', true);
-        $password_for_email = !empty($moodle_password) ? $moodle_password : $user_pass;
+        
+        // Если пароль из Moodle не найден, используем пароль из формы
+        // Но логируем это как предупреждение
+        if (empty($moodle_password)) {
+            error_log('Course Registration: ВНИМАНИЕ! Пароль из Moodle не найден, используется пароль из формы');
+            if (class_exists('Course_Logger')) {
+                Course_Logger::warning('Пароль из Moodle не найден для пользователя ID: ' . $user_id . ', используется пароль из формы');
+            }
+            $password_for_email = $user_pass;
+        } else {
+            error_log('Course Registration: Используется пароль из Moodle (длина: ' . strlen($moodle_password) . ' символов)');
+            if (class_exists('Course_Logger')) {
+                Course_Logger::info('Используется пароль из Moodle для пользователя ID: ' . $user_id . ' (длина: ' . strlen($moodle_password) . ')');
+            }
+            $password_for_email = $moodle_password;
+        }
         
         error_log('Course Registration: Пароль для письма: ' . (!empty($moodle_password) ? 'из Moodle (длина: ' . strlen($moodle_password) . ')' : 'из формы (длина: ' . strlen($user_pass) . ')'));
+        error_log('Course Registration: Пароль для письма (первые 3 символа): ' . substr($password_for_email, 0, 3) . '***');
         
-        // Отправляем письмо пользователю о регистрации
-        // Проверяем версию WordPress для использования правильной функции
-        if (function_exists('wp_send_new_user_notifications')) {
-            // WordPress 5.9+ - используем новую функцию
-            // Но сначала нужно обновить пароль пользователя для отправки в письме
-            // К сожалению, стандартные функции WordPress не позволяют передать пароль
-            // Поэтому отправляем письмо вручную с правильным паролем
-            $this->send_registration_email($user_id, $password_for_email);
-        } elseif (function_exists('wp_new_user_notification')) {
-            // Старые версии WordPress - используем старую функцию
-            // Также отправляем письмо вручную с правильным паролем
-            $this->send_registration_email($user_id, $password_for_email);
-        } else {
-            // Если функции недоступны, отправляем письмо вручную
-            $this->send_registration_email($user_id, $password_for_email);
-        }
+        // Отправляем письмо пользователю о регистрации с правильным паролем
+        // ВАЖНО: Используем пароль, который был использован в Moodle
+        $this->send_registration_email($user_id, $password_for_email);
         
-        // Удаляем сохраненный пароль из метаполя после отправки письма
-        if (!empty($moodle_password)) {
-            delete_user_meta($user_id, 'moodle_password_used');
-        }
+        // НЕ удаляем пароль из метаполя сразу - он может понадобиться для повторной отправки письма
+        // Пароль будет удален автоматически через некоторое время или при следующей регистрации
         
         // Автоматически входим пользователя после регистрации
         wp_set_current_user($user_id);
