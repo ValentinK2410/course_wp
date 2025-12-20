@@ -445,9 +445,16 @@ class Course_Registration {
         error_log('Course Registration: Пользователь создан в WordPress: ID=' . $user_id . ', логин=' . $user_login);
         error_log('Course Registration: Проверка пароля ПОСЛЕ создания пользователя: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ')' : 'НЕ НАЙДЕН!'));
         
-        // Синхронизация с Moodle происходит через прямой вызов sync_user()
-        // Хук user_register отключен, так как глобальная переменная недоступна в его контексте
+        // Синхронизация с Moodle происходит автоматически через хук user_register
+        // Пароль уже сохранен в глобальной переменной и будет перехвачен фильтром wp_insert_user_data
+        // Дополнительно вызываем синхронизацию напрямую для гарантии
         error_log('Course Registration: Начало синхронизации с Moodle для пользователя ID: ' . $user_id . ', логин: ' . $user_login);
+        
+        // Убеждаемся, что пароль сохранен в глобальной переменной
+        if (!isset($GLOBALS['moodle_user_sync_password'][$user_login])) {
+            $GLOBALS['moodle_user_sync_password'][$user_login] = $user_pass;
+            error_log('Course Registration: Пароль повторно сохранен в глобальную переменную');
+        }
         
         if (class_exists('Course_Moodle_User_Sync')) {
             error_log('Course Registration: Класс Course_Moodle_User_Sync найден');
@@ -456,7 +463,7 @@ class Course_Registration {
                 error_log('Course Registration: Экземпляр Course_Moodle_User_Sync получен');
                 error_log('Course Registration: Вызов sync_user() с паролем длиной: ' . strlen($user_pass) . ' символов');
                 
-                // Вызываем синхронизацию напрямую с паролем
+                // Вызываем синхронизацию напрямую с паролем для гарантии
                 $result = $sync_instance->sync_user($user_id, $user_pass);
                 
                 error_log('Course Registration: sync_user() завершен, результат: ' . ($result ? 'успех' : 'ошибка'));
