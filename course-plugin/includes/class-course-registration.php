@@ -338,15 +338,29 @@ class Course_Registration {
      * Вызывается через AJAX при отправке формы
      */
     public function process_registration() {
+        // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ - в самом начале функции
+        // Записываем в файл напрямую, чтобы убедиться, что логирование работает
+        $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
+        $log_message = '[' . date('Y-m-d H:i:s') . '] AJAX ОБРАБОТЧИК ВЫЗВАН! POST данные: ' . print_r($_POST, true) . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
         // Логируем начало процесса регистрации
         error_log('Course Registration: ========== НАЧАЛО РЕГИСТРАЦИИ ==========');
+        error_log('Course Registration: POST данные: ' . print_r($_POST, true));
+        
         if (class_exists('Course_Logger')) {
             Course_Logger::info('========== НАЧАЛО РЕГИСТРАЦИИ ==========');
+            Course_Logger::info('POST данные: ' . print_r($_POST, true));
         }
         
         // Проверяем nonce для безопасности
         if (!isset($_POST['course_register_nonce']) || !wp_verify_nonce($_POST['course_register_nonce'], 'course_register')) {
-            error_log('Course Registration: Ошибка безопасности - nonce не прошел проверку');
+            $error_msg = 'Course Registration: Ошибка безопасности - nonce не прошел проверку. POST: ' . print_r($_POST, true);
+            error_log($error_msg);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ' . $error_msg . "\n", FILE_APPEND);
+            if (class_exists('Course_Logger')) {
+                Course_Logger::error($error_msg);
+            }
             wp_send_json_error(array('message' => __('Ошибка безопасности. Обновите страницу и попробуйте снова.', 'course-plugin')));
         }
         
