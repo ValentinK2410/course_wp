@@ -34,6 +34,12 @@ class Course_Registration {
      * Регистрирует шорткод для формы регистрации
      */
     private function __construct() {
+        // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ - проверка инициализации класса
+        $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
+        $log_message = '[' . date('Y-m-d H:i:s') . '] Course_Registration: КЛАСС ИНИЦИАЛИЗИРОВАН!' . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        error_log('Course Registration: Класс инициализирован, регистрируем хуки');
+        
         // Регистрируем шорткод [course_register] для отображения формы регистрации
         add_shortcode('course_register', array($this, 'registration_form'));
         
@@ -44,6 +50,11 @@ class Course_Registration {
         // Проверка существования пользователя в Moodle по email
         add_action('wp_ajax_course_check_moodle_email', array($this, 'check_moodle_email'));
         add_action('wp_ajax_nopriv_course_check_moodle_email', array($this, 'check_moodle_email'));
+        
+        // Логируем регистрацию AJAX-обработчиков
+        $log_message = '[' . date('Y-m-d H:i:s') . '] Course_Registration: AJAX обработчики зарегистрированы' . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        error_log('Course Registration: AJAX обработчики зарегистрированы');
     }
     
     /**
@@ -341,9 +352,21 @@ class Course_Registration {
         // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ - в самом начале функции
         // Записываем в файл напрямую, чтобы убедиться, что логирование работает
         $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
+        
+        // Проверяем права на запись
+        $test_write = @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ТЕСТ ЗАПИСИ В ФАЙЛ' . "\n", FILE_APPEND);
+        if ($test_write === false) {
+            // Если не можем записать в файл, пытаемся записать в другой файл
+            $alt_log_file = WP_CONTENT_DIR . '/course-registration-error.log';
+            @file_put_contents($alt_log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА: Не могу записать в ' . $log_file . "\n", FILE_APPEND);
+        }
+        
         $log_message = '[' . date('Y-m-d H:i:s') . '] ========== AJAX ОБРАБОТЧИК ВЫЗВАН! ==========' . "\n";
         $log_message .= 'POST данные: ' . print_r($_POST, true) . "\n";
+        $log_message .= 'REQUEST данные: ' . print_r($_REQUEST, true) . "\n";
         $log_message .= 'Класс Course_Moodle_User_Sync существует: ' . (class_exists('Course_Moodle_User_Sync') ? 'ДА' : 'НЕТ') . "\n";
+        $log_message .= 'Класс Course_Registration существует: ' . (class_exists('Course_Registration') ? 'ДА' : 'НЕТ') . "\n";
+        $log_message .= 'WP_CONTENT_DIR: ' . WP_CONTENT_DIR . "\n";
         $log_message .= '========================================' . "\n\n";
         @file_put_contents($log_file, $log_message, FILE_APPEND);
         
