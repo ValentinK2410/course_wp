@@ -188,9 +188,21 @@ class Course_Moodle_User_Sync {
         $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
         error_log('Moodle User Sync: API объект создан/обновлен с URL: ' . $this->moodle_url);
         
-        // Вызываем стандартный метод синхронизации
+        // Вызываем стандартный метод синхронизации с передачей пароля
         try {
-            $this->sync_user_on_register($user_id);
+            // Передаем пароль в sync_user_on_register, если он был передан в sync_user
+            if (!empty($plain_password)) {
+                $this->sync_user_on_register($user_id, $plain_password);
+            } else {
+                // Если пароль не передан, пытаемся найти его в глобальной переменной
+                if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
+                    $plain_password = $GLOBALS['moodle_user_sync_password'][$user->user_login];
+                    $this->sync_user_on_register($user_id, $plain_password);
+                } else {
+                    error_log('Moodle User Sync: КРИТИЧЕСКАЯ ОШИБКА - пароль не передан и не найден в глобальной переменной!');
+                    return false;
+                }
+            }
             error_log('Moodle User Sync: Метод sync_user_on_register завершен для пользователя ID: ' . $user_id);
         } catch (Exception $e) {
             error_log('Moodle User Sync: Исключение при синхронизации: ' . $e->getMessage());
@@ -236,8 +248,9 @@ class Course_Moodle_User_Sync {
      * Создает пользователя в Moodle при регистрации в WordPress
      * 
      * @param int $user_id ID пользователя WordPress
+     * @param string $plain_password Незахэшированный пароль (опционально, если не передан, будет искаться в глобальной переменной)
      */
-    public function sync_user_on_register($user_id) {
+    public function sync_user_on_register($user_id, $plain_password = '') {
         // Получаем объект пользователя WordPress
         $user = get_userdata($user_id);
         
@@ -296,41 +309,37 @@ class Course_Moodle_User_Sync {
         
         error_log('Moodle User Sync: Пользователь ' . $user->user_email . ' НЕ найден в Moodle, продолжаем создание нового пользователя');
         
-        // Получаем незахэшированный пароль из временного хранилища
-        $plain_password = '';
-        
-        // Логируем состояние глобальной переменной перед поиском пароля
-        error_log('Moodle User Sync: Поиск пароля для логина: ' . $user->user_login);
-        error_log('Moodle User Sync: Глобальная переменная существует: ' . (isset($GLOBALS['moodle_user_sync_password']) ? 'да' : 'нет'));
-        if (isset($GLOBALS['moodle_user_sync_password']) && is_array($GLOBALS['moodle_user_sync_password'])) {
-            error_log('Moodle User Sync: Доступные ключи в глобальной переменной: ' . print_r(array_keys($GLOBALS['moodle_user_sync_password']), true));
-        }
-        
-        // Сначала проверяем глобальную переменную (устанавливается в sync_user или capture_password_before_hash)
-        if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
-            $plain_password = $GLOBALS['moodle_user_sync_password'][$user->user_login];
-            // НЕ удаляем пароль сразу - он может понадобиться для повторных попыток
-            error_log('Moodle User Sync: Пароль найден в глобальной переменной для ' . $user->user_email . ' (длина: ' . strlen($plain_password) . ' символов)');
-            error_log('Moodle User Sync: Пароль (первые 3 символа): ' . substr($plain_password, 0, 3) . '***');
-        } 
-        // Если не найден, пытаемся получить из POST данных (если регистрация через форму)
-        elseif (isset($_POST['user_pass']) && !empty($_POST['user_pass'])) {
-            $plain_password = $_POST['user_pass'];
-            error_log('Moodle User Sync: Пароль получен из POST данных для ' . $user->user_email . ' (длина: ' . strlen($plain_password) . ' символов)');
-        }
-        // Если все еще не найден, проверяем статическую переменную из capture_password_before_hash
-        else {
-            // Пытаемся найти пароль в других возможных местах
-            error_log('Moodle User Sync: Пароль не найден в стандартных местах для ' . $user->user_email . ', логин: ' . $user->user_login);
-            error_log('Moodle User Sync: Доступные ключи в глобальной переменной: ' . (isset($GLOBALS['moodle_user_sync_password']) && is_array($GLOBALS['moodle_user_sync_password']) ? print_r(array_keys($GLOBALS['moodle_user_sync_password']), true) : 'переменная не существует или не массив'));
-            
-            // КРИТИЧНО: Если пароль не найден, НЕ создаем пользователя в Moodle
-            // Это предотвращает создание пользователя со случайным паролем
-            error_log('Moodle User Sync: КРИТИЧЕСКАЯ ОШИБКА! Пароль не найден для ' . $user->user_email . '. Пользователь НЕ будет создан в Moodle!');
-            if (class_exists('Course_Logger')) {
-                Course_Logger::error('Пароль не найден для пользователя ID: ' . $user_id . ', логин: ' . $user->user_login . '. Пользователь НЕ будет создан в Moodle!');
+        // Получаем незахэшированный пароль
+        // Сначала проверяем, передан ли пароль как параметр
+        if (empty($plain_password)) {
+            // Если пароль не передан, пытаемся найти его в глобальной переменной
+            error_log('Moodle User Sync: Пароль не передан как параметр, ищем в глобальной переменной для логина: ' . $user->user_login);
+            error_log('Moodle User Sync: Глобальная переменная существует: ' . (isset($GLOBALS['moodle_user_sync_password']) ? 'да' : 'нет'));
+            if (isset($GLOBALS['moodle_user_sync_password']) && is_array($GLOBALS['moodle_user_sync_password'])) {
+                error_log('Moodle User Sync: Доступные ключи в глобальной переменной: ' . print_r(array_keys($GLOBALS['moodle_user_sync_password']), true));
             }
-            return; // Прекращаем создание пользователя в Moodle, если пароль не найден
+            
+            // Проверяем глобальную переменную (устанавливается в sync_user или capture_password_before_hash)
+            if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
+                $plain_password = $GLOBALS['moodle_user_sync_password'][$user->user_login];
+                error_log('Moodle User Sync: Пароль найден в глобальной переменной для ' . $user->user_email . ' (длина: ' . strlen($plain_password) . ' символов)');
+                error_log('Moodle User Sync: Пароль (первые 3 символа): ' . substr($plain_password, 0, 3) . '***');
+            } 
+            // Если не найден, пытаемся получить из POST данных (если регистрация через форму)
+            elseif (isset($_POST['user_pass']) && !empty($_POST['user_pass'])) {
+                $plain_password = $_POST['user_pass'];
+                error_log('Moodle User Sync: Пароль получен из POST данных для ' . $user->user_email . ' (длина: ' . strlen($plain_password) . ' символов)');
+            }
+            // Если все еще не найден, это критическая ошибка
+            else {
+                error_log('Moodle User Sync: КРИТИЧЕСКАЯ ОШИБКА! Пароль не найден для ' . $user->user_email . '. Пользователь НЕ будет создан в Moodle!');
+                if (class_exists('Course_Logger')) {
+                    Course_Logger::error('Пароль не найден для пользователя ID: ' . $user_id . ', логин: ' . $user->user_login . '. Пользователь НЕ будет создан в Moodle!');
+                }
+                return; // Прекращаем создание пользователя в Moodle, если пароль не найден
+            }
+        } else {
+            error_log('Moodle User Sync: Пароль передан как параметр (длина: ' . strlen($plain_password) . ' символов, первые 3 символа: ' . substr($plain_password, 0, 3) . '***)');
         }
         
         // Если пароль не найден, это критическая ошибка
