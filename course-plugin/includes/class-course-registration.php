@@ -424,16 +424,42 @@ class Course_Registration {
         error_log('Course Registration: Пользователь создан в WordPress: ID=' . $user_id . ', логин=' . $user_login);
         error_log('Course Registration: Проверка пароля ПОСЛЕ создания пользователя: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ')' : 'НЕ НАЙДЕН!'));
         
-        // Синхронизация произойдет автоматически через хук 'user_register'
-        // Хук зарегистрирован в классе Course_Moodle_User_Sync
-        // Также вызываем синхронизацию напрямую для гарантии
+        // Синхронизация с Moodle происходит через прямой вызов sync_user()
+        // Хук user_register отключен, так как глобальная переменная недоступна в его контексте
+        error_log('Course Registration: Начало синхронизации с Moodle для пользователя ID: ' . $user_id . ', логин: ' . $user_login);
+        
         if (class_exists('Course_Moodle_User_Sync')) {
+            error_log('Course Registration: Класс Course_Moodle_User_Sync найден');
             try {
                 $sync_instance = Course_Moodle_User_Sync::get_instance();
+                error_log('Course Registration: Экземпляр Course_Moodle_User_Sync получен');
+                error_log('Course Registration: Вызов sync_user() с паролем длиной: ' . strlen($user_pass) . ' символов');
+                
                 // Вызываем синхронизацию напрямую с паролем
-                $sync_instance->sync_user($user_id, $user_pass);
+                $result = $sync_instance->sync_user($user_id, $user_pass);
+                
+                error_log('Course Registration: sync_user() завершен, результат: ' . ($result ? 'успех' : 'ошибка'));
+                
+                if (class_exists('Course_Logger')) {
+                    Course_Logger::info('Синхронизация с Moodle завершена для пользователя ID: ' . $user_id . ', результат: ' . ($result ? 'успех' : 'ошибка'));
+                }
             } catch (Exception $e) {
-                error_log('Course Registration: Ошибка при прямой синхронизации: ' . $e->getMessage());
+                error_log('Course Registration: ИСКЛЮЧЕНИЕ при прямой синхронизации: ' . $e->getMessage());
+                error_log('Course Registration: Трассировка стека: ' . $e->getTraceAsString());
+                if (class_exists('Course_Logger')) {
+                    Course_Logger::error('Исключение при синхронизации: ' . $e->getMessage());
+                }
+            } catch (Error $e) {
+                error_log('Course Registration: КРИТИЧЕСКАЯ ОШИБКА при прямой синхронизации: ' . $e->getMessage());
+                error_log('Course Registration: Трассировка стека: ' . $e->getTraceAsString());
+                if (class_exists('Course_Logger')) {
+                    Course_Logger::error('Критическая ошибка при синхронизации: ' . $e->getMessage());
+                }
+            }
+        } else {
+            error_log('Course Registration: КРИТИЧЕСКАЯ ОШИБКА - класс Course_Moodle_User_Sync не найден!');
+            if (class_exists('Course_Logger')) {
+                Course_Logger::error('Класс Course_Moodle_User_Sync не найден при попытке синхронизации');
             }
         }
         
