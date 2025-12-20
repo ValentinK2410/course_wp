@@ -338,8 +338,15 @@ class Course_Registration {
      * Вызывается через AJAX при отправке формы
      */
     public function process_registration() {
+        // Логируем начало процесса регистрации
+        error_log('Course Registration: ========== НАЧАЛО РЕГИСТРАЦИИ ==========');
+        if (class_exists('Course_Logger')) {
+            Course_Logger::info('========== НАЧАЛО РЕГИСТРАЦИИ ==========');
+        }
+        
         // Проверяем nonce для безопасности
         if (!isset($_POST['course_register_nonce']) || !wp_verify_nonce($_POST['course_register_nonce'], 'course_register')) {
+            error_log('Course Registration: Ошибка безопасности - nonce не прошел проверку');
             wp_send_json_error(array('message' => __('Ошибка безопасности. Обновите страницу и попробуйте снова.', 'course-plugin')));
         }
         
