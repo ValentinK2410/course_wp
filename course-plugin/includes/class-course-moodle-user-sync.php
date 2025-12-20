@@ -110,6 +110,13 @@ class Course_Moodle_User_Sync {
      * @return bool true если синхронизация успешна, false в случае ошибки
      */
     public function sync_user($user_id, $plain_password = '') {
+        // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ в файл
+        $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
+        $log_message = '[' . date('Y-m-d H:i:s') . '] ========== sync_user() ВЫЗВАН ==========' . "\n";
+        $log_message .= 'User ID: ' . $user_id . "\n";
+        $log_message .= 'Password provided: ' . (!empty($plain_password) ? 'YES (length: ' . strlen($plain_password) . ')' : 'NO') . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
         // Используем альтернативное логирование
         if (class_exists('Course_Logger')) {
             Course_Logger::info('========== НАЧАЛО СИНХРОНИЗАЦИИ ==========');
