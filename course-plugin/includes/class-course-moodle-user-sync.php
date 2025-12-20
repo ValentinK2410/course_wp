@@ -310,17 +310,26 @@ class Course_Moodle_User_Sync {
             $plain_password = $GLOBALS['moodle_user_sync_password'][$user->user_login];
             // НЕ удаляем пароль сразу - он может понадобиться для повторных попыток
             error_log('Moodle User Sync: Пароль найден в глобальной переменной для ' . $user->user_email . ' (длина: ' . strlen($plain_password) . ' символов)');
+            error_log('Moodle User Sync: Пароль (первые 3 символа): ' . substr($plain_password, 0, 3) . '***');
         } 
         // Если не найден, пытаемся получить из POST данных (если регистрация через форму)
         elseif (isset($_POST['user_pass']) && !empty($_POST['user_pass'])) {
             $plain_password = $_POST['user_pass'];
-            error_log('Moodle User Sync: Пароль получен из POST данных для ' . $user->user_email);
+            error_log('Moodle User Sync: Пароль получен из POST данных для ' . $user->user_email . ' (длина: ' . strlen($plain_password) . ' символов)');
         }
         // Если все еще не найден, проверяем статическую переменную из capture_password_before_hash
         else {
             // Пытаемся найти пароль в других возможных местах
             error_log('Moodle User Sync: Пароль не найден в стандартных местах для ' . $user->user_email . ', логин: ' . $user->user_login);
             error_log('Moodle User Sync: Доступные ключи в глобальной переменной: ' . (isset($GLOBALS['moodle_user_sync_password']) && is_array($GLOBALS['moodle_user_sync_password']) ? print_r(array_keys($GLOBALS['moodle_user_sync_password']), true) : 'переменная не существует или не массив'));
+            
+            // КРИТИЧНО: Если пароль не найден, НЕ создаем пользователя в Moodle
+            // Это предотвращает создание пользователя со случайным паролем
+            error_log('Moodle User Sync: КРИТИЧЕСКАЯ ОШИБКА! Пароль не найден для ' . $user->user_email . '. Пользователь НЕ будет создан в Moodle!');
+            if (class_exists('Course_Logger')) {
+                Course_Logger::error('Пароль не найден для пользователя ID: ' . $user_id . ', логин: ' . $user->user_login . '. Пользователь НЕ будет создан в Moodle!');
+            }
+            return; // Прекращаем создание пользователя в Moodle, если пароль не найден
         }
         
         // Если пароль не найден, это критическая ошибка
