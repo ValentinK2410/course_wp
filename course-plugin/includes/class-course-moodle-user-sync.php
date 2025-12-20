@@ -66,10 +66,11 @@ class Course_Moodle_User_Sync {
         // Поэтому используем фильтр 'wp_insert_user_data' для перехвата пароля до хэширования
         add_filter('wp_insert_user_data', array($this, 'capture_password_before_hash'), 10, 3);
         
-        // Регистрируем хук для синхронизации при регистрации нового пользователя
-        // Хук 'user_register' срабатывает после успешной регистрации пользователя в WordPress
-        // Пароль будет перехвачен через фильтр wp_insert_user_data и сохранен в глобальной переменной
-        add_action('user_register', array($this, 'sync_user_on_register'), 10, 1);
+        // Хук 'user_register' отключен, так как синхронизация происходит через прямой вызов sync_user() с паролем
+        // Это гарантирует, что пароль всегда доступен при синхронизации
+        // Проблема: глобальная переменная не доступна в контексте хука user_register
+        // Решение: использовать только прямой вызов sync_user($user_id, $plain_password) из Course_Registration
+        // add_action('user_register', array($this, 'sync_user_on_register'), 10, 1); // Отключен
         
         // Регистрируем хук для синхронизации при обновлении профиля пользователя
         // Хук 'profile_update' срабатывает при обновлении данных пользователя
