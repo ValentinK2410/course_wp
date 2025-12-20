@@ -341,12 +341,16 @@ class Course_Registration {
         // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ - в самом начале функции
         // Записываем в файл напрямую, чтобы убедиться, что логирование работает
         $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
-        $log_message = '[' . date('Y-m-d H:i:s') . '] AJAX ОБРАБОТЧИК ВЫЗВАН! POST данные: ' . print_r($_POST, true) . "\n";
+        $log_message = '[' . date('Y-m-d H:i:s') . '] ========== AJAX ОБРАБОТЧИК ВЫЗВАН! ==========' . "\n";
+        $log_message .= 'POST данные: ' . print_r($_POST, true) . "\n";
+        $log_message .= 'Класс Course_Moodle_User_Sync существует: ' . (class_exists('Course_Moodle_User_Sync') ? 'ДА' : 'НЕТ') . "\n";
+        $log_message .= '========================================' . "\n\n";
         @file_put_contents($log_file, $log_message, FILE_APPEND);
         
         // Логируем начало процесса регистрации
         error_log('Course Registration: ========== НАЧАЛО РЕГИСТРАЦИИ ==========');
         error_log('Course Registration: POST данные: ' . print_r($_POST, true));
+        error_log('Course Registration: Класс Course_Moodle_User_Sync существует: ' . (class_exists('Course_Moodle_User_Sync') ? 'ДА' : 'НЕТ'));
         
         if (class_exists('Course_Logger')) {
             Course_Logger::info('========== НАЧАЛО РЕГИСТРАЦИИ ==========');
@@ -486,6 +490,16 @@ class Course_Registration {
             error_log('Course Registration: Пароль повторно сохранен в глобальную переменную');
         }
         
+        // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ перед синхронизацией
+        $log_message = '[' . date('Y-m-d H:i:s') . '] ПЕРЕД СИНХРОНИЗАЦИЕЙ:' . "\n";
+        $log_message .= 'User ID: ' . $user_id . "\n";
+        $log_message .= 'User Login: ' . $user_login . "\n";
+        $log_message .= 'User Email: ' . $user_email . "\n";
+        $log_message .= 'Password length: ' . strlen($user_pass) . "\n";
+        $log_message .= 'Password (first 3 chars): ' . substr($user_pass, 0, 3) . '***' . "\n";
+        $log_message .= 'Class Course_Moodle_User_Sync exists: ' . (class_exists('Course_Moodle_User_Sync') ? 'YES' : 'NO') . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
         if (class_exists('Course_Moodle_User_Sync')) {
             error_log('Course Registration: Класс Course_Moodle_User_Sync найден');
             try {
@@ -493,8 +507,19 @@ class Course_Registration {
                 error_log('Course Registration: Экземпляр Course_Moodle_User_Sync получен');
                 error_log('Course Registration: Вызов sync_user() с паролем длиной: ' . strlen($user_pass) . ' символов');
                 
+                // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ перед вызовом sync_user
+                $log_message = '[' . date('Y-m-d H:i:s') . '] ВЫЗОВ sync_user() с параметрами:' . "\n";
+                $log_message .= 'User ID: ' . $user_id . "\n";
+                $log_message .= 'Password length: ' . strlen($user_pass) . "\n";
+                @file_put_contents($log_file, $log_message, FILE_APPEND);
+                
                 // Вызываем синхронизацию напрямую с паролем для гарантии
                 $result = $sync_instance->sync_user($user_id, $user_pass);
+                
+                // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ после вызова sync_user
+                $log_message = '[' . date('Y-m-d H:i:s') . '] sync_user() ЗАВЕРШЕН:' . "\n";
+                $log_message .= 'Result: ' . ($result ? 'SUCCESS' : 'FAILED') . "\n";
+                @file_put_contents($log_file, $log_message, FILE_APPEND);
                 
                 error_log('Course Registration: sync_user() завершен, результат: ' . ($result ? 'успех' : 'ошибка'));
                 
