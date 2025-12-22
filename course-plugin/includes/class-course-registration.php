@@ -502,104 +502,19 @@ class Course_Registration {
         error_log('Course Registration: Пользователь создан в WordPress: ID=' . $user_id . ', логин=' . $user_login);
         error_log('Course Registration: Проверка пароля ПОСЛЕ создания пользователя: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ')' : 'НЕ НАЙДЕН!'));
         
-        // Синхронизация с Moodle происходит автоматически через хук user_register
-        // Пароль уже сохранен в глобальной переменной и будет перехвачен фильтром wp_insert_user_data
-        // Дополнительно вызываем синхронизацию напрямую для гарантии
-        error_log('Course Registration: Начало синхронизации с Moodle для пользователя ID: ' . $user_id . ', логин: ' . $user_login);
+        // ИЗМЕНЕНО: Пользователь НЕ создается в Moodle сразу при регистрации
+        // Создание пользователя в Moodle произойдет когда пользователь подтвердит email
+        // и установит пароль через хук wp_set_password
+        error_log('Course Registration: Пользователь создан в WordPress. Синхронизация с Moodle произойдет после подтверждения email и установки пароля.');
         
-        // Убеждаемся, что пароль сохранен в глобальной переменной
-        if (!isset($GLOBALS['moodle_user_sync_password'][$user_login])) {
-            $GLOBALS['moodle_user_sync_password'][$user_login] = $user_pass;
-            error_log('Course Registration: Пароль повторно сохранен в глобальную переменную');
-        }
+        // Сохраняем пароль в метаполе для последующего использования при создании в Moodle
+        // Пароль будет использован когда пользователь подтвердит email и установит пароль
+        update_user_meta($user_id, 'pending_moodle_password', $user_pass);
+        error_log('Course Registration: Пароль сохранен в метаполе для последующей синхронизации с Moodle');
         
-        // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ перед синхронизацией
-        $log_message = '[' . date('Y-m-d H:i:s') . '] ПЕРЕД СИНХРОНИЗАЦИЕЙ:' . "\n";
-        $log_message .= 'User ID: ' . $user_id . "\n";
-        $log_message .= 'User Login: ' . $user_login . "\n";
-        $log_message .= 'User Email: ' . $user_email . "\n";
-        $log_message .= 'Password length: ' . strlen($user_pass) . "\n";
-        $log_message .= 'Password (first 3 chars): ' . substr($user_pass, 0, 3) . '***' . "\n";
-        $log_message .= 'Class Course_Moodle_User_Sync exists: ' . (class_exists('Course_Moodle_User_Sync') ? 'YES' : 'NO') . "\n";
-        @file_put_contents($log_file, $log_message, FILE_APPEND);
-        
-        if (class_exists('Course_Moodle_User_Sync')) {
-            error_log('Course Registration: Класс Course_Moodle_User_Sync найден');
-            try {
-                $sync_instance = Course_Moodle_User_Sync::get_instance();
-                error_log('Course Registration: Экземпляр Course_Moodle_User_Sync получен');
-                error_log('Course Registration: Вызов sync_user() с паролем длиной: ' . strlen($user_pass) . ' символов');
-                
-                // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ перед вызовом sync_user
-                $log_message = '[' . date('Y-m-d H:i:s') . '] ВЫЗОВ sync_user() с параметрами:' . "\n";
-                $log_message .= 'User ID: ' . $user_id . "\n";
-                $log_message .= 'Password length: ' . strlen($user_pass) . "\n";
-                @file_put_contents($log_file, $log_message, FILE_APPEND);
-                
-                // Вызываем синхронизацию напрямую с паролем для гарантии
-                $result = $sync_instance->sync_user($user_id, $user_pass);
-                
-                // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ после вызова sync_user
-                $log_message = '[' . date('Y-m-d H:i:s') . '] sync_user() ЗАВЕРШЕН:' . "\n";
-                $log_message .= 'Result: ' . ($result ? 'SUCCESS' : 'FAILED') . "\n";
-                @file_put_contents($log_file, $log_message, FILE_APPEND);
-                
-                error_log('Course Registration: sync_user() завершен, результат: ' . ($result ? 'успех' : 'ошибка'));
-                
-                if (class_exists('Course_Logger')) {
-                    Course_Logger::info('Синхронизация с Moodle завершена для пользователя ID: ' . $user_id . ', результат: ' . ($result ? 'успех' : 'ошибка'));
-                }
-            } catch (Exception $e) {
-                error_log('Course Registration: ИСКЛЮЧЕНИЕ при прямой синхронизации: ' . $e->getMessage());
-                error_log('Course Registration: Трассировка стека: ' . $e->getTraceAsString());
-                if (class_exists('Course_Logger')) {
-                    Course_Logger::error('Исключение при синхронизации: ' . $e->getMessage());
-                }
-            } catch (Error $e) {
-                error_log('Course Registration: КРИТИЧЕСКАЯ ОШИБКА при прямой синхронизации: ' . $e->getMessage());
-                error_log('Course Registration: Трассировка стека: ' . $e->getTraceAsString());
-                if (class_exists('Course_Logger')) {
-                    Course_Logger::error('Критическая ошибка при синхронизации: ' . $e->getMessage());
-                }
-            }
-        } else {
-            error_log('Course Registration: КРИТИЧЕСКАЯ ОШИБКА - класс Course_Moodle_User_Sync не найден!');
-            if (class_exists('Course_Logger')) {
-                Course_Logger::error('Класс Course_Moodle_User_Sync не найден при попытке синхронизации');
-            }
-        }
-        
-        // Ждем немного, чтобы синхронизация с Moodle успела завершиться
-        // и пароль был сохранен в метаполе
-        sleep(1);
-        
-        // Получаем пароль, который был использован при создании пользователя в Moodle
-        // ВАЖНО: Используем пароль из Moodle, так как он может отличаться от пароля формы
-        // (например, если Moodle требует специальные символы или цифры)
-        $moodle_password = get_user_meta($user_id, 'moodle_password_used', true);
-        
-        // Если пароль из Moodle не найден, используем пароль из формы
-        // Но логируем это как предупреждение
-        if (empty($moodle_password)) {
-            error_log('Course Registration: ВНИМАНИЕ! Пароль из Moodle не найден, используется пароль из формы');
-            if (class_exists('Course_Logger')) {
-                Course_Logger::warning('Пароль из Moodle не найден для пользователя ID: ' . $user_id . ', используется пароль из формы');
-            }
-            $password_for_email = $user_pass;
-        } else {
-            error_log('Course Registration: Используется пароль из Moodle (длина: ' . strlen($moodle_password) . ' символов)');
-            if (class_exists('Course_Logger')) {
-                Course_Logger::info('Используется пароль из Moodle для пользователя ID: ' . $user_id . ' (длина: ' . strlen($moodle_password) . ')');
-            }
-            $password_for_email = $moodle_password;
-        }
-        
-        error_log('Course Registration: Пароль для письма: ' . (!empty($moodle_password) ? 'из Moodle (длина: ' . strlen($moodle_password) . ')' : 'из формы (длина: ' . strlen($user_pass) . ')'));
-        error_log('Course Registration: Пароль для письма (первые 3 символа): ' . substr($password_for_email, 0, 3) . '***');
-        
-        // Отправляем письмо пользователю о регистрации с правильным паролем
-        // ВАЖНО: Используем пароль, который был использован в Moodle
-        $this->send_registration_email($user_id, $password_for_email);
+        // Отправляем письмо пользователю о регистрации с паролем
+        // ВАЖНО: Используем пароль из формы (модифицированный для Moodle)
+        $this->send_registration_email($user_id, $user_pass);
         
         // НЕ удаляем пароль из метаполя сразу - он может понадобиться для повторной отправки письма
         // Пароль будет удален автоматически через некоторое время или при следующей регистрации
