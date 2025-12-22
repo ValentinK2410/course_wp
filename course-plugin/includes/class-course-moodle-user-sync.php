@@ -652,6 +652,11 @@ class Course_Moodle_User_Sync {
             if (!preg_match('/[0-9]/', $password_for_moodle)) {
                 $password_for_moodle = $password_for_moodle . '1';
             }
+            
+            // ВАЖНО: Обновляем пароль в WordPress на модифицированный, чтобы он совпадал с Moodle
+            // Это нужно для того, чтобы пользователь мог войти с тем же паролем
+            wp_set_password($password_for_moodle, $user_id);
+            error_log('Moodle User Sync: Пароль в WordPress обновлен на модифицированный для совпадения с Moodle');
         }
         
         error_log('Moodle User Sync: Пользователь ID ' . $user_id . ' еще не создан в Moodle, создаем с паролем (длина: ' . strlen($password_for_moodle) . ')');
@@ -807,13 +812,19 @@ class Course_Moodle_User_Sync {
             $name = $user->display_name ? $user->display_name : $user->user_login;
         }
         
+        // ВАЖНО: Используем тот же пароль, что был отправлен в Moodle
+        // Пароль уже модифицирован для Moodle, используем его и для Laravel
+        // Это гарантирует, что пользователь сможет войти с одним паролем во все системы
         $data = array(
             'name' => $name,
             'email' => $user->user_email,
-            'password' => $password,
+            'password' => $password, // Пароль уже модифицирован для Moodle
             'moodle_user_id' => $moodle_user_id,
             'phone' => get_user_meta($user_id, 'phone', true) ?: '',
         );
+        
+        // Логируем пароль для отладки (первые 3 символа)
+        error_log('Moodle User Sync: Отправка пароля в Laravel (длина: ' . strlen($password) . ', первые 3 символа: ' . substr($password, 0, 3) . '***)');
         
         // Формируем URL для API запроса
         $api_url = rtrim($laravel_api_url, '/') . '/api/users/sync-from-wordpress';
