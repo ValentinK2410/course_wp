@@ -766,13 +766,28 @@ class Course_Moodle_User_Sync {
      * @param string $password Пароль пользователя (незахэшированный)
      */
     private function sync_user_to_laravel($user_id, $moodle_user_id, $password) {
+        // КРИТИЧЕСКОЕ ЛОГИРОВАНИЕ - начало синхронизации с Laravel
+        $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
+        $log_message = '[' . date('Y-m-d H:i:s') . '] ========== НАЧАЛО СИНХРОНИЗАЦИИ С LARAVEL ==========' . "\n";
+        $log_message .= 'User ID: ' . $user_id . "\n";
+        $log_message .= 'Moodle User ID: ' . $moodle_user_id . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
         // Получаем настройки Laravel API
         $laravel_api_url = get_option('laravel_api_url', '');
         $laravel_api_token = get_option('laravel_api_token', '');
         
+        // Логируем настройки
+        $log_message = '[' . date('Y-m-d H:i:s') . '] Laravel API настройки:' . "\n";
+        $log_message .= 'URL: ' . ($laravel_api_url ?: 'НЕ УСТАНОВЛЕН') . "\n";
+        $log_message .= 'Token: ' . ($laravel_api_token ? 'УСТАНОВЛЕН (длина: ' . strlen($laravel_api_token) . ')' : 'НЕ УСТАНОВЛЕН') . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
         // Проверяем, настроен ли Laravel API
         if (empty($laravel_api_url) || empty($laravel_api_token)) {
-            error_log('Moodle User Sync: Laravel API не настроен, пропускаем синхронизацию с Laravel');
+            $error_msg = 'Moodle User Sync: Laravel API не настроен, пропускаем синхронизацию с Laravel. URL: ' . ($laravel_api_url ?: 'пусто') . ', Token: ' . ($laravel_api_token ? 'установлен' : 'не установлен');
+            error_log($error_msg);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА: ' . $error_msg . "\n", FILE_APPEND);
             if (class_exists('Course_Logger')) {
                 Course_Logger::warning('Laravel API не настроен для синхронизации пользователя ID: ' . $user_id);
             }
@@ -803,6 +818,12 @@ class Course_Moodle_User_Sync {
         // Формируем URL для API запроса
         $api_url = rtrim($laravel_api_url, '/') . '/api/users/sync-from-wordpress';
         
+        // Логируем данные перед отправкой
+        $log_message = '[' . date('Y-m-d H:i:s') . '] Отправка запроса в Laravel:' . "\n";
+        $log_message .= 'URL: ' . $api_url . "\n";
+        $log_message .= 'Data: ' . json_encode(array_merge($data, array('password' => '***скрыто***'))) . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
         // Выполняем POST запрос к Laravel API
         $response = wp_remote_post($api_url, array(
             'body' => json_encode($data),
@@ -815,7 +836,9 @@ class Course_Moodle_User_Sync {
         
         // Проверяем результат запроса
         if (is_wp_error($response)) {
-            error_log('Moodle User Sync: Ошибка при синхронизации с Laravel - ' . $response->get_error_message());
+            $error_msg = 'Moodle User Sync: Ошибка при синхронизации с Laravel - ' . $response->get_error_message() . ' (код: ' . $response->get_error_code() . ')';
+            error_log($error_msg);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА ЗАПРОСА: ' . $error_msg . "\n", FILE_APPEND);
             if (class_exists('Course_Logger')) {
                 Course_Logger::error('Ошибка синхронизации с Laravel для пользователя ID: ' . $user_id . ' - ' . $response->get_error_message());
             }
@@ -826,13 +849,23 @@ class Course_Moodle_User_Sync {
         $response_body = wp_remote_retrieve_body($response);
         $response_data = json_decode($response_body, true);
         
+        // Логируем ответ
+        $log_message = '[' . date('Y-m-d H:i:s') . '] Ответ от Laravel:' . "\n";
+        $log_message .= 'Код ответа: ' . $response_code . "\n";
+        $log_message .= 'Тело ответа: ' . $response_body . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
         if ($response_code === 201 && isset($response_data['success']) && $response_data['success']) {
-            error_log('Moodle User Sync: Пользователь успешно синхронизирован с Laravel приложением');
+            $success_msg = 'Moodle User Sync: Пользователь успешно синхронизирован с Laravel приложением';
+            error_log($success_msg);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] УСПЕХ: ' . $success_msg . "\n", FILE_APPEND);
             if (class_exists('Course_Logger')) {
                 Course_Logger::info('Пользователь успешно синхронизирован с Laravel: ID=' . $user_id . ', email=' . $user->user_email);
             }
         } else {
-            error_log('Moodle User Sync: Ошибка синхронизации с Laravel - код ответа: ' . $response_code . ', ответ: ' . $response_body);
+            $error_msg = 'Moodle User Sync: Ошибка синхронизации с Laravel - код ответа: ' . $response_code . ', ответ: ' . $response_body;
+            error_log($error_msg);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА ОТВЕТА: ' . $error_msg . "\n", FILE_APPEND);
             if (class_exists('Course_Logger')) {
                 Course_Logger::error('Ошибка синхронизации с Laravel для пользователя ID: ' . $user_id . ' - код: ' . $response_code . ', ответ: ' . $response_body);
             }
