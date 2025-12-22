@@ -680,6 +680,16 @@ class Course_Moodle_User_Sync {
         if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
             unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
         }
+        
+        // Отправляем письмо пользователю с паролем, если оно еще не было отправлено
+        // Проверяем, было ли уже отправлено письмо при регистрации
+        $email_sent = get_user_meta($user_id, 'registration_email_sent', true);
+        if (!$email_sent) {
+            // Письмо не было отправлено, отправляем его сейчас
+            $this->send_password_email($user_id, $password_for_moodle);
+            // Помечаем, что письмо отправлено
+            update_user_meta($user_id, 'registration_email_sent', true);
+        }
     }
     
     /**
