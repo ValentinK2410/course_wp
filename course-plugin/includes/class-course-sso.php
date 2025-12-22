@@ -51,6 +51,9 @@ class Course_SSO {
         // Добавляем виджет в меню пользователя
         add_filter('wp_nav_menu_items', array($this, 'add_sso_menu_items'), 10, 2);
         
+        // Регистрируем шорткод для кнопок SSO
+        add_shortcode('sso_buttons', array($this, 'sso_buttons_shortcode'));
+        
         // Генерируем SSO API ключ при первой загрузке, если он не установлен
         if (empty(get_option('sso_api_key', ''))) {
             $this->generate_sso_api_key();
