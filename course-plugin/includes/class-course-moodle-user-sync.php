@@ -901,5 +901,81 @@ class Course_Moodle_User_Sync {
             }
         }
     }
+    
+    /**
+     * Отправка письма пользователю с паролем
+     * Вызывается после создания пользователя в Moodle
+     * 
+     * @param int $user_id ID пользователя WordPress
+     * @param string $password Пароль пользователя
+     */
+    private function send_password_email($user_id, $password) {
+        $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
+        $log_message = '[' . date('Y-m-d H:i:s') . '] ========== ОТПРАВКА ПИСЬМА С ПАРОЛЕМ ==========' . "\n";
+        $log_message .= 'User ID: ' . $user_id . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
+        $user = get_userdata($user_id);
+        if (!$user) {
+            error_log('Moodle User Sync: Пользователь с ID ' . $user_id . ' не найден для отправки письма');
+            return;
+        }
+        
+        // Получаем настройки сайта
+        $blogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+        $admin_email = get_option('admin_email');
+        
+        // Формируем тему письма
+        $subject = sprintf(__('[%s] Ваши данные для входа', 'course-plugin'), $blogname);
+        
+        // Формируем текст письма
+        $message = sprintf(__('Здравствуйте, %s!', 'course-plugin'), $user->display_name) . "\r\n\r\n";
+        $message .= __('Ваш аккаунт успешно создан на всех платформах.', 'course-plugin') . "\r\n\r\n";
+        $message .= __('Ваши данные для входа:', 'course-plugin') . "\r\n";
+        $message .= sprintf(__('Логин: %s', 'course-plugin'), $user->user_login) . "\r\n";
+        $message .= sprintf(__('Email: %s', 'course-plugin'), $user->user_email) . "\r\n";
+        $message .= sprintf(__('Пароль: %s', 'course-plugin'), $password) . "\r\n\r\n";
+        $message .= __('Вы можете использовать эти данные для входа на:', 'course-plugin') . "\r\n";
+        $message .= sprintf(__('- WordPress: %s', 'course-plugin'), wp_login_url()) . "\r\n";
+        $moodle_url = get_option('moodle_sync_url', '');
+        if ($moodle_url) {
+            $message .= sprintf(__('- Moodle: %s', 'course-plugin'), rtrim($moodle_url, '/') . '/login/index.php') . "\r\n";
+        }
+        $laravel_url = get_option('laravel_api_url', '');
+        if ($laravel_url) {
+            $message .= sprintf(__('- Система управления: %s', 'course-plugin'), rtrim($laravel_url, '/') . '/login') . "\r\n";
+        }
+        $message .= "\r\n";
+        $message .= __('С уважением,', 'course-plugin') . "\r\n";
+        $message .= sprintf(__('Команда %s', 'course-plugin'), $blogname) . "\r\n";
+        
+        // Заголовки письма
+        $headers = array(
+            'Content-Type: text/plain; charset=UTF-8',
+            'From: ' . $blogname . ' <' . $admin_email . '>'
+        );
+        
+        // Отправляем письмо
+        $mail_result = wp_mail($user->user_email, $subject, $message, $headers);
+        
+        // Логируем результат
+        if ($mail_result) {
+            $success_msg = 'Moodle User Sync: Письмо с паролем успешно отправлено пользователю ' . $user->user_email;
+            error_log($success_msg);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] УСПЕХ: ' . $success_msg . "\n", FILE_APPEND);
+        } else {
+            $error_msg = 'Moodle User Sync: ОШИБКА отправки письма с паролем пользователю ' . $user->user_email;
+            error_log($error_msg);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА: ' . $error_msg . "\n", FILE_APPEND);
+            
+            // Проверяем ошибки PHPMailer
+            global $phpmailer;
+            if (isset($phpmailer) && isset($phpmailer->ErrorInfo)) {
+                $phpmailer_error = 'PHPMailer ошибка: ' . $phpmailer->ErrorInfo;
+                error_log('Moodle User Sync: ' . $phpmailer_error);
+                @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ' . $phpmailer_error . "\n", FILE_APPEND);
+            }
+        }
+    }
 }
 
