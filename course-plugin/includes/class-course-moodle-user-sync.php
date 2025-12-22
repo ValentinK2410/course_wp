@@ -103,6 +103,16 @@ class Course_Moodle_User_Sync {
             'type' => 'boolean',
             'default' => true  // По умолчанию синхронизация включена
         ));
+        
+        // Регистрируем настройки для синхронизации с Laravel
+        register_setting('moodle_sync_settings', 'laravel_api_url', array(
+            'type' => 'string',
+            'default' => ''
+        ));
+        register_setting('moodle_sync_settings', 'laravel_api_token', array(
+            'type' => 'string',
+            'default' => ''
+        ));
     }
     
     /**
@@ -468,6 +478,9 @@ class Course_Moodle_User_Sync {
                     unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
                 }
                 error_log('Moodle User Sync: УСПЕХ! Пользователь ' . $user->user_email . ' успешно создан в Moodle (ID: ' . $moodle_user_id . ') с паролем длиной ' . strlen($plain_password) . ' символов');
+                
+                // Создаем пользователя в Laravel приложении через API
+                $this->sync_user_to_laravel($user_id, $moodle_user_id, $plain_password);
             } else {
                 // Пользователь не создан, но результат есть - проверяем ошибки
                 error_log('Moodle User Sync: ОШИБКА при создании пользователя ' . $user->user_email . ' в Moodle - ID не найден в результате');
@@ -741,6 +754,88 @@ class Course_Moodle_User_Sync {
             error_log('Moodle User Sync: Пароль пользователя ' . $user->user_email . ' обновлен в Moodle');
         } else {
             error_log('Moodle User Sync: Ошибка при обновлении пароля пользователя ' . $user->user_email . ' в Moodle');
+        }
+    }
+    
+    /**
+     * Синхронизация пользователя с Laravel приложением
+     * Создает пользователя в Laravel через API после успешного создания в Moodle
+     * 
+     * @param int $user_id ID пользователя WordPress
+     * @param int $moodle_user_id ID пользователя в Moodle
+     * @param string $password Пароль пользователя (незахэшированный)
+     */
+    private function sync_user_to_laravel($user_id, $moodle_user_id, $password) {
+        // Получаем настройки Laravel API
+        $laravel_api_url = get_option('laravel_api_url', '');
+        $laravel_api_token = get_option('laravel_api_token', '');
+        
+        // Проверяем, настроен ли Laravel API
+        if (empty($laravel_api_url) || empty($laravel_api_token)) {
+            error_log('Moodle User Sync: Laravel API не настроен, пропускаем синхронизацию с Laravel');
+            if (class_exists('Course_Logger')) {
+                Course_Logger::warning('Laravel API не настроен для синхронизации пользователя ID: ' . $user_id);
+            }
+            return;
+        }
+        
+        // Получаем данные пользователя WordPress
+        $user = get_userdata($user_id);
+        if (!$user) {
+            error_log('Moodle User Sync: Пользователь WordPress с ID ' . $user_id . ' не найден для синхронизации с Laravel');
+            return;
+        }
+        
+        // Подготавливаем данные для отправки в Laravel
+        $name = trim($user->first_name . ' ' . $user->last_name);
+        if (empty($name)) {
+            $name = $user->display_name ? $user->display_name : $user->user_login;
+        }
+        
+        $data = array(
+            'name' => $name,
+            'email' => $user->user_email,
+            'password' => $password,
+            'moodle_user_id' => $moodle_user_id,
+            'phone' => get_user_meta($user_id, 'phone', true) ?: '',
+        );
+        
+        // Формируем URL для API запроса
+        $api_url = rtrim($laravel_api_url, '/') . '/api/users/sync-from-wordpress';
+        
+        // Выполняем POST запрос к Laravel API
+        $response = wp_remote_post($api_url, array(
+            'body' => json_encode($data),
+            'headers' => array(
+                'Content-Type' => 'application/json',
+                'X-API-Token' => $laravel_api_token,
+            ),
+            'timeout' => 30,
+        ));
+        
+        // Проверяем результат запроса
+        if (is_wp_error($response)) {
+            error_log('Moodle User Sync: Ошибка при синхронизации с Laravel - ' . $response->get_error_message());
+            if (class_exists('Course_Logger')) {
+                Course_Logger::error('Ошибка синхронизации с Laravel для пользователя ID: ' . $user_id . ' - ' . $response->get_error_message());
+            }
+            return;
+        }
+        
+        $response_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+        $response_data = json_decode($response_body, true);
+        
+        if ($response_code === 201 && isset($response_data['success']) && $response_data['success']) {
+            error_log('Moodle User Sync: Пользователь успешно синхронизирован с Laravel приложением');
+            if (class_exists('Course_Logger')) {
+                Course_Logger::info('Пользователь успешно синхронизирован с Laravel: ID=' . $user_id . ', email=' . $user->user_email);
+            }
+        } else {
+            error_log('Moodle User Sync: Ошибка синхронизации с Laravel - код ответа: ' . $response_code . ', ответ: ' . $response_body);
+            if (class_exists('Course_Logger')) {
+                Course_Logger::error('Ошибка синхронизации с Laravel для пользователя ID: ' . $user_id . ' - код: ' . $response_code . ', ответ: ' . $response_body);
+            }
         }
     }
 }
