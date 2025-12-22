@@ -145,6 +145,17 @@ class Course_Moodle_Sync {
             'type' => 'boolean',
             'default' => true  // По умолчанию обновляем существующие категории
         ));
+        
+        // Регистрируем опции для синхронизации с Laravel
+        register_setting('moodle_sync_settings', 'laravel_api_url', array(
+            'type' => 'string',
+            'sanitize_callback' => 'esc_url_raw'  // Очистка URL для безопасности
+        ));
+        
+        register_setting('moodle_sync_settings', 'laravel_api_token', array(
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field'  // Очистка текста для безопасности
+        ));
     }
     
     /**
@@ -227,6 +238,8 @@ class Course_Moodle_Sync {
         $moodle_update_courses = get_option('moodle_sync_update_courses', true);
         $moodle_update_categories = get_option('moodle_sync_update_categories', true);
         $moodle_sync_users_enabled = get_option('moodle_sync_users_enabled', true);
+        $laravel_api_url = get_option('laravel_api_url', '');
+        $laravel_api_token = get_option('laravel_api_token', '');
         
         ?>
         <div class="wrap">
@@ -339,6 +352,46 @@ class Course_Moodle_Sync {
                                    <?php checked(1, $moodle_sync_users_enabled); ?> />
                             <p class="description">
                                 <?php _e('Если включено, при регистрации и обновлении профиля в WordPress пользователь будет автоматически создаваться/обновляться в Moodle. Это позволит использовать один логин и пароль на обоих сайтах.', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h2><?php _e('Настройки синхронизации с Laravel', 'course-plugin'); ?></h2>
+                <p class="description"><?php _e('После создания пользователя в Moodle, он автоматически создается в Laravel приложении через API.', 'course-plugin'); ?></p>
+                
+                <table class="form-table">
+                    <!-- Поле для ввода URL Laravel API -->
+                    <tr>
+                        <th scope="row">
+                            <label for="laravel_api_url"><?php _e('Laravel API URL', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="url" 
+                                   id="laravel_api_url" 
+                                   name="laravel_api_url" 
+                                   value="<?php echo esc_attr($laravel_api_url); ?>" 
+                                   class="regular-text" 
+                                   placeholder="https://m.dekan.pro" />
+                            <p class="description">
+                                <?php _e('URL вашего Laravel приложения (например: https://m.dekan.pro)', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Поле для ввода токена Laravel API -->
+                    <tr>
+                        <th scope="row">
+                            <label for="laravel_api_token"><?php _e('Laravel API Token', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" 
+                                   id="laravel_api_token" 
+                                   name="laravel_api_token" 
+                                   value="<?php echo esc_attr($laravel_api_token); ?>" 
+                                   class="regular-text" />
+                            <p class="description">
+                                <?php _e('Токен для доступа к Laravel API. Должен совпадать с WORDPRESS_API_TOKEN в .env файле Laravel приложения.', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
