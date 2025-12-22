@@ -646,17 +646,26 @@ class Course_Moodle_User_Sync {
             $password_for_moodle = $password;
             
             // Модифицируем пароль для соответствия требованиям Moodle
+            $needs_modification = false;
             if (!preg_match('/[*\-#]/', $password_for_moodle)) {
                 $password_for_moodle = $password_for_moodle . '-';
+                $needs_modification = true;
             }
             if (!preg_match('/[0-9]/', $password_for_moodle)) {
                 $password_for_moodle = $password_for_moodle . '1';
+                $needs_modification = true;
             }
             
             // ВАЖНО: Обновляем пароль в WordPress на модифицированный, чтобы он совпадал с Moodle
             // Это нужно для того, чтобы пользователь мог войти с тем же паролем
-            wp_set_password($password_for_moodle, $user_id);
-            error_log('Moodle User Sync: Пароль в WordPress обновлен на модифицированный для совпадения с Moodle');
+            // Но только если пароль был модифицирован, чтобы избежать бесконечного цикла
+            if ($needs_modification && $password_for_moodle !== $password) {
+                // Временно отключаем хук, чтобы избежать бесконечного цикла
+                remove_action('wp_set_password', array($this, 'sync_user_on_password_set'), 10);
+                wp_set_password($password_for_moodle, $user_id);
+                add_action('wp_set_password', array($this, 'sync_user_on_password_set'), 10, 2);
+                error_log('Moodle User Sync: Пароль в WordPress обновлен на модифицированный для совпадения с Moodle');
+            }
         }
         
         error_log('Moodle User Sync: Пользователь ID ' . $user_id . ' еще не создан в Moodle, создаем с паролем (длина: ' . strlen($password_for_moodle) . ')');
