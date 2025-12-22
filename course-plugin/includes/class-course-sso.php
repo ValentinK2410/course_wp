@@ -50,6 +50,20 @@ class Course_SSO {
         
         // Добавляем виджет в меню пользователя
         add_filter('wp_nav_menu_items', array($this, 'add_sso_menu_items'), 10, 2);
+        
+        // Генерируем SSO API ключ при первой загрузке, если он не установлен
+        if (empty(get_option('sso_api_key', ''))) {
+            $this->generate_sso_api_key();
+        }
+    }
+    
+    /**
+     * Генерация SSO API ключа
+     */
+    private function generate_sso_api_key() {
+        $api_key = wp_generate_password(64, false);
+        update_option('sso_api_key', $api_key);
+        error_log('Course SSO: SSO API ключ сгенерирован автоматически');
     }
     
     /**
