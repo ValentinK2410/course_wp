@@ -117,6 +117,7 @@ class Course_Plugin {
             'includes/class-course-transliteration.php', // Класс для транслитерации кириллицы в латиницу
             'includes/class-course-moodle-user-sync.php', // Класс для синхронизации пользователей между WordPress и Moodle
             'includes/class-course-registration.php',   // Класс для формы регистрации пользователей
+            'includes/class-course-sso.php',             // Класс для Single Sign-On (SSO)
         );
         
         // Проходим по каждому файлу в массиве
@@ -209,6 +210,12 @@ class Course_Plugin {
         // Добавляет шорткод [course_register] для отображения формы регистрации на любой странице
         if (class_exists('Course_Registration')) {
             Course_Registration::get_instance();
+        }
+        
+        // Инициализируем Single Sign-On (SSO)
+        // Позволяет пользователям автоматически входить в Moodle и Laravel после входа в WordPress
+        if (class_exists('Course_SSO')) {
+            Course_SSO::get_instance();
         }
     }
     

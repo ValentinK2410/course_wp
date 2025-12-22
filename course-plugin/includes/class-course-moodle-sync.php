@@ -156,6 +156,12 @@ class Course_Moodle_Sync {
             'type' => 'string',
             'sanitize_callback' => 'sanitize_text_field'  // Очистка текста для безопасности
         ));
+        
+        // Регистрируем опцию для SSO API ключа
+        register_setting('moodle_sync_settings', 'sso_api_key', array(
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field'  // Очистка текста для безопасности
+        ));
     }
     
     /**
@@ -240,6 +246,7 @@ class Course_Moodle_Sync {
         $moodle_sync_users_enabled = get_option('moodle_sync_users_enabled', true);
         $laravel_api_url = get_option('laravel_api_url', '');
         $laravel_api_token = get_option('laravel_api_token', '');
+        $sso_api_key = get_option('sso_api_key', '');
         
         ?>
         <div class="wrap">
@@ -393,6 +400,33 @@ class Course_Moodle_Sync {
                             <p class="description">
                                 <?php _e('Токен для доступа к Laravel API. Должен совпадать с WORDPRESS_API_TOKEN в .env файле Laravel приложения.', 'course-plugin'); ?>
                             </p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h2><?php _e('Настройки Single Sign-On (SSO)', 'course-plugin'); ?></h2>
+                <p class="description"><?php _e('Позволяет пользователям автоматически входить в Moodle и Laravel после входа в WordPress.', 'course-plugin'); ?></p>
+                
+                <table class="form-table">
+                    <!-- Поле для ввода SSO API ключа -->
+                    <tr>
+                        <th scope="row">
+                            <label for="sso_api_key"><?php _e('SSO API Key', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" 
+                                   id="sso_api_key" 
+                                   name="sso_api_key" 
+                                   value="<?php echo esc_attr($sso_api_key); ?>" 
+                                   class="regular-text" />
+                            <p class="description">
+                                <?php _e('Секретный ключ для проверки SSO токенов. Должен совпадать с WORDPRESS_SSO_API_KEY в .env файле Laravel приложения. Если пусто, будет сгенерирован автоматически.', 'course-plugin'); ?>
+                            </p>
+                            <?php if (empty($sso_api_key)): ?>
+                            <p class="description" style="color: #d63638;">
+                                <strong><?php _e('Внимание:', 'course-plugin'); ?></strong> <?php _e('Ключ не установлен. Рекомендуется установить уникальный ключ для безопасности.', 'course-plugin'); ?>
+                            </p>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 </table>
