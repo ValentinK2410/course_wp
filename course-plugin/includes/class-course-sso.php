@@ -206,6 +206,42 @@ class Course_SSO {
     }
     
     /**
+     * Шорткод для отображения кнопок SSO
+     * Использование: [sso_buttons]
+     */
+    public function sso_buttons_shortcode($atts) {
+        // Показываем только для авторизованных пользователей
+        if (!is_user_logged_in()) {
+            return '';
+        }
+        
+        $moodle_url = get_option('moodle_sync_url', '');
+        $laravel_url = get_option('laravel_api_url', '');
+        
+        if (empty($moodle_url) && empty($laravel_url)) {
+            return '';
+        }
+        
+        ob_start();
+        ?>
+        <div class="sso-buttons-wrapper" style="margin: 20px 0;">
+            <?php if (!empty($moodle_url)): ?>
+            <a href="javascript:void(0);" onclick="goToMoodle();" class="sso-button sso-moodle" style="display: inline-block; padding: 10px 20px; margin: 5px; background: #f98012; color: white; text-decoration: none; border-radius: 5px;">
+                Перейти в Moodle
+            </a>
+            <?php endif; ?>
+            
+            <?php if (!empty($laravel_url)): ?>
+            <a href="javascript:void(0);" onclick="goToLaravel();" class="sso-button sso-laravel" style="display: inline-block; padding: 10px 20px; margin: 5px; background: #f9322c; color: white; text-decoration: none; border-radius: 5px;">
+                Перейти в Систему управления
+            </a>
+            <?php endif; ?>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+    
+    /**
      * AJAX обработчик для получения SSO токенов
      */
     public function ajax_get_sso_tokens() {
