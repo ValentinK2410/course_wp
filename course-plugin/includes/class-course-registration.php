@@ -538,15 +538,30 @@ class Course_Registration {
      * @param string $password Пароль пользователя
      */
     private function send_registration_email($user_id, $password) {
+        $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
+        $log_message = '[' . date('Y-m-d H:i:s') . '] ========== ОТПРАВКА ПИСЬМА ==========' . "\n";
+        $log_message .= 'User ID: ' . $user_id . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
         $user = get_userdata($user_id);
         
         if (!$user) {
+            $error_msg = 'Course Registration: Пользователь с ID ' . $user_id . ' не найден для отправки письма';
+            error_log($error_msg);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА: ' . $error_msg . "\n", FILE_APPEND);
             return;
         }
         
         // Получаем настройки сайта
         $blogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
         $admin_email = get_option('admin_email');
+        
+        // Логируем настройки
+        $log_message = '[' . date('Y-m-d H:i:s') . '] Настройки письма:' . "\n";
+        $log_message .= 'Email получателя: ' . $user->user_email . "\n";
+        $log_message .= 'Email отправителя: ' . $admin_email . "\n";
+        $log_message .= 'Название сайта: ' . $blogname . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
         
         // Формируем тему письма
         $subject = sprintf(__('[%s] Добро пожаловать!', 'course-plugin'), $blogname);
@@ -567,8 +582,49 @@ class Course_Registration {
             'From: ' . $blogname . ' <' . $admin_email . '>'
         );
         
+        // Логируем перед отправкой
+        $log_message = '[' . date('Y-m-d H:i:s') . '] Попытка отправки письма через wp_mail()' . "\n";
+        $log_message .= 'Тема: ' . $subject . "\n";
+        $log_message .= 'Длина сообщения: ' . strlen($message) . " символов\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
         // Отправляем письмо
-        wp_mail($user->user_email, $subject, $message, $headers);
+        $mail_result = wp_mail($user->user_email, $subject, $message, $headers);
+        
+        // Логируем результат
+        if ($mail_result) {
+            $success_msg = 'Course Registration: Письмо успешно отправлено пользователю ' . $user->user_email;
+            error_log($success_msg);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] УСПЕХ: ' . $success_msg . "\n", FILE_APPEND);
+        } else {
+            $error_msg = 'Course Registration: ОШИБКА отправки письма пользователю ' . $user->user_email;
+            error_log($error_msg);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА: ' . $error_msg . "\n", FILE_APPEND);
+            
+            // Проверяем, есть ли глобальная переменная с ошибкой wp_mail
+            global $phpmailer;
+            if (isset($phpmailer) && isset($phpmailer->ErrorInfo)) {
+                $phpmailer_error = 'PHPMailer ошибка: ' . $phpmailer->ErrorInfo;
+                error_log('Course Registration: ' . $phpmailer_error);
+                @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ' . $phpmailer_error . "\n", FILE_APPEND);
+            }
+        }
+        
+        // Также пробуем использовать стандартную функцию WordPress для отправки уведомления
+        // Это может помочь, если wp_mail не работает
+        if (function_exists('wp_new_user_notification')) {
+            // Отключаем отправку пароля администратору (второй параметр = false)
+            // Отправляем только пользователю (первый параметр = user_id)
+            try {
+                wp_new_user_notification($user_id, null, 'user');
+                $log_message = '[' . date('Y-m-d H:i:s') . '] Также вызвана стандартная функция wp_new_user_notification()' . "\n";
+                @file_put_contents($log_file, $log_message, FILE_APPEND);
+            } catch (Exception $e) {
+                $error_msg = 'Course Registration: Ошибка при вызове wp_new_user_notification: ' . $e->getMessage();
+                error_log($error_msg);
+                @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА: ' . $error_msg . "\n", FILE_APPEND);
+            }
+        }
     }
     
     /**
