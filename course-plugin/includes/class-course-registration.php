@@ -391,6 +391,20 @@ class Course_Registration {
             wp_send_json_error(array('message' => __('Ошибка безопасности. Обновите страницу и попробуйте снова.', 'course-plugin')));
         }
         
+        // Проверка защиты от ботов
+        if (class_exists('Course_Anti_Bot')) {
+            $bot_check = Course_Anti_Bot::verify_bot_protection();
+            if ($bot_check !== true) {
+                $error_msg = 'Course Registration: Защита от ботов сработала: ' . (isset($bot_check['message']) ? $bot_check['message'] : 'неизвестная ошибка');
+                error_log($error_msg);
+                @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ' . $error_msg . "\n", FILE_APPEND);
+                if (class_exists('Course_Logger')) {
+                    Course_Logger::warning($error_msg);
+                }
+                wp_send_json_error(array('message' => isset($bot_check['message']) ? $bot_check['message'] : __('Обнаружена автоматическая регистрация.', 'course-plugin')));
+            }
+        }
+        
         // Проверяем, разрешена ли регистрация
         if (!get_option('users_can_register')) {
             wp_send_json_error(array('message' => __('Регистрация новых пользователей отключена.', 'course-plugin')));

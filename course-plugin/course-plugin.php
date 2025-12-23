@@ -118,6 +118,8 @@ class Course_Plugin {
             'includes/class-course-moodle-user-sync.php', // Класс для синхронизации пользователей между WordPress и Moodle
             'includes/class-course-registration.php',   // Класс для формы регистрации пользователей
             'includes/class-course-sso.php',             // Класс для Single Sign-On (SSO)
+            'includes/class-course-anti-bot.php',        // Класс для защиты от ботов
+            'includes/class-course-anti-bot-admin.php',  // Класс для админ-панели защиты от ботов
         );
         
         // Проходим по каждому файлу в массиве
