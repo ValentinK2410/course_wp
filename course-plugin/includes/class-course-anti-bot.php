@@ -771,15 +771,24 @@ class Course_Anti_Bot {
                             .then(function(data) {
                                 if (data.success && data.data) {
                                     var newChallenge = data.data;
-                                    sessionStorage.setItem('challenge_answer', newChallenge.answer.toLowerCase().trim());
-                                    sessionStorage.setItem('challenge_type', newChallenge.type);
-                                    challengeLabel.innerHTML = newChallenge.question + ' <span style="color: #dc3232;">*</span>';
-                                    challengeInput.value = '';
-                                    challengeInput.type = newChallenge.input_type;
-                                    if (newChallenge.type === 'bible') {
-                                        challengeInput.placeholder = '<?php echo esc_js(__('Введите пропущенное слово', 'course-plugin')); ?>';
-                                    } else {
-                                        challengeInput.placeholder = '';
+                                    
+                                    // Преобразуем ответ в строку перед сохранением (для математических задач answer - число)
+                                    var answerStr = String(newChallenge.answer || '');
+                                    sessionStorage.setItem('challenge_answer', answerStr.toLowerCase().trim());
+                                    sessionStorage.setItem('challenge_type', newChallenge.type || '');
+                                    
+                                    if (challengeLabel && newChallenge.question) {
+                                        challengeLabel.innerHTML = newChallenge.question + ' <span style="color: #dc3232;">*</span>';
+                                    }
+                                    
+                                    if (challengeInput) {
+                                        challengeInput.value = '';
+                                        challengeInput.type = newChallenge.input_type || 'text';
+                                        if (newChallenge.type === 'bible') {
+                                            challengeInput.placeholder = '<?php echo esc_js(__('Введите пропущенное слово', 'course-plugin')); ?>';
+                                        } else {
+                                            challengeInput.placeholder = '';
+                                        }
                                     }
                                 } else {
                                     alert('<?php echo esc_js(__('Не удалось загрузить новую задачу. Попробуйте обновить страницу.', 'course-plugin')); ?>');
