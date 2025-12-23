@@ -40,7 +40,7 @@ class Course_Anti_Bot {
         add_action('wp_footer', array($this, 'add_anti_bot_scripts'));
         
         // Добавляем защиту для стандартной формы WordPress (wp-login.php)
-        add_action('login_form_register', array($this, 'add_wp_login_scripts'));
+        // Используем только login_footer, чтобы скрипт добавлялся в конце страницы
         add_action('login_footer', array($this, 'add_wp_login_scripts'));
         
         // Проверка защиты при стандартной регистрации WordPress
