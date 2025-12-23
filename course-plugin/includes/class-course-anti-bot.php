@@ -683,6 +683,16 @@ class Course_Anti_Bot {
             return;
         }
         
+        // Проверяем, что регистрация не была успешной (WordPress добавляет параметр 'registered' при успехе)
+        if (isset($_GET['registered']) && $_GET['registered'] === 'success') {
+            return;
+        }
+        
+        // Проверяем, что нет сообщения об успешной регистрации
+        if (isset($_GET['checkemail']) && $_GET['checkemail'] === 'registered') {
+            return;
+        }
+        
         $anti_bot_enabled = get_option('anti_bot_enabled', true);
         if (!$anti_bot_enabled) {
             return;
@@ -699,13 +709,37 @@ class Course_Anti_Bot {
         ?>
         <script type="text/javascript">
         (function() {
+            // Проверяем, что мы действительно на странице регистрации (не на странице успеха)
+            var urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('registered') === 'success' || urlParams.get('checkemail') === 'registered') {
+                return; // Не выполняем скрипт на странице успеха
+            }
+            
             // Ждем загрузки DOM
             function initProtection() {
                 var form = document.getElementById('registerform');
                 if (!form) {
-                    // Если форма еще не загружена, пробуем еще раз через небольшую задержку
-                    setTimeout(initProtection, 100);
+                    // Если форма еще не загружена, пробуем еще раз через небольшую задержку (максимум 5 секунд)
+                    var attempts = 0;
+                    var maxAttempts = 50; // 50 попыток * 100мс = 5 секунд
+                    var checkInterval = setInterval(function() {
+                        attempts++;
+                        form = document.getElementById('registerform');
+                        if (form) {
+                            clearInterval(checkInterval);
+                            initProtection();
+                        } else if (attempts >= maxAttempts) {
+                            clearInterval(checkInterval);
+                            // Если форма не найдена после 5 секунд, значит мы не на странице регистрации
+                            return;
+                        }
+                    }, 100);
                     return;
+                }
+                
+                // Дополнительная проверка: убеждаемся, что форма действительно для регистрации
+                if (!form.querySelector('input[name="user_login"]') || !form.querySelector('input[name="user_email"]')) {
+                    return; // Это не форма регистрации
                 }
                 
                 // Добавляем honeypot поле
@@ -911,10 +945,13 @@ class Course_Anti_Bot {
                 });
             }
             
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initProtection);
-            } else {
-                initProtection();
+            // Проверяем наличие формы перед инициализацией
+            if (document.getElementById('registerform')) {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initProtection);
+                } else {
+                    initProtection();
+                }
             }
         })();
         </script>
