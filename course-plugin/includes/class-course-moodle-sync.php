@@ -910,7 +910,114 @@ class Course_Moodle_Sync {
             update_post_meta($post_id, 'moodle_course_url', $moodle_course_url);
         }
         
+        // Отправляем курс в Laravel приложение
+        $this->sync_course_to_laravel($post_id, $course, $action);
+        
         return $action;
+    }
+    
+    /**
+     * Отправка курса в Laravel приложение через API
+     * Вызывается после успешного сохранения курса в WordPress
+     * 
+     * @param int $wp_course_id ID курса в WordPress
+     * @param array $moodle_course Данные курса из Moodle
+     * @param string $action Действие ('created' или 'updated')
+     */
+    private function sync_course_to_laravel($wp_course_id, $moodle_course, $action) {
+        // Получаем настройки Laravel API
+        $laravel_api_url = get_option('laravel_api_url', '');
+        $laravel_api_token = get_option('laravel_api_token', '');
+        
+        // Проверяем, настроен ли Laravel API
+        if (empty($laravel_api_url) || empty($laravel_api_token)) {
+            error_log('Moodle Sync: Laravel API не настроен, пропускаем синхронизацию курса с Laravel');
+            return;
+        }
+        
+        // Получаем данные курса из WordPress
+        $wp_course = get_post($wp_course_id);
+        if (!$wp_course) {
+            error_log('Moodle Sync: Курс WordPress с ID ' . $wp_course_id . ' не найден для синхронизации с Laravel');
+            return;
+        }
+        
+        // Получаем метаданные курса
+        $moodle_course_id = get_post_meta($wp_course_id, 'moodle_course_id', true);
+        $moodle_category_id = get_post_meta($wp_course_id, 'moodle_category_id', true);
+        $start_date = get_post_meta($wp_course_id, '_course_start_date', true);
+        $end_date = get_post_meta($wp_course_id, '_course_end_date', true);
+        $duration = get_post_meta($wp_course_id, '_course_duration', true);
+        $price = get_post_meta($wp_course_id, '_course_price', true);
+        $capacity = get_post_meta($wp_course_id, '_course_capacity', true);
+        $enrolled = get_post_meta($wp_course_id, '_course_enrolled', true);
+        
+        // Получаем категорию курса
+        $categories = wp_get_post_terms($wp_course_id, 'course_specialization', array('fields' => 'names'));
+        $category_name = !empty($categories) ? $categories[0] : '';
+        
+        // Подготавливаем данные для отправки в Laravel
+        $data = array(
+            'wordpress_course_id' => $wp_course_id,
+            'moodle_course_id' => $moodle_course_id ?: (isset($moodle_course['id']) ? $moodle_course['id'] : null),
+            'name' => $wp_course->post_title,
+            'description' => $wp_course->post_content,
+            'short_description' => $wp_course->post_excerpt,
+            'category_id' => $moodle_category_id ?: (isset($moodle_course['categoryid']) ? $moodle_course['categoryid'] : null),
+            'category_name' => $category_name,
+            'start_date' => $start_date ?: (isset($moodle_course['startdate']) && $moodle_course['startdate'] > 0 ? date('Y-m-d', $moodle_course['startdate']) : null),
+            'end_date' => $end_date ?: (isset($moodle_course['enddate']) && $moodle_course['enddate'] > 0 ? date('Y-m-d', $moodle_course['enddate']) : null),
+            'duration' => $duration ?: null,
+            'price' => $price ?: null,
+            'capacity' => $capacity ?: null,
+            'enrolled' => $enrolled ?: 0,
+            'status' => $wp_course->post_status,
+            'action' => $action, // 'created' или 'updated'
+        );
+        
+        // Формируем URL для API запроса
+        $api_url = rtrim($laravel_api_url, '/') . '/api/courses/sync-from-wordpress';
+        
+        // Логируем данные перед отправкой
+        error_log('Moodle Sync: Отправка курса в Laravel - ID: ' . $wp_course_id . ', название: ' . $wp_course->post_title);
+        
+        // Выполняем POST запрос к Laravel API
+        $response = wp_remote_post($api_url, array(
+            'body' => json_encode($data),
+            'headers' => array(
+                'Content-Type' => 'application/json',
+                'X-API-Token' => $laravel_api_token,
+            ),
+            'timeout' => 30,
+        ));
+        
+        // Проверяем результат запроса
+        if (is_wp_error($response)) {
+            $error_msg = 'Moodle Sync: Ошибка при синхронизации курса с Laravel - ' . $response->get_error_message();
+            error_log($error_msg);
+            if (class_exists('Course_Logger')) {
+                Course_Logger::error('Ошибка синхронизации курса с Laravel: ID=' . $wp_course_id . ' - ' . $response->get_error_message());
+            }
+            return;
+        }
+        
+        $response_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+        $response_data = json_decode($response_body, true);
+        
+        if (($response_code === 201 || $response_code === 200) && isset($response_data['success']) && $response_data['success']) {
+            $success_msg = 'Moodle Sync: Курс успешно синхронизирован с Laravel приложением - ID: ' . $wp_course_id;
+            error_log($success_msg);
+            if (class_exists('Course_Logger')) {
+                Course_Logger::info('Курс успешно синхронизирован с Laravel: ID=' . $wp_course_id . ', название=' . $wp_course->post_title);
+            }
+        } else {
+            $error_msg = 'Moodle Sync: Ошибка синхронизации курса с Laravel - код ответа: ' . $response_code . ', ответ: ' . $response_body;
+            error_log($error_msg);
+            if (class_exists('Course_Logger')) {
+                Course_Logger::error('Ошибка синхронизации курса с Laravel: ID=' . $wp_course_id . ' - код: ' . $response_code . ', ответ: ' . $response_body);
+            }
+        }
     }
     
     /**
