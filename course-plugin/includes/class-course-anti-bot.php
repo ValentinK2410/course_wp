@@ -85,6 +85,92 @@ class Course_Anti_Bot {
     }
     
     /**
+     * Получение задач для защиты от ботов
+     * Возвращает либо математическую задачу, либо задание с текстом из Евангелия
+     * 
+     * @return array Массив с данными задачи
+     */
+    private function get_challenge() {
+        // Отрывки из Евангелия от Иоанна с пропущенными словами
+        $bible_challenges = array(
+            array(
+                'text' => 'В начале было Слово, и Слово было у Бога, и Слово было ___',
+                'answer' => 'Бог',
+                'type' => 'bible'
+            ),
+            array(
+                'text' => 'В Нем была жизнь, и жизнь была свет ___',
+                'answer' => 'людей',
+                'type' => 'bible'
+            ),
+            array(
+                'text' => 'И Слово стало плотию, и обитало с нами, полное благодати и ___',
+                'answer' => 'истины',
+                'type' => 'bible'
+            ),
+            array(
+                'text' => 'Иоанн свидетельствует о Нем и, восклицая, говорит: Сей был Тот, о Котором я сказал, что Идущий за мною стал впереди меня, потому что был прежде ___',
+                'answer' => 'меня',
+                'type' => 'bible'
+            ),
+            array(
+                'text' => 'И от полноты Его все мы приняли и благодать на ___',
+                'answer' => 'благодать',
+                'type' => 'bible'
+            ),
+            array(
+                'text' => 'Ибо закон дан через Моисея; благодать же и истина произошли через Иисуса ___',
+                'answer' => 'Христа',
+                'type' => 'bible'
+            ),
+            array(
+                'text' => 'Бога не видел никто никогда; Единородный Сын, сущий в недре Отчем, Он явил ___',
+                'answer' => 'Его',
+                'type' => 'bible'
+            ),
+            array(
+                'text' => 'Иисус сказал ему в ответ: истинно, истинно говорю тебе, если кто не родится свыше, не может увидеть Царствия ___',
+                'answer' => 'Божия',
+                'type' => 'bible'
+            ),
+            array(
+                'text' => 'Ибо так возлюбил Бог мир, что отдал Сына Своего Единородного, дабы всякий верующий в Него, не погиб, но имел жизнь ___',
+                'answer' => 'вечную',
+                'type' => 'bible'
+            ),
+            array(
+                'text' => 'Иисус сказал ей: Я есмь воскресение и жизнь; верующий в Меня, если и умрет, оживет. И всякий, живущий и верующий в Меня, не умрет ___',
+                'answer' => 'во век',
+                'type' => 'bible'
+            ),
+        );
+        
+        // Случайно выбираем тип задачи (50% математика, 50% текст)
+        $use_math = (rand(1, 100) <= 50);
+        
+        if ($use_math) {
+            // Математическая задача
+            $num1 = rand(1, 10);
+            $num2 = rand(1, 10);
+            return array(
+                'type' => 'math',
+                'question' => sprintf(__('Сколько будет %d + %d?', 'course-plugin'), $num1, $num2),
+                'answer' => $num1 + $num2,
+                'input_type' => 'number'
+            );
+        } else {
+            // Задание с текстом из Евангелия
+            $challenge = $bible_challenges[array_rand($bible_challenges)];
+            return array(
+                'type' => 'bible',
+                'question' => sprintf(__('Вставьте пропущенное слово: %s', 'course-plugin'), $challenge['text']),
+                'answer' => strtolower(trim($challenge['answer'])),
+                'input_type' => 'text'
+            );
+        }
+    }
+    
+    /**
      * Добавление скриптов и полей защиты в форму регистрации
      */
     public function add_anti_bot_scripts() {
@@ -96,6 +182,13 @@ class Course_Anti_Bot {
         $math_enabled = get_option('math_challenge_enabled', true);
         $behavior_enabled = get_option('behavior_analysis_enabled', true);
         $field_order_enabled = get_option('field_order_check_enabled', true);
+        
+        if (!$math_enabled) {
+            return; // Если защита отключена, не добавляем скрипты
+        }
+        
+        // Генерируем задачу
+        $challenge = $this->get_challenge();
         
         ?>
         <script type="text/javascript">
@@ -127,61 +220,101 @@ class Course_Anti_Bot {
             }
             
             // ============================================
-            // 2. МАТЕМАТИЧЕСКАЯ ЗАДАЧА
+            // 2. ЗАДАЧА ДЛЯ ЗАЩИТЫ (математика или текст)
             // ============================================
-            <?php if ($math_enabled): ?>
-            var mathChallenge = {
-                num1: Math.floor(Math.random() * 10) + 1,
-                num2: Math.floor(Math.random() * 10) + 1,
-                operator: '+',
-                answer: 0
-            };
-            mathChallenge.answer = mathChallenge.num1 + mathChallenge.num2;
+            var challenge = <?php echo json_encode($challenge); ?>;
             
-            // Сохраняем ответ в sessionStorage
-            sessionStorage.setItem('math_answer', mathChallenge.answer);
+            // Сохраняем правильный ответ в sessionStorage
+            sessionStorage.setItem('challenge_answer', challenge.answer.toLowerCase().trim());
+            sessionStorage.setItem('challenge_type', challenge.type);
             
-            function addMathChallenge() {
+            function addChallenge() {
                 var form = document.getElementById('course-registration-form');
                 if (!form) return;
                 
-                var mathField = document.getElementById('math_challenge');
-                if (mathField) return;
+                var challengeField = document.getElementById('anti_bot_challenge');
+                if (challengeField) return;
                 
-                var mathContainer = document.createElement('p');
-                mathContainer.id = 'math_challenge_container';
+                var challengeContainer = document.createElement('p');
+                challengeContainer.id = 'challenge_container';
+                challengeContainer.style.marginBottom = '15px';
                 
-                var mathLabel = document.createElement('label');
-                mathLabel.setAttribute('for', 'math_challenge');
-                mathLabel.innerHTML = '<?php echo esc_js(__('Сколько будет', 'course-plugin')); ?> ' + 
-                    mathChallenge.num1 + ' + ' + mathChallenge.num2 + '? <span class="required">*</span>';
+                var challengeLabel = document.createElement('label');
+                challengeLabel.setAttribute('for', 'anti_bot_challenge');
+                challengeLabel.style.display = 'block';
+                challengeLabel.style.marginBottom = '5px';
+                challengeLabel.style.fontWeight = 'bold';
+                challengeLabel.innerHTML = challenge.question + ' <span class="required">*</span>';
                 
-                var mathInput = document.createElement('input');
-                mathInput.type = 'number';
-                mathInput.name = 'math_challenge';
-                mathInput.id = 'math_challenge';
-                mathInput.className = 'input';
-                mathInput.required = true;
-                mathInput.setAttribute('autocomplete', 'off');
+                var challengeInput = document.createElement('input');
+                challengeInput.type = challenge.input_type;
+                challengeInput.name = 'anti_bot_challenge';
+                challengeInput.id = 'anti_bot_challenge';
+                challengeInput.className = 'input';
+                challengeInput.required = true;
+                challengeInput.setAttribute('autocomplete', 'off');
+                challengeInput.style.width = '100%';
+                challengeInput.style.padding = '8px';
+                challengeInput.style.border = '1px solid #ddd';
+                challengeInput.style.borderRadius = '3px';
                 
-                mathContainer.appendChild(mathLabel);
-                mathContainer.appendChild(mathInput);
+                // Для текстовых заданий добавляем подсказку
+                if (challenge.type === 'bible') {
+                    challengeInput.placeholder = '<?php echo esc_js(__('Введите пропущенное слово', 'course-plugin')); ?>';
+                }
+                
+                challengeContainer.appendChild(challengeLabel);
+                challengeContainer.appendChild(challengeInput);
+                
+                // Добавляем кнопку "Обновить задачу" для текстовых заданий
+                if (challenge.type === 'bible') {
+                    var refreshButton = document.createElement('button');
+                    refreshButton.type = 'button';
+                    refreshButton.className = 'button';
+                    refreshButton.style.marginTop = '5px';
+                    refreshButton.innerHTML = '<?php echo esc_js(__('Обновить задачу', 'course-plugin')); ?>';
+                    refreshButton.onclick = function() {
+                        // Загружаем новую задачу через AJAX
+                        jQuery.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                            type: 'POST',
+                            data: {
+                                action: 'get_new_challenge'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    var newChallenge = response.data;
+                                    sessionStorage.setItem('challenge_answer', newChallenge.answer.toLowerCase().trim());
+                                    sessionStorage.setItem('challenge_type', newChallenge.type);
+                                    challengeLabel.innerHTML = newChallenge.question + ' <span class="required">*</span>';
+                                    challengeInput.value = '';
+                                    challengeInput.type = newChallenge.input_type;
+                                    if (newChallenge.type === 'bible') {
+                                        challengeInput.placeholder = '<?php echo esc_js(__('Введите пропущенное слово', 'course-plugin')); ?>';
+                                    } else {
+                                        challengeInput.placeholder = '';
+                                    }
+                                }
+                            }
+                        });
+                    };
+                    challengeContainer.appendChild(refreshButton);
+                }
                 
                 // Вставляем перед кнопкой отправки
                 var submitButton = form.querySelector('.submit');
                 if (submitButton) {
-                    form.insertBefore(mathContainer, submitButton);
+                    form.insertBefore(challengeContainer, submitButton);
                 } else {
-                    form.appendChild(mathContainer);
+                    form.appendChild(challengeContainer);
                 }
             }
             
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', addMathChallenge);
+                document.addEventListener('DOMContentLoaded', addChallenge);
             } else {
-                addMathChallenge();
+                addChallenge();
             }
-            <?php endif; ?>
             
             // ============================================
             // 3. АНАЛИЗ ПОВЕДЕНИЯ ПОЛЬЗОВАТЕЛЯ

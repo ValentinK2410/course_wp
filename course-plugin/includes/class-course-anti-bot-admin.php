@@ -100,7 +100,7 @@ class Course_Anti_Bot_Admin {
                 <table class="form-table">
                     <tr>
                         <th scope="row">
-                            <label for="math_challenge_enabled"><?php _e('Математическая задача', 'course-plugin'); ?></label>
+                            <label for="math_challenge_enabled"><?php _e('Задачи для защиты (математика и текст)', 'course-plugin'); ?></label>
                         </th>
                         <td>
                             <input type="checkbox" 
@@ -109,7 +109,12 @@ class Course_Anti_Bot_Admin {
                                    value="1" 
                                    <?php checked(1, $math_challenge_enabled); ?> />
                             <p class="description">
-                                <?php _e('Добавляет простую математическую задачу в форму регистрации. Пользователь должен решить её перед отправкой формы.', 'course-plugin'); ?>
+                                <?php _e('Добавляет задачи в форму регистрации. Случайно выбирается либо простая математическая задача (например: 5 + 3 = ?), либо задание на вставку пропущенного слова из Евангелия от Иоанна. Пользователь должен решить задачу перед отправкой формы.', 'course-plugin'); ?>
+                            </p>
+                            <p class="description" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-left: 4px solid #0073aa;">
+                                <strong><?php _e('Примеры заданий:', 'course-plugin'); ?></strong><br>
+                                <?php _e('• Математика: "Сколько будет 7 + 4?"', 'course-plugin'); ?><br>
+                                <?php _e('• Текст: "В начале было Слово, и Слово было у Бога, и Слово было ___"', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
@@ -207,7 +212,7 @@ class Course_Anti_Bot_Admin {
                 <ul>
                     <li><strong><?php _e('Honeypot поле', 'course-plugin'); ?></strong> - <?php _e('Скрытое поле, которое заполняют только боты. Всегда включено, не требует настройки.', 'course-plugin'); ?></li>
                     <li><strong><?php _e('Проверка времени заполнения', 'course-plugin'); ?></strong> - <?php _e('Форма должна заполняться минимум 3 секунды. Всегда включено, не требует настройки.', 'course-plugin'); ?></li>
-                    <li><strong><?php _e('Математическая задача', 'course-plugin'); ?></strong> - <?php _e('Простая математическая задача (например: 5 + 3 = ?). Пользователь должен решить её перед отправкой формы.', 'course-plugin'); ?></li>
+                    <li><strong><?php _e('Задачи для защиты', 'course-plugin'); ?></strong> - <?php _e('Случайно выбирается либо простая математическая задача (например: 5 + 3 = ?), либо задание на вставку пропущенного слова из Евангелия от Иоанна. Пользователь должен решить задачу перед отправкой формы.', 'course-plugin'); ?></li>
                     <li><strong><?php _e('Анализ поведения пользователя', 'course-plugin'); ?></strong> - <?php _e('Отслеживает движения мыши, клики, паттерны ввода, время между действиями. Очень эффективно против ботов.', 'course-plugin'); ?></li>
                     <li><strong><?php _e('Проверка последовательности заполнения полей', 'course-plugin'); ?></strong> - <?php _e('Отслеживает порядок заполнения полей. Боты часто заполняют поля не по порядку.', 'course-plugin'); ?></li>
                     <li><strong><?php _e('Проверка JavaScript окружения', 'course-plugin'); ?></strong> - <?php _e('Проверяет характеристики браузера и устройства. Всегда включено.', 'course-plugin'); ?></li>
