@@ -38,22 +38,10 @@ class Course_Anti_Bot_Admin {
      * Добавление пункта меню в админку
      */
     public function add_admin_menu() {
-        // Проверяем, существует ли родительское меню
+        // Используем то же меню, что и настройки Moodle Sync
+        // Если меню настроек Moodle существует, добавляем подменю к нему
+        // Иначе создаем отдельное меню
         $parent_slug = 'course-plugin-settings';
-        
-        // Если родительское меню не существует, создаем его
-        global $submenu;
-        if (!isset($submenu[$parent_slug])) {
-            add_menu_page(
-                __('Настройки плагина', 'course-plugin'),
-                __('Курсы Про', 'course-plugin'),
-                'manage_options',
-                $parent_slug,
-                null,
-                'dashicons-welcome-learn-more',
-                30
-            );
-        }
         
         add_submenu_page(
             $parent_slug,
