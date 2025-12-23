@@ -724,9 +724,10 @@ class Course_Anti_Bot {
                 if (!document.getElementById('anti_bot_challenge')) {
                     var challenge = <?php echo json_encode($challenge); ?>;
                     
-                    // Сохраняем правильный ответ
-                    sessionStorage.setItem('challenge_answer', challenge.answer.toLowerCase().trim());
-                    sessionStorage.setItem('challenge_type', challenge.type);
+                    // Сохраняем правильный ответ (преобразуем в строку для поддержки математических задач)
+                    var answerStr = String(challenge.answer || '');
+                    sessionStorage.setItem('challenge_answer', answerStr.toLowerCase().trim());
+                    sessionStorage.setItem('challenge_type', challenge.type || '');
                     
                     var challengeContainer = document.createElement('p');
                     challengeContainer.id = 'challenge_container';
