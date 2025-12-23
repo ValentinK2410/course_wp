@@ -108,6 +108,10 @@ class Course_Anti_Bot {
             return;
         }
         
+        // Проверяем, есть ли форма регистрации на странице
+        // Скрипты будут добавлены только если форма существует
+        // Это проверяется через JavaScript
+        
         $recaptcha_site_key = get_option('recaptcha_site_key', '');
         
         ?>
