@@ -2,16 +2,30 @@
 /**
  * Скрипт для тестирования синхронизации курсов с Laravel
  * 
+ * ВАЖНО: Этот файл должен находиться в КОРНЕ WordPress (там же, где wp-config.php)
+ * 
  * Использование:
- * 1. Загрузите этот файл в корень WordPress
+ * 1. Скопируйте этот файл в корень WordPress (рядом с wp-config.php)
  * 2. Откройте в браузере: https://site.dekan.pro/test-course-sync.php
  * 3. Проверьте вывод
- * 
- * ВАЖНО: Удалите этот файл после использования!
+ * 4. УДАЛИТЕ файл после использования!
  */
 
+// Определяем путь к корню WordPress
+// Если файл в корне WordPress, используем текущую директорию
+// Если файл в подпапке, раскомментируйте и укажите правильный путь:
+// define('ABSPATH', dirname(__FILE__) . '/');
+
 // Загружаем WordPress
-require_once('wp-load.php');
+if (file_exists('wp-load.php')) {
+    require_once('wp-load.php');
+} elseif (file_exists('../wp-load.php')) {
+    require_once('../wp-load.php');
+} elseif (file_exists('../../wp-load.php')) {
+    require_once('../../wp-load.php');
+} else {
+    die('Ошибка: файл wp-load.php не найден. Убедитесь, что файл находится в корне WordPress.');
+}
 
 // Проверяем права доступа (только для администраторов)
 if (!current_user_can('manage_options')) {
