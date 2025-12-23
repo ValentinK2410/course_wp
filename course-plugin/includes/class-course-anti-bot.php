@@ -103,30 +103,23 @@ class Course_Anti_Bot {
      * Добавление скриптов и honeypot поля в форму регистрации
      */
     public function add_anti_bot_scripts() {
-        // Показываем только на страницах с формой регистрации
-        if (!is_page() && !is_singular()) {
-            return;
-        }
-        
         $anti_bot_enabled = get_option('anti_bot_enabled', true);
         if (!$anti_bot_enabled) {
             return;
         }
         
         $recaptcha_site_key = get_option('recaptcha_site_key', '');
-        $rate_limit_enabled = get_option('rate_limit_enabled', true);
         
         ?>
         <script type="text/javascript">
         (function() {
             // Honeypot поле - скрытое поле, которое боты заполнят, а люди нет
-            var honeypotAdded = false;
-            
             function addHoneypotField() {
-                if (honeypotAdded) return;
-                
                 var form = document.getElementById('course-registration-form');
                 if (!form) return;
+                
+                // Проверяем, не добавлено ли уже поле
+                if (document.getElementById('website_url')) return;
                 
                 // Создаем скрытое поле
                 var honeypot = document.createElement('input');
@@ -139,10 +132,10 @@ class Course_Anti_Bot {
                 honeypot.style.left = '-9999px';
                 honeypot.tabIndex = -1;
                 honeypot.setAttribute('autocomplete', 'off');
+                honeypot.setAttribute('aria-hidden', 'true');
                 
                 // Добавляем поле в форму
                 form.appendChild(honeypot);
-                honeypotAdded = true;
             }
             
             // Добавляем honeypot при загрузке страницы
@@ -159,19 +152,23 @@ class Course_Anti_Bot {
             // Отслеживаем начало заполнения формы
             var form = document.getElementById('course-registration-form');
             if (form) {
-                form.addEventListener('focusin', function() {
-                    formStartTime = Date.now();
-                }, true);
+                var firstInput = form.querySelector('input[type="text"], input[type="email"]');
+                if (firstInput) {
+                    firstInput.addEventListener('focus', function() {
+                        formStartTime = Date.now();
+                    }, {once: true});
+                }
             }
             
             // Перехватываем отправку формы для проверки
-            if (form) {
-                form.addEventListener('submit', function(e) {
+            if (form && typeof jQuery !== 'undefined') {
+                jQuery(form).on('submit', function(e) {
                     // Проверка honeypot
                     var honeypotValue = document.getElementById('website_url');
                     if (honeypotValue && honeypotValue.value !== '') {
                         e.preventDefault();
-                        alert('Обнаружена автоматическая регистрация. Если вы не бот, обратитесь к администратору.');
+                        var $messages = jQuery('#course-registration-messages');
+                        $messages.html('<div class="error">Обнаружена автоматическая регистрация.</div>').addClass('error');
                         return false;
                     }
                     
@@ -179,13 +176,13 @@ class Course_Anti_Bot {
                     var formTime = Date.now() - formStartTime;
                     if (formTime < minFormTime) {
                         e.preventDefault();
-                        alert('Форма заполнена слишком быстро. Пожалуйста, заполните форму внимательно.');
+                        var $messages = jQuery('#course-registration-messages');
+                        $messages.html('<div class="error">Форма заполнена слишком быстро. Пожалуйста, заполните форму внимательно.</div>').addClass('error');
                         return false;
                     }
                     
                     // Проверка reCAPTCHA (если включена)
                     <?php if (!empty($recaptcha_site_key)): ?>
-                    var recaptchaToken = null;
                     var recaptchaSiteKey = '<?php echo esc_js($recaptcha_site_key); ?>';
                     
                     e.preventDefault();
@@ -194,61 +191,53 @@ class Course_Anti_Bot {
                     if (typeof grecaptcha !== 'undefined') {
                         grecaptcha.ready(function() {
                             grecaptcha.execute(recaptchaSiteKey, {action: 'register'}).then(function(token) {
-                                recaptchaToken = token;
+                                // Добавляем токен в форму и отправляем
+                                var $form = jQuery(form);
+                                var formData = $form.serialize();
+                                formData += '&recaptcha_token=' + encodeURIComponent(token);
                                 
-                                // Проверяем токен через AJAX
-                                var xhr = new XMLHttpRequest();
-                                xhr.open('POST', '<?php echo admin_url('admin-ajax.php'); ?>', true);
-                                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                                xhr.onreadystatechange = function() {
-                                    if (xhr.readyState === 4) {
-                                        if (xhr.status === 200) {
-                                            try {
-                                                var response = JSON.parse(xhr.responseText);
-                                                if (response.success) {
-                                                    // reCAPTCHA прошла проверку, отправляем форму
-                                                    var formData = new FormData(form);
-                                                    formData.append('recaptcha_token', recaptchaToken);
-                                                    
-                                                    // Вызываем оригинальный обработчик формы
-                                                    if (typeof jQuery !== 'undefined' && jQuery.fn.ajaxSubmit) {
-                                                        jQuery(form).ajaxSubmit({
-                                                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                                                            type: 'POST',
-                                                            success: function(response) {
-                                                                // Обработка ответа
-                                                                if (response.success) {
-                                                                    alert(response.data.message);
-                                                                    if (response.data.redirect) {
-                                                                        window.location.href = response.data.redirect;
-                                                                    }
-                                                                } else {
-                                                                    alert(response.data.message);
-                                                                }
-                                                            }
-                                                        });
-                                                    } else {
-                                                        // Fallback: обычная отправка формы
-                                                        form.submit();
-                                                    }
-                                                } else {
-                                                    alert('Ошибка проверки безопасности. Попробуйте еще раз.');
-                                                }
-                                            } catch (e) {
-                                                console.error('Ошибка обработки ответа reCAPTCHA:', e);
-                                                alert('Ошибка проверки безопасности. Попробуйте еще раз.');
+                                // Отправляем форму через AJAX
+                                jQuery.ajax({
+                                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                                    type: 'POST',
+                                    data: formData,
+                                    success: function(response) {
+                                        var $messages = jQuery('#course-registration-messages');
+                                        var $submit = jQuery('#wp-submit');
+                                        
+                                        if (response.success) {
+                                            $messages.html('<div class="success">' + response.data.message + '</div>').addClass('success');
+                                            $form[0].reset();
+                                            
+                                            if (response.data.redirect) {
+                                                setTimeout(function() {
+                                                    window.location.href = response.data.redirect;
+                                                }, 2000);
                                             }
                                         } else {
-                                            alert('Ошибка проверки безопасности. Попробуйте еще раз.');
+                                            $messages.html('<div class="error">' + response.data.message + '</div>').addClass('error');
+                                            $submit.prop('disabled', false).val('<?php echo esc_js(__('Зарегистрироваться', 'course-plugin')); ?>');
                                         }
+                                    },
+                                    error: function() {
+                                        var $messages = jQuery('#course-registration-messages');
+                                        var $submit = jQuery('#wp-submit');
+                                        $messages.html('<div class="error">Ошибка проверки безопасности. Попробуйте еще раз.</div>').addClass('error');
+                                        $submit.prop('disabled', false).val('<?php echo esc_js(__('Зарегистрироваться', 'course-plugin')); ?>');
                                     }
-                                };
-                                xhr.send('action=verify_recaptcha&token=' + encodeURIComponent(token) + '&nonce=<?php echo wp_create_nonce("verify_recaptcha"); ?>');
+                                });
+                            }).catch(function(error) {
+                                console.error('reCAPTCHA error:', error);
+                                var $messages = jQuery('#course-registration-messages');
+                                var $submit = jQuery('#wp-submit');
+                                $messages.html('<div class="error">Ошибка загрузки системы безопасности. Обновите страницу.</div>').addClass('error');
+                                $submit.prop('disabled', false).val('<?php echo esc_js(__('Зарегистрироваться', 'course-plugin')); ?>');
                             });
                         });
                     } else {
                         console.error('reCAPTCHA не загружена');
-                        alert('Ошибка загрузки системы безопасности. Обновите страницу.');
+                        var $messages = jQuery('#course-registration-messages');
+                        $messages.html('<div class="error">Ошибка загрузки системы безопасности. Обновите страницу.</div>').addClass('error');
                     }
                     <?php endif; ?>
                 });
