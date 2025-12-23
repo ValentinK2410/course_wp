@@ -231,9 +231,10 @@ class Course_Anti_Bot {
             // ============================================
             var challenge = <?php echo json_encode($challenge); ?>;
             
-            // Сохраняем правильный ответ в sessionStorage
-            sessionStorage.setItem('challenge_answer', challenge.answer.toLowerCase().trim());
-            sessionStorage.setItem('challenge_type', challenge.type);
+            // Сохраняем правильный ответ в sessionStorage (преобразуем в строку для поддержки математических задач)
+            var answerStr = String(challenge.answer || '');
+            sessionStorage.setItem('challenge_answer', answerStr.toLowerCase().trim());
+            sessionStorage.setItem('challenge_type', challenge.type || '');
             
             function addChallenge() {
                 var form = document.getElementById('course-registration-form');
@@ -483,7 +484,7 @@ class Course_Anti_Bot {
                     
                     // Нормализуем ответ (убираем пробелы, приводим к нижнему регистру)
                     var normalizedAnswer = challengeAnswer.toString().toLowerCase().trim();
-                    var normalizedCorrect = correctAnswer.toLowerCase().trim();
+                    var normalizedCorrect = correctAnswer ? String(correctAnswer).toLowerCase().trim() : '';
                     
                     if (challengeType === 'math') {
                         // Для математических задач сравниваем числа
@@ -853,7 +854,7 @@ class Course_Anti_Bot {
                     var correctAnswer = sessionStorage.getItem('challenge_answer');
                     var challengeType = sessionStorage.getItem('challenge_type');
                     var normalizedAnswer = challengeAnswer.value.toString().toLowerCase().trim();
-                    var normalizedCorrect = correctAnswer ? correctAnswer.toLowerCase().trim() : '';
+                    var normalizedCorrect = correctAnswer ? String(correctAnswer).toLowerCase().trim() : '';
                     
                     if (!normalizedCorrect) {
                         e.preventDefault();
