@@ -450,15 +450,57 @@ class Course_Anti_Bot {
                         return false;
                     }
                     
-                    // Проверка математической задачи
-                    <?php if ($math_enabled): ?>
-                    var mathAnswer = parseInt(jQuery('#math_challenge').val());
-                    var correctAnswer = parseInt(sessionStorage.getItem('math_answer'));
-                    if (isNaN(mathAnswer) || mathAnswer !== correctAnswer) {
-                        $messages.html('<div class="error">Неверный ответ на математическую задачу. Пожалуйста, решите задачу правильно.</div>').addClass('error');
+                    // Проверка задачи (математика или текст)
+                    var challengeAnswer = jQuery('#anti_bot_challenge').val();
+                    var correctAnswer = sessionStorage.getItem('challenge_answer');
+                    var challengeType = sessionStorage.getItem('challenge_type');
+                    
+                    if (!challengeAnswer || challengeAnswer === '') {
+                        $messages.html('<div class="error">Пожалуйста, решите задачу для защиты от ботов.</div>').addClass('error');
                         return false;
                     }
-                    <?php endif; ?>
+                    
+                    // Нормализуем ответ (убираем пробелы, приводим к нижнему регистру)
+                    var normalizedAnswer = challengeAnswer.toString().toLowerCase().trim();
+                    var normalizedCorrect = correctAnswer.toLowerCase().trim();
+                    
+                    if (challengeType === 'math') {
+                        // Для математических задач сравниваем числа
+                        var userAnswer = parseInt(normalizedAnswer);
+                        var correctNum = parseInt(normalizedCorrect);
+                        if (isNaN(userAnswer) || userAnswer !== correctNum) {
+                            $messages.html('<div class="error">Неверный ответ на задачу. Пожалуйста, решите задачу правильно.</div>').addClass('error');
+                            return false;
+                        }
+                    } else {
+                        // Для текстовых заданий сравниваем строки (с учетом возможных вариантов написания)
+                        // Разрешаем варианты с разными окончаниями или близкие по смыслу
+                        var answerVariants = normalizedCorrect.split(' ');
+                        var userWords = normalizedAnswer.split(' ');
+                        
+                        // Проверяем, содержит ли ответ пользователя правильное слово
+                        var isCorrect = false;
+                        for (var i = 0; i < answerVariants.length; i++) {
+                            for (var j = 0; j < userWords.length; j++) {
+                                // Сравниваем слова (учитываем возможные окончания)
+                                if (userWords[j].indexOf(answerVariants[i]) === 0 || answerVariants[i].indexOf(userWords[j]) === 0) {
+                                    isCorrect = true;
+                                    break;
+                                }
+                            }
+                            if (isCorrect) break;
+                        }
+                        
+                        // Также проверяем точное совпадение
+                        if (!isCorrect && normalizedAnswer === normalizedCorrect) {
+                            isCorrect = true;
+                        }
+                        
+                        if (!isCorrect) {
+                            $messages.html('<div class="error">Неверный ответ. Пожалуйста, внимательно прочитайте задание и вставьте правильное слово.</div>').addClass('error');
+                            return false;
+                        }
+                    }
                     
                     // Проверка поведения пользователя
                     <?php if ($behavior_enabled): ?>
