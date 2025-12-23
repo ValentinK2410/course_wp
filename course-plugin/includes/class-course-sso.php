@@ -126,55 +126,95 @@ class Course_SSO {
             return; // Если не настроены URL, не добавляем скрипты
         }
         
+        // Получаем URL для AJAX
+        $ajax_url = admin_url('admin-ajax.php');
+        $nonce = wp_create_nonce('sso_tokens');
+        
         ?>
         <script type="text/javascript">
-        jQuery(document).ready(function($) {
+        (function() {
+            // Функция для выполнения AJAX запроса (работает с jQuery или без него)
+            function ssoAjaxRequest(action, callback) {
+                var ajaxUrl = '<?php echo esc_js($ajax_url); ?>';
+                var nonce = '<?php echo esc_js($nonce); ?>';
+                
+                // Используем Fetch API если доступен, иначе XMLHttpRequest
+                if (typeof fetch !== 'undefined') {
+                    var formData = new FormData();
+                    formData.append('action', action);
+                    formData.append('nonce', nonce);
+                    
+                    fetch(ajaxUrl, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        callback(data);
+                    })
+                    .catch(function(error) {
+                        console.error('SSO Error:', error);
+                        alert('Ошибка при получении токена');
+                    });
+                } else if (typeof XMLHttpRequest !== 'undefined') {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', ajaxUrl, true);
+                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === 4) {
+                            if (xhr.status === 200) {
+                                try {
+                                    var data = JSON.parse(xhr.responseText);
+                                    callback(data);
+                                } catch (e) {
+                                    console.error('SSO Parse Error:', e);
+                                    alert('Ошибка при обработке ответа');
+                                }
+                            } else {
+                                alert('Ошибка при получении токена');
+                            }
+                        }
+                    };
+                    xhr.send('action=' + encodeURIComponent(action) + '&nonce=' + encodeURIComponent(nonce));
+                } else {
+                    alert('Браузер не поддерживает необходимые функции для SSO');
+                }
+            }
+            
             // Функция для перехода в Moodle
             window.goToMoodle = function() {
-                $.ajax({
-                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                    type: 'POST',
-                    data: {
-                        action: 'get_sso_tokens',
-                        nonce: '<?php echo wp_create_nonce('sso_tokens'); ?>'
-                    },
-                    success: function(response) {
-                        if (response.success && response.data && response.data.moodle_token) {
-                            var moodleUrl = '<?php echo esc_js(rtrim($moodle_url, '/')); ?>' + '/auth/sso/login.php?token=' + encodeURIComponent(response.data.moodle_token);
-                            window.location.href = moodleUrl;
-                        } else {
-                            alert('Ошибка получения токена для входа в Moodle');
-                        }
-                    },
-                    error: function() {
-                        alert('Ошибка при получении токена');
+                <?php if (!empty($moodle_url)): ?>
+                ssoAjaxRequest('get_sso_tokens', function(response) {
+                    if (response.success && response.data && response.data.moodle_token) {
+                        var moodleUrl = '<?php echo esc_js(rtrim($moodle_url, '/')); ?>' + '/auth/sso/login.php?token=' + encodeURIComponent(response.data.moodle_token);
+                        window.location.href = moodleUrl;
+                    } else {
+                        alert('Ошибка получения токена для входа в Moodle');
                     }
                 });
+                <?php else: ?>
+                alert('Moodle URL не настроен');
+                <?php endif; ?>
             };
             
             // Функция для перехода в Laravel
             window.goToLaravel = function() {
-                $.ajax({
-                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                    type: 'POST',
-                    data: {
-                        action: 'get_sso_tokens',
-                        nonce: '<?php echo wp_create_nonce('sso_tokens'); ?>'
-                    },
-                    success: function(response) {
-                        if (response.success && response.data && response.data.laravel_token) {
-                            var laravelUrl = '<?php echo esc_js(rtrim($laravel_url, '/')); ?>' + '/sso/login?token=' + encodeURIComponent(response.data.laravel_token);
-                            window.location.href = laravelUrl;
-                        } else {
-                            alert('Ошибка получения токена для входа в Laravel');
-                        }
-                    },
-                    error: function() {
-                        alert('Ошибка при получении токена');
+                <?php if (!empty($laravel_url)): ?>
+                ssoAjaxRequest('get_sso_tokens', function(response) {
+                    if (response.success && response.data && response.data.laravel_token) {
+                        var laravelUrl = '<?php echo esc_js(rtrim($laravel_url, '/')); ?>' + '/sso/login?token=' + encodeURIComponent(response.data.laravel_token);
+                        window.location.href = laravelUrl;
+                    } else {
+                        alert('Ошибка получения токена для входа в Laravel');
                     }
                 });
+                <?php else: ?>
+                alert('Laravel URL не настроен');
+                <?php endif; ?>
             };
-        });
+        })();
         </script>
         <?php
     }
