@@ -288,21 +288,35 @@ class Course_Anti_Bot {
                             data: {
                                 action: 'get_new_challenge'
                             },
-                            success: function(response) {
-                                if (response.success) {
-                                    var newChallenge = response.data;
-                                    sessionStorage.setItem('challenge_answer', newChallenge.answer.toLowerCase().trim());
-                                    sessionStorage.setItem('challenge_type', newChallenge.type);
-                                    challengeLabel.innerHTML = newChallenge.question + ' <span class="required">*</span>';
-                                    challengeInput.value = '';
-                                    challengeInput.type = newChallenge.input_type;
-                                    if (newChallenge.type === 'bible') {
-                                        challengeInput.placeholder = '<?php echo esc_js(__('Введите пропущенное слово', 'course-plugin')); ?>';
-                                    } else {
-                                        challengeInput.placeholder = '';
+                                    success: function(response) {
+                                        if (response.success && response.data) {
+                                            var newChallenge = response.data;
+                                            
+                                            // Преобразуем ответ в строку перед сохранением (для математических задач answer - число)
+                                            var answerStr = String(newChallenge.answer || '');
+                                            sessionStorage.setItem('challenge_answer', answerStr.toLowerCase().trim());
+                                            sessionStorage.setItem('challenge_type', newChallenge.type || '');
+                                            
+                                            if (challengeLabel && newChallenge.question) {
+                                                challengeLabel.innerHTML = newChallenge.question + ' <span class="required">*</span>';
+                                            }
+                                            
+                                            if (challengeInput) {
+                                                challengeInput.value = '';
+                                                challengeInput.type = newChallenge.input_type || 'text';
+                                                if (newChallenge.type === 'bible') {
+                                                    challengeInput.placeholder = '<?php echo esc_js(__('Введите пропущенное слово', 'course-plugin')); ?>';
+                                                } else {
+                                                    challengeInput.placeholder = '';
+                                                }
+                                            }
+                                        } else {
+                                            alert('<?php echo esc_js(__('Не удалось загрузить новую задачу. Попробуйте обновить страницу.', 'course-plugin')); ?>');
+                                        }
+                                    },
+                                    error: function() {
+                                        alert('<?php echo esc_js(__('Произошла ошибка при загрузке новой задачи.', 'course-plugin')); ?>');
                                     }
-                                }
-                            }
                         });
                     };
                     challengeContainer.appendChild(refreshButton);
