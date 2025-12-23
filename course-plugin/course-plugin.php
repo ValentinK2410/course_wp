@@ -219,6 +219,18 @@ class Course_Plugin {
         if (class_exists('Course_SSO')) {
             Course_SSO::get_instance();
         }
+        
+        // Инициализируем защиту от ботов
+        // Добавляет методы защиты от автоматических регистраций (honeypot, математические задачи, анализ поведения)
+        if (class_exists('Course_Anti_Bot')) {
+            Course_Anti_Bot::get_instance();
+        }
+        
+        // Инициализируем админ-панель защиты от ботов
+        // Добавляет страницу настроек "Настройки → Защита от ботов"
+        if (class_exists('Course_Anti_Bot_Admin')) {
+            Course_Anti_Bot_Admin::get_instance();
+        }
     }
     
     /**
