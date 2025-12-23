@@ -822,6 +822,7 @@ class Course_Anti_Bot {
                     if (!challengeAnswer || !challengeAnswer.value) {
                         e.preventDefault();
                         alert('<?php echo esc_js(__('Пожалуйста, решите задачу для защиты от ботов.', 'course-plugin')); ?>');
+                        challengeAnswer.focus();
                         return false;
                     }
                     
@@ -830,12 +831,20 @@ class Course_Anti_Bot {
                     var normalizedAnswer = challengeAnswer.value.toString().toLowerCase().trim();
                     var normalizedCorrect = correctAnswer ? correctAnswer.toLowerCase().trim() : '';
                     
+                    if (!normalizedCorrect) {
+                        e.preventDefault();
+                        alert('<?php echo esc_js(__('Ошибка проверки. Пожалуйста, обновите страницу и попробуйте снова.', 'course-plugin')); ?>');
+                        return false;
+                    }
+                    
                     if (challengeType === 'math') {
                         var userAnswer = parseInt(normalizedAnswer);
                         var correctNum = parseInt(normalizedCorrect);
                         if (isNaN(userAnswer) || userAnswer !== correctNum) {
                             e.preventDefault();
                             alert('<?php echo esc_js(__('Неверный ответ на задачу. Пожалуйста, решите задачу правильно.', 'course-plugin')); ?>');
+                            challengeAnswer.focus();
+                            challengeAnswer.select();
                             return false;
                         }
                     } else if (challengeType === 'bible') {
@@ -843,22 +852,37 @@ class Course_Anti_Bot {
                         var userWords = normalizedAnswer.split(' ');
                         var isCorrect = false;
                         
-                        for (var i = 0; i < answerVariants.length; i++) {
-                            for (var j = 0; j < userWords.length; j++) {
-                                if (userWords[j].indexOf(answerVariants[i]) === 0 || answerVariants[i].indexOf(userWords[j]) === 0) {
-                                    isCorrect = true;
-                                    break;
+                        // Проверяем точное совпадение
+                        if (normalizedAnswer === normalizedCorrect) {
+                            isCorrect = true;
+                        } else {
+                            // Проверяем частичное совпадение
+                            for (var i = 0; i < answerVariants.length; i++) {
+                                for (var j = 0; j < userWords.length; j++) {
+                                    if (userWords[j].indexOf(answerVariants[i]) === 0 || answerVariants[i].indexOf(userWords[j]) === 0) {
+                                        isCorrect = true;
+                                        break;
+                                    }
                                 }
+                                if (isCorrect) break;
                             }
-                            if (isCorrect) break;
                         }
                         
-                        if (!isCorrect && normalizedAnswer !== normalizedCorrect) {
+                        if (!isCorrect) {
                             e.preventDefault();
                             alert('<?php echo esc_js(__('Неверный ответ. Пожалуйста, внимательно прочитайте задание и вставьте правильное слово.', 'course-plugin')); ?>');
+                            challengeAnswer.focus();
+                            challengeAnswer.select();
                             return false;
                         }
                     }
+                    
+                    // Добавляем тип задачи в форму для серверной проверки
+                    var challengeTypeInput = document.createElement('input');
+                    challengeTypeInput.type = 'hidden';
+                    challengeTypeInput.name = 'challenge_type';
+                    challengeTypeInput.value = challengeType;
+                    form.appendChild(challengeTypeInput);
                 });
             }
             
