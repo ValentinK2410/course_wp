@@ -62,12 +62,13 @@ class Course_Anti_Bot_Admin {
             check_admin_referer('course_anti_bot_settings-options');
         }
         
-        $recaptcha_site_key = get_option('recaptcha_site_key', '');
-        $recaptcha_secret_key = get_option('recaptcha_secret_key', '');
         $anti_bot_enabled = get_option('anti_bot_enabled', true);
         $rate_limit_enabled = get_option('rate_limit_enabled', true);
         $rate_limit_attempts = get_option('rate_limit_attempts', 5);
         $rate_limit_period = get_option('rate_limit_period', 3600);
+        $math_challenge_enabled = get_option('math_challenge_enabled', true);
+        $behavior_analysis_enabled = get_option('behavior_analysis_enabled', true);
+        $field_order_check_enabled = get_option('field_order_check_enabled', true);
         
         ?>
         <div class="wrap">
@@ -95,39 +96,50 @@ class Course_Anti_Bot_Admin {
                     </tr>
                 </table>
                 
-                <h2><?php _e('Google reCAPTCHA v3', 'course-plugin'); ?></h2>
-                <p class="description">
-                    <?php _e('reCAPTCHA v3 работает в фоновом режиме и не требует действий от пользователя. Получите ключи на', 'course-plugin'); ?>
-                    <a href="https://www.google.com/recaptcha/admin" target="_blank"><?php _e('Google reCAPTCHA', 'course-plugin'); ?></a>
-                </p>
+                <h2><?php _e('Методы защиты', 'course-plugin'); ?></h2>
                 <table class="form-table">
                     <tr>
                         <th scope="row">
-                            <label for="recaptcha_site_key"><?php _e('Site Key', 'course-plugin'); ?></label>
+                            <label for="math_challenge_enabled"><?php _e('Математическая задача', 'course-plugin'); ?></label>
                         </th>
                         <td>
-                            <input type="text" 
-                                   id="recaptcha_site_key" 
-                                   name="recaptcha_site_key" 
-                                   value="<?php echo esc_attr($recaptcha_site_key); ?>" 
-                                   class="regular-text" />
+                            <input type="checkbox" 
+                                   id="math_challenge_enabled" 
+                                   name="math_challenge_enabled" 
+                                   value="1" 
+                                   <?php checked(1, $math_challenge_enabled); ?> />
                             <p class="description">
-                                <?php _e('Публичный ключ reCAPTCHA (Site Key).', 'course-plugin'); ?>
+                                <?php _e('Добавляет простую математическую задачу в форму регистрации. Пользователь должен решить её перед отправкой формы.', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="recaptcha_secret_key"><?php _e('Secret Key', 'course-plugin'); ?></label>
+                            <label for="behavior_analysis_enabled"><?php _e('Анализ поведения пользователя', 'course-plugin'); ?></label>
                         </th>
                         <td>
-                            <input type="text" 
-                                   id="recaptcha_secret_key" 
-                                   name="recaptcha_secret_key" 
-                                   value="<?php echo esc_attr($recaptcha_secret_key); ?>" 
-                                   class="regular-text" />
+                            <input type="checkbox" 
+                                   id="behavior_analysis_enabled" 
+                                   name="behavior_analysis_enabled" 
+                                   value="1" 
+                                   <?php checked(1, $behavior_analysis_enabled); ?> />
                             <p class="description">
-                                <?php _e('Секретный ключ reCAPTCHA (Secret Key). Не показывайте его никому!', 'course-plugin'); ?>
+                                <?php _e('Анализирует поведение пользователя: движения мыши, клики, паттерны ввода, время заполнения формы. Очень эффективно против ботов.', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="field_order_check_enabled"><?php _e('Проверка последовательности заполнения полей', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="checkbox" 
+                                   id="field_order_check_enabled" 
+                                   name="field_order_check_enabled" 
+                                   value="1" 
+                                   <?php checked(1, $field_order_check_enabled); ?> />
+                            <p class="description">
+                                <?php _e('Отслеживает порядок заполнения полей формы. Боты часто заполняют поля не по порядку или слишком быстро.', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
@@ -191,12 +203,23 @@ class Course_Anti_Bot_Admin {
             
             <h2><?php _e('Информация о защите', 'course-plugin'); ?></h2>
             <div class="card">
-                <h3><?php _e('Методы защиты:', 'course-plugin'); ?></h3>
+                <h3><?php _e('Методы защиты (все работают без сторонних сервисов):', 'course-plugin'); ?></h3>
                 <ul>
-                    <li><strong><?php _e('Honeypot поле', 'course-plugin'); ?></strong> - <?php _e('Скрытое поле, которое заполняют только боты. Всегда включено.', 'course-plugin'); ?></li>
-                    <li><strong><?php _e('Проверка времени заполнения', 'course-plugin'); ?></strong> - <?php _e('Форма должна заполняться минимум 2 секунды. Всегда включено.', 'course-plugin'); ?></li>
-                    <li><strong><?php _e('reCAPTCHA v3', 'course-plugin'); ?></strong> - <?php _e('Невидимая проверка от Google. Требует настройки ключей.', 'course-plugin'); ?></li>
-                    <li><strong><?php _e('Rate Limiting', 'course-plugin'); ?></strong> - <?php _e('Ограничение попыток регистрации с одного IP адреса.', 'course-plugin'); ?></li>
+                    <li><strong><?php _e('Honeypot поле', 'course-plugin'); ?></strong> - <?php _e('Скрытое поле, которое заполняют только боты. Всегда включено, не требует настройки.', 'course-plugin'); ?></li>
+                    <li><strong><?php _e('Проверка времени заполнения', 'course-plugin'); ?></strong> - <?php _e('Форма должна заполняться минимум 3 секунды. Всегда включено, не требует настройки.', 'course-plugin'); ?></li>
+                    <li><strong><?php _e('Математическая задача', 'course-plugin'); ?></strong> - <?php _e('Простая математическая задача (например: 5 + 3 = ?). Пользователь должен решить её перед отправкой формы.', 'course-plugin'); ?></li>
+                    <li><strong><?php _e('Анализ поведения пользователя', 'course-plugin'); ?></strong> - <?php _e('Отслеживает движения мыши, клики, паттерны ввода, время между действиями. Очень эффективно против ботов.', 'course-plugin'); ?></li>
+                    <li><strong><?php _e('Проверка последовательности заполнения полей', 'course-plugin'); ?></strong> - <?php _e('Отслеживает порядок заполнения полей. Боты часто заполняют поля не по порядку.', 'course-plugin'); ?></li>
+                    <li><strong><?php _e('Проверка JavaScript окружения', 'course-plugin'); ?></strong> - <?php _e('Проверяет характеристики браузера и устройства. Всегда включено.', 'course-plugin'); ?></li>
+                    <li><strong><?php _e('Rate Limiting', 'course-plugin'); ?></strong> - <?php _e('Ограничение попыток регистрации с одного IP адреса. Настраивается.', 'course-plugin'); ?></li>
+                </ul>
+                <p><strong><?php _e('Преимущества:', 'course-plugin'); ?></strong></p>
+                <ul>
+                    <li><?php _e('Полная независимость от сторонних сервисов', 'course-plugin'); ?></li>
+                    <li><?php _e('Не требует API ключей или регистрации', 'course-plugin'); ?></li>
+                    <li><?php _e('Работает полностью на вашем сервере', 'course-plugin'); ?></li>
+                    <li><?php _e('Не передает данные пользователей третьим лицам', 'course-plugin'); ?></li>
+                    <li><?php _e('Множественные уровни защиты', 'course-plugin'); ?></li>
                 </ul>
             </div>
         </div>
