@@ -38,13 +38,9 @@ class Course_Anti_Bot_Admin {
      * Добавление пункта меню в админку
      */
     public function add_admin_menu() {
-        // Используем то же меню, что и настройки Moodle Sync
-        // Если меню настроек Moodle существует, добавляем подменю к нему
-        // Иначе создаем отдельное меню
-        $parent_slug = 'course-plugin-settings';
-        
-        add_submenu_page(
-            $parent_slug,
+        // Добавляем страницу настроек в раздел "Настройки" (Settings)
+        // Так же, как и настройки Moodle Sync
+        add_options_page(
             __('Защита от ботов', 'course-plugin'),
             __('Защита от ботов', 'course-plugin'),
             'manage_options',
