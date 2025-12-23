@@ -709,37 +709,46 @@ class Course_Anti_Bot {
         ?>
         <script type="text/javascript">
         (function() {
+            // СТРОГАЯ ПРОВЕРКА: Если форма не найдена сразу, не выполняем скрипт вообще
+            // Это предотвращает выполнение скрипта на странице успеха
+            var form = document.getElementById('registerform');
+            if (!form) {
+                // Если форма не найдена, проверяем через небольшую задержку (только один раз)
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        form = document.getElementById('registerform');
+                        if (!form) {
+                            return; // Форма не найдена, выходим
+                        }
+                        // Проверяем, что это действительно форма регистрации
+                        if (!form.querySelector('input[name="user_login"]') || !form.querySelector('input[name="user_email"]')) {
+                            return; // Это не форма регистрации
+                        }
+                        initProtection();
+                    });
+                } else {
+                    // DOM уже загружен, форма не найдена - выходим
+                    return;
+                }
+                return; // Выходим из основной функции
+            }
+            
             // Проверяем, что мы действительно на странице регистрации (не на странице успеха)
             var urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('registered') === 'success' || urlParams.get('checkemail') === 'registered') {
                 return; // Не выполняем скрипт на странице успеха
             }
             
+            // Дополнительная проверка: убеждаемся, что форма действительно для регистрации
+            if (!form.querySelector('input[name="user_login"]') || !form.querySelector('input[name="user_email"]')) {
+                return; // Это не форма регистрации
+            }
+            
             // Ждем загрузки DOM
             function initProtection() {
-                var form = document.getElementById('registerform');
+                form = document.getElementById('registerform');
                 if (!form) {
-                    // Если форма еще не загружена, пробуем еще раз через небольшую задержку (максимум 5 секунд)
-                    var attempts = 0;
-                    var maxAttempts = 50; // 50 попыток * 100мс = 5 секунд
-                    var checkInterval = setInterval(function() {
-                        attempts++;
-                        form = document.getElementById('registerform');
-                        if (form) {
-                            clearInterval(checkInterval);
-                            initProtection();
-                        } else if (attempts >= maxAttempts) {
-                            clearInterval(checkInterval);
-                            // Если форма не найдена после 5 секунд, значит мы не на странице регистрации
-                            return;
-                        }
-                    }, 100);
-                    return;
-                }
-                
-                // Дополнительная проверка: убеждаемся, что форма действительно для регистрации
-                if (!form.querySelector('input[name="user_login"]') || !form.querySelector('input[name="user_email"]')) {
-                    return; // Это не форма регистрации
+                    return; // Форма не найдена
                 }
                 
                 // Добавляем honeypot поле
