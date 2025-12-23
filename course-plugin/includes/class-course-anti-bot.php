@@ -36,12 +36,19 @@ class Course_Anti_Bot {
         // Регистрируем настройки
         add_action('admin_init', array($this, 'register_settings'));
         
-        // Добавляем скрипты и поля в форму регистрации
+        // Добавляем скрипты и поля в форму регистрации (кастомная форма через шорткод)
         add_action('wp_footer', array($this, 'add_anti_bot_scripts'));
         
-        // AJAX обработчик для проверки защиты
-        add_action('wp_ajax_verify_anti_bot', array($this, 'ajax_verify_anti_bot'));
-        add_action('wp_ajax_nopriv_verify_anti_bot', array($this, 'ajax_verify_anti_bot'));
+        // Добавляем защиту для стандартной формы WordPress (wp-login.php)
+        add_action('login_form_register', array($this, 'add_wp_login_scripts'));
+        add_action('login_footer', array($this, 'add_wp_login_scripts'));
+        
+        // Проверка защиты при стандартной регистрации WordPress
+        add_filter('registration_errors', array($this, 'validate_wp_registration'), 10, 3);
+        
+        // AJAX обработчик для получения новой задачи (если пользователь хочет обновить)
+        add_action('wp_ajax_get_new_challenge', array($this, 'ajax_get_new_challenge'));
+        add_action('wp_ajax_nopriv_get_new_challenge', array($this, 'ajax_get_new_challenge'));
     }
     
     /**
@@ -645,11 +652,226 @@ class Course_Anti_Bot {
     }
     
     /**
-     * AJAX обработчик для проверки защиты (если нужен отдельный endpoint)
+     * AJAX обработчик для получения новой задачи
      */
-    public function ajax_verify_anti_bot() {
-        // Этот метод можно использовать для дополнительных проверок
-        wp_send_json_success(array('message' => 'OK'));
+    public function ajax_get_new_challenge() {
+        $challenge = $this->get_challenge();
+        wp_send_json_success($challenge);
+    }
+    
+    /**
+     * Добавление защиты для стандартной формы WordPress (wp-login.php)
+     */
+    public function add_wp_login_scripts() {
+        // Проверяем, что мы на странице регистрации
+        if (!isset($_GET['action']) || $_GET['action'] !== 'register') {
+            return;
+        }
+        
+        $anti_bot_enabled = get_option('anti_bot_enabled', true);
+        if (!$anti_bot_enabled) {
+            return;
+        }
+        
+        $math_enabled = get_option('math_challenge_enabled', true);
+        if (!$math_enabled) {
+            return;
+        }
+        
+        // Генерируем задачу
+        $challenge = $this->get_challenge();
+        
+        ?>
+        <script type="text/javascript">
+        (function() {
+            // Ждем загрузки DOM
+            function initProtection() {
+                var form = document.getElementById('registerform');
+                if (!form) {
+                    // Если форма еще не загружена, пробуем еще раз через небольшую задержку
+                    setTimeout(initProtection, 100);
+                    return;
+                }
+                
+                // Добавляем honeypot поле
+                if (!document.getElementById('website_url')) {
+                    var honeypot = document.createElement('input');
+                    honeypot.type = 'text';
+                    honeypot.name = 'website_url';
+                    honeypot.id = 'website_url';
+                    honeypot.style.cssText = 'display:none !important; visibility:hidden !important; position:absolute !important; left:-9999px !important; opacity:0 !important; height:0 !important; width:0 !important;';
+                    honeypot.tabIndex = -1;
+                    honeypot.setAttribute('autocomplete', 'off');
+                    honeypot.setAttribute('aria-hidden', 'true');
+                    form.appendChild(honeypot);
+                }
+                
+                // Добавляем поле с задачей
+                if (!document.getElementById('anti_bot_challenge')) {
+                    var challenge = <?php echo json_encode($challenge); ?>;
+                    
+                    // Сохраняем правильный ответ
+                    sessionStorage.setItem('challenge_answer', challenge.answer.toLowerCase().trim());
+                    sessionStorage.setItem('challenge_type', challenge.type);
+                    
+                    var challengeContainer = document.createElement('p');
+                    challengeContainer.id = 'challenge_container';
+                    challengeContainer.style.marginBottom = '15px';
+                    
+                    var challengeLabel = document.createElement('label');
+                    challengeLabel.setAttribute('for', 'anti_bot_challenge');
+                    challengeLabel.style.display = 'block';
+                    challengeLabel.style.marginBottom = '5px';
+                    challengeLabel.style.fontWeight = 'bold';
+                    challengeLabel.innerHTML = challenge.question + ' <span style="color: #dc3232;">*</span>';
+                    
+                    var challengeInput = document.createElement('input');
+                    challengeInput.type = challenge.input_type;
+                    challengeInput.name = 'anti_bot_challenge';
+                    challengeInput.id = 'anti_bot_challenge';
+                    challengeInput.className = 'input';
+                    challengeInput.required = true;
+                    challengeInput.setAttribute('autocomplete', 'off');
+                    challengeInput.style.width = '100%';
+                    challengeInput.style.padding = '8px';
+                    challengeInput.style.border = '1px solid #ddd';
+                    challengeInput.style.borderRadius = '3px';
+                    challengeInput.style.marginTop = '5px';
+                    
+                    if (challenge.type === 'bible') {
+                        challengeInput.placeholder = '<?php echo esc_js(__('Введите пропущенное слово', 'course-plugin')); ?>';
+                    }
+                    
+                    challengeContainer.appendChild(challengeLabel);
+                    challengeContainer.appendChild(challengeInput);
+                    
+                    // Добавляем кнопку обновления для текстовых заданий
+                    if (challenge.type === 'bible') {
+                        var refreshButton = document.createElement('button');
+                        refreshButton.type = 'button';
+                        refreshButton.className = 'button';
+                        refreshButton.style.marginTop = '5px';
+                        refreshButton.innerHTML = '<?php echo esc_js(__('Обновить задачу', 'course-plugin')); ?>';
+                        refreshButton.onclick = function() {
+                            if (typeof jQuery !== 'undefined') {
+                                jQuery.ajax({
+                                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                                    type: 'POST',
+                                    data: {
+                                        action: 'get_new_challenge'
+                                    },
+                                    success: function(response) {
+                                        if (response.success) {
+                                            var newChallenge = response.data;
+                                            sessionStorage.setItem('challenge_answer', newChallenge.answer.toLowerCase().trim());
+                                            sessionStorage.setItem('challenge_type', newChallenge.type);
+                                            challengeLabel.innerHTML = newChallenge.question + ' <span style="color: #dc3232;">*</span>';
+                                            challengeInput.value = '';
+                                            challengeInput.type = newChallenge.input_type;
+                                            if (newChallenge.type === 'bible') {
+                                                challengeInput.placeholder = '<?php echo esc_js(__('Введите пропущенное слово', 'course-plugin')); ?>';
+                                            } else {
+                                                challengeInput.placeholder = '';
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        };
+                        challengeContainer.appendChild(refreshButton);
+                    }
+                    
+                    // Вставляем перед кнопкой отправки
+                    var submitButton = form.querySelector('input[type="submit"]');
+                    if (submitButton && submitButton.parentNode) {
+                        submitButton.parentNode.insertBefore(challengeContainer, submitButton);
+                    } else {
+                        form.appendChild(challengeContainer);
+                    }
+                }
+                
+                // Перехватываем отправку формы
+                form.addEventListener('submit', function(e) {
+                    // Проверка honeypot
+                    var honeypotValue = document.getElementById('website_url');
+                    if (honeypotValue && honeypotValue.value !== '') {
+                        e.preventDefault();
+                        alert('<?php echo esc_js(__('Обнаружена автоматическая регистрация.', 'course-plugin')); ?>');
+                        return false;
+                    }
+                    
+                    // Проверка задачи
+                    var challengeAnswer = document.getElementById('anti_bot_challenge');
+                    if (!challengeAnswer || !challengeAnswer.value) {
+                        e.preventDefault();
+                        alert('<?php echo esc_js(__('Пожалуйста, решите задачу для защиты от ботов.', 'course-plugin')); ?>');
+                        return false;
+                    }
+                    
+                    var correctAnswer = sessionStorage.getItem('challenge_answer');
+                    var challengeType = sessionStorage.getItem('challenge_type');
+                    var normalizedAnswer = challengeAnswer.value.toString().toLowerCase().trim();
+                    var normalizedCorrect = correctAnswer ? correctAnswer.toLowerCase().trim() : '';
+                    
+                    if (challengeType === 'math') {
+                        var userAnswer = parseInt(normalizedAnswer);
+                        var correctNum = parseInt(normalizedCorrect);
+                        if (isNaN(userAnswer) || userAnswer !== correctNum) {
+                            e.preventDefault();
+                            alert('<?php echo esc_js(__('Неверный ответ на задачу. Пожалуйста, решите задачу правильно.', 'course-plugin')); ?>');
+                            return false;
+                        }
+                    } else if (challengeType === 'bible') {
+                        var answerVariants = normalizedCorrect.split(' ');
+                        var userWords = normalizedAnswer.split(' ');
+                        var isCorrect = false;
+                        
+                        for (var i = 0; i < answerVariants.length; i++) {
+                            for (var j = 0; j < userWords.length; j++) {
+                                if (userWords[j].indexOf(answerVariants[i]) === 0 || answerVariants[i].indexOf(userWords[j]) === 0) {
+                                    isCorrect = true;
+                                    break;
+                                }
+                            }
+                            if (isCorrect) break;
+                        }
+                        
+                        if (!isCorrect && normalizedAnswer !== normalizedCorrect) {
+                            e.preventDefault();
+                            alert('<?php echo esc_js(__('Неверный ответ. Пожалуйста, внимательно прочитайте задание и вставьте правильное слово.', 'course-plugin')); ?>');
+                            return false;
+                        }
+                    }
+                });
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initProtection);
+            } else {
+                initProtection();
+            }
+        })();
+        </script>
+        <?php
+    }
+    
+    /**
+     * Проверка защиты при стандартной регистрации WordPress
+     * 
+     * @param WP_Error $errors Объект ошибок WordPress
+     * @param string $sanitized_user_login Очищенный логин пользователя
+     * @param string $user_email Email пользователя
+     * @return WP_Error Объект ошибок с добавленными ошибками защиты
+     */
+    public function validate_wp_registration($errors, $sanitized_user_login, $user_email) {
+        // Проверка защиты от ботов
+        $bot_check = self::verify_bot_protection();
+        if ($bot_check !== true) {
+            $error_message = isset($bot_check['message']) ? $bot_check['message'] : __('Обнаружена автоматическая регистрация.', 'course-plugin');
+            $errors->add('anti_bot_failed', $error_message);
+        }
+        
+        return $errors;
     }
     
     /**
