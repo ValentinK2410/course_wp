@@ -224,6 +224,61 @@ class Course_Registration {
                 // Очищаем предыдущие сообщения
                 $messages.html('').removeClass('error success');
                 
+                // Проверка защиты от ботов (если скрипты защиты загружены)
+                // Проверяем наличие поля задачи защиты
+                var $challengeField = $('#anti_bot_challenge');
+                if ($challengeField.length > 0) {
+                    var challengeAnswer = $challengeField.val();
+                    var correctAnswer = sessionStorage.getItem('challenge_answer');
+                    var challengeType = sessionStorage.getItem('challenge_type');
+                    
+                    if (!challengeAnswer || challengeAnswer === '') {
+                        $messages.html('<div class="error"><?php echo esc_js(__('Пожалуйста, решите задачу для защиты от ботов.', 'course-plugin')); ?></div>').addClass('error');
+                        return false;
+                    }
+                    
+                    // Нормализуем ответ
+                    var normalizedAnswer = challengeAnswer.toString().toLowerCase().trim();
+                    var normalizedCorrect = correctAnswer ? correctAnswer.toLowerCase().trim() : '';
+                    
+                    if (challengeType === 'math') {
+                        // Для математических задач
+                        var userAnswer = parseInt(normalizedAnswer);
+                        var correctNum = parseInt(normalizedCorrect);
+                        if (isNaN(userAnswer) || userAnswer !== correctNum) {
+                            $messages.html('<div class="error"><?php echo esc_js(__('Неверный ответ на задачу. Пожалуйста, решите задачу правильно.', 'course-plugin')); ?></div>').addClass('error');
+                            return false;
+                        }
+                    } else if (challengeType === 'bible') {
+                        // Для текстовых заданий
+                        var answerVariants = normalizedCorrect.split(' ');
+                        var userWords = normalizedAnswer.split(' ');
+                        var isCorrect = false;
+                        
+                        for (var i = 0; i < answerVariants.length; i++) {
+                            for (var j = 0; j < userWords.length; j++) {
+                                if (userWords[j].indexOf(answerVariants[i]) === 0 || answerVariants[i].indexOf(userWords[j]) === 0) {
+                                    isCorrect = true;
+                                    break;
+                                }
+                            }
+                            if (isCorrect) break;
+                        }
+                        
+                        if (!isCorrect && normalizedAnswer !== normalizedCorrect) {
+                            $messages.html('<div class="error"><?php echo esc_js(__('Неверный ответ. Пожалуйста, внимательно прочитайте задание и вставьте правильное слово.', 'course-plugin')); ?></div>').addClass('error');
+                            return false;
+                        }
+                    }
+                }
+                
+                // Проверка honeypot поля (если существует)
+                var $honeypot = $('#website_url');
+                if ($honeypot.length > 0 && $honeypot.val() !== '') {
+                    $messages.html('<div class="error"><?php echo esc_js(__('Обнаружена автоматическая регистрация.', 'course-plugin')); ?></div>').addClass('error');
+                    return false;
+                }
+                
                 // Проверяем совпадение паролей
                 if ($('#user_pass').val() !== $('#user_pass_confirm').val()) {
                     $messages.html('<div class="error"><?php echo esc_js(__('Пароли не совпадают!', 'course-plugin')); ?></div>').addClass('error');
