@@ -188,7 +188,7 @@ class Course_SSO {
                 <?php if (!empty($moodle_url)): ?>
                 ssoAjaxRequest('get_sso_tokens', function(response) {
                     if (response.success && response.data && response.data.moodle_token) {
-                        var moodleUrl = '<?php echo esc_js(rtrim($moodle_url, '/')); ?>' + '/auth/sso/login.php?token=' + encodeURIComponent(response.data.moodle_token);
+                        var moodleUrl = '<?php echo esc_js(rtrim($moodle_url, '/')); ?>' + '/sso-login.php?token=' + encodeURIComponent(response.data.moodle_token);
                         window.location.href = moodleUrl;
                     } else {
                         alert('Ошибка получения токена для входа в Moodle');
