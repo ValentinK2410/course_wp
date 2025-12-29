@@ -220,6 +220,31 @@ try {
         // Сохраняем moodle_user_id
         update_user_meta($wp_user_id, 'moodle_user_id', $moodle_id);
         
+        // Помечаем, что пароль нужно синхронизировать обратно в Moodle при первом входе
+        // Пользователь получит временный пароль, который нужно будет синхронизировать
+        update_user_meta($wp_user_id, 'moodle_password_needs_sync', true);
+        update_user_meta($wp_user_id, 'moodle_password_synced', false);
+        
+        // Обновляем пароль в Moodle на временный пароль
+        // Это позволит пользователю войти в Moodle с тем же временным паролем
+        try {
+            $moodle_api = new Course_Moodle_API($moodle_url, $moodle_token);
+            $update_result = $moodle_api->update_user($moodle_id, array(
+                'password' => $temp_password
+            ));
+            
+            if ($update_result !== false) {
+                // Помечаем, что пароль синхронизирован
+                update_user_meta($wp_user_id, 'moodle_password_synced', true);
+                delete_user_meta($wp_user_id, 'moodle_password_needs_sync');
+                echo "<p>✓ Пароль пользователя <strong>{$email}</strong> обновлен в Moodle</p>\n";
+            } else {
+                echo "<p>⚠ Не удалось обновить пароль в Moodle для пользователя <strong>{$email}</strong></p>\n";
+            }
+        } catch (Exception $e) {
+            echo "<p>⚠ Ошибка при обновлении пароля в Moodle: " . $e->getMessage() . "</p>\n";
+        }
+        
         // Создаем пользователя в Laravel
         $laravel_result = create_user_in_laravel(array(
             'name' => $fullname,
