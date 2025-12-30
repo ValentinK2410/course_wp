@@ -581,11 +581,18 @@ class Course_Registration {
         update_user_meta($user_id, 'pending_moodle_password', $user_pass);
         error_log('Course Registration: Пароль сохранен в метаполе для последующей синхронизации с Moodle');
         
-        // ИЗМЕНЕНО: Письмо НЕ отправляется при регистрации
-        // Письмо будет отправлено автоматически после создания пользователя в Moodle
-        // через метод send_password_email() в классе Course_Moodle_User_Sync
-        // Это письмо будет содержать данные для входа на все три платформы (WordPress, Moodle, Laravel)
-        error_log('Course Registration: Письмо будет отправлено после создания пользователя в Moodle');
+        // Отправляем письмо пользователю сразу после регистрации
+        try {
+            $this->send_registration_email($user_id, $user_pass);
+            error_log('Course Registration: Письмо отправлено сразу после регистрации');
+        } catch (Exception $e) {
+            error_log('Course Registration: Ошибка при отправке письма: ' . $e->getMessage());
+        } catch (Error $e) {
+            error_log('Course Registration: Фатальная ошибка при отправке письма: ' . $e->getMessage());
+        }
+        
+        // Синхронизация с Moodle/Laravel будет выполнена через хук wp_set_password
+        // когда пользователь подтвердит email и установит пароль
         
         // НЕ удаляем пароль из метаполя сразу - он может понадобиться для повторной отправки письма
         // Пароль будет удален автоматически через некоторое время или при следующей регистрации

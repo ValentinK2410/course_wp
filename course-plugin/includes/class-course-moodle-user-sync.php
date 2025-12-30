@@ -83,10 +83,6 @@ class Course_Moodle_User_Sync {
         // Это срабатывает когда пользователь подтверждает email и устанавливает пароль
         add_action('wp_set_password', array($this, 'sync_user_on_password_set'), 10, 2);
         
-        // Регистрируем хук для синхронизации пароля при первом входе пользователя
-        // Это позволяет синхронизировать временный пароль обратно в Moodle
-        add_action('wp_login', array($this, 'sync_password_on_first_login'), 10, 2);
-        
         // Регистрируем хук для добавления настроек в админку
         add_action('admin_init', array($this, 'register_user_sync_settings'));
         
