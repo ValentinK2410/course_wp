@@ -64,11 +64,27 @@ class Course_Anti_Bot_Admin {
         
         $anti_bot_enabled = get_option('anti_bot_enabled', true);
         $rate_limit_enabled = get_option('rate_limit_enabled', true);
-        $rate_limit_attempts = get_option('rate_limit_attempts', 5);
-        $rate_limit_period = get_option('rate_limit_period', 3600);
+        $rate_limit_attempts = get_option('rate_limit_attempts', 10); // Увеличено по умолчанию
+        $rate_limit_period = get_option('rate_limit_period', 1800); // Уменьшено по умолчанию (30 минут вместо 60)
         $math_challenge_enabled = get_option('math_challenge_enabled', true);
         $behavior_analysis_enabled = get_option('behavior_analysis_enabled', true);
         $field_order_check_enabled = get_option('field_order_check_enabled', true);
+        
+        // Обработка сброса лимита для IP
+        if (isset($_POST['reset_rate_limit_ip']) && isset($_POST['reset_ip']) && wp_verify_nonce($_POST['reset_rate_limit_nonce'], 'reset_rate_limit')) {
+            $ip_to_reset = sanitize_text_field($_POST['reset_ip']);
+            delete_transient('registration_attempts_' . $ip_to_reset);
+            delete_option('_transient_timeout_registration_attempts_' . $ip_to_reset);
+            echo '<div class="notice notice-success is-dismissible"><p>' . sprintf(__('Лимит для IP %s успешно сброшен.', 'course-plugin'), esc_html($ip_to_reset)) . '</p></div>';
+        }
+        
+        // Обработка сброса всех лимитов
+        if (isset($_POST['reset_all_rate_limits']) && wp_verify_nonce($_POST['reset_all_rate_limits_nonce'], 'reset_all_rate_limits')) {
+            global $wpdb;
+            $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_registration_attempts_%'");
+            $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_registration_attempts_%'");
+            echo '<div class="notice notice-success is-dismissible"><p>' . __('Все лимиты регистрации успешно сброшены.', 'course-plugin') . '</p></div>';
+        }
         
         ?>
         <div class="wrap">
@@ -180,7 +196,7 @@ class Course_Anti_Bot_Admin {
                                    min="1" 
                                    max="20" />
                             <p class="description">
-                                <?php _e('Максимальное количество попыток регистрации за период.', 'course-plugin'); ?>
+                                <?php _e('Максимальное количество попыток регистрации за период. Рекомендуется: 10-15 попыток.', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
@@ -197,7 +213,7 @@ class Course_Anti_Bot_Admin {
                                    min="60" 
                                    step="60" />
                             <p class="description">
-                                <?php _e('Период времени для подсчета попыток (в секундах). Например: 3600 = 1 час, 86400 = 24 часа.', 'course-plugin'); ?>
+                                <?php _e('Период времени для подсчета попыток (в секундах). Например: 1800 = 30 минут, 3600 = 1 час, 86400 = 24 часа. Рекомендуется: 1800-3600 секунд (30-60 минут).', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
@@ -205,6 +221,49 @@ class Course_Anti_Bot_Admin {
                 
                 <?php submit_button(); ?>
             </form>
+            
+            <hr>
+            
+            <h2><?php _e('Управление лимитами регистрации', 'course-plugin'); ?></h2>
+            <div class="card">
+                <h3><?php _e('Сброс лимита для конкретного IP', 'course-plugin'); ?></h3>
+                <p><?php _e('Если пользователь заблокирован из-за превышения лимита попыток, вы можете сбросить лимит для его IP адреса.', 'course-plugin'); ?></p>
+                <form method="post" action="" style="margin-top: 15px;">
+                    <?php wp_nonce_field('reset_rate_limit', 'reset_rate_limit_nonce'); ?>
+                    <p>
+                        <label for="reset_ip"><?php _e('IP адрес:', 'course-plugin'); ?></label><br>
+                        <input type="text" 
+                               id="reset_ip" 
+                               name="reset_ip" 
+                               value="" 
+                               placeholder="192.168.1.1" 
+                               class="regular-text" 
+                               required />
+                    </p>
+                    <p>
+                        <button type="submit" 
+                                name="reset_rate_limit_ip" 
+                                class="button button-secondary"
+                                onclick="return confirm('<?php echo esc_js(__('Вы уверены, что хотите сбросить лимит для этого IP?', 'course-plugin')); ?>');">
+                            <?php _e('Сбросить лимит для IP', 'course-plugin'); ?>
+                        </button>
+                    </p>
+                </form>
+                
+                <h3 style="margin-top: 30px;"><?php _e('Сброс всех лимитов', 'course-plugin'); ?></h3>
+                <p><?php _e('Внимание: это действие сбросит все лимиты регистрации для всех IP адресов.', 'course-plugin'); ?></p>
+                <form method="post" action="" style="margin-top: 15px;">
+                    <?php wp_nonce_field('reset_all_rate_limits', 'reset_all_rate_limits_nonce'); ?>
+                    <p>
+                        <button type="submit" 
+                                name="reset_all_rate_limits" 
+                                class="button button-secondary"
+                                onclick="return confirm('<?php echo esc_js(__('Вы уверены, что хотите сбросить ВСЕ лимиты регистрации? Это действие нельзя отменить.', 'course-plugin')); ?>');">
+                            <?php _e('Сбросить все лимиты', 'course-plugin'); ?>
+                        </button>
+                    </p>
+                </form>
+            </div>
             
             <h2><?php _e('Информация о защите', 'course-plugin'); ?></h2>
             <div class="card">

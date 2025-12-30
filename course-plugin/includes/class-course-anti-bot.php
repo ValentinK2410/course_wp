@@ -1106,12 +1106,39 @@ class Course_Anti_Bot {
         if ($rate_limit_enabled) {
             $ip = $_SERVER['REMOTE_ADDR'];
             $attempts = get_transient('registration_attempts_' . $ip);
-            $max_attempts = get_option('rate_limit_attempts', 5);
-            $period = get_option('rate_limit_period', 3600);
+            $max_attempts = get_option('rate_limit_attempts', 10); // Увеличено с 5 до 10 по умолчанию
+            $period = get_option('rate_limit_period', 1800); // Уменьшено с 3600 (60 мин) до 1800 (30 мин) по умолчанию
             
             if ($attempts !== false && intval($attempts) >= $max_attempts) {
-                error_log('Course Anti-Bot: Превышен лимит попыток регистрации для IP: ' . $ip);
-                return array('message' => sprintf(__('Превышен лимит попыток регистрации. Попробуйте через %d минут.', 'course-plugin'), round($period / 60)));
+                // Получаем время истечения транзиента для расчета оставшегося времени
+                $transient_timeout = '_transient_timeout_registration_attempts_' . $ip;
+                $expiration_time = get_option($transient_timeout);
+                
+                if ($expiration_time) {
+                    $remaining_seconds = max(0, $expiration_time - time());
+                    $remaining_minutes = ceil($remaining_seconds / 60);
+                    
+                    if ($remaining_minutes > 0) {
+                        $message = sprintf(
+                            __('Превышен лимит попыток регистрации (%d попыток). Попробуйте через %d %s.', 'course-plugin'),
+                            $max_attempts,
+                            $remaining_minutes,
+                            $remaining_minutes == 1 ? __('минуту', 'course-plugin') : ($remaining_minutes < 5 ? __('минуты', 'course-plugin') : __('минут', 'course-plugin'))
+                        );
+                    } else {
+                        // Время истекло, можно попробовать снова
+                        delete_transient('registration_attempts_' . $ip);
+                        delete_option($transient_timeout);
+                        $message = null; // Сбрасываем блокировку
+                    }
+                } else {
+                    $message = sprintf(__('Превышен лимит попыток регистрации (%d попыток). Попробуйте через %d минут.', 'course-plugin'), $max_attempts, round($period / 60));
+                }
+                
+                if ($message) {
+                    error_log('Course Anti-Bot: Превышен лимит попыток регистрации для IP: ' . $ip . ' (попыток: ' . intval($attempts) . '/' . $max_attempts . ')');
+                    return array('message' => $message);
+                }
             }
             
             // Увеличиваем счетчик попыток
