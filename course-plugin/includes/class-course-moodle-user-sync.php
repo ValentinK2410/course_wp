@@ -409,10 +409,22 @@ class Course_Moodle_User_Sync {
         error_log('Moodle User Sync: Финальный пароль для отправки в Moodle (длина: ' . strlen($plain_password) . ', первые 3 символа: ' . substr($plain_password, 0, 3) . '***)');
         
         // Подготавливаем данные для создания пользователя в Moodle
-        // Важно: Moodle требует, чтобы lastname не был пустым, поэтому используем дефис если пусто
-        // Пробел может вызывать ошибку "Invalid parameter value detected"
+        // Важно: Moodle требует, чтобы lastname не был пустым и содержал хотя бы один буквенный символ
+        // Используем имя пользователя или "User" если фамилия пустая
         $firstname = !empty($user->first_name) ? trim($user->first_name) : (!empty($user->display_name) ? trim($user->display_name) : $user->user_login);
-        $lastname = !empty($user->last_name) && trim($user->last_name) !== '' ? trim($user->last_name) : '-';  // Дефис вместо пустой строки
+        // Если фамилия пустая, используем имя пользователя или "User" вместо дефиса или пробела
+        if (!empty($user->last_name) && trim($user->last_name) !== '') {
+            $lastname = trim($user->last_name);
+        } elseif (!empty($user->first_name)) {
+            // Если есть имя, используем его как фамилию
+            $lastname = trim($user->first_name);
+        } elseif (!empty($user->display_name)) {
+            // Если есть отображаемое имя, используем его
+            $lastname = trim($user->display_name);
+        } else {
+            // В крайнем случае используем "User"
+            $lastname = 'User';
+        }
         
         $user_data = array(
             'username' => $user->user_login,  // Логин пользователя
