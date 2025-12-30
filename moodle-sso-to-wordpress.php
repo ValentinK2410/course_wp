@@ -2,17 +2,22 @@
 /**
  * Moodle → WordPress SSO (обратный SSO)
  * 
- * Этот файл должен быть размещен в КОРНЕ Moodle:
- * /path/to/moodle/moodle-sso-to-wordpress.php
+ * Этот файл должен быть размещен в директории public Moodle:
+ * /var/www/www-root/data/www/class.dekan.pro/public/moodle-sso-to-wordpress.php
+ * 
+ * config.php Moodle находится на уровень выше:
+ * /var/www/www-root/data/www/class.dekan.pro/config.php
  * 
  * Использование:
  * https://class.dekan.pro/moodle-sso-to-wordpress.php
  * 
  * Пользователь должен быть авторизован в Moodle.
+ * Файл автоматически загружает config.php из родительской директории.
  */
 
 // Загружаем конфигурацию Moodle
-require_once(__DIR__ . '/config.php');
+// config.php находится на уровень выше: /var/www/www-root/data/www/class.dekan.pro/config.php
+require_once(__DIR__ . '/../config.php');
 
 // Проверяем, что пользователь авторизован в Moodle
 require_login();
@@ -22,6 +27,11 @@ global $USER;
 
 if (!$USER || !$USER->id) {
     redirect(new moodle_url('/login/index.php'), 'Пользователь Moodle не авторизован', null, \core\output\notification::NOTIFY_ERROR);
+}
+
+// Проверяем, что у пользователя есть email
+if (empty($USER->email)) {
+    redirect(new moodle_url('/'), 'У вашего аккаунта Moodle не указан email. Обратитесь к администратору.', null, \core\output\notification::NOTIFY_ERROR);
 }
 
 // Настройки WordPress SSO
@@ -51,5 +61,6 @@ $redirect_url = rtrim($wordpress_url, '/') . '/wp-admin/admin-ajax.php?' . http_
 // Логируем попытку входа
 error_log('Moodle SSO: Пользователь ' . $USER->email . ' (ID: ' . $USER->id . ') пытается войти в WordPress');
 
-// Перенаправляем в WordPress
-redirect(new moodle_url($redirect_url));
+// Перенаправляем в WordPress (используем обычный HTTP редирект для внешнего URL)
+header('Location: ' . $redirect_url);
+exit;
