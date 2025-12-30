@@ -216,16 +216,28 @@ class Course_Moodle_API {
         // Эта функция создает нового пользователя в Moodle
         
         // Подготавливаем данные пользователя
-        // Moodle требует, чтобы lastname не был пустым, поэтому используем дефис если пусто
-        // Пробел может вызывать ошибку "Invalid parameter value detected"
+        // Moodle требует, чтобы lastname не был пустым и отличался от firstname
+        $firstname = isset($user_data['firstname']) ? trim($user_data['firstname']) : '';
         $lastname = !empty($user_data['lastname']) && trim($user_data['lastname']) !== '' ? trim($user_data['lastname']) : '-';
+        
+        // ВАЖНО: Если firstname и lastname одинаковые, Moodle вернет ошибку "Invalid parameter value detected"
+        // Исправляем это, заменяя lastname на "User" если они совпадают
+        if ($firstname === $lastname && $lastname !== '-') {
+            $lastname = 'User';
+            error_log('Moodle API: firstname и lastname совпадают (' . $firstname . '), заменяем lastname на "User"');
+        }
+        
+        // Если lastname все еще пустой или равен дефису, и firstname не пустой, используем "User"
+        if (($lastname === '' || $lastname === '-') && !empty($firstname)) {
+            $lastname = 'User';
+        }
         
         // Формируем массив данных для создания пользователя
         $moodle_user_data = array(
             'username' => $user_data['username'],
             'password' => $user_data['password'],
-            'firstname' => $user_data['firstname'],
-            'lastname' => $lastname,  // Используем пробел вместо пустой строки
+            'firstname' => $firstname,
+            'lastname' => $lastname,
             'email' => $user_data['email'],
         );
         

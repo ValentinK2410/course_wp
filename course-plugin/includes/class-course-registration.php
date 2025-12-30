@@ -580,15 +580,32 @@ class Course_Registration {
         error_log('Course Registration: Пользователь создан в WordPress: ID=' . $user_id . ', логин=' . $user_login);
         error_log('Course Registration: Проверка пароля ПОСЛЕ создания пользователя: ' . (isset($GLOBALS['moodle_user_sync_password'][$user_login]) ? 'найден (длина: ' . strlen($GLOBALS['moodle_user_sync_password'][$user_login]) . ')' : 'НЕ НАЙДЕН!'));
         
-        // ИЗМЕНЕНО: Пользователь НЕ создается в Moodle сразу при регистрации
-        // Создание пользователя в Moodle произойдет когда пользователь подтвердит email
-        // и установит пароль через хук wp_set_password
-        error_log('Course Registration: Пользователь создан в WordPress. Синхронизация с Moodle произойдет после подтверждения email и установки пароля.');
-        
-        // Сохраняем пароль в метаполе для последующего использования при создании в Moodle
-        // Пароль будет использован когда пользователь подтвердит email и установит пароль
+        // Сохраняем пароль в метаполе для последующего использования
         update_user_meta($user_id, 'pending_moodle_password', $user_pass);
-        error_log('Course Registration: Пароль сохранен в метаполе для последующей синхронизации с Moodle');
+        error_log('Course Registration: Пароль сохранен в метаполе');
+        
+        // Синхронизируем пользователя с Moodle сразу после регистрации
+        if (class_exists('Course_Moodle_User_Sync')) {
+            try {
+                $sync_instance = Course_Moodle_User_Sync::get_instance();
+                error_log('Course Registration: Вызываем sync_user() для синхронизации с Moodle');
+                
+                // Вызываем синхронизацию с передачей пароля
+                $sync_result = $sync_instance->sync_user($user_id, $user_pass);
+                
+                if ($sync_result) {
+                    error_log('Course Registration: УСПЕХ! Пользователь синхронизирован с Moodle');
+                } else {
+                    error_log('Course Registration: ВНИМАНИЕ! Синхронизация с Moodle не удалась, но пользователь создан в WordPress');
+                }
+            } catch (Exception $e) {
+                error_log('Course Registration: ОШИБКА при синхронизации с Moodle: ' . $e->getMessage());
+            } catch (Error $e) {
+                error_log('Course Registration: ФАТАЛЬНАЯ ОШИБКА при синхронизации с Moodle: ' . $e->getMessage());
+            }
+        } else {
+            error_log('Course Registration: КРИТИЧЕСКАЯ ОШИБКА - класс Course_Moodle_User_Sync не найден!');
+        }
         
         // Отправляем письмо пользователю сразу после регистрации
         try {
@@ -600,11 +617,7 @@ class Course_Registration {
             error_log('Course Registration: Фатальная ошибка при отправке письма: ' . $e->getMessage());
         }
         
-        // Синхронизация с Moodle/Laravel будет выполнена через хук wp_set_password
-        // когда пользователь подтвердит email и установит пароль
-        
-        // НЕ удаляем пароль из метаполя сразу - он может понадобиться для повторной отправки письма
-        // Пароль будет удален автоматически через некоторое время или при следующей регистрации
+        // Пароль сохранен в метаполе для повторной отправки письма при необходимости
         
         // Автоматически входим пользователя после регистрации
         wp_set_current_user($user_id);

@@ -410,20 +410,34 @@ class Course_Moodle_User_Sync {
         
         // Подготавливаем данные для создания пользователя в Moodle
         // Важно: Moodle требует, чтобы lastname не был пустым и содержал хотя бы один буквенный символ
-        // Используем имя пользователя или "User" если фамилия пустая
+        // Также важно: lastname должен отличаться от firstname
         $firstname = !empty($user->first_name) ? trim($user->first_name) : (!empty($user->display_name) ? trim($user->display_name) : $user->user_login);
-        // Если фамилия пустая, используем имя пользователя или "User" вместо дефиса или пробела
+        
+        // Определяем фамилию
         if (!empty($user->last_name) && trim($user->last_name) !== '') {
             $lastname = trim($user->last_name);
-        } elseif (!empty($user->first_name)) {
-            // Если есть имя, используем его как фамилию
-            $lastname = trim($user->first_name);
-        } elseif (!empty($user->display_name)) {
-            // Если есть отображаемое имя, используем его
-            $lastname = trim($user->display_name);
         } else {
-            // В крайнем случае используем "User"
-            $lastname = 'User';
+            // Если фамилия пустая, используем логин или "User"
+            // ВАЖНО: lastname должен отличаться от firstname
+            if ($user->user_login !== $firstname) {
+                $lastname = $user->user_login;
+            } else {
+                // Если логин совпадает с именем, добавляем суффикс или используем "User"
+                $lastname = $firstname . ' User';
+                // Если это все еще слишком похоже, используем просто "User"
+                if ($lastname === $firstname . ' ' . $firstname) {
+                    $lastname = 'User';
+                }
+            }
+        }
+        
+        // Дополнительная проверка: если firstname и lastname одинаковые, меняем lastname
+        if ($firstname === $lastname) {
+            if ($lastname === 'User') {
+                $firstname = $user->user_login;
+            } else {
+                $lastname = 'User';
+            }
         }
         
         $user_data = array(

@@ -120,22 +120,18 @@ echo "<hr>\n";
 
 try {
     // Получаем пользователей из Moodle
-    // Используем core_user_get_users для получения всех пользователей
+    // Используем публичный метод get_users() для получения всех пользователей
     // Пробуем разные варианты критериев, так как Moodle API может требовать разные форматы
-    $moodle_users = $moodle_api->call('core_user_get_users', array(
-        'criteria' => array(
-            array(
-                'key' => 'deleted',
-                'value' => '0' // Только неудаленные пользователи
-            )
+    $moodle_users = $moodle_api->get_users(array(
+        array(
+            'key' => 'deleted',
+            'value' => '0' // Только неудаленные пользователи
         )
     ));
     
     // Если не получилось, пробуем без критериев
     if (isset($moodle_users['exception']) || !isset($moodle_users['users'])) {
-        $moodle_users = $moodle_api->call('core_user_get_users', array(
-            'criteria' => array()
-        ));
+        $moodle_users = $moodle_api->get_users(array());
     }
     
     if (isset($moodle_users['exception'])) {

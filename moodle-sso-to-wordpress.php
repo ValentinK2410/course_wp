@@ -37,7 +37,7 @@ if (empty($USER->email)) {
 // Настройки WordPress SSO
 // ВАЖНО: Замените эти значения на ваши настройки из WordPress
 $wordpress_url = 'https://site.dekan.pro'; // URL вашего WordPress сайта
-$moodle_sso_api_key = 'ВАШ_MOODLE_SSO_API_KEY'; // Ключ из WordPress: Настройки → Moodle Sync → Moodle SSO API Key
+$moodle_sso_api_key = 'zf9Nt1ckaYFIwK6qPYTb7f8peaNu10W9p2BGbHXpjAJuVFFs9qH8AEyzAvBDbW2R'; // Ключ из WordPress: Настройки → Moodle Sync → Moodle SSO API Key
 
 // Проверяем, что настройки заполнены
 if (empty($wordpress_url) || empty($moodle_sso_api_key) || $moodle_sso_api_key === 'ВАШ_MOODLE_SSO_API_KEY') {
@@ -60,6 +60,9 @@ $redirect_url = rtrim($wordpress_url, '/') . '/wp-admin/admin-ajax.php?' . http_
 
 // Логируем попытку входа
 error_log('Moodle SSO: Пользователь ' . $USER->email . ' (ID: ' . $USER->id . ') пытается войти в WordPress');
+error_log('Moodle SSO: Используемый API ключ (первые 20 символов): ' . substr($moodle_sso_api_key, 0, 20) . '...');
+error_log('Moodle SSO: Длина API ключа: ' . strlen($moodle_sso_api_key));
+error_log('Moodle SSO: URL редиректа: ' . $redirect_url);
 
 // Перенаправляем в WordPress (используем обычный HTTP редирект для внешнего URL)
 header('Location: ' . $redirect_url);

@@ -432,11 +432,27 @@ class Course_SSO {
      */
     public function ajax_sso_login_from_moodle() {
         // Проверяем API ключ Moodle для безопасности
-        $moodle_api_key = isset($_REQUEST['moodle_api_key']) ? sanitize_text_field($_REQUEST['moodle_api_key']) : '';
+        // Используем raw значение из REQUEST, так как sanitize_text_field может изменить ключ
+        $moodle_api_key = isset($_REQUEST['moodle_api_key']) ? trim($_REQUEST['moodle_api_key']) : '';
         $expected_key = get_option('moodle_sso_api_key', '');
         
-        if (empty($expected_key) || $moodle_api_key !== $expected_key) {
-            wp_die('Unauthorized: Invalid Moodle SSO API key', 'Unauthorized', array('response' => 401));
+        // Логируем попытку входа для отладки (первые 20 символов для безопасности)
+        error_log('Course SSO: Попытка входа из Moodle. Переданный ключ (первые 20 символов): ' . (!empty($moodle_api_key) ? substr($moodle_api_key, 0, 20) . '...' : 'пусто'));
+        error_log('Course SSO: Переданный ключ (длина): ' . strlen($moodle_api_key));
+        error_log('Course SSO: Ожидаемый ключ (первые 20 символов): ' . (!empty($expected_key) ? substr($expected_key, 0, 20) . '...' : 'пусто'));
+        error_log('Course SSO: Ожидаемый ключ (длина): ' . strlen($expected_key));
+        
+        if (empty($expected_key)) {
+            error_log('Course SSO: ОШИБКА - Moodle SSO API ключ не настроен в WordPress!');
+            wp_die('Несанкционированный доступ: Moodle SSO API ключ не настроен в WordPress. Перейдите в Настройки → Moodle Sync и установите Moodle SSO API Key.', 'Несанкционированный доступ', array('response' => 401));
+        }
+        
+        // Используем hash_equals для безопасного сравнения строк (защита от timing attacks)
+        if (!hash_equals($expected_key, $moodle_api_key)) {
+            error_log('Course SSO: ОШИБКА - Неверный Moodle SSO API ключ!');
+            error_log('Course SSO: Переданный ключ (первые 30): ' . substr($moodle_api_key, 0, 30));
+            error_log('Course SSO: Ожидаемый ключ (первые 30): ' . substr($expected_key, 0, 30));
+            wp_die('Несанкционированный доступ: Недействительный ключ API Moodle SSO. Убедитесь, что ключ в файле moodle-sso-to-wordpress.php совпадает с ключом в WordPress (Настройки → Moodle Sync → Moodle SSO API Key).', 'Несанкционированный доступ', array('response' => 401));
         }
         
         // Получаем токен из запроса
