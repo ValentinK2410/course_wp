@@ -48,6 +48,10 @@ class Course_SSO {
         add_action('wp_ajax_verify_sso_token', array($this, 'ajax_verify_sso_token'));
         add_action('wp_ajax_nopriv_verify_sso_token', array($this, 'ajax_verify_sso_token'));
         
+        // Endpoint для входа из Moodle в WordPress (обратный SSO)
+        add_action('wp_ajax_sso_login_from_moodle', array($this, 'ajax_sso_login_from_moodle'));
+        add_action('wp_ajax_nopriv_sso_login_from_moodle', array($this, 'ajax_sso_login_from_moodle'));
+        
         // Добавляем виджет в меню пользователя
         add_filter('wp_nav_menu_items', array($this, 'add_sso_menu_items'), 10, 2);
         
@@ -58,6 +62,11 @@ class Course_SSO {
         if (empty(get_option('sso_api_key', ''))) {
             $this->generate_sso_api_key();
         }
+        
+        // Генерируем Moodle SSO API ключ при первой загрузке, если он не установлен
+        if (empty(get_option('moodle_sso_api_key', ''))) {
+            $this->generate_moodle_sso_api_key();
+        }
     }
     
     /**
@@ -67,6 +76,15 @@ class Course_SSO {
         $api_key = wp_generate_password(64, false);
         update_option('sso_api_key', $api_key);
         error_log('Course SSO: SSO API ключ сгенерирован автоматически');
+    }
+    
+    /**
+     * Генерация Moodle SSO API ключа (для обратного SSO)
+     */
+    private function generate_moodle_sso_api_key() {
+        $api_key = wp_generate_password(64, false);
+        update_option('moodle_sso_api_key', $api_key);
+        error_log('Course SSO: Moodle SSO API ключ сгенерирован автоматически');
     }
     
     /**
@@ -404,6 +422,107 @@ class Course_SSO {
         } else {
             wp_send_json_error(array('message' => 'Invalid or expired token'));
         }
+    }
+    
+    /**
+     * AJAX обработчик для входа из Moodle в WordPress (обратный SSO)
+     * 
+     * Использование:
+     * https://site.dekan.pro/wp-admin/admin-ajax.php?action=sso_login_from_moodle&token=TOKEN&moodle_api_key=API_KEY
+     */
+    public function ajax_sso_login_from_moodle() {
+        // Проверяем API ключ Moodle для безопасности
+        $moodle_api_key = isset($_REQUEST['moodle_api_key']) ? sanitize_text_field($_REQUEST['moodle_api_key']) : '';
+        $expected_key = get_option('moodle_sso_api_key', '');
+        
+        if (empty($expected_key) || $moodle_api_key !== $expected_key) {
+            wp_die('Unauthorized: Invalid Moodle SSO API key', 'Unauthorized', array('response' => 401));
+        }
+        
+        // Получаем токен из запроса
+        $token = isset($_REQUEST['token']) ? sanitize_text_field($_REQUEST['token']) : '';
+        
+        if (empty($token)) {
+            wp_die('Token required', 'Bad Request', array('response' => 400));
+        }
+        
+        // Декодируем токен от Moodle
+        // Формат токена: base64(user_id:email:timestamp:hash)
+        $decoded = base64_decode($token);
+        if (!$decoded) {
+            wp_die('Invalid token format', 'Bad Request', array('response' => 400));
+        }
+        
+        $parts = explode(':', $decoded);
+        if (count($parts) !== 4) {
+            wp_die('Invalid token format', 'Bad Request', array('response' => 400));
+        }
+        
+        $moodle_user_id = intval($parts[0]);
+        $email = sanitize_email($parts[1]);
+        $timestamp = intval($parts[2]);
+        $token_hash = $parts[3];
+        
+        // Проверяем срок действия токена (5 минут)
+        if (time() - $timestamp > 300) {
+            wp_die('Token expired', 'Unauthorized', array('response' => 401));
+        }
+        
+        // Проверяем подпись токена
+        $data = $moodle_user_id . '|' . $email . '|' . $timestamp;
+        $expected_hash = hash_hmac('sha256', $data, $expected_key);
+        
+        if (!hash_equals($expected_hash, $token_hash)) {
+            wp_die('Invalid token signature', 'Unauthorized', array('response' => 401));
+        }
+        
+        // Ищем пользователя в WordPress по email
+        $user = get_user_by('email', $email);
+        
+        if (!$user) {
+            // Пользователь не найден - можно создать нового или показать ошибку
+            // Для безопасности лучше показать ошибку, чтобы администратор создал пользователя вручную
+            wp_die(
+                'Пользователь с email ' . esc_html($email) . ' не найден в WordPress. Обратитесь к администратору.',
+                'User Not Found',
+                array('response' => 404)
+            );
+        }
+        
+        // Автоматически входим пользователя в WordPress
+        wp_set_current_user($user->ID);
+        wp_set_auth_cookie($user->ID, true);
+        
+        // Сохраняем ID пользователя Moodle в метаполе WordPress (если еще не сохранен)
+        $existing_moodle_id = get_user_meta($user->ID, 'moodle_user_id', true);
+        if (empty($existing_moodle_id)) {
+            update_user_meta($user->ID, 'moodle_user_id', $moodle_user_id);
+        }
+        
+        // Логируем успешный вход
+        error_log('Course SSO: Пользователь ' . $email . ' успешно вошел в WordPress из Moodle');
+        
+        // Перенаправляем на нужную страницу
+        $redirect_url = isset($_REQUEST['redirect']) ? esc_url_raw($_REQUEST['redirect']) : admin_url();
+        
+        // Используем JavaScript для перенаправления, так как заголовки могут быть уже отправлены
+        ?>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Вход в WordPress...</title>
+            <script type="text/javascript">
+                window.location.href = <?php echo json_encode($redirect_url); ?>;
+            </script>
+        </head>
+        <body>
+            <p>Выполняется вход в WordPress...</p>
+            <p>Если перенаправление не произошло автоматически, <a href="<?php echo esc_url($redirect_url); ?>">нажмите здесь</a>.</p>
+        </body>
+        </html>
+        <?php
+        exit;
     }
 }
 
