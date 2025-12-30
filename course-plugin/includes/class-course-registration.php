@@ -56,7 +56,9 @@ class Course_Registration {
         add_action('wp_ajax_nopriv_course_resend_registration_email', array($this, 'resend_registration_email'));
         
         // Добавляем форму повторной отправки письма на страницу входа
-        add_action('login_form', array($this, 'add_resend_email_form'));
+        // Используем несколько хуков для надежности
+        add_action('login_footer', array($this, 'add_resend_email_form'));
+        add_action('login_form_bottom', array($this, 'add_resend_email_form'));
         
         // Логируем регистрацию AJAX-обработчиков
         $log_message = '[' . date('Y-m-d H:i:s') . '] Course_Registration: AJAX обработчики зарегистрированы' . "\n";
@@ -751,15 +753,33 @@ class Course_Registration {
      * Показывается только для неавторизованных пользователей
      */
     public function add_resend_email_form() {
+        // Проверяем, что мы на странице входа WordPress
+        if (!isset($GLOBALS['pagenow']) || $GLOBALS['pagenow'] !== 'wp-login.php') {
+            return;
+        }
+        
         // Показываем только для неавторизованных пользователей
         if (is_user_logged_in()) {
             return;
         }
         
-        // Показываем только если это страница входа (не регистрации)
+        // Показываем только если это страница входа (не регистрации, не сброс пароля и т.д.)
         $action = isset($_GET['action']) ? $_GET['action'] : 'login';
-        if ($action !== 'login' && $action !== '') {
+        $allowed_actions = array('', 'login', 'lostpassword');
+        if (!in_array($action, $allowed_actions)) {
             return;
+        }
+        
+        // Предотвращаем дублирование формы, если хук сработал дважды
+        static $form_added = false;
+        if ($form_added) {
+            return;
+        }
+        $form_added = true;
+        
+        // Логируем для отладки
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Course Registration: add_resend_email_form вызван, показываем форму');
         }
         
         ?>
