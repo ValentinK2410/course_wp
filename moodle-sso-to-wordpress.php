@@ -1,0 +1,55 @@
+<?php
+/**
+ * Moodle → WordPress SSO (обратный SSO)
+ * 
+ * Этот файл должен быть размещен в КОРНЕ Moodle:
+ * /path/to/moodle/moodle-sso-to-wordpress.php
+ * 
+ * Использование:
+ * https://class.dekan.pro/moodle-sso-to-wordpress.php
+ * 
+ * Пользователь должен быть авторизован в Moodle.
+ */
+
+// Загружаем конфигурацию Moodle
+require_once(__DIR__ . '/config.php');
+
+// Проверяем, что пользователь авторизован в Moodle
+require_login();
+
+// Получаем текущего пользователя Moodle
+global $USER;
+
+if (!$USER || !$USER->id) {
+    redirect(new moodle_url('/login/index.php'), 'Пользователь Moodle не авторизован', null, \core\output\notification::NOTIFY_ERROR);
+}
+
+// Настройки WordPress SSO
+// ВАЖНО: Замените эти значения на ваши настройки из WordPress
+$wordpress_url = 'https://site.dekan.pro'; // URL вашего WordPress сайта
+$moodle_sso_api_key = 'ВАШ_MOODLE_SSO_API_KEY'; // Ключ из WordPress: Настройки → Moodle Sync → Moodle SSO API Key
+
+// Проверяем, что настройки заполнены
+if (empty($wordpress_url) || empty($moodle_sso_api_key) || $moodle_sso_api_key === 'ВАШ_MOODLE_SSO_API_KEY') {
+    redirect(new moodle_url('/'), 'SSO не настроен. Обратитесь к администратору.', null, \core\output\notification::NOTIFY_ERROR);
+}
+
+// Генерируем токен для WordPress
+// Формат: base64(user_id:email:timestamp:hash)
+$timestamp = time();
+$data = $USER->id . '|' . $USER->email . '|' . $timestamp;
+$token_hash = hash_hmac('sha256', $data, $moodle_sso_api_key);
+$sso_token = base64_encode($USER->id . ':' . $USER->email . ':' . $timestamp . ':' . $token_hash);
+
+// URL для перенаправления в WordPress
+$redirect_url = rtrim($wordpress_url, '/') . '/wp-admin/admin-ajax.php?' . http_build_query([
+    'action' => 'sso_login_from_moodle',
+    'token' => $sso_token,
+    'moodle_api_key' => $moodle_sso_api_key,
+]);
+
+// Логируем попытку входа
+error_log('Moodle SSO: Пользователь ' . $USER->email . ' (ID: ' . $USER->id . ') пытается войти в WordPress');
+
+// Перенаправляем в WordPress
+redirect(new moodle_url($redirect_url));
