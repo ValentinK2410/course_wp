@@ -409,11 +409,10 @@ class Course_Moodle_User_Sync {
         error_log('Moodle User Sync: Финальный пароль для отправки в Moodle (длина: ' . strlen($plain_password) . ', первые 3 символа: ' . substr($plain_password, 0, 3) . '***)');
         
         // Подготавливаем данные для создания пользователя в Moodle
-        // Важно: Moodle требует, чтобы lastname не был пустым и не был дефисом
-        // Используем имя пользователя или "User" вместо дефиса, чтобы избежать ошибки "Invalid parameter value detected"
+        // Важно: Moodle требует, чтобы lastname не был пустым и содержал хотя бы один буквенный символ
+        // Используем имя пользователя или "User" если фамилия пустая
         $firstname = !empty($user->first_name) ? trim($user->first_name) : (!empty($user->display_name) ? trim($user->display_name) : $user->user_login);
-        
-        // Если фамилия пустая, используем имя пользователя или "User" вместо дефиса
+        // Если фамилия пустая, используем имя пользователя или "User" вместо дефиса или пробела
         if (!empty($user->last_name) && trim($user->last_name) !== '') {
             $lastname = trim($user->last_name);
         } elseif (!empty($user->first_name)) {
@@ -701,6 +700,18 @@ class Course_Moodle_User_Sync {
     }
     
     /**
+     * Публичный метод для синхронизации пароля пользователя с Moodle
+     * Можно вызывать из других классов для обновления пароля в Moodle
+     * 
+     * @param int $user_id ID пользователя WordPress
+     * @param string $new_password Новый пароль (незахэшированный)
+     * @return bool true если успешно, false в случае ошибки
+     */
+    public function sync_user_password_to_moodle($user_id, $new_password) {
+        return $this->update_moodle_password($user_id, $new_password);
+    }
+    
+    /**
      * Обновление пароля пользователя в Moodle
      * 
      * @param int $user_id ID пользователя WordPress
@@ -741,8 +752,10 @@ class Course_Moodle_User_Sync {
             update_user_meta($user_id, 'moodle_password_synced', true);
             delete_user_meta($user_id, 'moodle_password_needs_sync');
             error_log('Moodle User Sync: Пароль пользователя ID ' . $user_id . ' обновлен в Moodle');
+            return true;
         } else {
             error_log('Moodle User Sync: Ошибка при обновлении пароля пользователя ID ' . $user_id . ' в Moodle');
+            return false;
         }
     }
     
@@ -789,70 +802,6 @@ class Course_Moodle_User_Sync {
             error_log('Moodle User Sync: Пароль пользователя ' . $user->user_email . ' обновлен в Moodle');
         } else {
             error_log('Moodle User Sync: Ошибка при обновлении пароля пользователя ' . $user->user_email . ' в Moodle');
-        }
-    }
-    
-    /**
-     * Синхронизация пароля при первом входе пользователя
-     * Позволяет синхронизировать временный пароль обратно в Moodle
-     * 
-     * @param string $user_login Логин пользователя
-     * @param WP_User $user Объект пользователя WordPress
-     */
-    public function sync_password_on_first_login($user_login, $user) {
-        // Проверяем, что API настроен
-        if (!$this->api) {
-            // Обновляем настройки API на случай, если они изменились
-            $this->moodle_url = get_option('moodle_sync_url', '');
-            $this->moodle_token = get_option('moodle_sync_token', '');
-            
-            if (empty($this->moodle_url) || empty($this->moodle_token)) {
-                return; // API не настроен
-            }
-            
-            $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
-        }
-        
-        // Проверяем, включена ли синхронизация пользователей
-        $sync_enabled = get_option('moodle_sync_users_enabled', true);
-        if (!$sync_enabled) {
-            return;
-        }
-        
-        // Проверяем, есть ли сохраненный пароль, который нужно синхронизировать
-        $pending_password = get_user_meta($user->ID, 'pending_moodle_password', true);
-        
-        if (!empty($pending_password)) {
-            // Получаем ID пользователя в Moodle
-            $moodle_user_id = get_user_meta($user->ID, 'moodle_user_id', true);
-            
-            if (!$moodle_user_id) {
-                // Если ID Moodle не найден, пытаемся найти пользователя по email
-                $moodle_user = $this->api->get_user_by_email($user->user_email);
-                
-                if ($moodle_user) {
-                    $moodle_user_id = $moodle_user['id'];
-                    update_user_meta($user->ID, 'moodle_user_id', $moodle_user_id);
-                } else {
-                    // Если пользователь не найден в Moodle, создаем его
-                    $this->sync_user_on_register($user->ID, $pending_password);
-                    delete_user_meta($user->ID, 'pending_moodle_password');
-                    return;
-                }
-            }
-            
-            // Обновляем пароль в Moodle
-            $result = $this->api->update_user($moodle_user_id, array(
-                'password' => $pending_password
-            ));
-            
-            if ($result !== false) {
-                // Удаляем сохраненный пароль после успешной синхронизации
-                delete_user_meta($user->ID, 'pending_moodle_password');
-                error_log('Moodle User Sync: Временный пароль синхронизирован с Moodle для пользователя ' . $user->user_email);
-            } else {
-                error_log('Moodle User Sync: Ошибка при синхронизации временного пароля для пользователя ' . $user->user_email);
-            }
         }
     }
     

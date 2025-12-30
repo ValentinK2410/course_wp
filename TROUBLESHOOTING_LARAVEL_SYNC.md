@@ -141,3 +141,18 @@ update_option('laravel_api_token', 'your-secret-token-here');
    ```
 4. Значение `WORDPRESS_API_TOKEN` из Laravel `.env` (первые 10 символов)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
