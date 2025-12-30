@@ -51,6 +51,13 @@ class Course_Registration {
         add_action('wp_ajax_course_check_moodle_email', array($this, 'check_moodle_email'));
         add_action('wp_ajax_nopriv_course_check_moodle_email', array($this, 'check_moodle_email'));
         
+        // Повторная отправка письма с данными для входа
+        add_action('wp_ajax_course_resend_registration_email', array($this, 'resend_registration_email'));
+        add_action('wp_ajax_nopriv_course_resend_registration_email', array($this, 'resend_registration_email'));
+        
+        // Добавляем форму повторной отправки письма на страницу входа
+        add_action('login_form', array($this, 'add_resend_email_form'));
+        
         // Логируем регистрацию AJAX-обработчиков
         $log_message = '[' . date('Y-m-d H:i:s') . '] Course_Registration: AJAX обработчики зарегистрированы' . "\n";
         @file_put_contents($log_file, $log_message, FILE_APPEND);
@@ -641,16 +648,50 @@ class Course_Registration {
         $log_message .= 'Название сайта: ' . $blogname . "\n";
         @file_put_contents($log_file, $log_message, FILE_APPEND);
         
+        // Определяем, это повторная отправка или нет
+        $is_resend = (isset($_POST['action']) && $_POST['action'] === 'course_resend_registration_email') || 
+                     (isset($_REQUEST['action']) && $_REQUEST['action'] === 'course_resend_registration_email');
+        
         // Формируем тему письма
-        $subject = sprintf(__('[%s] Добро пожаловать!', 'course-plugin'), $blogname);
+        if ($is_resend) {
+            $subject = sprintf(__('[%s] Повторная отправка данных для входа', 'course-plugin'), $blogname);
+        } else {
+            $subject = sprintf(__('[%s] Добро пожаловать!', 'course-plugin'), $blogname);
+        }
+        
+        // Проверяем, синхронизирован ли пользователь с Moodle
+        $moodle_user_id = get_user_meta($user_id, 'moodle_user_id', true);
+        $moodle_url = get_option('moodle_sync_url', '');
+        $laravel_url = get_option('laravel_api_url', '');
         
         // Формируем текст письма
         $message = sprintf(__('Здравствуйте, %s!', 'course-plugin'), $user->display_name) . "\r\n\r\n";
-        $message .= sprintf(__('Добро пожаловать на сайт %s!', 'course-plugin'), $blogname) . "\r\n\r\n";
+        
+        // Если это повторная отправка, добавляем соответствующее сообщение
+        if ($is_resend) {
+            $message .= __('Вы запросили повторную отправку письма с данными для входа.', 'course-plugin') . "\r\n\r\n";
+        } else {
+            $message .= sprintf(__('Добро пожаловать на сайт %s!', 'course-plugin'), $blogname) . "\r\n\r\n";
+        }
+        
         $message .= __('Ваши данные для входа:', 'course-plugin') . "\r\n";
         $message .= sprintf(__('Логин: %s', 'course-plugin'), $user->user_login) . "\r\n";
+        $message .= sprintf(__('Email: %s', 'course-plugin'), $user->user_email) . "\r\n";
         $message .= sprintf(__('Пароль: %s', 'course-plugin'), $password) . "\r\n\r\n";
-        $message .= sprintf(__('Войти на сайт: %s', 'course-plugin'), wp_login_url()) . "\r\n\r\n";
+        
+        // Если пользователь синхронизирован с Moodle, добавляем информацию о всех платформах
+        if ($moodle_user_id && !empty($moodle_url)) {
+            $message .= __('Вы можете использовать эти данные для входа на:', 'course-plugin') . "\r\n";
+            $message .= sprintf(__('- WordPress: %s', 'course-plugin'), wp_login_url()) . "\r\n";
+            $message .= sprintf(__('- Moodle: %s', 'course-plugin'), rtrim($moodle_url, '/') . '/login/index.php') . "\r\n";
+            if (!empty($laravel_url)) {
+                $message .= sprintf(__('- Система управления: %s', 'course-plugin'), rtrim($laravel_url, '/') . '/login') . "\r\n";
+            }
+            $message .= "\r\n";
+        } else {
+            $message .= sprintf(__('Войти на сайт: %s', 'course-plugin'), wp_login_url()) . "\r\n\r\n";
+        }
+        
         $message .= __('С уважением,', 'course-plugin') . "\r\n";
         $message .= sprintf(__('Команда %s', 'course-plugin'), $blogname) . "\r\n";
         
@@ -702,6 +743,213 @@ class Course_Registration {
                 error_log($error_msg);
                 @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА: ' . $error_msg . "\n", FILE_APPEND);
             }
+        }
+    }
+    
+    /**
+     * Добавление формы повторной отправки письма на страницу входа
+     * Показывается только для неавторизованных пользователей
+     */
+    public function add_resend_email_form() {
+        // Показываем только для неавторизованных пользователей
+        if (is_user_logged_in()) {
+            return;
+        }
+        
+        // Показываем только если это страница входа (не регистрации)
+        $action = isset($_GET['action']) ? $_GET['action'] : 'login';
+        if ($action !== 'login' && $action !== '') {
+            return;
+        }
+        
+        ?>
+        <div id="course-resend-email-wrapper" style="margin-top: 20px; padding: 15px; background: #f0f0f1; border-radius: 4px; border-left: 4px solid #2271b1;">
+            <h3 style="margin-top: 0; font-size: 14px; font-weight: 600;"><?php _e('Не получили письмо при регистрации?', 'course-plugin'); ?></h3>
+            <p style="margin-bottom: 10px; font-size: 13px; color: #50575e;">
+                <?php _e('Если вы зарегистрировались, но не получили письмо с данными для входа, введите ваш email ниже и мы отправим письмо повторно.', 'course-plugin'); ?>
+            </p>
+            <form id="course-resend-email-form" style="margin: 0;">
+                <p>
+                    <label for="resend_email" style="display: block; margin-bottom: 5px; font-weight: 600;">
+                        <?php _e('Email адрес:', 'course-plugin'); ?>
+                    </label>
+                    <input type="email" 
+                           id="resend_email" 
+                           name="resend_email" 
+                           value="" 
+                           class="input" 
+                           style="width: 100%; padding: 8px; border: 1px solid #8c8f94; border-radius: 4px;"
+                           placeholder="<?php esc_attr_e('your-email@example.com', 'course-plugin'); ?>" 
+                           required />
+                </p>
+                <p>
+                    <button type="submit" 
+                            class="button button-secondary" 
+                            style="width: 100%; padding: 8px; font-size: 14px;">
+                        <?php _e('Отправить письмо повторно', 'course-plugin'); ?>
+                    </button>
+                </p>
+                <div id="resend-email-message" style="margin-top: 10px; display: none;"></div>
+            </form>
+        </div>
+        
+        <script type="text/javascript">
+        (function() {
+            var form = document.getElementById('course-resend-email-form');
+            var messageDiv = document.getElementById('resend-email-message');
+            var submitBtn = form.querySelector('button[type="submit"]');
+            var originalBtnText = submitBtn.textContent;
+            
+            if (!form) return;
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                var email = document.getElementById('resend_email').value;
+                if (!email) {
+                    showMessage('<?php echo esc_js(__('Введите email адрес', 'course-plugin')); ?>', 'error');
+                    return;
+                }
+                
+                // Отключаем кнопку
+                submitBtn.disabled = true;
+                submitBtn.textContent = '<?php echo esc_js(__('Отправка...', 'course-plugin')); ?>';
+                messageDiv.style.display = 'none';
+                
+                // Отправляем AJAX запрос
+                var formData = new FormData();
+                formData.append('action', 'course_resend_registration_email');
+                formData.append('email', email);
+                formData.append('nonce', '<?php echo wp_create_nonce('course_resend_email'); ?>');
+                
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        showMessage(data.data.message || '<?php echo esc_js(__('Письмо успешно отправлено! Проверьте вашу почту.', 'course-plugin')); ?>', 'success');
+                        form.reset();
+                    } else {
+                        showMessage(data.data.message || '<?php echo esc_js(__('Ошибка при отправке письма. Попробуйте позже.', 'course-plugin')); ?>', 'error');
+                    }
+                })
+                .catch(function(error) {
+                    showMessage('<?php echo esc_js(__('Произошла ошибка. Попробуйте позже.', 'course-plugin')); ?>', 'error');
+                })
+                .finally(function() {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                });
+            });
+            
+            function showMessage(text, type) {
+                messageDiv.textContent = text;
+                messageDiv.style.display = 'block';
+                messageDiv.style.padding = '10px';
+                messageDiv.style.borderRadius = '4px';
+                
+                if (type === 'success') {
+                    messageDiv.style.background = '#d1e7dd';
+                    messageDiv.style.color = '#0f5132';
+                    messageDiv.style.border = '1px solid #badbcc';
+                } else {
+                    messageDiv.style.background = '#f8d7da';
+                    messageDiv.style.color = '#842029';
+                    messageDiv.style.border = '1px solid #f5c2c7';
+                }
+            }
+        })();
+        </script>
+        <?php
+    }
+    
+    /**
+     * Повторная отправка письма с данными для входа
+     * Вызывается через AJAX когда пользователь запрашивает повторную отправку письма
+     */
+    public function resend_registration_email() {
+        $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
+        $log_message = '[' . date('Y-m-d H:i:s') . '] ========== ПОВТОРНАЯ ОТПРАВКА ПИСЬМА ==========' . "\n";
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+        
+        // Проверяем nonce для безопасности
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'course_resend_email')) {
+            wp_send_json_error(array('message' => __('Ошибка безопасности. Обновите страницу и попробуйте снова.', 'course-plugin')));
+        }
+        
+        // Получаем email из запроса
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        
+        // Валидация email
+        if (empty($email) || !is_email($email)) {
+            wp_send_json_error(array('message' => __('Введите корректный email адрес.', 'course-plugin')));
+        }
+        
+        // Ищем пользователя по email
+        $user = get_user_by('email', $email);
+        
+        if (!$user) {
+            // Пользователь не найден - не сообщаем об этом для безопасности
+            wp_send_json_error(array('message' => __('Если пользователь с таким email существует, письмо будет отправлено на указанный адрес.', 'course-plugin')));
+        }
+        
+        // Проверяем, есть ли сохраненный пароль из регистрации
+        $saved_password = get_user_meta($user->ID, 'pending_moodle_password', true);
+        $moodle_password = get_user_meta($user->ID, 'moodle_password_used', true);
+        
+        // Определяем, какой пароль использовать
+        $password_to_send = '';
+        
+        if (!empty($moodle_password)) {
+            // Используем пароль, который был использован при создании в Moodle
+            $password_to_send = $moodle_password;
+            error_log('Course Registration: Используется пароль из метаполя moodle_password_used для пользователя ID: ' . $user->ID);
+        } elseif (!empty($saved_password)) {
+            // Используем сохраненный пароль из регистрации
+            $password_to_send = $saved_password;
+            error_log('Course Registration: Используется сохраненный пароль из регистрации для пользователя ID: ' . $user->ID);
+        } else {
+            // Генерируем новый временный пароль
+            $password_to_send = wp_generate_password(12, true);
+            
+            // Устанавливаем новый пароль для пользователя
+            wp_set_password($password_to_send, $user->ID);
+            
+            // Синхронизируем пароль с Moodle, если пользователь синхронизирован
+            if (class_exists('Course_Moodle_User_Sync')) {
+                $moodle_user_id = get_user_meta($user->ID, 'moodle_user_id', true);
+                if ($moodle_user_id) {
+                    try {
+                        $sync_instance = Course_Moodle_User_Sync::get_instance();
+                        if (method_exists($sync_instance, 'sync_user_password_to_moodle')) {
+                            $sync_instance->sync_user_password_to_moodle($user->ID, $password_to_send);
+                            error_log('Course Registration: Пароль синхронизирован с Moodle для пользователя ID: ' . $user->ID);
+                        }
+                    } catch (Exception $e) {
+                        error_log('Course Registration: Ошибка синхронизации пароля с Moodle: ' . $e->getMessage());
+                    }
+                }
+            }
+            
+            error_log('Course Registration: Сгенерирован новый временный пароль для пользователя ID: ' . $user->ID);
+        }
+        
+        // Отправляем письмо с данными для входа
+        try {
+            $this->send_registration_email($user->ID, $password_to_send);
+            
+            $success_msg = __('Письмо с данными для входа успешно отправлено на ваш email адрес. Проверьте почту (включая папку "Спам").', 'course-plugin');
+            error_log('Course Registration: Письмо успешно отправлено повторно пользователю ' . $email);
+            
+            wp_send_json_success(array('message' => $success_msg));
+        } catch (Exception $e) {
+            $error_msg = __('Ошибка при отправке письма. Попробуйте позже или обратитесь к администратору.', 'course-plugin');
+            error_log('Course Registration: Ошибка при повторной отправке письма: ' . $e->getMessage());
+            wp_send_json_error(array('message' => $error_msg));
         }
     }
     

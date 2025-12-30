@@ -688,6 +688,18 @@ class Course_Moodle_User_Sync {
     }
     
     /**
+     * Публичный метод для синхронизации пароля пользователя с Moodle
+     * Можно вызывать из других классов для обновления пароля в Moodle
+     * 
+     * @param int $user_id ID пользователя WordPress
+     * @param string $new_password Новый пароль (незахэшированный)
+     * @return bool true если успешно, false в случае ошибки
+     */
+    public function sync_user_password_to_moodle($user_id, $new_password) {
+        return $this->update_moodle_password($user_id, $new_password);
+    }
+    
+    /**
      * Обновление пароля пользователя в Moodle
      * 
      * @param int $user_id ID пользователя WordPress
@@ -728,8 +740,10 @@ class Course_Moodle_User_Sync {
             update_user_meta($user_id, 'moodle_password_synced', true);
             delete_user_meta($user_id, 'moodle_password_needs_sync');
             error_log('Moodle User Sync: Пароль пользователя ID ' . $user_id . ' обновлен в Moodle');
+            return true;
         } else {
             error_log('Moodle User Sync: Ошибка при обновлении пароля пользователя ID ' . $user_id . ' в Moodle');
+            return false;
         }
     }
     
