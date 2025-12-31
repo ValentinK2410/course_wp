@@ -315,6 +315,13 @@ class Course_Moodle_User_Sync {
         
         error_log('Moodle User Sync: Начало синхронизации пользователя ' . $user->user_email . ' (ID: ' . $user_id . ', логин: ' . $user->user_login . ')');
         
+        // Проверяем, не создан ли уже пользователь в Moodle (по метаполю WordPress)
+        $existing_moodle_id = get_user_meta($user_id, 'moodle_user_id', true);
+        if ($existing_moodle_id) {
+            error_log('Moodle User Sync: Пользователь уже синхронизирован с Moodle (ID: ' . $existing_moodle_id . '), пропускаем создание');
+            return;
+        }
+        
         // Проверяем, существует ли уже пользователь в Moodle
         error_log('Moodle User Sync: Проверка существования пользователя в Moodle по email: ' . $user->user_email);
         $moodle_user = $this->api->get_user_by_email($user->user_email);
@@ -494,9 +501,10 @@ class Course_Moodle_User_Sync {
                     Course_Logger::info('Пароль сохранен в метаполе для пользователя ID: ' . $user_id . ' (длина: ' . strlen($plain_password) . ')');
                 }
                 
-                // Удаляем пароль из памяти после успешного создания
+                // Удаляем пароль из памяти только после успешного создания пользователя
                 if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
                     unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
+                    error_log('Moodle User Sync: Пароль удален из глобальной переменной после успешного создания пользователя');
                 }
                 error_log('Moodle User Sync: УСПЕХ! Пользователь ' . $user->user_email . ' успешно создан в Moodle (ID: ' . $moodle_user_id . ') с паролем длиной ' . strlen($plain_password) . ' символов');
                 
@@ -509,7 +517,9 @@ class Course_Moodle_User_Sync {
             }
         } else {
             // Если произошла ошибка, записываем её в лог
+            // НЕ удаляем пароль из глобальной переменной при ошибке - он может понадобиться для повторной попытки
             error_log('Moodle User Sync: ОШИБКА при создании пользователя ' . $user->user_email . ' в Moodle');
+            error_log('Moodle User Sync: Пароль НЕ удален из глобальной переменной при ошибке, чтобы можно было повторить попытку');
             
             if (is_array($result) && !empty($result)) {
                 if (isset($result[0]['warnings']) && is_array($result[0]['warnings'])) {
@@ -693,14 +703,13 @@ class Course_Moodle_User_Sync {
         
         // Сохраняем пароль во временное хранилище для sync_user_on_register
         $GLOBALS['moodle_user_sync_password'][$user->user_login] = $password_for_moodle;
+        error_log('Moodle User Sync: Пароль сохранен в глобальную переменную для логина: ' . $user->user_login . ' (длина: ' . strlen($password_for_moodle) . ')');
         
         // Создаем пользователя в Moodle
         $this->sync_user_on_register($user_id, $password_for_moodle);
         
-        // Удаляем пароль из памяти после синхронизации
-        if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
-            unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
-        }
+        // НЕ удаляем пароль из памяти здесь - он будет удален в sync_user_on_register только при успешном создании
+        // Это позволяет повторно использовать пароль при повторных попытках синхронизации
         
         // Отправляем письмо пользователю с паролем для всех трех платформ
         // Это единственное письмо, которое отправляется пользователю
