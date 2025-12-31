@@ -103,13 +103,22 @@ class Course_Moodle_API {
         // Проверяем, вернул ли Moodle исключение (ошибку)
         // Moodle возвращает ошибки в формате: {"exception": "...", "message": "..."}
         if (isset($data['exception'])) {
-            // Записываем ошибку в лог
-            error_log('Moodle API Exception: ' . (isset($data['message']) ? $data['message'] : 'неизвестная ошибка') . ' (Type: ' . (isset($data['errorcode']) ? $data['errorcode'] : (isset($data['exception']) ? $data['exception'] : 'unknown')) . ')');
+            // Записываем ошибку в лог с полной информацией
+            $error_message = isset($data['message']) ? $data['message'] : 'неизвестная ошибка';
+            $error_code = isset($data['errorcode']) ? $data['errorcode'] : (isset($data['exception']) ? $data['exception'] : 'unknown');
+            
+            error_log('Moodle API Exception: ' . $error_message . ' (Type: ' . $error_code . ')');
+            error_log('Moodle API Full Response: ' . print_r($data, true));
+            
             if (isset($data['debuginfo'])) {
                 error_log('Moodle API Debug Info: ' . $data['debuginfo']);
             }
+            
+            // Логируем полный ответ для диагностики
+            error_log('Moodle API Response Body (full): ' . $body);
+            
             // Возвращаем массив с ошибкой, чтобы вызывающий код мог обработать её
-            return array('exception' => $data['exception'], 'message' => isset($data['message']) ? $data['message'] : '', 'errorcode' => isset($data['errorcode']) ? $data['errorcode'] : '');
+            return array('exception' => $data['exception'], 'message' => $error_message, 'errorcode' => $error_code, 'debuginfo' => isset($data['debuginfo']) ? $data['debuginfo'] : '');
         }
         
         // Возвращаем успешно полученные данные

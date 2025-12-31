@@ -322,7 +322,7 @@ class Course_Moodle_User_Sync {
             return;
         }
         
-        // Проверяем, существует ли уже пользователь в Moodle
+        // Проверяем, существует ли уже пользователь в Moodle по email
         error_log('Moodle User Sync: Проверка существования пользователя в Moodle по email: ' . $user->user_email);
         $moodle_user = $this->api->get_user_by_email($user->user_email);
         
@@ -332,6 +332,18 @@ class Course_Moodle_User_Sync {
             update_user_meta($user_id, 'moodle_user_id', $moodle_user['id']);
             
             error_log('Moodle User Sync: Пользователь ' . $user->user_email . ' уже существует в Moodle (ID: ' . $moodle_user['id'] . ', username: ' . (isset($moodle_user['username']) ? $moodle_user['username'] : 'неизвестно') . '), данные обновлены. Новый пользователь не создается.');
+            return;
+        }
+        
+        // Проверяем, существует ли уже пользователь в Moodle по username
+        error_log('Moodle User Sync: Проверка существования пользователя в Moodle по username: ' . $user->user_login);
+        $moodle_user_by_username = $this->api->get_user_by_username($user->user_login);
+        
+        if ($moodle_user_by_username) {
+            // Если пользователь уже существует в Moodle с таким username, обновляем его данные
+            update_user_meta($user_id, 'moodle_user_id', $moodle_user_by_username['id']);
+            
+            error_log('Moodle User Sync: Пользователь с username ' . $user->user_login . ' уже существует в Moodle (ID: ' . $moodle_user_by_username['id'] . ', email: ' . (isset($moodle_user_by_username['email']) ? $moodle_user_by_username['email'] : 'неизвестно') . '), данные обновлены. Новый пользователь не создается.');
             return;
         }
         
@@ -442,8 +454,34 @@ class Course_Moodle_User_Sync {
             error_log('Moodle User Sync: lastname совпадает или начинается с firstname, заменяем на "User"');
         }
         
+        // Проверяем, не занят ли username в Moodle
+        // Если занят, используем email как username или добавляем суффикс
+        // Также нормализуем username (строчные буквы, так как Moodle может быть чувствителен к регистру)
+        $username = strtolower($user->user_login);
+        $moodle_user_by_username_check = $this->api->get_user_by_username($username);
+        
+        if ($moodle_user_by_username_check) {
+            // Username уже занят, используем email как username (без домена для краткости)
+            $email_username = strtolower(substr($user->user_email, 0, strpos($user->user_email, '@')));
+            if (empty($email_username)) {
+                $email_username = strtolower(str_replace(array('@', '.'), array('_', '_'), $user->user_email));
+            }
+            $username = $email_username;
+            error_log('Moodle User Sync: Username "' . $user->user_login . '" уже занят в Moodle, используем email-username: ' . $username);
+            
+            // Проверяем, не занят ли и email-username
+            $moodle_user_by_email_username = $this->api->get_user_by_username($username);
+            if ($moodle_user_by_email_username) {
+                // И email-username занят, добавляем суффикс
+                $username = $email_username . '_' . substr(md5($user->user_email . time()), 0, 6);
+                error_log('Moodle User Sync: Email-username тоже занят, используем с суффиксом: ' . $username);
+            }
+        }
+        
+        error_log('Moodle User Sync: Финальный username для Moodle: ' . $username);
+        
         $user_data = array(
-            'username' => $user->user_login,  // Логин пользователя
+            'username' => $username,          // Логин пользователя (может быть изменен если занят)
             'password' => $plain_password,    // Незахэшированный пароль
             'firstname' => $firstname,        // Имя (обязательно)
             'lastname' => $lastname,          // Фамилия (обязательно, минимум пробел)
@@ -477,7 +515,17 @@ class Course_Moodle_User_Sync {
         
         // Проверяем, есть ли исключение в ответе (ошибка от Moodle)
         if (isset($result['exception'])) {
-            error_log('Moodle User Sync: ОШИБКА от Moodle API - ' . (isset($result['message']) ? $result['message'] : 'неизвестная ошибка') . ' (Код: ' . (isset($result['errorcode']) ? $result['errorcode'] : 'неизвестно') . ')');
+            $error_msg = isset($result['message']) ? $result['message'] : 'неизвестная ошибка';
+            $error_code = isset($result['errorcode']) ? $result['errorcode'] : 'неизвестно';
+            $debug_info = isset($result['debuginfo']) ? $result['debuginfo'] : '';
+            
+            error_log('Moodle User Sync: ОШИБКА от Moodle API - ' . $error_msg . ' (Код: ' . $error_code . ')');
+            if (!empty($debug_info)) {
+                error_log('Moodle User Sync: Debug Info от Moodle: ' . $debug_info);
+            }
+            error_log('Moodle User Sync: Полный ответ с ошибкой: ' . print_r($result, true));
+            error_log('Moodle User Sync: Данные, которые были отправлены: username=' . $user_data['username'] . ', email=' . $user_data['email'] . ', firstname=' . $user_data['firstname'] . ', lastname=' . $user_data['lastname']);
+            
             // Продолжаем обработку для логирования всех деталей ошибки
         }
         
