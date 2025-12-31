@@ -220,16 +220,23 @@ class Course_Moodle_API {
         $firstname = isset($user_data['firstname']) ? trim($user_data['firstname']) : '';
         $lastname = !empty($user_data['lastname']) && trim($user_data['lastname']) !== '' ? trim($user_data['lastname']) : '-';
         
-        // ВАЖНО: Если firstname и lastname одинаковые, Moodle вернет ошибку "Invalid parameter value detected"
-        // Исправляем это, заменяя lastname на "User" если они совпадают
-        if ($firstname === $lastname && $lastname !== '-') {
+        // ВАЖНО: Если firstname и lastname одинаковые ИЛИ lastname начинается с firstname,
+        // Moodle вернет ошибку "Invalid parameter value detected"
+        // Исправляем это, заменяя lastname на "User"
+        if (($firstname === $lastname || strpos($lastname, $firstname) === 0) && $lastname !== '-' && $lastname !== 'User') {
             $lastname = 'User';
-            error_log('Moodle API: firstname и lastname совпадают (' . $firstname . '), заменяем lastname на "User"');
+            error_log('Moodle API: lastname совпадает или начинается с firstname (' . $firstname . ' -> ' . $lastname . '), заменяем lastname на "User"');
         }
         
         // Если lastname все еще пустой или равен дефису, и firstname не пустой, используем "User"
         if (($lastname === '' || $lastname === '-') && !empty($firstname)) {
             $lastname = 'User';
+        }
+        
+        // Финальная проверка: если после всех проверок они все еще совпадают, меняем lastname
+        if ($firstname === $lastname && $lastname !== 'User') {
+            $lastname = 'User';
+            error_log('Moodle API: Финальная проверка - firstname и lastname все еще совпадают, заменяем lastname на "User"');
         }
         
         // Формируем массив данных для создания пользователя

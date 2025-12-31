@@ -418,26 +418,21 @@ class Course_Moodle_User_Sync {
             $lastname = trim($user->last_name);
         } else {
             // Если фамилия пустая, используем логин или "User"
-            // ВАЖНО: lastname должен отличаться от firstname
-            if ($user->user_login !== $firstname) {
+            // ВАЖНО: lastname должен отличаться от firstname и не начинаться с него
+            if ($user->user_login !== $firstname && strpos($user->user_login, $firstname) !== 0) {
                 $lastname = $user->user_login;
             } else {
-                // Если логин совпадает с именем, добавляем суффикс или используем "User"
-                $lastname = $firstname . ' User';
-                // Если это все еще слишком похоже, используем просто "User"
-                if ($lastname === $firstname . ' ' . $firstname) {
-                    $lastname = 'User';
-                }
+                // Если логин совпадает с именем или начинается с него, используем просто "User"
+                $lastname = 'User';
             }
         }
         
-        // Дополнительная проверка: если firstname и lastname одинаковые, меняем lastname
-        if ($firstname === $lastname) {
-            if ($lastname === 'User') {
-                $firstname = $user->user_login;
-            } else {
-                $lastname = 'User';
-            }
+        // ВАЖНО: Проверяем, что lastname не совпадает с firstname и не начинается с него
+        // Moodle может отклонить, если lastname начинается с firstname
+        if ($firstname === $lastname || strpos($lastname, $firstname) === 0) {
+            // Если lastname совпадает или начинается с firstname, заменяем на "User"
+            $lastname = 'User';
+            error_log('Moodle User Sync: lastname совпадает или начинается с firstname, заменяем на "User"');
         }
         
         $user_data = array(
