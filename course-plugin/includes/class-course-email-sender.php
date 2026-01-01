@@ -48,9 +48,22 @@ class Course_Email_Sender {
         // Пробуем разные методы отправки по порядку приоритета
         
         // Метод 1: SMTP через PHPMailer (если доступен и настроен)
-        $smtp_result = $this->send_via_smtp($to, $subject, $message, $headers);
-        if ($smtp_result['success']) {
-            return $smtp_result;
+        // Проверяем, настроен ли SMTP перед попыткой отправки
+        $smtp_host = get_option('course_smtp_host', '');
+        $smtp_username = get_option('course_smtp_username', '');
+        $smtp_password = get_option('course_smtp_password', '');
+        
+        if (!empty($smtp_host) && !empty($smtp_username) && !empty($smtp_password)) {
+            // SMTP настроен - пробуем использовать его
+            $smtp_result = $this->send_via_smtp($to, $subject, $message, $headers);
+            if ($smtp_result['success']) {
+                return $smtp_result;
+            }
+            // Если SMTP не сработал, продолжаем пробовать другие методы
+            error_log("Course Email: SMTP не сработал, пробуем другие методы. Ошибка: " . $smtp_result['message']);
+        } else {
+            // SMTP не настроен - пропускаем его и используем стандартные методы
+            error_log("Course Email: SMTP не настроен, используем стандартные методы отправки");
         }
         
         // Метод 2: Стандартный wp_mail с улучшенными заголовками

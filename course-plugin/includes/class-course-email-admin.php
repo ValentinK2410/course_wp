@@ -71,21 +71,69 @@ class Course_Email_Admin {
      */
     public function render_settings_page() {
         // Обработка тестовой отправки
-        if (isset($_POST['test_email']) && isset($_POST['test_email_address'])) {
+        $test_results = array();
+        if (isset($_POST['test_email']) && isset($_POST['test_email_addresses'])) {
             check_admin_referer('course_email_test');
-            $test_email = sanitize_email($_POST['test_email_address']);
-            if (is_email($test_email)) {
+            
+            $test_addresses = sanitize_textarea_field($_POST['test_email_addresses']);
+            $test_subject = isset($_POST['test_email_subject']) ? sanitize_text_field($_POST['test_email_subject']) : 'Тест отправки email';
+            $test_message_text = isset($_POST['test_email_message']) ? sanitize_textarea_field($_POST['test_email_message']) : '';
+            
+            // Разбиваем адреса по строкам и запятым
+            $emails = preg_split('/[\s,;]+/', $test_addresses, -1, PREG_SPLIT_NO_EMPTY);
+            
+            if (empty($emails)) {
+                $test_results[] = '<div class="notice notice-error"><p>Не указаны email адреса для теста.</p></div>';
+            } else {
                 if (class_exists('Course_Email_Sender')) {
                     $email_sender = Course_Email_Sender::get_instance();
-                    $result = $email_sender->test_email_sending($test_email);
-                    $test_message = $result['success'] 
-                        ? '<div class="notice notice-success"><p>Тестовое письмо успешно отправлено на ' . esc_html($test_email) . ' методом: ' . esc_html($result['method']) . '</p></div>'
-                        : '<div class="notice notice-error"><p>Ошибка отправки тестового письма: ' . esc_html($result['message']) . '</p></div>';
+                    $success_count = 0;
+                    $fail_count = 0;
+                    $results_details = array();
+                    
+                    foreach ($emails as $email) {
+                        $email = trim($email);
+                        if (is_email($email)) {
+                            // Используем пользовательский текст или стандартный
+                            if (empty($test_message_text)) {
+                                $message = "Это тестовое письмо для проверки настроек отправки email.\n\n";
+                                $message .= "Если вы получили это письмо, значит настройки работают корректно.\n\n";
+                                $message .= "Время отправки: " . date('Y-m-d H:i:s') . "\n";
+                                $message .= "Сервер: " . $_SERVER['SERVER_NAME'] . "\n";
+                                $message .= "Email получателя: " . $email . "\n";
+                            } else {
+                                $message = $test_message_text;
+                            }
+                            
+                            $result = $email_sender->send_email($email, $test_subject, $message);
+                            
+                            if ($result['success']) {
+                                $success_count++;
+                                $results_details[] = '<strong>' . esc_html($email) . '</strong>: ✓ Успешно (метод: ' . esc_html($result['method']) . ')';
+                            } else {
+                                $fail_count++;
+                                $results_details[] = '<strong>' . esc_html($email) . '</strong>: ✗ Ошибка - ' . esc_html($result['message']);
+                            }
+                        } else {
+                            $fail_count++;
+                            $results_details[] = '<strong>' . esc_html($email) . '</strong>: ✗ Неверный email адрес';
+                        }
+                    }
+                    
+                    // Формируем итоговое сообщение
+                    $total = count($emails);
+                    if ($success_count > 0) {
+                        $test_results[] = '<div class="notice notice-success"><p><strong>Успешно отправлено:</strong> ' . $success_count . ' из ' . $total . '</p></div>';
+                    }
+                    if ($fail_count > 0) {
+                        $test_results[] = '<div class="notice notice-error"><p><strong>Ошибок:</strong> ' . $fail_count . ' из ' . $total . '</p></div>';
+                    }
+                    if (!empty($results_details)) {
+                        $test_results[] = '<div class="notice notice-info"><p><strong>Детали:</strong><br>' . implode('<br>', $results_details) . '</p></div>';
+                    }
                 } else {
-                    $test_message = '<div class="notice notice-error"><p>Класс Course_Email_Sender не найден. Убедитесь, что плагин активирован.</p></div>';
+                    $test_results[] = '<div class="notice notice-error"><p>Класс Course_Email_Sender не найден. Убедитесь, что плагин активирован.</p></div>';
                 }
-            } else {
-                $test_message = '<div class="notice notice-error"><p>Неверный email адрес.</p></div>';
             }
         }
         
@@ -94,7 +142,11 @@ class Course_Email_Admin {
             <h1>Настройки Email (SMTP)</h1>
             <p>Настройте SMTP для улучшения доставляемости email, особенно для Gmail.</p>
             
-            <?php if (isset($test_message)) echo $test_message; ?>
+            <?php if (!empty($test_results)): ?>
+                <?php foreach ($test_results as $result): ?>
+                    <?php echo $result; ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
             
             <form method="post" action="options.php">
                 <?php settings_fields('course_email_settings'); ?>
@@ -195,19 +247,45 @@ class Course_Email_Admin {
             <hr>
             
             <h2>Тестовая отправка</h2>
-            <p>Отправьте тестовое письмо для проверки настроек SMTP.</p>
+            <p>Отправьте тестовое письмо на один или несколько адресов для проверки настроек отправки email.</p>
             <form method="post" action="">
                 <?php wp_nonce_field('course_email_test'); ?>
                 <table class="form-table">
                     <tr>
                         <th scope="row">
-                            <label for="test_email_address">Email для теста</label>
+                            <label for="test_email_addresses">Email адреса для теста</label>
                         </th>
                         <td>
-                            <input type="email" id="test_email_address" name="test_email_address" 
-                                   value="<?php echo esc_attr(get_option('admin_email')); ?>" 
-                                   class="regular-text" required />
-                            <p class="description">На этот адрес будет отправлено тестовое письмо</p>
+                            <textarea id="test_email_addresses" name="test_email_addresses" 
+                                      rows="4" class="large-text" required><?php echo esc_textarea(get_option('admin_email')); ?></textarea>
+                            <p class="description">
+                                Укажите один или несколько email адресов (разделяйте запятыми, пробелами или переносами строк).<br>
+                                Например: test@gmail.com, test@yandex.ru или каждый адрес с новой строки
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="test_email_subject">Тема письма</label>
+                        </th>
+                        <td>
+                            <input type="text" id="test_email_subject" name="test_email_subject" 
+                                   value="Тест отправки email - <?php echo date('Y-m-d H:i:s'); ?>" 
+                                   class="large-text" />
+                            <p class="description">Тема тестового письма</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="test_email_message">Текст письма</label>
+                        </th>
+                        <td>
+                            <textarea id="test_email_message" name="test_email_message" 
+                                      rows="8" class="large-text"></textarea>
+                            <p class="description">
+                                Введите текст письма. Если оставить пустым, будет использован стандартный тестовый текст.<br>
+                                Можно использовать для проверки отправки на разные почтовые сервисы (Gmail, Yandex, Mail.ru и т.д.)
+                            </p>
                         </td>
                     </tr>
                 </table>
