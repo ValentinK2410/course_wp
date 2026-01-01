@@ -33,6 +33,12 @@ if (empty($moodle_url) || empty($moodle_token)) {
     die('ОШИБКА: Настройки Moodle API не заполнены. Перейдите в админ-панель WordPress и заполните настройки синхронизации.');
 }
 
+// Проверка настроек email перед началом синхронизации
+$admin_email = get_option('admin_email');
+if (empty($admin_email)) {
+    die('ОШИБКА: Не настроен email администратора. Перейдите в Настройки → Общие и укажите email администратора.');
+}
+
 // Инициализация
 $moodle_api = new Course_Moodle_API($moodle_url, $moodle_token);
 $sync_class = Course_Moodle_User_Sync::get_instance();
@@ -89,16 +95,35 @@ function create_user_in_laravel($user_data, $moodle_user_id) {
     return array('success' => false, 'message' => 'Ошибка Laravel API: ' . $response_body);
 }
 
-// Функция для отправки письма пользователю
-function send_sync_notification_email($user_email, $user_login, $temp_password, $moodle_url) {
+// Функция для отправки письма пользователю с проверкой успешности
+function send_sync_notification_email($user_email, $user_login, $temp_password, $moodle_url, $moodle_password_changed = false) {
+    // Проверяем настройки email перед отправкой
+    if (!function_exists('wp_mail')) {
+        return array('success' => false, 'message' => 'Функция wp_mail недоступна');
+    }
+    
     $subject = 'Ваш аккаунт синхронизирован';
     
     $message = "Здравствуйте!\n\n";
     $message .= "Ваш аккаунт был синхронизирован между Moodle, WordPress и системой управления обучением.\n\n";
-    $message .= "Данные для входа:\n";
-    $message .= "Логин: " . $user_login . "\n";
-    $message .= "Временный пароль: " . $temp_password . "\n\n";
-    $message .= "ВАЖНО: После первого входа рекомендуется сменить пароль.\n\n";
+    
+    if ($moodle_password_changed) {
+        // Если пароль Moodle был изменен (старая логика - не используется сейчас)
+        $message .= "Данные для входа:\n";
+        $message .= "Логин: " . $user_login . "\n";
+        $message .= "Временный пароль: " . $temp_password . "\n\n";
+        $message .= "ВАЖНО: После первого входа рекомендуется сменить пароль.\n\n";
+    } else {
+        // Пароль Moodle НЕ изменен - пользователь использует существующий пароль
+        $message .= "ВАЖНО: Ваш пароль в Moodle НЕ был изменен. Вы можете продолжать использовать свой существующий пароль Moodle для входа.\n\n";
+        $message .= "Для входа в WordPress:\n";
+        $message .= "- Вы можете войти через SSO используя свой аккаунт Moodle\n";
+        $message .= "- Или использовать прямой вход в WordPress:\n";
+        $message .= "  Логин: " . $user_login . "\n";
+        $message .= "  Пароль WordPress: " . $temp_password . "\n\n";
+        $message .= "Рекомендуется использовать вход через Moodle (SSO) для единого доступа ко всем системам.\n\n";
+    }
+    
     $message .= "Ссылки для входа:\n";
     $message .= "- WordPress: " . home_url('/wp-login.php') . "\n";
     $message .= "- Moodle: " . rtrim($moodle_url, '/') . "/login/index.php\n";
@@ -110,12 +135,44 @@ function send_sync_notification_email($user_email, $user_login, $temp_password, 
     
     $message .= "\nС уважением,\nАдминистрация";
     
-    wp_mail($user_email, $subject, $message);
+    // Отправляем письмо с заголовками для лучшей доставляемости
+    $headers = array(
+        'Content-Type: text/plain; charset=UTF-8',
+        'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>'
+    );
+    
+    $mail_result = wp_mail($user_email, $subject, $message, $headers);
+    
+    if ($mail_result) {
+        return array('success' => true, 'message' => 'Письмо успешно отправлено');
+    } else {
+        // Проверяем последнюю ошибку
+        global $phpmailer;
+        $error_message = 'Неизвестная ошибка отправки email';
+        if (isset($phpmailer) && is_object($phpmailer) && isset($phpmailer->ErrorInfo)) {
+            $error_message = $phpmailer->ErrorInfo;
+        }
+        return array('success' => false, 'message' => 'Ошибка отправки email: ' . $error_message);
+    }
 }
 
 // Получаем всех пользователей из Moodle
 echo "<h1>Синхронизация пользователей из Moodle</h1>\n";
 echo "<p>Начало синхронизации: " . date('Y-m-d H:i:s') . "</p>\n";
+
+// Предупреждение о безопасности
+echo "<div style='background: #d1ecf1; border: 1px solid #0c5460; padding: 15px; margin: 20px 0; border-radius: 5px;'>\n";
+echo "<h3 style='margin-top: 0; color: #0c5460;'>🔒 ГЛАВНОЕ ПРАВИЛО БЕЗОПАСНОСТИ:</h3>\n";
+echo "<ul style='color: #0c5460;'>\n";
+echo "<li><strong>ПАРОЛИ В MOODLE НЕ БУДУТ ИЗМЕНЕНЫ!</strong></li>\n";
+echo "<li>Все пользователи уже существуют в Moodle и имеют свои рабочие пароли</li>\n";
+echo "<li>Мы НЕ меняем пароли в Moodle, чтобы пользователи не потеряли доступ</li>\n";
+echo "<li>Для существующих пользователей в WordPress - только обновляется связь с Moodle</li>\n";
+echo "<li>Для новых пользователей - создается аккаунт в WordPress, пароль Moodle остается прежним</li>\n";
+echo "<li>Пользователи могут войти в WordPress через SSO используя свой существующий пароль Moodle</li>\n";
+echo "</ul>\n";
+echo "</div>\n";
+
 echo "<hr>\n";
 
 try {
@@ -151,6 +208,8 @@ try {
     $created_count = 0;
     $updated_count = 0;
     $skipped_count = 0;
+    $email_sent_count = 0;
+    $email_failed_count = 0;
     $errors = array();
     
     foreach ($users as $moodle_user) {
@@ -176,10 +235,11 @@ try {
         $wp_user = get_user_by('email', $email);
         
         if ($wp_user) {
-            // Пользователь уже существует - обновляем moodle_user_id
+            // Пользователь уже существует - обновляем только moodle_user_id
+            // ВАЖНО: НЕ меняем пароль существующего пользователя, чтобы не потерять доступ!
             update_user_meta($wp_user->ID, 'moodle_user_id', $moodle_id);
             $updated_count++;
-            echo "<p>✓ Пользователь <strong>{$email}</strong> уже существует в WordPress (ID: {$wp_user->ID}). Обновлен moodle_user_id.</p>\n";
+            echo "<p>✓ Пользователь <strong>{$email}</strong> уже существует в WordPress (ID: {$wp_user->ID}). Обновлен moodle_user_id. Пароль в Moodle НЕ изменен.</p>\n";
             continue;
         }
         
@@ -216,29 +276,29 @@ try {
         // Сохраняем moodle_user_id
         update_user_meta($wp_user_id, 'moodle_user_id', $moodle_id);
         
-        // Помечаем, что пароль нужно синхронизировать обратно в Moodle при первом входе
-        // Пользователь получит временный пароль, который нужно будет синхронизировать
-        update_user_meta($wp_user_id, 'moodle_password_needs_sync', true);
-        update_user_meta($wp_user_id, 'moodle_password_synced', false);
+        // ГЛАВНОЕ ПРАВИЛО: НЕ МЕНЯТЬ ПАРОЛИ В MOODLE ДЛЯ СУЩЕСТВУЮЩИХ ПОЛЬЗОВАТЕЛЕЙ!
+        // Пользователь уже существует в Moodle и имеет свой рабочий пароль
+        // Мы НЕ должны его менять, чтобы пользователь не потерял доступ!
+        // Пользователь может войти в WordPress через SSO используя свой существующий пароль Moodle
         
-        // Обновляем пароль в Moodle на временный пароль
-        // Это позволит пользователю войти в Moodle с тем же временным паролем
-        try {
-            $moodle_api = new Course_Moodle_API($moodle_url, $moodle_token);
-            $update_result = $moodle_api->update_user($moodle_id, array(
-                'password' => $temp_password
-            ));
-            
-            if ($update_result !== false) {
-                // Помечаем, что пароль синхронизирован
-                update_user_meta($wp_user_id, 'moodle_password_synced', true);
-                delete_user_meta($wp_user_id, 'moodle_password_needs_sync');
-                echo "<p>✓ Пароль пользователя <strong>{$email}</strong> обновлен в Moodle</p>\n";
-            } else {
-                echo "<p>⚠ Не удалось обновить пароль в Moodle для пользователя <strong>{$email}</strong></p>\n";
-            }
-        } catch (Exception $e) {
-            echo "<p>⚠ Ошибка при обновлении пароля в Moodle: " . $e->getMessage() . "</p>\n";
+        // Помечаем, что пароль в Moodle НЕ был изменен (это правильно!)
+        update_user_meta($wp_user_id, 'moodle_password_synced', false);
+        update_user_meta($wp_user_id, 'moodle_password_not_changed', true);
+        update_user_meta($wp_user_id, 'wp_password', $temp_password); // Сохраняем пароль WP для справки
+        
+        echo "<p>✓ Пользователь <strong>{$email}</strong> создан в WordPress (ID: {$wp_user_id})</p>\n";
+        echo "<p>ℹ Пароль в Moodle НЕ изменен - пользователь сохраняет свой существующий доступ в Moodle</p>\n";
+        
+        // Отправляем уведомление пользователю (без пароля Moodle, т.к. он не менялся)
+        $email_result = send_sync_notification_email($email, $username, $temp_password, $moodle_url, false);
+        
+        if ($email_result['success']) {
+            $email_sent_count++;
+            echo "<p>✓ Email уведомление отправлено пользователю <strong>{$email}</strong></p>\n";
+        } else {
+            $email_failed_count++;
+            $errors[] = "Email не отправлен пользователю {$email}: {$email_result['message']}";
+            echo "<p style='color: orange;'>⚠ Email не отправлен пользователю <strong>{$email}</strong>: {$email_result['message']}</p>\n";
         }
         
         // Создаем пользователя в Laravel
@@ -254,9 +314,6 @@ try {
             echo "<p>⚠ Пользователь <strong>{$email}</strong> создан в WordPress (ID: {$wp_user_id}), но ошибка в Laravel: {$laravel_result['message']}</p>\n";
         }
         
-        // Отправляем письмо пользователю
-        send_sync_notification_email($email, $username, $temp_password, $moodle_url);
-        
         $created_count++;
         
         // Небольшая задержка, чтобы не перегружать сервер
@@ -266,9 +323,20 @@ try {
     echo "<hr>\n";
     echo "<h2>Результаты синхронизации</h2>\n";
     echo "<p>Всего пользователей в Moodle: <strong>{$total_users}</strong></p>\n";
-    echo "<p>Создано новых пользователей: <strong>{$created_count}</strong></p>\n";
+    echo "<p>Создано новых пользователей в WordPress: <strong>{$created_count}</strong></p>\n";
     echo "<p>Обновлено существующих пользователей: <strong>{$updated_count}</strong></p>\n";
     echo "<p>Пропущено пользователей: <strong>{$skipped_count}</strong></p>\n";
+    echo "<hr>\n";
+    echo "<div style='background: #d4edda; border: 1px solid #155724; padding: 10px; margin: 10px 0; border-radius: 5px;'>\n";
+    echo "<p style='color: #155724; margin: 0;'><strong>✓ Безопасность:</strong> Пароли в Moodle НЕ были изменены. Все пользователи сохраняют свой существующий доступ в Moodle.</p>\n";
+    echo "</div>\n";
+    echo "<hr>\n";
+    echo "<h3>Статистика отправки email:</h3>\n";
+    echo "<p>Email успешно отправлено: <strong style='color: green;'>{$email_sent_count}</strong></p>\n";
+    if ($email_failed_count > 0) {
+        echo "<p>Email НЕ отправлено: <strong style='color: orange;'>{$email_failed_count}</strong></p>\n";
+        echo "<p style='color: orange;'>Пользователи, которым не отправился email, все равно могут использовать свой существующий пароль Moodle для входа через SSO.</p>\n";
+    }
     
     if (!empty($errors)) {
         echo "<h3>Ошибки и предупреждения:</h3>\n";
