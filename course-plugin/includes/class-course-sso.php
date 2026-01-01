@@ -624,81 +624,68 @@ class Course_SSO {
         
         $message .= "\nС уважением,\nАдминистрация";
         
-        // Получаем настройки для отправки
-        $admin_email = get_option('admin_email');
-        $site_name = get_bloginfo('name');
-        $site_url = home_url();
-        
-        // Извлекаем домен из email для диагностики
-        $email_domain = substr(strrchr($user_email, "@"), 1);
-        $is_gmail = (strpos(strtolower($email_domain), 'gmail.com') !== false);
-        
-        // Логируем попытку отправки для диагностики
-        error_log("Course SSO Email: Попытка отправки письма на {$user_email} (домен: {$email_domain}, Gmail: " . ($is_gmail ? 'да' : 'нет') . ")");
-        
-        // Отправляем письмо с улучшенными заголовками для лучшей доставляемости (особенно для Gmail)
-        $headers = array();
-        
-        // Content-Type с правильной кодировкой
-        $headers[] = 'Content-Type: text/plain; charset=UTF-8';
-        
-        // From заголовок - важно для Gmail
-        $from_name = !empty($site_name) ? $site_name : 'WordPress';
-        $from_email = !empty($admin_email) ? $admin_email : 'noreply@' . parse_url($site_url, PHP_URL_HOST);
-        $headers[] = 'From: ' . $from_name . ' <' . $from_email . '>';
-        
-        // Reply-To заголовок - важно для Gmail
-        $headers[] = 'Reply-To: ' . $from_name . ' <' . $from_email . '>';
-        
-        // X-Mailer заголовок для идентификации
-        $headers[] = 'X-Mailer: WordPress/' . get_bloginfo('version');
-        
-        // Дополнительные заголовки для улучшения доставляемости
-        $headers[] = 'MIME-Version: 1.0';
-        $headers[] = 'X-Priority: 3'; // Нормальный приоритет
-        
-        // Для Gmail добавляем дополнительные заголовки
-        if ($is_gmail) {
-            // List-Unsubscribe заголовок (Gmail это ценит)
-            $headers[] = 'List-Unsubscribe: <' . $site_url . '>, <mailto:' . $from_email . '?subject=unsubscribe>';
-            error_log("Course SSO Email: Добавлены специальные заголовки для Gmail");
-        }
-        
-        // Отправляем письмо
-        $mail_result = wp_mail($user_email, $subject, $message, $headers);
-        
-        if ($mail_result) {
-            error_log("Course SSO Email: Письмо успешно отправлено на {$user_email}");
-            return true;
-        } else {
-            global $phpmailer;
-            $error_message = 'Неизвестная ошибка отправки email';
-            $error_details = '';
+        // Используем улучшенный класс для отправки email с поддержкой SMTP
+        // Это решает проблемы с доставляемостью в Gmail
+        if (class_exists('Course_Email_Sender')) {
+            $email_sender = Course_Email_Sender::get_instance();
             
-            if (isset($phpmailer) && is_object($phpmailer)) {
-                if (isset($phpmailer->ErrorInfo)) {
+            // Подготавливаем базовые заголовки
+            $headers = array();
+            
+            // Отправляем через улучшенный класс
+            $result = $email_sender->send_email($user_email, $subject, $message, $headers);
+            
+            // Логируем результат
+            if ($result['success']) {
+                error_log("Course SSO Email: Письмо успешно отправлено на {$user_email} методом: {$result['method']}");
+                return true;
+            } else {
+                error_log("Course SSO Email: ОШИБКА отправки на {$user_email}: {$result['message']} (метод: {$result['method']})");
+                return false;
+            }
+        } else {
+            // Fallback на стандартный метод, если класс не загружен
+            error_log("Course SSO Email: Класс Course_Email_Sender не найден, используем стандартный метод");
+            
+            // Получаем настройки для отправки
+            $admin_email = get_option('admin_email');
+            $site_name = get_bloginfo('name');
+            $site_url = home_url();
+            
+            // Извлекаем домен из email для диагностики
+            $email_domain = substr(strrchr($user_email, "@"), 1);
+            $is_gmail = (strpos(strtolower($email_domain), 'gmail.com') !== false);
+            
+            // Отправляем письмо с улучшенными заголовками
+            $headers = array();
+            $headers[] = 'Content-Type: text/plain; charset=UTF-8';
+            
+            $from_name = !empty($site_name) ? $site_name : 'WordPress';
+            $from_email = !empty($admin_email) ? $admin_email : 'noreply@' . parse_url($site_url, PHP_URL_HOST);
+            $headers[] = 'From: ' . $from_name . ' <' . $from_email . '>';
+            $headers[] = 'Reply-To: ' . $from_name . ' <' . $from_email . '>';
+            $headers[] = 'X-Mailer: WordPress/' . get_bloginfo('version');
+            $headers[] = 'MIME-Version: 1.0';
+            $headers[] = 'X-Priority: 3';
+            
+            if ($is_gmail) {
+                $headers[] = 'List-Unsubscribe: <' . $site_url . '>, <mailto:' . $from_email . '?subject=unsubscribe>';
+            }
+            
+            $mail_result = wp_mail($user_email, $subject, $message, $headers);
+            
+            if ($mail_result) {
+                error_log("Course SSO Email: Письмо успешно отправлено на {$user_email}");
+                return true;
+            } else {
+                global $phpmailer;
+                $error_message = 'Неизвестная ошибка отправки email';
+                if (isset($phpmailer) && is_object($phpmailer) && isset($phpmailer->ErrorInfo)) {
                     $error_message = $phpmailer->ErrorInfo;
                 }
-                if (method_exists($phpmailer, 'getSMTPInstance')) {
-                    $smtp = $phpmailer->getSMTPInstance();
-                    if ($smtp && method_exists($smtp, 'getError')) {
-                        $smtp_error = $smtp->getError();
-                        if ($smtp_error) {
-                            $error_details = ' SMTP ошибка: ' . $smtp_error['error'];
-                        }
-                    }
-                }
+                error_log("Course SSO Email: ОШИБКА отправки на {$user_email}: {$error_message}");
+                return false;
             }
-            
-            $full_error = $error_message . $error_details;
-            error_log("Course SSO Email: ОШИБКА отправки на {$user_email}: {$full_error}");
-            
-            // Для Gmail добавляем дополнительную информацию
-            if ($is_gmail) {
-                error_log("Course SSO Email: ВАЖНО для Gmail - проверьте SPF/DKIM/DMARC записи в DNS вашего домена");
-            }
-            
-            return false;
         }
     }
 }

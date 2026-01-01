@@ -120,6 +120,8 @@ class Course_Plugin {
             'includes/class-course-sso.php',             // Класс для Single Sign-On (SSO)
             'includes/class-course-anti-bot.php',        // Класс для защиты от ботов
             'includes/class-course-anti-bot-admin.php',  // Класс для админ-панели защиты от ботов
+            'includes/class-course-email-sender.php',    // Класс для улучшенной отправки email (SMTP поддержка)
+            'includes/class-course-email-admin.php',    // Класс для админ-панели настроек email (SMTP)
         );
         
         // Проходим по каждому файлу в массиве
@@ -230,6 +232,12 @@ class Course_Plugin {
         // Добавляет страницу настроек "Настройки → Защита от ботов"
         if (class_exists('Course_Anti_Bot_Admin')) {
             Course_Anti_Bot_Admin::get_instance();
+        }
+        
+        // Инициализируем админ-панель настроек email (SMTP)
+        // Добавляет страницу настроек "Настройки → Email (SMTP)"
+        if (class_exists('Course_Email_Admin')) {
+            Course_Email_Admin::get_instance();
         }
     }
     
