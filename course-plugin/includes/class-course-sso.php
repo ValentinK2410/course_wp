@@ -515,6 +515,23 @@ class Course_SSO {
             update_user_meta($user->ID, 'moodle_user_id', $moodle_user_id);
         }
         
+        // Проверяем, является ли это первым входом через SSO для синхронизированного пользователя
+        $moodle_password_not_changed = get_user_meta($user->ID, 'moodle_password_not_changed', true);
+        $sso_first_login_completed = get_user_meta($user->ID, 'sso_first_login_completed', true);
+        
+        if ($moodle_password_not_changed && empty($sso_first_login_completed)) {
+            // Это первый вход через SSO для пользователя, синхронизированного из Moodle
+            // Устанавливаем флаг, что первый вход выполнен
+            update_user_meta($user->ID, 'sso_first_login_completed', true);
+            update_user_meta($user->ID, 'sso_first_login_date', current_time('mysql'));
+            
+            // Отправляем email с инструкцией по установке пароля WordPress
+            $moodle_url = get_option('moodle_sync_url', '');
+            $this->send_first_sso_login_email($user, $moodle_url);
+            
+            error_log('Course SSO: Первый вход через SSO для пользователя ' . $email . '. Email с инструкцией отправлен.');
+        }
+        
         // Логируем успешный вход
         error_log('Course SSO: Пользователь ' . $email . ' успешно вошел в WordPress из Moodle');
         
@@ -539,6 +556,94 @@ class Course_SSO {
         </html>
         <?php
         exit;
+    }
+    
+    /**
+     * Отправка email с инструкцией по установке пароля WordPress после первого входа через SSO
+     * 
+     * @param WP_User $user Объект пользователя WordPress
+     * @param string $moodle_url URL Moodle
+     */
+    private function send_first_sso_login_email($user, $moodle_url) {
+        if (!function_exists('wp_mail')) {
+            error_log('Course SSO: Функция wp_mail недоступна для отправки email');
+            return false;
+        }
+        
+        $user_email = $user->user_email;
+        $user_login = $user->user_login;
+        
+        // Генерируем ссылку для сброса пароля WordPress
+        $reset_key = get_password_reset_key($user);
+        $reset_url = network_site_url("wp-login.php?action=rp&key={$reset_key}&login=" . rawurlencode($user_login), 'login');
+        
+        $subject = 'Добро пожаловать в WordPress! Настройте пароль для прямого входа';
+        
+        $message = "Здравствуйте, " . $user->display_name . "!\n\n";
+        $message .= "Поздравляем! Вы успешно вошли в WordPress через SSO из Moodle.\n\n";
+        
+        $message .= "═══════════════════════════════════════════════════════════\n";
+        $message .= "НАСТРОЙКА ПАРОЛЯ WORDPRESS (ОПЦИОНАЛЬНО)\n";
+        $message .= "═══════════════════════════════════════════════════════════\n\n";
+        
+        $message .= "Вы можете продолжать использовать SSO для входа в WordPress (рекомендуется).\n";
+        $message .= "Однако, если вы хотите иметь возможность входить напрямую в WordPress,\n";
+        $message .= "вы можете установить свой пароль WordPress.\n\n";
+        
+        $message .= "Для установки пароля WordPress:\n";
+        $message .= "1. Перейдите по этой ссылке:\n";
+        $message .= "   " . $reset_url . "\n\n";
+        $message .= "2. Введите новый пароль для вашего аккаунта WordPress\n\n";
+        $message .= "3. После установки пароля вы сможете входить в WordPress двумя способами:\n";
+        $message .= "   - Через SSO из Moodle (как сейчас)\n";
+        $message .= "   - Напрямую используя логин и пароль WordPress\n\n";
+        
+        $message .= "═══════════════════════════════════════════════════════════\n";
+        $message .= "СПОСОБЫ ВХОДА В WORDPRESS\n";
+        $message .= "═══════════════════════════════════════════════════════════\n\n";
+        
+        $message .= "СПОСОБ 1: Через SSO из Moodle (РЕКОМЕНДУЕТСЯ)\n";
+        $message .= "───────────────────────────────────────────────────────────\n";
+        $message .= "1. Войдите в Moodle: " . rtrim($moodle_url, '/') . "/login/index.php\n";
+        $message .= "2. Перейдите по ссылке: " . rtrim($moodle_url, '/') . "/moodle-sso-to-wordpress.php\n";
+        $message .= "3. Вы автоматически войдете в WordPress\n\n";
+        
+        $message .= "СПОСОБ 2: Прямой вход в WordPress\n";
+        $message .= "───────────────────────────────────────────────────────────\n";
+        $message .= "Ссылка для входа: " . home_url('/wp-login.php') . "\n";
+        $message .= "Логин: " . $user_login . "\n";
+        $message .= "Пароль: (используйте пароль, который вы установите по ссылке выше)\n\n";
+        
+        $message .= "═══════════════════════════════════════════════════════════\n";
+        $message .= "ВАЖНАЯ ИНФОРМАЦИЯ\n";
+        $message .= "═══════════════════════════════════════════════════════════\n\n";
+        $message .= "• Ваш пароль Moodle остался прежним и не был изменен\n";
+        $message .= "• Установка пароля WordPress необязательна - вы можете использовать только SSO\n";
+        $message .= "• Ссылка для установки пароля действительна в течение 24 часов\n";
+        $message .= "• Если вы не хотите устанавливать пароль WordPress, просто продолжайте использовать SSO\n\n";
+        
+        $message .= "\nС уважением,\nАдминистрация";
+        
+        // Отправляем письмо с заголовками
+        $headers = array(
+            'Content-Type: text/plain; charset=UTF-8',
+            'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>'
+        );
+        
+        $mail_result = wp_mail($user_email, $subject, $message, $headers);
+        
+        if ($mail_result) {
+            error_log('Course SSO: Email с инструкцией по установке пароля отправлен пользователю ' . $user_email);
+            return true;
+        } else {
+            global $phpmailer;
+            $error_message = 'Неизвестная ошибка отправки email';
+            if (isset($phpmailer) && is_object($phpmailer) && isset($phpmailer->ErrorInfo)) {
+                $error_message = $phpmailer->ErrorInfo;
+            }
+            error_log('Course SSO: Ошибка отправки email пользователю ' . $user_email . ': ' . $error_message);
+            return false;
+        }
     }
 }
 

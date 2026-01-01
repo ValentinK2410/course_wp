@@ -116,21 +116,50 @@ function send_sync_notification_email($user_email, $user_login, $temp_password, 
     } else {
         // Пароль Moodle НЕ изменен - пользователь использует существующий пароль
         $message .= "ВАЖНО: Ваш пароль в Moodle НЕ был изменен. Вы можете продолжать использовать свой существующий пароль Moodle для входа.\n\n";
-        $message .= "Для входа в WordPress:\n";
-        $message .= "- Вы можете войти через SSO используя свой аккаунт Moodle\n";
-        $message .= "- Или использовать прямой вход в WordPress:\n";
-        $message .= "  Логин: " . $user_login . "\n";
-        $message .= "  Пароль WordPress: " . $temp_password . "\n\n";
-        $message .= "Рекомендуется использовать вход через Moodle (SSO) для единого доступа ко всем системам.\n\n";
-    }
-    
-    $message .= "Ссылки для входа:\n";
-    $message .= "- WordPress: " . home_url('/wp-login.php') . "\n";
-    $message .= "- Moodle: " . rtrim($moodle_url, '/') . "/login/index.php\n";
-    
-    $laravel_url = get_option('laravel_api_url', '');
-    if ($laravel_url) {
-        $message .= "- Система управления: " . rtrim($laravel_url, '/') . "\n";
+        
+        $message .= "═══════════════════════════════════════════════════════════\n";
+        $message .= "КАК ВОЙТИ В WORDPRESS\n";
+        $message .= "═══════════════════════════════════════════════════════════\n\n";
+        
+        $message .= "СПОСОБ 1: Вход через SSO из Moodle (РЕКОМЕНДУЕТСЯ)\n";
+        $message .= "───────────────────────────────────────────────────────────\n";
+        $message .= "Это самый простой способ! Используйте свой существующий пароль Moodle.\n\n";
+        $message .= "Пошаговая инструкция:\n";
+        $message .= "1. Войдите в Moodle используя свой обычный логин и пароль:\n";
+        $message .= "   " . rtrim($moodle_url, '/') . "/login/index.php\n\n";
+        $message .= "2. После входа в Moodle перейдите по этой ссылке для автоматического входа в WordPress:\n";
+        $sso_url = rtrim($moodle_url, '/') . '/moodle-sso-to-wordpress.php';
+        $message .= "   " . $sso_url . "\n\n";
+        $message .= "3. Вы автоматически войдете в WordPress без необходимости вводить пароль!\n\n";
+        
+        $message .= "СПОСОБ 2: Прямой вход в WordPress\n";
+        $message .= "───────────────────────────────────────────────────────────\n";
+        $message .= "Если вы хотите войти напрямую в WordPress без Moodle:\n\n";
+        $message .= "Ссылка для входа: " . home_url('/wp-login.php') . "\n";
+        $message .= "Логин: " . $user_login . "\n";
+        $message .= "Пароль WordPress: " . $temp_password . "\n\n";
+        $message .= "Примечание: После первого входа через SSO вы получите дополнительное письмо с инструкциями по настройке пароля WordPress.\n\n";
+        
+        $message .= "═══════════════════════════════════════════════════════════\n";
+        $message .= "ПОЛЕЗНЫЕ ССЫЛКИ\n";
+        $message .= "═══════════════════════════════════════════════════════════\n\n";
+        $message .= "• WordPress: " . home_url('/wp-login.php') . "\n";
+        $message .= "• Moodle: " . rtrim($moodle_url, '/') . "/login/index.php\n";
+        $message .= "• SSO из Moodle в WordPress: " . $sso_url . "\n";
+        
+        $laravel_url = get_option('laravel_api_url', '');
+        if ($laravel_url) {
+            $message .= "• Система управления: " . rtrim($laravel_url, '/') . "\n";
+        }
+        
+        $message .= "\n";
+        $message .= "═══════════════════════════════════════════════════════════\n";
+        $message .= "ВАЖНАЯ ИНФОРМАЦИЯ\n";
+        $message .= "═══════════════════════════════════════════════════════════\n\n";
+        $message .= "• Ваш пароль в Moodle остался прежним - используйте его для входа в Moodle\n";
+        $message .= "• Для входа в WordPress рекомендуется использовать SSO (способ 1)\n";
+        $message .= "• SSO позволяет использовать один пароль (Moodle) для доступа ко всем системам\n";
+        $message .= "• Если возникнут проблемы со входом, обратитесь к администратору\n\n";
     }
     
     $message .= "\nС уважением,\nАдминистрация";
