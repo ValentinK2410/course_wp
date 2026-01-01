@@ -95,7 +95,18 @@ function create_user_in_laravel($user_data, $moodle_user_id) {
     return array('success' => false, 'message' => 'Ошибка Laravel API: ' . $response_body);
 }
 
-// Функция для отправки письма пользователю с проверкой успешности
+/**
+ * Функция для отправки письма пользователю с проверкой успешности
+ * 
+ * ВАЖНО для доставляемости в Gmail:
+ * 1. Убедитесь, что настроены SPF записи в DNS вашего домена
+ * 2. Настройте DKIM подпись для вашего домена
+ * 3. Настройте DMARC политику
+ * 4. Используйте SMTP плагин (например, WP Mail SMTP) вместо стандартной функции mail()
+ * 5. Проверьте, что email администратора WordPress совпадает с доменом сайта
+ * 
+ * Для диагностики проверьте логи WordPress (wp-content/debug.log)
+ */
 function send_sync_notification_email($user_email, $user_login, $temp_password, $moodle_url, $moodle_password_changed = false) {
     // Проверяем настройки email перед отправкой
     if (!function_exists('wp_mail')) {
@@ -164,24 +175,85 @@ function send_sync_notification_email($user_email, $user_login, $temp_password, 
     
     $message .= "\nС уважением,\nАдминистрация";
     
-    // Отправляем письмо с заголовками для лучшей доставляемости
-    $headers = array(
-        'Content-Type: text/plain; charset=UTF-8',
-        'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>'
-    );
+    // Получаем настройки для отправки
+    $admin_email = get_option('admin_email');
+    $site_name = get_bloginfo('name');
+    $site_url = home_url();
     
+    // Извлекаем домен из email для диагностики
+    $email_domain = substr(strrchr($user_email, "@"), 1);
+    $is_gmail = (strpos(strtolower($email_domain), 'gmail.com') !== false);
+    
+    // Логируем попытку отправки для диагностики
+    error_log("Course Sync Email: Попытка отправки письма на {$user_email} (домен: {$email_domain}, Gmail: " . ($is_gmail ? 'да' : 'нет') . ")");
+    
+    // Отправляем письмо с улучшенными заголовками для лучшей доставляемости (особенно для Gmail)
+    $headers = array();
+    
+    // Content-Type с правильной кодировкой
+    $headers[] = 'Content-Type: text/plain; charset=UTF-8';
+    
+    // From заголовок - важно для Gmail
+    $from_name = !empty($site_name) ? $site_name : 'WordPress';
+    $from_email = !empty($admin_email) ? $admin_email : 'noreply@' . parse_url($site_url, PHP_URL_HOST);
+    $headers[] = 'From: ' . $from_name . ' <' . $from_email . '>';
+    
+    // Reply-To заголовок - важно для Gmail
+    $headers[] = 'Reply-To: ' . $from_name . ' <' . $from_email . '>';
+    
+    // X-Mailer заголовок для идентификации
+    $headers[] = 'X-Mailer: WordPress/' . get_bloginfo('version');
+    
+    // Дополнительные заголовки для улучшения доставляемости
+    $headers[] = 'MIME-Version: 1.0';
+    $headers[] = 'X-Priority: 3'; // Нормальный приоритет
+    
+    // Для Gmail добавляем дополнительные заголовки
+    if ($is_gmail) {
+        // List-Unsubscribe заголовок (Gmail это ценит)
+        $headers[] = 'List-Unsubscribe: <' . $site_url . '>, <mailto:' . $from_email . '?subject=unsubscribe>';
+        error_log("Course Sync Email: Добавлены специальные заголовки для Gmail");
+    }
+    
+    // Логируем заголовки для диагностики
+    error_log("Course Sync Email: Заголовки: " . print_r($headers, true));
+    
+    // Отправляем письмо
     $mail_result = wp_mail($user_email, $subject, $message, $headers);
     
     if ($mail_result) {
+        error_log("Course Sync Email: Письмо успешно отправлено на {$user_email}");
         return array('success' => true, 'message' => 'Письмо успешно отправлено');
     } else {
         // Проверяем последнюю ошибку
         global $phpmailer;
         $error_message = 'Неизвестная ошибка отправки email';
-        if (isset($phpmailer) && is_object($phpmailer) && isset($phpmailer->ErrorInfo)) {
-            $error_message = $phpmailer->ErrorInfo;
+        $error_details = '';
+        
+        if (isset($phpmailer) && is_object($phpmailer)) {
+            if (isset($phpmailer->ErrorInfo)) {
+                $error_message = $phpmailer->ErrorInfo;
+            }
+            if (method_exists($phpmailer, 'getSMTPInstance')) {
+                $smtp = $phpmailer->getSMTPInstance();
+                if ($smtp && method_exists($smtp, 'getError')) {
+                    $smtp_error = $smtp->getError();
+                    if ($smtp_error) {
+                        $error_details = ' SMTP ошибка: ' . $smtp_error['error'];
+                    }
+                }
+            }
         }
-        return array('success' => false, 'message' => 'Ошибка отправки email: ' . $error_message);
+        
+        $full_error = 'Ошибка отправки email: ' . $error_message . $error_details;
+        error_log("Course Sync Email: ОШИБКА отправки на {$user_email}: {$full_error}");
+        
+        // Для Gmail добавляем дополнительную информацию
+        if ($is_gmail) {
+            $full_error .= ' (Gmail может блокировать письма без правильных SPF/DKIM записей. Проверьте настройки DNS вашего домена.)';
+        }
+        
+        return array('success' => false, 'message' => $full_error);
     }
 }
 
