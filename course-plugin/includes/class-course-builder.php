@@ -196,7 +196,9 @@ class Course_Builder {
                 }
             }
         }
+        error_log('=== Course Builder: SAVE START ===');
         error_log('Course Builder: Widgets count BEFORE validation: ' . $widgets_before_validation);
+        error_log('Course Builder: Full data structure BEFORE validation: ' . print_r($data, true));
         
         // Валидация данных
         $data = $this->validate_data($data);
@@ -215,6 +217,8 @@ class Course_Builder {
             }
         }
         error_log('Course Builder: Widgets count AFTER validation: ' . $widgets_after_validation);
+        error_log('Course Builder: Full data structure AFTER validation: ' . print_r($data, true));
+        error_log('=== Course Builder: SAVE END ===');
         
         // Добавляем версию
         $data['version'] = self::DATA_VERSION;
