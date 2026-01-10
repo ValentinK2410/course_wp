@@ -619,9 +619,22 @@
         },
         
         loadBuilder: function() {
+            // Проверяем доступность переменных
+            if (typeof courseBuilderAdmin === 'undefined') {
+                console.error('courseBuilderAdmin is not defined in loadBuilder!');
+                return;
+            }
+            
             var postId = courseBuilderAdmin.postId;
             
+            if (!postId || postId === 0) {
+                console.error('Post ID is missing or invalid in loadBuilder:', postId);
+                return;
+            }
+            
             console.log('Loading builder data for post:', postId);
+            console.log('AJAX URL:', courseBuilderAdmin.ajaxUrl);
+            console.log('Load nonce:', courseBuilderAdmin.loadNonce ? 'present' : 'missing');
             
             $.ajax({
                 url: courseBuilderAdmin.ajaxUrl,
@@ -633,6 +646,9 @@
                 },
                 success: function(response) {
                     console.log('Load builder response:', response);
+                    console.log('Response success:', response.success);
+                    console.log('Response data:', response.data);
+                    
                     if (response.success && response.data) {
                         // Проверяем наличие секций в данных
                         if (response.data.sections && response.data.sections.length > 0) {
@@ -640,16 +656,21 @@
                             CourseBuilderAdmin.renderBuilder(response.data);
                         } else {
                             console.log('No sections found in data, showing empty state');
+                            console.log('Data structure:', JSON.stringify(response.data, null, 2));
                             $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
                         }
                     } else {
                         console.error('Failed to load builder data:', response);
+                        if (response.data && response.data.message) {
+                            console.error('Error message:', response.data.message);
+                        }
                         // Показываем пустое состояние при ошибке
                         $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error loading builder data:', xhr, status, error);
+                    console.error('Response text:', xhr.responseText);
                     // Показываем пустое состояние при ошибке
                     $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Ошибка загрузки данных. Начните добавлять виджеты из боковой панели</p></div>');
                 }
@@ -658,13 +679,17 @@
         
         renderBuilder: function(data) {
             console.log('Rendering builder data:', data);
+            console.log('Data structure:', JSON.stringify(data, null, 2));
             
             // Рендеринг структуры builder из данных
             if (data.sections && data.sections.length > 0) {
+                console.log('Found ' + data.sections.length + ' sections to render');
                 var html = '';
+                var totalWidgets = 0;
                 
                 $.each(data.sections, function(index, section) {
-                    html += '<div class="course-builder-section" data-section-id="' + section.id + '">';
+                    console.log('Rendering section ' + (index + 1) + ':', section.id);
+                    html += '<div class="course-builder-section" data-section-id="' + (section.id || 'section_' + Date.now() + '_' + index) + '">';
                     html += '<div class="course-builder-section-header">';
                     html += '<h3>Секция ' + (index + 1) + '</h3>';
                     html += '<button class="course-builder-delete-section" style="float: right;">Удалить секцию</button>';
@@ -672,14 +697,25 @@
                     html += '<div class="course-builder-section-content">';
                     
                     if (section.columns && section.columns.length > 0) {
+                        console.log('Section ' + (index + 1) + ' has ' + section.columns.length + ' columns');
                         $.each(section.columns, function(colIndex, column) {
                             var columnWidth = column.width || 100;
-                            html += '<div class="course-builder-column" data-column-id="' + column.id + '" style="width: ' + columnWidth + '%;">';
+                            var columnId = column.id || 'col_' + Date.now() + '_' + colIndex;
+                            html += '<div class="course-builder-column" data-column-id="' + columnId + '" style="width: ' + columnWidth + '%;">';
                             html += '<div class="course-builder-widgets-list">';
                             
                             if (column.widgets && column.widgets.length > 0) {
+                                console.log('Column ' + (colIndex + 1) + ' has ' + column.widgets.length + ' widgets');
                                 $.each(column.widgets, function(widgetIndex, widget) {
+                                    if (!widget.id) {
+                                        widget.id = 'widget_' + Date.now() + '_' + widgetIndex;
+                                    }
+                                    if (!widget.type) {
+                                        console.warn('Widget without type found, skipping:', widget);
+                                        return;
+                                    }
                                     html += CourseBuilderAdmin.renderWidget(widget);
+                                    totalWidgets++;
                                 });
                             }
                             
@@ -687,6 +723,7 @@
                             html += '</div>';
                         });
                     } else {
+                        console.log('Section ' + (index + 1) + ' has no columns, creating default');
                         // Если колонок нет, создаем одну по умолчанию
                         var columnId = 'col_' + Date.now();
                         html += '<div class="course-builder-column" data-column-id="' + columnId + '" style="width: 100%;">';
@@ -698,18 +735,31 @@
                     html += '</div>';
                 });
                 
+                console.log('Total widgets to render: ' + totalWidgets);
                 $('#course-builder-editor').html(html);
                 
                 // Восстанавливаем настройки виджетов из HTML атрибутов в jQuery data
+                var restoredCount = 0;
                 $('#course-builder-editor').find('.course-builder-widget').each(function() {
                     var $widget = $(this);
                     // Это автоматически восстановит настройки из атрибута data-widget-settings
-                    CourseBuilderAdmin.getWidgetSettings($widget);
+                    var settings = CourseBuilderAdmin.getWidgetSettings($widget);
+                    if (settings && Object.keys(settings).length > 0) {
+                        restoredCount++;
+                        console.log('Restored settings for widget:', $widget.data('widget-id'), settings);
+                    }
+                    // Обновляем отображение виджета с восстановленными настройками
+                    CourseBuilderAdmin.updateWidgetDisplay($widget);
                 });
                 
-                CourseBuilderAdmin.initSortable();
+                console.log('Restored settings for ' + restoredCount + ' widgets');
                 
-                console.log('Builder rendered successfully');
+                // Инициализируем сортировку после небольшой задержки, чтобы DOM обновился
+                setTimeout(function() {
+                    CourseBuilderAdmin.initSortable();
+                }, 100);
+                
+                console.log('Builder rendered successfully with ' + totalWidgets + ' widgets');
             } else {
                 console.log('No sections found in data, showing empty state');
                 // Показываем пустое состояние, если секций нет
