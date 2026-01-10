@@ -134,19 +134,32 @@ class Course_Builder {
      * Получить данные builder для поста
      */
     public function get_builder_data($post_id) {
-        $data = get_post_meta($post_id, self::META_KEY, true);
+        $raw_data = get_post_meta($post_id, self::META_KEY, true);
         
-        if (empty($data)) {
+        error_log('Course Builder: Getting data for post ' . $post_id . ', raw data type: ' . gettype($raw_data) . ', empty: ' . (empty($raw_data) ? 'yes' : 'no'));
+        
+        if (empty($raw_data)) {
+            error_log('Course Builder: No data found, returning default');
             return $this->get_default_data();
         }
         
         // Декодируем JSON, если это строка
-        if (is_string($data)) {
-            $data = json_decode($data, true);
+        if (is_string($raw_data)) {
+            error_log('Course Builder: Decoding JSON string, length: ' . strlen($raw_data));
+            $data = json_decode($raw_data, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log('Course Builder: JSON decode error: ' . json_last_error_msg());
+                return $this->get_default_data();
+            }
+        } else {
+            $data = $raw_data;
         }
+        
+        error_log('Course Builder: Decoded data sections count: ' . (isset($data['sections']) ? count($data['sections']) : 0));
         
         // Проверяем версию и мигрируем при необходимости
         if (isset($data['version']) && $data['version'] !== self::DATA_VERSION) {
+            error_log('Course Builder: Data version mismatch, migrating');
             $data = $this->migrate_data($data);
         }
         
@@ -332,21 +345,31 @@ class Course_Builder {
     public function ajax_load_builder_data() {
         // Проверка nonce
         if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'course_builder_load')) {
+            error_log('Course Builder: Load nonce verification failed');
             wp_send_json_error(array('message' => __('Ошибка безопасности', 'course-plugin')));
         }
         
         // Проверка прав
         if (!current_user_can('edit_posts')) {
+            error_log('Course Builder: User does not have edit_posts capability for load');
             wp_send_json_error(array('message' => __('Недостаточно прав', 'course-plugin')));
         }
         
         $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
         
         if (!$post_id) {
+            error_log('Course Builder: Post ID is missing for load');
             wp_send_json_error(array('message' => __('Не указан ID поста', 'course-plugin')));
         }
         
+        error_log('Course Builder: Loading data for post ' . $post_id);
+        
+        // Получаем сырые данные из базы
+        $raw_data = get_post_meta($post_id, self::META_KEY, true);
+        error_log('Course Builder: Raw meta data: ' . ($raw_data ? 'exists (type: ' . gettype($raw_data) . ', length: ' . (is_string($raw_data) ? strlen($raw_data) : 'N/A') . ')' : 'missing'));
+        
         $data = $this->get_builder_data($post_id);
+        error_log('Course Builder: Processed data sections: ' . (isset($data['sections']) ? count($data['sections']) : 0));
         
         wp_send_json_success(array('data' => $data));
     }
