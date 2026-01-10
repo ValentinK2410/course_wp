@@ -181,19 +181,33 @@ class Course_Builder_Admin {
                             nonce: courseBuilderAdmin.nonce
                         },
                         success: function(response) {
-                            if (response.success && response.data.widgets) {
+                            console.log('Widgets response:', response);
+                            if (response.success && response.data && response.data.widgets) {
                                 var html = '';
+                                var widgetCount = 0;
                                 $.each(response.data.widgets, function(type, widget) {
-                                    html += '<button class="course-builder-add-widget" data-widget-type="' + type + '">';
-                                    html += '<span class="dashicons ' + widget.icon + '"></span>';
-                                    html += '<span>' + widget.name + '</span>';
+                                    widgetCount++;
+                                    html += '<button class="course-builder-add-widget" data-widget-type="' + type + '" style="display: block; width: 100%; margin-bottom: 8px; padding: 10px; text-align: left; background: #fff; border: 1px solid #ddd; border-radius: 3px; cursor: pointer;">';
+                                    html += '<span class="dashicons ' + widget.icon + '" style="vertical-align: middle; margin-right: 8px;"></span>';
+                                    html += '<span style="vertical-align: middle;">' + widget.name + '</span>';
                                     html += '</button>';
                                 });
-                                $('#course-builder-widget-list').html(html);
+                                
+                                if (widgetCount > 0) {
+                                    $('#course-builder-widget-list').html(html);
+                                    console.log('Loaded ' + widgetCount + ' widgets');
+                                } else {
+                                    console.error('No widgets found in response');
+                                    $('#course-builder-widget-list').html('<p style="color: #dc3232;">Виджеты не найдены. Проверьте консоль для деталей.</p>');
+                                }
+                            } else {
+                                console.error('Invalid response format:', response);
+                                $('#course-builder-widget-list').html('<p style="color: #dc3232;">Ошибка загрузки виджетов: ' + (response.data && response.data.message ? response.data.message : 'Неизвестная ошибка') + '</p>');
                             }
                         },
                         error: function(xhr, status, error) {
-                            console.error('Error loading widgets:', error);
+                            console.error('Error loading widgets:', error, xhr);
+                            $('#course-builder-widget-list').html('<p style="color: #dc3232;">Ошибка AJAX: ' + error + '</p>');
                         }
                     });
                     
@@ -494,19 +508,37 @@ class Course_Builder_Admin {
             wp_send_json_error(array('message' => __('Недостаточно прав', 'course-plugin')));
         }
         
+        // Убеждаемся, что виджеты зарегистрированы
+        // Вызываем хук регистрации виджетов, если он еще не был вызван
+        do_action('course_builder_register_widgets');
+        
         $widgets = Course_Builder::get_widgets();
         $widgets_data = array();
         
+        if (empty($widgets)) {
+            // Если виджеты не зарегистрированы, регистрируем их вручную
+            Course_Builder_Register::register_widgets();
+            $widgets = Course_Builder::get_widgets();
+        }
+        
         foreach ($widgets as $type => $class_name) {
             if (class_exists($class_name)) {
-                $widget = new $class_name();
-                $widgets_data[$type] = array(
-                    'name' => $widget->get_name(),
-                    'description' => $widget->get_description(),
-                    'icon' => $widget->get_icon(),
-                    'type' => $type
-                );
+                try {
+                    $widget = new $class_name();
+                    $widgets_data[$type] = array(
+                        'name' => $widget->get_name(),
+                        'description' => $widget->get_description(),
+                        'icon' => $widget->get_icon(),
+                        'type' => $type
+                    );
+                } catch (Exception $e) {
+                    error_log('Course Builder: Ошибка создания виджета ' . $type . ': ' . $e->getMessage());
+                }
             }
+        }
+        
+        if (empty($widgets_data)) {
+            wp_send_json_error(array('message' => __('Виджеты не найдены', 'course-plugin'), 'debug' => array('widgets_count' => count($widgets))));
         }
         
         wp_send_json_success(array('widgets' => $widgets_data));
