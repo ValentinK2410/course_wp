@@ -416,8 +416,10 @@ class Course_Builder {
         
         $data = $this->get_builder_data($post_id);
         error_log('Course Builder: Processed data sections: ' . (isset($data['sections']) ? count($data['sections']) : 0));
+        error_log('Course Builder: Data structure before sending: ' . print_r($data, true));
         
-        // Возвращаем данные напрямую, без дополнительного вложения
+        // wp_send_json_success() автоматически оборачивает данные в объект с ключом 'data'
+        // Структура ответа будет: { success: true, data: { sections: [...] } }
         wp_send_json_success($data);
     }
 }
