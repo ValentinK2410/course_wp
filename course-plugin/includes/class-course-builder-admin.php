@@ -56,6 +56,7 @@ class Course_Builder_Admin {
         // AJAX обработчики
         add_action('wp_ajax_course_builder_get_widgets', array($this, 'ajax_get_widgets'));
         add_action('wp_ajax_course_builder_enable', array($this, 'ajax_enable_builder'));
+        add_action('wp_ajax_course_builder_get_widget_settings', array($this, 'ajax_get_widget_settings'));
     }
     
     /**
