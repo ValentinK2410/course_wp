@@ -701,14 +701,30 @@
                         console.log('Builder data sections:', builderData.sections);
                         console.log('Builder data sections count:', builderData.sections ? builderData.sections.length : 0);
                         
-                        // Проверяем наличие секций в данных
-                        if (builderData.sections && Array.isArray(builderData.sections) && builderData.sections.length > 0) {
-                            console.log('Found ' + builderData.sections.length + ' sections, rendering...');
-                            CourseBuilderAdmin.renderBuilder(builderData);
+                        // Дополнительная проверка структуры данных
+                        if (builderData && typeof builderData === 'object') {
+                            // Если данные обернуты в объект с ключом 'data', извлекаем их
+                            if (builderData.data && typeof builderData.data === 'object') {
+                                console.log('Data wrapped in data object, extracting...');
+                                builderData = builderData.data;
+                            }
+                            
+                            // Проверяем наличие секций в данных
+                            if (builderData.sections && Array.isArray(builderData.sections) && builderData.sections.length > 0) {
+                                console.log('Found ' + builderData.sections.length + ' sections, rendering...');
+                                CourseBuilderAdmin.renderBuilder(builderData);
+                            } else {
+                                console.log('No sections found in data, showing empty state');
+                                console.log('Full data structure:', JSON.stringify(builderData, null, 2));
+                                console.log('builderData type:', typeof builderData);
+                                console.log('builderData.sections:', builderData.sections);
+                                console.log('builderData.sections type:', typeof builderData.sections);
+                                console.log('builderData.sections is array:', Array.isArray(builderData.sections));
+                                $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
+                            }
                         } else {
-                            console.log('No sections found in data, showing empty state');
-                            console.log('Full data structure:', JSON.stringify(builderData, null, 2));
-                            $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
+                            console.error('Invalid builder data structure:', builderData);
+                            $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Ошибка загрузки данных. Начните добавлять виджеты из боковой панели</p></div>');
                         }
                     } else {
                         console.error('Failed to load builder data:', response);
