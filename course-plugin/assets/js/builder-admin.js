@@ -307,6 +307,8 @@
             var widgetType = $widget.data('widget-type');
             var currentSettings = CourseBuilderAdmin.getWidgetSettings($widget);
             
+            console.log('Editing widget:', widgetId, 'type:', widgetType, 'current settings:', currentSettings);
+            
             // Сохраняем ID виджета в модальном окне
             $('#course-builder-widget-modal').data('editing-widget-id', widgetId);
             
@@ -320,20 +322,32 @@
                     nonce: courseBuilderAdmin.nonce
                 },
                 success: function(response) {
+                    console.log('Widget settings response:', response);
                     if (response.success && response.data && response.data.fields) {
                         var html = '';
                         $.each(response.data.fields, function(index, field) {
-                            var fieldValue = currentSettings[field.name] || (field.default || '');
+                            var fieldValue = currentSettings[field.name];
+                            if (fieldValue === undefined || fieldValue === null) {
+                                fieldValue = (field.default !== undefined ? field.default : '');
+                            }
                             html += CourseBuilderAdmin.renderSettingsField(field, fieldValue);
                         });
                         $('#course-builder-widget-settings').html(html);
                         $('#course-builder-widget-modal').show();
                     } else {
-                        alert('Не удалось загрузить настройки виджета');
+                        var errorMsg = 'Не удалось загрузить настройки виджета';
+                        if (response.data && response.data.message) {
+                            errorMsg += ': ' + response.data.message;
+                        }
+                        if (response.data && response.data.debug) {
+                            console.error('Debug info:', response.data.debug);
+                        }
+                        alert(errorMsg);
                     }
                 },
-                error: function() {
-                    alert('Ошибка загрузки настроек виджета');
+                error: function(xhr, status, error) {
+                    console.error('Error loading widget settings:', xhr, status, error);
+                    alert('Ошибка загрузки настроек виджета: ' + error);
                 }
             });
         },
