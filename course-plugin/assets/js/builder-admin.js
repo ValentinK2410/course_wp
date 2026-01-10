@@ -242,13 +242,16 @@
             
             // Создаем виджет
             var widgetId = 'widget_' + Date.now();
-            var widgetHtml = CourseBuilderAdmin.renderWidget({
+            var $widget = $(CourseBuilderAdmin.renderWidget({
                 id: widgetId,
                 type: widgetType,
                 settings: {}
-            });
+            }));
             
-            $widgetsList.append(widgetHtml);
+            // Сохраняем настройки в data-атрибуте
+            $widget.data('widget-settings', {});
+            
+            $widgetsList.append($widget);
             CourseBuilderAdmin.initSortable();
             
             console.log('Widget added successfully');
