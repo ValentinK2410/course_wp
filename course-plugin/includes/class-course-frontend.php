@@ -46,6 +46,18 @@ class Course_Frontend {
      * Определяет, какой шаблон использовать для отображения курсов
      */
     public function course_template_loader($template) {
+        // Проверяем, используется ли builder для текущей страницы
+        global $post;
+        if ($post && (is_singular('course') || is_page())) {
+            $builder = Course_Builder::get_instance();
+            if ($builder->is_builder_enabled($post->ID)) {
+                $builder_template = COURSE_PLUGIN_DIR . 'templates/builder-template.php';
+                if (file_exists($builder_template)) {
+                    return $builder_template;
+                }
+            }
+        }
+        
         // Шаблон архива курсов
         // Проверяем несколько условий для определения архива курсов
         $is_course_archive = false;

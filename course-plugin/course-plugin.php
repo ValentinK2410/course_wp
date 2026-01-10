@@ -122,6 +122,12 @@ class Course_Plugin {
             'includes/class-course-anti-bot-admin.php',  // Класс для админ-панели защиты от ботов
             'includes/class-course-email-sender.php',    // Класс для улучшенной отправки email (SMTP поддержка)
             'includes/class-course-email-admin.php',    // Класс для админ-панели настроек email (SMTP)
+            // Course Builder (порядок важен!)
+            'includes/class-course-builder.php',         // Главный класс builder (должен быть первым)
+            'includes/class-course-builder-widgets.php', // Базовый класс для виджетов
+            'includes/class-course-builder-register.php', // Регистрация виджетов (должен быть после базовых классов)
+            'includes/class-course-builder-admin.php',   // Админ-панель builder
+            'includes/class-course-builder-frontend.php', // Рендеринг на фронтенде
         );
         
         // Проходим по каждому файлу в массиве
@@ -238,6 +244,20 @@ class Course_Plugin {
         // Добавляет страницу настроек "Настройки → Email (SMTP)"
         if (class_exists('Course_Email_Admin')) {
             Course_Email_Admin::get_instance();
+        }
+        
+        // Инициализируем Course Builder
+        // Визуальный редактор для создания страниц курсов
+        if (class_exists('Course_Builder')) {
+            Course_Builder::get_instance();
+        }
+        
+        if (class_exists('Course_Builder_Admin')) {
+            Course_Builder_Admin::get_instance();
+        }
+        
+        if (class_exists('Course_Builder_Frontend')) {
+            Course_Builder_Frontend::get_instance();
         }
     }
     
