@@ -650,13 +650,20 @@
                     console.log('Response data:', response.data);
                     
                     if (response.success && response.data) {
+                        // PHP возвращает данные в структуре: { success: true, data: { data: { sections: [...] } } }
+                        // Нужно извлечь вложенные данные
+                        var builderData = response.data.data || response.data;
+                        
+                        console.log('Extracted builder data:', builderData);
+                        console.log('Builder data sections:', builderData.sections);
+                        
                         // Проверяем наличие секций в данных
-                        if (response.data.sections && response.data.sections.length > 0) {
-                            console.log('Found ' + response.data.sections.length + ' sections, rendering...');
-                            CourseBuilderAdmin.renderBuilder(response.data);
+                        if (builderData.sections && builderData.sections.length > 0) {
+                            console.log('Found ' + builderData.sections.length + ' sections, rendering...');
+                            CourseBuilderAdmin.renderBuilder(builderData);
                         } else {
                             console.log('No sections found in data, showing empty state');
-                            console.log('Data structure:', JSON.stringify(response.data, null, 2));
+                            console.log('Data structure:', JSON.stringify(builderData, null, 2));
                             $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
                         }
                     } else {
