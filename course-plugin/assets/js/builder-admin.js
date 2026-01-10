@@ -49,7 +49,20 @@
             // Удаление виджета
             $(document).on('click', '.course-builder-delete-widget', function() {
                 if (confirm(courseBuilderAdmin.strings.delete + '?')) {
-                    $(this).closest('.course-builder-widget').remove();
+                    var $widget = $(this).closest('.course-builder-widget');
+                    $widget.remove();
+                    
+                    // Проверяем, остались ли виджеты в секции
+                    var $section = $widget.closest('.course-builder-section');
+                    var $remainingWidgets = $section.find('.course-builder-widget');
+                    if ($remainingWidgets.length === 0) {
+                        // Если виджетов не осталось, проверяем все секции
+                        var $allSections = $('#course-builder-editor').find('.course-builder-section');
+                        if ($allSections.length === 0) {
+                            $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
+                        }
+                    }
+                    
                     CourseBuilderAdmin.saveBuilder();
                 }
             });
@@ -93,11 +106,15 @@
         initSortable: function() {
             // Инициализация drag-and-drop для виджетов
             if ($.fn.sortable) {
+                // Уничтожаем предыдущую инициализацию, если была
+                $('.course-builder-widgets-list').sortable('destroy');
+                
                 $('.course-builder-widgets-list').sortable({
                     handle: '.course-builder-widget-handle',
                     placeholder: 'course-builder-widget-placeholder',
                     tolerance: 'pointer',
                     update: function() {
+                        console.log('Widget order changed, saving...');
                         CourseBuilderAdmin.saveBuilder();
                     }
                 });
@@ -317,6 +334,9 @@
             CourseBuilderAdmin.initSortable();
             
             console.log('Widget added successfully to section:', $targetSection.data('section-id'));
+            
+            // Автоматическое сохранение после добавления виджета
+            CourseBuilderAdmin.saveBuilder();
         },
         
         addSection: function() {
@@ -519,7 +539,14 @@
                 success: function(response) {
                     console.log('Load builder response:', response);
                     if (response.success && response.data) {
-                        CourseBuilderAdmin.renderBuilder(response.data);
+                        // Проверяем наличие секций в данных
+                        if (response.data.sections && response.data.sections.length > 0) {
+                            console.log('Found ' + response.data.sections.length + ' sections, rendering...');
+                            CourseBuilderAdmin.renderBuilder(response.data);
+                        } else {
+                            console.log('No sections found in data, showing empty state');
+                            $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
+                        }
                     } else {
                         console.error('Failed to load builder data:', response);
                         // Показываем пустое состояние при ошибке
