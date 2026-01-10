@@ -319,32 +319,25 @@ class Course_Builder {
             error_log('Course Builder: Section ' . $key . ' has ' . count($data['sections'][$key]['columns']) . ' columns');
             
             // Валидация колонок
-            // ВАЖНО: Используем ссылку &$column, чтобы изменения сохранялись в массиве $data
-            foreach ($data['sections'][$key]['columns'] as $col_key => &$column) {
-                if (!isset($column['id'])) {
-                    $column['id'] = 'col_' . uniqid();
+            foreach ($data['sections'][$key]['columns'] as $col_key => $column) {
+                // Используем прямой доступ к данным вместо ссылки для надежности
+                if (!isset($data['sections'][$key]['columns'][$col_key]['id'])) {
+                    $data['sections'][$key]['columns'][$col_key]['id'] = 'col_' . uniqid();
                 }
                 
-                if (!isset($column['width'])) {
-                    $column['width'] = 100;
+                if (!isset($data['sections'][$key]['columns'][$col_key]['width'])) {
+                    $data['sections'][$key]['columns'][$col_key]['width'] = 100;
                 }
                 
-                // ВАЖНО: Проверяем виджеты ДО установки пустого массива
-                $has_widgets = isset($column['widgets']) && is_array($column['widgets']);
-                $widgets_count = $has_widgets ? count($column['widgets']) : 0;
+                // ВАЖНО: Проверяем виджеты через прямой доступ к данным
+                $has_widgets = isset($data['sections'][$key]['columns'][$col_key]['widgets']) && 
+                               is_array($data['sections'][$key]['columns'][$col_key]['widgets']);
+                $widgets_count = $has_widgets ? count($data['sections'][$key]['columns'][$col_key]['widgets']) : 0;
                 error_log('Course Builder: Column ' . $col_key . ' has widgets: ' . ($has_widgets ? 'yes' : 'no') . ', count: ' . $widgets_count);
-                
-                // Проверяем, что виджеты действительно есть в исходных данных
-                if (isset($data['sections'][$key]['columns'][$col_key]['widgets'])) {
-                    $direct_widgets_count = is_array($data['sections'][$key]['columns'][$col_key]['widgets']) ? count($data['sections'][$key]['columns'][$col_key]['widgets']) : 0;
-                    error_log('Course Builder: Direct check - widgets in data[' . $key . '][columns][' . $col_key . ']: ' . $direct_widgets_count);
-                } else {
-                    error_log('Course Builder: Direct check - widgets key does not exist in data[' . $key . '][columns][' . $col_key . ']');
-                }
                 
                 if (!$has_widgets) {
                     error_log('Course Builder: Column ' . $col_key . ' had no widgets array, setting to empty and continuing');
-                    $column['widgets'] = array();
+                    $data['sections'][$key]['columns'][$col_key]['widgets'] = array();
                     continue; // Переходим к следующей колонке, если виджетов нет
                 }
                 
@@ -359,7 +352,7 @@ class Course_Builder {
                     }
                 }
                 
-                $widgets_count_before = count($column['widgets']);
+                $widgets_count_before = count($data['sections'][$key]['columns'][$col_key]['widgets']);
                 error_log('Course Builder: Validating widgets in column ' . $col_key . '. Registered widgets: ' . implode(', ', array_keys(self::$widgets)));
                 error_log('Course Builder: Widgets to validate: ' . $widgets_count_before);
                 
@@ -371,7 +364,7 @@ class Course_Builder {
                 // Создаем новый массив для валидных виджетов вместо удаления невалидных
                 $validated_widgets = array();
                 
-                foreach ($column['widgets'] as $widget_key => $widget) {
+                foreach ($data['sections'][$key]['columns'][$col_key]['widgets'] as $widget_key => $widget) {
                     error_log('Course Builder: Validating widget ' . $widget_key . ', type: ' . (isset($widget['type']) ? $widget['type'] : 'missing'));
                     
                     // Пропускаем виджеты без типа
@@ -404,14 +397,12 @@ class Course_Builder {
                     error_log('Course Builder: Added widget to validated array');
                 }
                 
-                // Заменяем массив виджетов на валидированный
-                $column['widgets'] = $validated_widgets;
+                // Заменяем массив виджетов на валидированный через прямой доступ
+                $data['sections'][$key]['columns'][$col_key]['widgets'] = $validated_widgets;
                 
-                $widgets_count_after = count($column['widgets']);
+                $widgets_count_after = count($data['sections'][$key]['columns'][$col_key]['widgets']);
                 error_log('Course Builder: After validation, widgets count: ' . $widgets_count_after . ' (was: ' . $widgets_count_before . ')');
             }
-            // ВАЖНО: Разрываем ссылку после цикла
-            unset($column);
         }
         
         error_log('Course Builder: validate_data completed');
