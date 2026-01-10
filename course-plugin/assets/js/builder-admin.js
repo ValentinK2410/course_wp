@@ -147,6 +147,13 @@
                 console.warn('No sections to save, but saving anyway to clear old data');
             }
             
+            // Показываем индикатор сохранения
+            var $saveIndicator = $('#course-builder-save-indicator');
+            if ($saveIndicator.length === 0) {
+                $saveIndicator = $('<div id="course-builder-save-indicator" style="position: fixed; top: 32px; right: 20px; background: #2271b1; color: white; padding: 10px 20px; border-radius: 4px; z-index: 100000; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>');
+                $('body').append($saveIndicator);
+            }
+            
             $.ajax({
                 url: courseBuilderAdmin.ajaxUrl,
                 type: 'POST',
@@ -157,6 +164,7 @@
                     nonce: courseBuilderAdmin.nonce
                 },
                 beforeSend: function() {
+                    $saveIndicator.text('Сохранение...').fadeIn(200);
                     if ($('.course-builder-save').length > 0) {
                         $('.course-builder-save').text(courseBuilderAdmin.strings.saving).prop('disabled', true);
                     }
@@ -164,6 +172,11 @@
                 success: function(response) {
                     console.log('Save response:', response);
                     if (response.success) {
+                        $saveIndicator.text('✓ Сохранено').css('background', '#00a32a');
+                        setTimeout(function() {
+                            $saveIndicator.fadeOut(200);
+                        }, 2000);
+                        
                         if ($('.course-builder-save').length > 0) {
                             $('.course-builder-save').text(courseBuilderAdmin.strings.saved).prop('disabled', false);
                             setTimeout(function() {
@@ -175,6 +188,11 @@
                             console.log('Saved data verified:', response.data);
                         }
                     } else {
+                        $saveIndicator.text('✗ Ошибка сохранения').css('background', '#dc3232');
+                        setTimeout(function() {
+                            $saveIndicator.fadeOut(200);
+                        }, 3000);
+                        
                         console.error('Save failed:', response.data);
                         var errorMsg = courseBuilderAdmin.strings.error + ': ' + (response.data && response.data.message ? response.data.message : 'Unknown error');
                         alert(errorMsg);
@@ -184,6 +202,12 @@
                     }
                 },
                 error: function(xhr, status, error) {
+                    var $saveIndicator = $('#course-builder-save-indicator');
+                    $saveIndicator.text('✗ Ошибка сохранения').css('background', '#dc3232');
+                    setTimeout(function() {
+                        $saveIndicator.fadeOut(200);
+                    }, 3000);
+                    
                     console.error('Save AJAX error:', xhr, status, error);
                     console.error('Response text:', xhr.responseText);
                     var errorMsg = courseBuilderAdmin.strings.error + ': ' + error;
