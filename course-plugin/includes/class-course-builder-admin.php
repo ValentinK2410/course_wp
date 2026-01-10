@@ -144,6 +144,32 @@ class Course_Builder_Admin {
                             <!-- Виджеты будут загружены через AJAX -->
                         </div>
                     </div>
+                    
+                    <div class="course-builder-actions-panel" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                        <h3><?php _e('Действия', 'course-plugin'); ?></h3>
+                        <button class="button button-secondary" id="course-builder-add-section" style="width: 100%; margin-bottom: 10px;">
+                            <span class="dashicons dashicons-plus-alt" style="vertical-align: middle;"></span>
+                            <?php _e('Добавить секцию', 'course-plugin'); ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Модальное окно для редактирования виджета -->
+            <div id="course-builder-widget-modal" style="display: none;">
+                <div class="course-builder-modal-overlay"></div>
+                <div class="course-builder-modal-content">
+                    <div class="course-builder-modal-header">
+                        <h2><?php _e('Редактировать виджет', 'course-plugin'); ?></h2>
+                        <button class="course-builder-modal-close">&times;</button>
+                    </div>
+                    <div class="course-builder-modal-body" id="course-builder-widget-settings">
+                        <!-- Настройки виджета будут загружены здесь -->
+                    </div>
+                    <div class="course-builder-modal-footer">
+                        <button class="button button-secondary course-builder-modal-cancel"><?php _e('Отмена', 'course-plugin'); ?></button>
+                        <button class="button button-primary course-builder-modal-save"><?php _e('Сохранить', 'course-plugin'); ?></button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -547,5 +573,37 @@ class Course_Builder_Admin {
         }
         
         wp_send_json_success(array('widgets' => $widgets_data));
+    }
+    
+    /**
+     * AJAX получение полей настроек виджета
+     */
+    public function ajax_get_widget_settings() {
+        // Проверка прав
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(array('message' => __('Недостаточно прав', 'course-plugin')));
+        }
+        
+        $widget_type = isset($_POST['widget_type']) ? sanitize_text_field($_POST['widget_type']) : '';
+        
+        if (!$widget_type) {
+            wp_send_json_error(array('message' => __('Не указан тип виджета', 'course-plugin')));
+        }
+        
+        // Получаем класс виджета
+        $widget_class = Course_Builder::get_widget_class($widget_type);
+        
+        if (!$widget_class || !class_exists($widget_class)) {
+            wp_send_json_error(array('message' => __('Виджет не найден', 'course-plugin')));
+        }
+        
+        try {
+            $widget = new $widget_class('temp', array());
+            $fields = $widget->get_settings_fields();
+            
+            wp_send_json_success(array('fields' => $fields));
+        } catch (Exception $e) {
+            wp_send_json_error(array('message' => __('Ошибка загрузки настроек', 'course-plugin')));
+        }
     }
 }

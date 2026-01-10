@@ -73,6 +73,21 @@
                     }
                 }
             });
+            
+            // Добавление новой секции
+            $(document).on('click', '#course-builder-add-section', function() {
+                CourseBuilderAdmin.addSection();
+            });
+            
+            // Закрытие модального окна
+            $(document).on('click', '.course-builder-modal-close, .course-builder-modal-cancel, .course-builder-modal-overlay', function() {
+                $('#course-builder-widget-modal').hide();
+            });
+            
+            // Сохранение настроек виджета
+            $(document).on('click', '.course-builder-modal-save', function() {
+                CourseBuilderAdmin.saveWidgetSettings();
+            });
         },
         
         initSortable: function() {
