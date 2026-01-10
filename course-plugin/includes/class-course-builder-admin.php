@@ -59,21 +59,35 @@ class Course_Builder_Admin {
      * Добавить пункт меню в админке
      */
     public function add_admin_menu() {
-        // Добавляем подменю для редактирования builder
-        add_submenu_page(
-            null, // Скрытое меню
+        // Добавляем скрытую страницу для редактирования builder
+        // Используем add_management_page для добавления в раздел "Инструменты"
+        // Но можно также использовать add_menu_page и скрыть через CSS
+        $hook = add_menu_page(
             __('Course Builder', 'course-plugin'),
             __('Course Builder', 'course-plugin'),
             'edit_posts',
             'course-builder',
-            array($this, 'render_builder_page')
+            array($this, 'render_builder_page'),
+            'dashicons-admin-customizer',
+            100
         );
+        
+        // Скрываем из меню, но страница остается доступной по прямой ссылке
+        // Используем хук для скрытия пункта меню
+        add_action('admin_head', function() {
+            echo '<style>#toplevel_page_course-builder { display: none !important; }</style>';
+        });
     }
     
     /**
      * Рендеринг страницы builder
      */
     public function render_builder_page() {
+        // Проверка прав доступа
+        if (!current_user_can('edit_posts')) {
+            wp_die(__('У вас нет прав для доступа к этой странице', 'course-plugin'));
+        }
+        
         $post_id = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
         
         if (!$post_id) {
@@ -83,6 +97,11 @@ class Course_Builder_Admin {
         $post = get_post($post_id);
         if (!$post) {
             wp_die(__('Пост не найден', 'course-plugin'));
+        }
+        
+        // Проверка прав на редактирование этого поста
+        if (!current_user_can('edit_post', $post_id)) {
+            wp_die(__('У вас нет прав для редактирования этого поста', 'course-plugin'));
         }
         
         // Включаем builder, если еще не включен
@@ -287,12 +306,20 @@ class Course_Builder_Admin {
     public function enqueue_assets($hook) {
         global $post;
         
-        // Подключаем только на страницах редактирования
-        if (!in_array($hook, array('post.php', 'post-new.php'))) {
-            return;
+        $post_id = 0;
+        
+        // Проверяем, находимся ли мы на странице builder
+        if ($hook === 'toplevel_page_course-builder' || (isset($_GET['page']) && $_GET['page'] === 'course-builder')) {
+            $post_id = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
+        } elseif ($post) {
+            $post_id = $post->ID;
         }
         
-        if (!$post || !in_array($post->post_type, array('page', 'course'))) {
+        // Подключаем скрипты и стили на странице builder или на страницах редактирования
+        $is_builder_page = ($hook === 'toplevel_page_course-builder' || (isset($_GET['page']) && $_GET['page'] === 'course-builder'));
+        $is_edit_page = in_array($hook, array('post.php', 'post-new.php')) && $post && in_array($post->post_type, array('page', 'course'));
+        
+        if (!$is_builder_page && !$is_edit_page) {
             return;
         }
         
@@ -318,7 +345,7 @@ class Course_Builder_Admin {
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('course_builder_save'),
             'loadNonce' => wp_create_nonce('course_builder_load'),
-            'postId' => $post->ID,
+            'postId' => $post_id,
             'strings' => array(
                 'save' => __('Сохранить', 'course-plugin'),
                 'saving' => __('Сохранение...', 'course-plugin'),
