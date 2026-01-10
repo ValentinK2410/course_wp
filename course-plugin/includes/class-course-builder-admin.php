@@ -524,7 +524,8 @@ class Course_Builder_Admin {
         foreach ($widgets as $type => $class_name) {
             if (class_exists($class_name)) {
                 try {
-                    $widget = new $class_name();
+                    // Создаем виджет с пустым ID для получения метаданных
+                    $widget = new $class_name('temp', array());
                     $widgets_data[$type] = array(
                         'name' => $widget->get_name(),
                         'description' => $widget->get_description(),
@@ -533,7 +534,11 @@ class Course_Builder_Admin {
                     );
                 } catch (Exception $e) {
                     error_log('Course Builder: Ошибка создания виджета ' . $type . ': ' . $e->getMessage());
+                } catch (Error $e) {
+                    error_log('Course Builder: Фатальная ошибка создания виджета ' . $type . ': ' . $e->getMessage());
                 }
+            } else {
+                error_log('Course Builder: Класс виджета не найден: ' . $class_name);
             }
         }
         
