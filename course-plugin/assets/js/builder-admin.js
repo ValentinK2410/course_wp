@@ -323,13 +323,28 @@
         },
         
         renderWidget: function(widget) {
-            var html = '<div class="course-builder-widget" data-widget-id="' + widget.id + '" data-widget-type="' + widget.type + '">';
+            var settings = widget.settings || {};
+            var displayText = 'Widget: ' + widget.type;
+            
+            // Показываем основные настройки в превью
+            if (settings.content) {
+                displayText = settings.content.substring(0, 50) + (settings.content.length > 50 ? '...' : '');
+            } else if (settings.title) {
+                displayText = settings.title;
+            } else if (settings.text) {
+                displayText = settings.text.substring(0, 50) + (settings.text.length > 50 ? '...' : '');
+            }
+            
+            // Экранируем JSON для безопасного использования в HTML атрибуте
+            var settingsJson = JSON.stringify(settings).replace(/"/g, '&quot;');
+            
+            var html = '<div class="course-builder-widget" data-widget-id="' + widget.id + '" data-widget-type="' + widget.type + '" data-widget-settings="' + settingsJson + '">';
             html += '<div class="course-builder-widget-handle">';
             html += '<span class="dashicons dashicons-move"></span>';
             html += '<span class="widget-title">' + widget.type + '</span>';
             html += '</div>';
             html += '<div class="course-builder-widget-content">';
-            html += '<p>Widget: ' + widget.type + '</p>';
+            html += '<p>' + displayText + '</p>';
             html += '</div>';
             html += '<div class="course-builder-widget-actions">';
             html += '<button class="course-builder-edit-widget">' + courseBuilderAdmin.strings.edit + '</button>';
