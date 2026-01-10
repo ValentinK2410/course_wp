@@ -329,9 +329,17 @@ class Course_Builder {
                 $widgets_count = $has_widgets ? count($column['widgets']) : 0;
                 error_log('Course Builder: Column ' . $col_key . ' has widgets: ' . ($has_widgets ? 'yes' : 'no') . ', count: ' . $widgets_count);
                 
+                // Проверяем, что виджеты действительно есть в исходных данных
+                if (isset($data['sections'][$key]['columns'][$col_key]['widgets'])) {
+                    $direct_widgets_count = is_array($data['sections'][$key]['columns'][$col_key]['widgets']) ? count($data['sections'][$key]['columns'][$col_key]['widgets']) : 0;
+                    error_log('Course Builder: Direct check - widgets in data[' . $key . '][columns][' . $col_key . ']: ' . $direct_widgets_count);
+                } else {
+                    error_log('Course Builder: Direct check - widgets key does not exist in data[' . $key . '][columns][' . $col_key . ']');
+                }
+                
                 if (!$has_widgets) {
+                    error_log('Course Builder: Column ' . $col_key . ' had no widgets array, setting to empty and continuing');
                     $data['sections'][$key]['columns'][$col_key]['widgets'] = array();
-                    error_log('Course Builder: Column ' . $col_key . ' had no widgets array, set to empty');
                     continue; // Переходим к следующей колонке, если виджетов нет
                 }
                 
