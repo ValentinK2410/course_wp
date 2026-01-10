@@ -292,20 +292,32 @@ class Course_Builder {
                 }
                 
                 // Валидация виджетов
+                // Убеждаемся, что виджеты зарегистрированы перед валидацией
+                do_action('course_builder_register_widgets');
+                
                 foreach ($data['sections'][$key]['columns'][$col_key]['widgets'] as $widget_key => $widget) {
                     if (!isset($widget['id'])) {
                         $data['sections'][$key]['columns'][$col_key]['widgets'][$widget_key]['id'] = 'widget_' . uniqid();
                     }
                     
                     if (!isset($widget['type'])) {
+                        error_log('Course Builder: Widget without type found, removing: ' . print_r($widget, true));
                         unset($data['sections'][$key]['columns'][$col_key]['widgets'][$widget_key]);
                         continue;
                     }
                     
                     // Проверяем, что тип виджета зарегистрирован
+                    // Если виджеты еще не зарегистрированы, регистрируем их вручную
+                    if (empty(self::$widgets)) {
+                        if (class_exists('Course_Builder_Register')) {
+                            Course_Builder_Register::register_widgets();
+                        }
+                    }
+                    
                     if (!isset(self::$widgets[$widget['type']])) {
-                        unset($data['sections'][$key]['columns'][$col_key]['widgets'][$widget_key]);
-                        continue;
+                        error_log('Course Builder: Widget type "' . $widget['type'] . '" not registered. Registered widgets: ' . implode(', ', array_keys(self::$widgets)));
+                        // НЕ удаляем виджет, если тип не зарегистрирован - возможно, виджеты еще не загружены
+                        // Просто логируем предупреждение
                     }
                     
                     if (!isset($widget['settings'])) {
