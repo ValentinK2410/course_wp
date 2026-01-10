@@ -330,14 +330,22 @@ class Course_Builder {
                 }
                 
                 // ВАЖНО: Проверяем виджеты через прямой доступ к данным
-                $has_widgets = isset($data['sections'][$key]['columns'][$col_key]['widgets']) && 
-                               is_array($data['sections'][$key]['columns'][$col_key]['widgets']);
-                $widgets_count = $has_widgets ? count($data['sections'][$key]['columns'][$col_key]['widgets']) : 0;
-                error_log('Course Builder: Column ' . $col_key . ' has widgets: ' . ($has_widgets ? 'yes' : 'no') . ', count: ' . $widgets_count);
-                
-                if (!$has_widgets) {
-                    error_log('Course Builder: Column ' . $col_key . ' had no widgets array, setting to empty and continuing');
+                // Убеждаемся, что массив виджетов существует
+                if (!isset($data['sections'][$key]['columns'][$col_key]['widgets'])) {
                     $data['sections'][$key]['columns'][$col_key]['widgets'] = array();
+                }
+                
+                if (!is_array($data['sections'][$key]['columns'][$col_key]['widgets'])) {
+                    error_log('Course Builder: Column ' . $col_key . ' widgets is not array, converting');
+                    $data['sections'][$key]['columns'][$col_key]['widgets'] = array();
+                }
+                
+                $widgets_count = count($data['sections'][$key]['columns'][$col_key]['widgets']);
+                error_log('Course Builder: Column ' . $col_key . ' has widgets count: ' . $widgets_count);
+                
+                // Если виджетов нет, просто продолжаем (не удаляем массив)
+                if ($widgets_count === 0) {
+                    error_log('Course Builder: Column ' . $col_key . ' has no widgets, keeping empty array');
                     continue; // Переходим к следующей колонке, если виджетов нет
                 }
                 
