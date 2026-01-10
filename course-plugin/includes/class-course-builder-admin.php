@@ -41,8 +41,11 @@ class Course_Builder_Admin {
         // Сохранение метабокса
         add_action('save_post', array($this, 'save_meta_box'), 10, 2);
         
-        // Добавляем кнопку в редактор
+        // Добавляем кнопку в редактор (для классического редактора)
         add_action('edit_form_after_title', array($this, 'add_builder_button'));
+        
+        // Добавляем кнопку для Gutenberg редактора
+        add_action('admin_footer', array($this, 'add_builder_button_gutenberg'));
         
         // Подключаем скрипты и стили
         add_action('admin_enqueue_scripts', array($this, 'enqueue_assets'));
@@ -225,6 +228,7 @@ class Course_Builder_Admin {
         wp_nonce_field('course_builder_meta_box', 'course_builder_meta_box_nonce');
         
         $use_builder = Course_Builder::get_instance()->is_builder_enabled($post->ID);
+        $builder_url = admin_url('admin.php?page=course-builder&post_id=' . $post->ID);
         ?>
         <p>
             <label>
@@ -234,6 +238,19 @@ class Course_Builder_Admin {
         </p>
         <p class="description">
             <?php _e('Включите эту опцию, чтобы редактировать страницу с помощью визуального редактора.', 'course-plugin'); ?>
+        </p>
+        <p style="margin-top: 15px;">
+            <?php if ($use_builder) : ?>
+                <a href="<?php echo esc_url($builder_url); ?>" class="button button-primary button-large" style="width: 100%; text-align: center; display: block;">
+                    <span class="dashicons dashicons-edit" style="margin-top: 3px; vertical-align: middle;"></span>
+                    <?php _e('Редактировать с Course Builder', 'course-plugin'); ?>
+                </a>
+            <?php else : ?>
+                <a href="<?php echo esc_url($builder_url); ?>" class="button button-secondary button-large" style="width: 100%; text-align: center; display: block;">
+                    <span class="dashicons dashicons-admin-customizer" style="margin-top: 3px; vertical-align: middle;"></span>
+                    <?php _e('Включить Course Builder', 'course-plugin'); ?>
+                </a>
+            <?php endif; ?>
         </p>
         <?php
     }
@@ -268,7 +285,7 @@ class Course_Builder_Admin {
     }
     
     /**
-     * Добавить кнопку builder в редактор
+     * Добавить кнопку builder в редактор (классический редактор)
      */
     public function add_builder_button($post) {
         if (!in_array($post->post_type, array('page', 'course'))) {
@@ -278,25 +295,86 @@ class Course_Builder_Admin {
         $builder_enabled = Course_Builder::get_instance()->is_builder_enabled($post->ID);
         $builder_url = admin_url('admin.php?page=course-builder&post_id=' . $post->ID);
         ?>
-        <div id="course-builder-button-wrapper" style="margin: 20px 0;">
+        <div id="course-builder-button-wrapper" style="margin: 20px 0; padding: 15px; background: #f0f0f1; border: 1px solid #c3c4c7; border-radius: 4px;">
             <?php if ($builder_enabled) : ?>
-                <a href="<?php echo esc_url($builder_url); ?>" class="button button-primary button-large" id="course-builder-edit-button">
-                    <span class="dashicons dashicons-edit" style="margin-top: 3px;"></span>
+                <a href="<?php echo esc_url($builder_url); ?>" class="button button-primary button-large" id="course-builder-edit-button" style="margin-right: 10px;">
+                    <span class="dashicons dashicons-edit" style="margin-top: 3px; vertical-align: middle;"></span>
                     <?php _e('Редактировать с Course Builder', 'course-plugin'); ?>
                 </a>
-                <p class="description">
+                <p class="description" style="margin-top: 10px; margin-bottom: 0;">
                     <?php _e('Эта страница использует Course Builder. Нажмите кнопку выше для редактирования.', 'course-plugin'); ?>
                 </p>
             <?php else : ?>
-                <a href="<?php echo esc_url($builder_url); ?>" class="button button-secondary button-large" id="course-builder-enable-button">
-                    <span class="dashicons dashicons-admin-customizer" style="margin-top: 3px;"></span>
+                <a href="<?php echo esc_url($builder_url); ?>" class="button button-secondary button-large" id="course-builder-enable-button" style="margin-right: 10px;">
+                    <span class="dashicons dashicons-admin-customizer" style="margin-top: 3px; vertical-align: middle;"></span>
                     <?php _e('Включить Course Builder', 'course-plugin'); ?>
                 </a>
-                <p class="description">
+                <p class="description" style="margin-top: 10px; margin-bottom: 0;">
                     <?php _e('Используйте Course Builder для визуального редактирования страницы.', 'course-plugin'); ?>
                 </p>
             <?php endif; ?>
         </div>
+        <?php
+    }
+    
+    /**
+     * Добавить кнопку builder для Gutenberg редактора
+     */
+    public function add_builder_button_gutenberg() {
+        global $post;
+        
+        if (!$post || !in_array($post->post_type, array('page', 'course'))) {
+            return;
+        }
+        
+        // Проверяем, что мы на странице редактирования
+        $screen = get_current_screen();
+        if (!$screen || !in_array($screen->base, array('post'))) {
+            return;
+        }
+        
+        $builder_enabled = Course_Builder::get_instance()->is_builder_enabled($post->ID);
+        $builder_url = admin_url('admin.php?page=course-builder&post_id=' . $post->ID);
+        ?>
+        <script>
+        jQuery(document).ready(function($) {
+            // Добавляем кнопку в верхнюю панель Gutenberg
+            function addBuilderButton() {
+                // Ищем панель инструментов Gutenberg
+                var toolbar = $('.edit-post-header-toolbar, .block-editor-writing-flow');
+                if (toolbar.length === 0) {
+                    // Если панель не найдена, добавляем после заголовка
+                    var titleArea = $('.editor-post-title, .wp-block-post-title');
+                    if (titleArea.length > 0) {
+                        var buttonHtml = '<div id="course-builder-button-wrapper-gutenberg" style="margin: 20px 0; padding: 15px; background: #f0f0f1; border: 1px solid #c3c4c7; border-radius: 4px; clear: both;">';
+                        <?php if ($builder_enabled) : ?>
+                            buttonHtml += '<a href="<?php echo esc_js($builder_url); ?>" class="components-button is-primary is-large" style="margin-right: 10px;">';
+                            buttonHtml += '<span class="dashicons dashicons-edit" style="margin-top: 3px; vertical-align: middle; margin-right: 5px;"></span>';
+                            buttonHtml += '<?php echo esc_js(__('Редактировать с Course Builder', 'course-plugin')); ?>';
+                            buttonHtml += '</a>';
+                            buttonHtml += '<p style="margin-top: 10px; margin-bottom: 0; color: #646970;"><?php echo esc_js(__('Эта страница использует Course Builder. Нажмите кнопку выше для редактирования.', 'course-plugin')); ?></p>';
+                        <?php else : ?>
+                            buttonHtml += '<a href="<?php echo esc_js($builder_url); ?>" class="components-button is-secondary is-large" style="margin-right: 10px;">';
+                            buttonHtml += '<span class="dashicons dashicons-admin-customizer" style="margin-top: 3px; vertical-align: middle; margin-right: 5px;"></span>';
+                            buttonHtml += '<?php echo esc_js(__('Включить Course Builder', 'course-plugin')); ?>';
+                            buttonHtml += '</a>';
+                            buttonHtml += '<p style="margin-top: 10px; margin-bottom: 0; color: #646970;"><?php echo esc_js(__('Используйте Course Builder для визуального редактирования страницы.', 'course-plugin')); ?></p>';
+                        <?php endif; ?>
+                        buttonHtml += '</div>';
+                        
+                        titleArea.after(buttonHtml);
+                    }
+                }
+            }
+            
+            // Пытаемся добавить кнопку сразу
+            addBuilderButton();
+            
+            // Также пытаемся добавить после загрузки Gutenberg
+            setTimeout(addBuilderButton, 1000);
+            setTimeout(addBuilderButton, 2000);
+        });
+        </script>
         <?php
     }
     
