@@ -122,11 +122,30 @@
         },
         
         saveBuilder: function() {
+            // Проверяем доступность переменных
+            if (typeof courseBuilderAdmin === 'undefined') {
+                console.error('courseBuilderAdmin is not defined!');
+                alert('Ошибка: не удалось инициализировать builder. Перезагрузите страницу.');
+                return;
+            }
+            
             var postId = courseBuilderAdmin.postId;
+            if (!postId || postId === 0) {
+                console.error('Post ID is missing or invalid:', postId);
+                alert('Ошибка: не указан ID поста. Перезагрузите страницу.');
+                return;
+            }
+            
             var data = CourseBuilderAdmin.getBuilderData();
             
             console.log('Saving builder data for post:', postId);
-            console.log('Data to save:', data);
+            console.log('Data to save:', JSON.stringify(data, null, 2));
+            console.log('Sections count:', data.sections ? data.sections.length : 0);
+            
+            // Проверяем, что есть данные для сохранения
+            if (!data.sections || data.sections.length === 0) {
+                console.warn('No sections to save, but saving anyway to clear old data');
+            }
             
             $.ajax({
                 url: courseBuilderAdmin.ajaxUrl,
@@ -138,43 +157,99 @@
                     nonce: courseBuilderAdmin.nonce
                 },
                 beforeSend: function() {
-                    $('.course-builder-save').text(courseBuilderAdmin.strings.saving).prop('disabled', true);
+                    if ($('.course-builder-save').length > 0) {
+                        $('.course-builder-save').text(courseBuilderAdmin.strings.saving).prop('disabled', true);
+                    }
                 },
                 success: function(response) {
                     console.log('Save response:', response);
                     if (response.success) {
-                        $('.course-builder-save').text(courseBuilderAdmin.strings.saved).prop('disabled', false);
-                        setTimeout(function() {
-                            $('.course-builder-save').text(courseBuilderAdmin.strings.save);
-                        }, 2000);
+                        if ($('.course-builder-save').length > 0) {
+                            $('.course-builder-save').text(courseBuilderAdmin.strings.saved).prop('disabled', false);
+                            setTimeout(function() {
+                                $('.course-builder-save').text(courseBuilderAdmin.strings.save);
+                            }, 2000);
+                        }
                         console.log('Data saved successfully');
+                        if (response.data) {
+                            console.log('Saved data verified:', response.data);
+                        }
                     } else {
                         console.error('Save failed:', response.data);
-                        alert(courseBuilderAdmin.strings.error + ': ' + (response.data.message || 'Unknown error'));
-                        $('.course-builder-save').text(courseBuilderAdmin.strings.save).prop('disabled', false);
+                        var errorMsg = courseBuilderAdmin.strings.error + ': ' + (response.data && response.data.message ? response.data.message : 'Unknown error');
+                        alert(errorMsg);
+                        if ($('.course-builder-save').length > 0) {
+                            $('.course-builder-save').text(courseBuilderAdmin.strings.save).prop('disabled', false);
+                        }
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Save AJAX error:', xhr, status, error);
-                    alert(courseBuilderAdmin.strings.error);
-                    $('.course-builder-save').text(courseBuilderAdmin.strings.save).prop('disabled', false);
+                    console.error('Response text:', xhr.responseText);
+                    var errorMsg = courseBuilderAdmin.strings.error + ': ' + error;
+                    if (xhr.responseText) {
+                        try {
+                            var errorResponse = JSON.parse(xhr.responseText);
+                            if (errorResponse.data && errorResponse.data.message) {
+                                errorMsg += ' - ' + errorResponse.data.message;
+                            }
+                        } catch (e) {
+                            // Игнорируем ошибку парсинга
+                        }
+                    }
+                    alert(errorMsg);
+                    if ($('.course-builder-save').length > 0) {
+                        $('.course-builder-save').text(courseBuilderAdmin.strings.save).prop('disabled', false);
+                    }
                 }
             });
         },
         
         getBuilderData: function() {
             var sections = [];
+            var $editor = $('#course-builder-editor');
             
-            $('.course-builder-section').each(function() {
+            // Проверяем, что редактор существует
+            if ($editor.length === 0) {
+                console.error('Course builder editor not found!');
+                return {
+                    version: '1.0.0',
+                    sections: []
+                };
+            }
+            
+            var $sections = $editor.find('.course-builder-section');
+            console.log('Found ' + $sections.length + ' sections in editor');
+            
+            $sections.each(function(index) {
                 var $section = $(this);
+                var sectionId = $section.data('section-id');
+                
+                // Если ID нет, создаем новый
+                if (!sectionId) {
+                    sectionId = 'section_' + Date.now() + '_' + index;
+                    $section.attr('data-section-id', sectionId);
+                }
+                
                 var section = {
-                    id: $section.data('section-id') || 'section_' + Date.now(),
+                    id: sectionId,
                     settings: {},
                     columns: []
                 };
                 
-                $section.find('.course-builder-column').each(function() {
+                var $columns = $section.find('.course-builder-column');
+                console.log('Section ' + sectionId + ' has ' + $columns.length + ' columns');
+                
+                $columns.each(function(colIndex) {
                     var $column = $(this);
+                    var columnId = $column.data('column-id');
+                    
+                    // Если ID нет, создаем новый
+                    if (!columnId) {
+                        columnId = 'col_' + Date.now() + '_' + colIndex;
+                        $column.attr('data-column-id', columnId);
+                    }
+                    
                     // Получаем ширину из стиля или вычисляем процентное соотношение
                     var widthStyle = $column.css('width');
                     var width = 100; // По умолчанию 100%
@@ -194,20 +269,40 @@
                     }
                     
                     var column = {
-                        id: $column.data('column-id') || 'col_' + Date.now(),
+                        id: columnId,
                         width: width,
                         settings: {},
                         widgets: []
                     };
                     
-                    $column.find('.course-builder-widget').each(function() {
+                    var $widgets = $column.find('.course-builder-widget');
+                    console.log('Column ' + columnId + ' has ' + $widgets.length + ' widgets');
+                    
+                    $widgets.each(function(widgetIndex) {
                         var $widget = $(this);
+                        var widgetId = $widget.data('widget-id');
+                        var widgetType = $widget.data('widget-type');
+                        
+                        // Если ID нет, создаем новый
+                        if (!widgetId) {
+                            widgetId = 'widget_' + Date.now() + '_' + widgetIndex;
+                            $widget.attr('data-widget-id', widgetId);
+                        }
+                        
+                        // Если тип не указан, пропускаем виджет
+                        if (!widgetType) {
+                            console.warn('Widget ' + widgetId + ' has no type, skipping');
+                            return;
+                        }
+                        
                         var widget = {
-                            id: $widget.data('widget-id') || 'widget_' + Date.now(),
-                            type: $widget.data('widget-type'),
+                            id: widgetId,
+                            type: widgetType,
                             settings: CourseBuilderAdmin.getWidgetSettings($widget)
                         };
+                        
                         column.widgets.push(widget);
+                        console.log('Added widget:', widgetId, 'type:', widgetType, 'settings:', widget.settings);
                     });
                     
                     section.columns.push(column);
@@ -221,7 +316,7 @@
                 sections: sections
             };
             
-            console.log('Getting builder data:', data);
+            console.log('Getting builder data - total sections:', sections.length);
             return data;
         },
         

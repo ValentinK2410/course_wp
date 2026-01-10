@@ -170,6 +170,19 @@ class Course_Builder {
      * Сохранить данные builder для поста
      */
     public function save_builder_data($post_id, $data) {
+        // Проверяем, что пост существует
+        $post = get_post($post_id);
+        if (!$post) {
+            error_log('Course Builder: Post ' . $post_id . ' does not exist');
+            return false;
+        }
+        
+        // Проверяем права доступа
+        if (!current_user_can('edit_post', $post_id)) {
+            error_log('Course Builder: User does not have permission to edit post ' . $post_id);
+            return false;
+        }
+        
         // Валидация данных
         $data = $this->validate_data($data);
         
@@ -177,7 +190,8 @@ class Course_Builder {
         $data['version'] = self::DATA_VERSION;
         $data['updated_at'] = current_time('mysql');
         
-        error_log('Course Builder: Validated data before save: ' . print_r($data, true));
+        error_log('Course Builder: Validated data before save for post ' . $post_id);
+        error_log('Course Builder: Sections count: ' . (isset($data['sections']) ? count($data['sections']) : 0));
         
         // Сохраняем как JSON
         $json_data = wp_json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -187,15 +201,47 @@ class Course_Builder {
             return false;
         }
         
-        error_log('Course Builder: JSON data to save: ' . $json_data);
+        error_log('Course Builder: JSON data length: ' . strlen($json_data));
         
+        // Используем update_post_meta, который обновит или создаст мета-поле
         $result = update_post_meta($post_id, self::META_KEY, $json_data);
         
-        // Проверяем, что данные действительно сохранились
+        // Если update_post_meta вернул false, это может означать, что значение не изменилось
+        // Но мы все равно проверим, что данные сохранились
         $saved = get_post_meta($post_id, self::META_KEY, true);
-        error_log('Course Builder: Data saved, verification: ' . ($saved ? 'exists' : 'missing'));
         
-        return $result !== false;
+        if ($saved === false || $saved === '') {
+            error_log('Course Builder: Data verification failed - meta is empty');
+            // Пробуем добавить через add_post_meta с unique = false
+            $add_result = add_post_meta($post_id, self::META_KEY, $json_data, true);
+            if ($add_result === false) {
+                // Если не получилось добавить (возможно, уже существует), обновляем принудительно
+                delete_post_meta($post_id, self::META_KEY);
+                $add_result = add_post_meta($post_id, self::META_KEY, $json_data, true);
+            }
+            $result = $add_result !== false;
+        } else {
+            // Проверяем, что сохраненные данные совпадают
+            if ($saved !== $json_data) {
+                error_log('Course Builder: Saved data does not match, retrying...');
+                delete_post_meta($post_id, self::META_KEY);
+                $result = add_post_meta($post_id, self::META_KEY, $json_data, true);
+                $result = $result !== false;
+            } else {
+                $result = true;
+            }
+        }
+        
+        // Финальная проверка
+        $final_check = get_post_meta($post_id, self::META_KEY, true);
+        if ($final_check && $final_check === $json_data) {
+            error_log('Course Builder: Data saved successfully for post ' . $post_id);
+            return true;
+        } else {
+            error_log('Course Builder: Data save verification failed for post ' . $post_id);
+            error_log('Course Builder: Expected length: ' . strlen($json_data) . ', Got length: ' . ($final_check ? strlen($final_check) : 0));
+            return false;
+        }
     }
     
     /**
