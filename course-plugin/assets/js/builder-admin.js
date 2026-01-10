@@ -178,25 +178,11 @@
         },
         
         getWidgetSettings: function($widget) {
-            var settings = {};
+            // Получаем настройки из data-атрибута виджета
+            var settings = $widget.data('widget-settings') || {};
             
-            // Получаем настройки из полей формы виджета
-            $widget.find('input, select, textarea').each(function() {
-                var $field = $(this);
-                var name = $field.attr('name');
-                
-                if (name && name.indexOf('settings[') !== -1) {
-                    var key = name.match(/settings\[(.+)\]/)[1];
-                    var value = $field.val();
-                    
-                    if ($field.attr('type') === 'checkbox') {
-                        value = $field.is(':checked') ? 1 : 0;
-                    }
-                    
-                    settings[key] = value;
-                }
-            });
-            
+            // Если настройки не найдены, возвращаем пустой объект
+            // Настройки должны быть сохранены через метод saveWidgetSettings
             return settings;
         },
         
