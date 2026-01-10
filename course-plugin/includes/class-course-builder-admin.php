@@ -116,6 +116,9 @@ class Course_Builder_Admin {
         // Загружаем данные builder
         $builder_data = $builder->get_builder_data($post_id);
         
+        // Убеждаемся, что скрипты загружены перед выводом страницы
+        $this->enqueue_assets('toplevel_page_course-builder');
+        
         ?>
         <div class="wrap course-builder-wrap">
             <div class="course-builder-toolbar">
@@ -144,35 +147,71 @@ class Course_Builder_Admin {
                 </div>
             </div>
         </div>
-        
-        <script>
-        jQuery(document).ready(function($) {
-            // Загружаем список виджетов
-            $.ajax({
-                url: courseBuilderAdmin.ajaxUrl,
-                type: 'POST',
-                data: {
-                    action: 'course_builder_get_widgets',
-                    nonce: courseBuilderAdmin.nonce
-                },
-                success: function(response) {
-                    if (response.success && response.data.widgets) {
-                        var html = '';
-                        $.each(response.data.widgets, function(type, widget) {
-                            html += '<button class="course-builder-add-widget" data-widget-type="' + type + '">';
-                            html += '<span class="dashicons ' + widget.icon + '"></span>';
-                            html += '<span>' + widget.name + '</span>';
-                            html += '</button>';
-                        });
-                        $('#course-builder-widget-list').html(html);
+        <?php
+        // Добавляем inline скрипт в футер через хук, чтобы он выполнялся после загрузки основного скрипта
+        add_action('admin_footer', function() {
+            // Проверяем, что мы на странице builder
+            if (!isset($_GET['page']) || $_GET['page'] !== 'course-builder') {
+                return;
+            }
+            ?>
+            <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                // Функция инициализации страницы builder
+                function initBuilderPage() {
+                    // Проверяем доступность переменных
+                    if (typeof courseBuilderAdmin === 'undefined') {
+                        console.log('Waiting for courseBuilderAdmin to load...');
+                        setTimeout(initBuilderPage, 200);
+                        return;
+                    }
+                    
+                    // Загружаем список виджетов
+                    $.ajax({
+                        url: courseBuilderAdmin.ajaxUrl,
+                        type: 'POST',
+                        data: {
+                            action: 'course_builder_get_widgets',
+                            nonce: courseBuilderAdmin.nonce
+                        },
+                        success: function(response) {
+                            if (response.success && response.data.widgets) {
+                                var html = '';
+                                $.each(response.data.widgets, function(type, widget) {
+                                    html += '<button class="course-builder-add-widget" data-widget-type="' + type + '">';
+                                    html += '<span class="dashicons ' + widget.icon + '"></span>';
+                                    html += '<span>' + widget.name + '</span>';
+                                    html += '</button>';
+                                });
+                                $('#course-builder-widget-list').html(html);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error loading widgets:', error);
+                        }
+                    });
+                    
+                    // Загружаем данные builder после загрузки скрипта
+                    if (typeof CourseBuilderAdmin !== 'undefined') {
+                        CourseBuilderAdmin.loadBuilder();
+                    } else {
+                        setTimeout(function() {
+                            if (typeof CourseBuilderAdmin !== 'undefined') {
+                                CourseBuilderAdmin.loadBuilder();
+                            } else {
+                                console.error('CourseBuilderAdmin object is not defined');
+                            }
+                        }, 500);
                     }
                 }
+                
+                // Запускаем инициализацию
+                initBuilderPage();
             });
-            
-            // Загружаем данные builder
-            CourseBuilderAdmin.loadBuilder();
-        });
-        </script>
+            </script>
+            <?php
+        }, 999);
+        ?>
         <?php
     }
     
