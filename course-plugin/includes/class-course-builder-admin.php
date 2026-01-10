@@ -508,6 +508,16 @@ class Course_Builder_Admin {
             false // Загружаем в head, чтобы был доступен раньше
         );
         
+        // Убеждаемся, что post_id установлен
+        if (!$post_id && isset($_GET['post_id'])) {
+            $post_id = intval($_GET['post_id']);
+        }
+        
+        // Проверяем, что post_id валиден
+        if (!$post_id) {
+            error_log('Course Builder Admin: Warning - post_id is not set when enqueuing scripts');
+        }
+        
         // Локализация
         wp_localize_script('course-builder-admin', 'courseBuilderAdmin', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -524,6 +534,19 @@ class Course_Builder_Admin {
                 'edit' => __('Редактировать', 'course-plugin'),
             )
         ));
+        
+        // Добавляем отладочную информацию в консоль
+        add_action('admin_footer', function() use ($post_id) {
+            if (isset($_GET['page']) && $_GET['page'] === 'course-builder') {
+                ?>
+                <script type="text/javascript">
+                console.log('Course Builder Admin initialized');
+                console.log('Post ID:', <?php echo intval($post_id); ?>);
+                console.log('AJAX URL:', '<?php echo admin_url('admin-ajax.php'); ?>');
+                </script>
+                <?php
+            }
+        }, 999);
     }
     
     /**
