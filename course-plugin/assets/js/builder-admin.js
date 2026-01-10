@@ -257,6 +257,37 @@
             console.log('Widget added successfully');
         },
         
+        addSection: function() {
+            var sectionId = 'section_' + Date.now();
+            var columnId = 'col_' + Date.now();
+            var sectionNumber = $('#course-builder-editor').find('.course-builder-section').length + 1;
+            
+            var sectionHtml = '<div class="course-builder-section" data-section-id="' + sectionId + '">';
+            sectionHtml += '<div class="course-builder-section-header">';
+            sectionHtml += '<h3>Секция ' + sectionNumber + '</h3>';
+            sectionHtml += '<button class="course-builder-delete-section" style="float: right;">Удалить секцию</button>';
+            sectionHtml += '</div>';
+            sectionHtml += '<div class="course-builder-section-content">';
+            sectionHtml += '<div class="course-builder-column" data-column-id="' + columnId + '" style="width: 100%;">';
+            sectionHtml += '<div class="course-builder-widgets-list"></div>';
+            sectionHtml += '</div>';
+            sectionHtml += '</div>';
+            sectionHtml += '</div>';
+            
+            // Удаляем пустое состояние, если оно есть
+            $('#course-builder-editor').find('.course-builder-empty-state').remove();
+            
+            // Добавляем секцию
+            if ($('#course-builder-editor').find('.course-builder-section').length === 0) {
+                $('#course-builder-editor').html(sectionHtml);
+            } else {
+                $('#course-builder-editor').append(sectionHtml);
+            }
+            
+            CourseBuilderAdmin.initSortable();
+            CourseBuilderAdmin.saveBuilder();
+        },
+        
         editWidget: function(widgetId) {
             // Открыть модальное окно с настройками виджета
             var $widget = $('.course-builder-widget[data-widget-id="' + widgetId + '"]');
