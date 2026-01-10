@@ -5,7 +5,8 @@
 (function($) {
     'use strict';
     
-    var CourseBuilderAdmin = {
+    // Делаем объект глобально доступным
+    window.CourseBuilderAdmin = {
         
         init: function() {
             this.bindEvents();
