@@ -59,6 +59,20 @@
                 var widgetId = $(this).closest('.course-builder-widget').data('widget-id');
                 CourseBuilderAdmin.editWidget(widgetId);
             });
+            
+            // Удаление секции
+            $(document).on('click', '.course-builder-delete-section', function(e) {
+                e.preventDefault();
+                if (confirm('Удалить эту секцию?')) {
+                    $(this).closest('.course-builder-section').remove();
+                    CourseBuilderAdmin.saveBuilder();
+                    
+                    // Если секций не осталось, показываем пустое состояние
+                    if ($('#course-builder-editor').find('.course-builder-section').length === 0) {
+                        $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
+                    }
+                }
+            });
         },
         
         initSortable: function() {
