@@ -178,12 +178,29 @@
         },
         
         getWidgetSettings: function($widget) {
-            // Получаем настройки из data-атрибута виджета
-            var settings = $widget.data('widget-settings') || {};
+            // Получаем настройки из jQuery data
+            var settings = $widget.data('widget-settings');
             
-            // Если настройки не найдены, возвращаем пустой объект
-            // Настройки должны быть сохранены через метод saveWidgetSettings
-            return settings;
+            // Если настройки не найдены в jQuery data, пытаемся получить из HTML атрибута
+            if (!settings || Object.keys(settings).length === 0) {
+                var settingsAttr = $widget.attr('data-widget-settings');
+                if (settingsAttr) {
+                    try {
+                        // Декодируем HTML entities и парсим JSON
+                        settingsAttr = settingsAttr.replace(/&quot;/g, '"');
+                        settings = JSON.parse(settingsAttr);
+                        // Сохраняем в jQuery data для будущего использования
+                        $widget.data('widget-settings', settings);
+                    } catch (e) {
+                        console.error('Error parsing widget settings:', e);
+                        settings = {};
+                    }
+                } else {
+                    settings = {};
+                }
+            }
+            
+            return settings || {};
         },
         
         addWidget: function(widgetType, sectionId) {
