@@ -591,20 +591,42 @@ class Course_Builder_Admin {
             wp_send_json_error(array('message' => __('Не указан тип виджета', 'course-plugin')));
         }
         
+        // Убеждаемся, что виджеты зарегистрированы
+        do_action('course_builder_register_widgets');
+        
+        // Если виджеты не зарегистрированы, регистрируем их вручную
+        if (class_exists('Course_Builder_Register')) {
+            Course_Builder_Register::register_widgets();
+        }
+        
         // Получаем класс виджета
         $widget_class = Course_Builder::get_widget_class($widget_type);
         
-        if (!$widget_class || !class_exists($widget_class)) {
-            wp_send_json_error(array('message' => __('Виджет не найден', 'course-plugin')));
+        if (!$widget_class) {
+            error_log('Course Builder: Widget class not found for type: ' . $widget_type);
+            wp_send_json_error(array('message' => __('Виджет не найден', 'course-plugin'), 'debug' => array('type' => $widget_type, 'registered_widgets' => array_keys(Course_Builder::get_widgets()))));
+        }
+        
+        if (!class_exists($widget_class)) {
+            error_log('Course Builder: Widget class does not exist: ' . $widget_class);
+            wp_send_json_error(array('message' => __('Класс виджета не найден', 'course-plugin'), 'debug' => array('class' => $widget_class)));
         }
         
         try {
             $widget = new $widget_class('temp', array());
             $fields = $widget->get_settings_fields();
             
+            if (empty($fields)) {
+                error_log('Course Builder: No settings fields returned for widget: ' . $widget_type);
+            }
+            
             wp_send_json_success(array('fields' => $fields));
         } catch (Exception $e) {
-            wp_send_json_error(array('message' => __('Ошибка загрузки настроек', 'course-plugin')));
+            error_log('Course Builder: Exception loading widget settings: ' . $e->getMessage());
+            wp_send_json_error(array('message' => __('Ошибка загрузки настроек', 'course-plugin'), 'debug' => array('error' => $e->getMessage())));
+        } catch (Error $e) {
+            error_log('Course Builder: Fatal error loading widget settings: ' . $e->getMessage());
+            wp_send_json_error(array('message' => __('Критическая ошибка загрузки настроек', 'course-plugin'), 'debug' => array('error' => $e->getMessage())));
         }
     }
 }
