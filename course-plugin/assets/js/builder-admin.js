@@ -142,25 +142,46 @@
             var sections = [];
             
             $('.course-builder-section').each(function() {
+                var $section = $(this);
                 var section = {
-                    id: $(this).data('section-id') || 'section_' + Date.now(),
+                    id: $section.data('section-id') || 'section_' + Date.now(),
                     settings: {},
                     columns: []
                 };
                 
-                $(this).find('.course-builder-column').each(function() {
+                $section.find('.course-builder-column').each(function() {
+                    var $column = $(this);
+                    // Получаем ширину из стиля или вычисляем процентное соотношение
+                    var widthStyle = $column.css('width');
+                    var width = 100; // По умолчанию 100%
+                    
+                    if (widthStyle) {
+                        // Если ширина указана в процентах, извлекаем число
+                        var match = widthStyle.match(/(\d+(?:\.\d+)?)%/);
+                        if (match) {
+                            width = parseFloat(match[1]);
+                        } else {
+                            // Если в пикселях, вычисляем процент от родителя
+                            var parentWidth = $column.parent().width();
+                            if (parentWidth > 0) {
+                                width = (parseInt(widthStyle) / parentWidth) * 100;
+                            }
+                        }
+                    }
+                    
                     var column = {
-                        id: $(this).data('column-id') || 'col_' + Date.now(),
-                        width: parseInt($(this).css('width')) || 50,
+                        id: $column.data('column-id') || 'col_' + Date.now(),
+                        width: width,
                         settings: {},
                         widgets: []
                     };
                     
-                    $(this).find('.course-builder-widget').each(function() {
+                    $column.find('.course-builder-widget').each(function() {
+                        var $widget = $(this);
                         var widget = {
-                            id: $(this).data('widget-id') || 'widget_' + Date.now(),
-                            type: $(this).data('widget-type'),
-                            settings: CourseBuilderAdmin.getWidgetSettings($(this))
+                            id: $widget.data('widget-id') || 'widget_' + Date.now(),
+                            type: $widget.data('widget-type'),
+                            settings: CourseBuilderAdmin.getWidgetSettings($widget)
                         };
                         column.widgets.push(widget);
                     });
@@ -171,10 +192,13 @@
                 sections.push(section);
             });
             
-            return {
+            var data = {
                 version: '1.0.0',
                 sections: sections
             };
+            
+            console.log('Getting builder data:', data);
+            return data;
         },
         
         getWidgetSettings: function($widget) {
