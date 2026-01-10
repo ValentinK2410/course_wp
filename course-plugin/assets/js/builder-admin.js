@@ -546,6 +546,14 @@
                 });
                 
                 $('#course-builder-editor').html(html);
+                
+                // Восстанавливаем настройки виджетов из HTML атрибутов в jQuery data
+                $('#course-builder-editor').find('.course-builder-widget').each(function() {
+                    var $widget = $(this);
+                    // Это автоматически восстановит настройки из атрибута data-widget-settings
+                    CourseBuilderAdmin.getWidgetSettings($widget);
+                });
+                
                 CourseBuilderAdmin.initSortable();
                 
                 console.log('Builder rendered successfully');
