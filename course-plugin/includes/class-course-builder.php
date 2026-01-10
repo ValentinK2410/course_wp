@@ -183,8 +183,38 @@ class Course_Builder {
             return false;
         }
         
+        // Логируем данные ДО валидации
+        $widgets_before_validation = 0;
+        if (isset($data['sections']) && is_array($data['sections'])) {
+            foreach ($data['sections'] as $section) {
+                if (isset($section['columns']) && is_array($section['columns'])) {
+                    foreach ($section['columns'] as $column) {
+                        if (isset($column['widgets']) && is_array($column['widgets'])) {
+                            $widgets_before_validation += count($column['widgets']);
+                        }
+                    }
+                }
+            }
+        }
+        error_log('Course Builder: Widgets count BEFORE validation: ' . $widgets_before_validation);
+        
         // Валидация данных
         $data = $this->validate_data($data);
+        
+        // Логируем данные ПОСЛЕ валидации
+        $widgets_after_validation = 0;
+        if (isset($data['sections']) && is_array($data['sections'])) {
+            foreach ($data['sections'] as $section) {
+                if (isset($section['columns']) && is_array($section['columns'])) {
+                    foreach ($section['columns'] as $column) {
+                        if (isset($column['widgets']) && is_array($column['widgets'])) {
+                            $widgets_after_validation += count($column['widgets']);
+                        }
+                    }
+                }
+            }
+        }
+        error_log('Course Builder: Widgets count AFTER validation: ' . $widgets_after_validation);
         
         // Добавляем версию
         $data['version'] = self::DATA_VERSION;
@@ -258,7 +288,10 @@ class Course_Builder {
      * Валидация данных builder
      */
     private function validate_data($data) {
+        error_log('Course Builder: validate_data called');
+        
         if (!is_array($data)) {
+            error_log('Course Builder: Data is not array, returning default');
             return $this->get_default_data();
         }
         
@@ -266,6 +299,8 @@ class Course_Builder {
         if (!isset($data['sections']) || !is_array($data['sections'])) {
             $data['sections'] = array();
         }
+        
+        error_log('Course Builder: Sections count in validate_data: ' . count($data['sections']));
         
         // Валидация секций
         foreach ($data['sections'] as $key => $section) {
@@ -277,6 +312,8 @@ class Course_Builder {
                 $data['sections'][$key]['columns'] = array();
             }
             
+            error_log('Course Builder: Section ' . $key . ' has ' . count($data['sections'][$key]['columns']) . ' columns');
+            
             // Валидация колонок
             foreach ($data['sections'][$key]['columns'] as $col_key => $column) {
                 if (!isset($column['id'])) {
@@ -287,8 +324,15 @@ class Course_Builder {
                     $data['sections'][$key]['columns'][$col_key]['width'] = 100;
                 }
                 
-                if (!isset($column['widgets']) || !is_array($column['widgets'])) {
+                // ВАЖНО: Проверяем виджеты ДО установки пустого массива
+                $has_widgets = isset($column['widgets']) && is_array($column['widgets']);
+                $widgets_count = $has_widgets ? count($column['widgets']) : 0;
+                error_log('Course Builder: Column ' . $col_key . ' has widgets: ' . ($has_widgets ? 'yes' : 'no') . ', count: ' . $widgets_count);
+                
+                if (!$has_widgets) {
                     $data['sections'][$key]['columns'][$col_key]['widgets'] = array();
+                    error_log('Course Builder: Column ' . $col_key . ' had no widgets array, set to empty');
+                    continue; // Переходим к следующей колонке, если виджетов нет
                 }
                 
                 // Валидация виджетов
@@ -303,8 +347,13 @@ class Course_Builder {
                 }
                 
                 $widgets_count_before = count($data['sections'][$key]['columns'][$col_key]['widgets']);
-                error_log('Course Builder: Validating widgets. Registered widgets: ' . implode(', ', array_keys(self::$widgets)));
+                error_log('Course Builder: Validating widgets in column ' . $col_key . '. Registered widgets: ' . implode(', ', array_keys(self::$widgets)));
                 error_log('Course Builder: Widgets to validate: ' . $widgets_count_before);
+                
+                if ($widgets_count_before === 0) {
+                    error_log('Course Builder: No widgets to validate in column ' . $col_key);
+                    continue;
+                }
                 
                 // Создаем новый массив для валидных виджетов вместо удаления невалидных
                 $validated_widgets = array();
@@ -339,6 +388,7 @@ class Course_Builder {
                     
                     // Добавляем виджет в массив валидных (всегда, даже если тип не зарегистрирован)
                     $validated_widgets[] = $widget;
+                    error_log('Course Builder: Added widget to validated array');
                 }
                 
                 // Заменяем массив виджетов на валидированный
@@ -349,6 +399,7 @@ class Course_Builder {
             }
         }
         
+        error_log('Course Builder: validate_data completed');
         return $data;
     }
     
