@@ -289,12 +289,142 @@
         },
         
         editWidget: function(widgetId) {
-            // Открыть модальное окно с настройками виджета
             var $widget = $('.course-builder-widget[data-widget-id="' + widgetId + '"]');
             var widgetType = $widget.data('widget-type');
+            var currentSettings = CourseBuilderAdmin.getWidgetSettings($widget);
             
-            // Здесь должна быть логика открытия модального окна с настройками
-            alert('Редактирование виджета: ' + widgetType);
+            // Сохраняем ID виджета в модальном окне
+            $('#course-builder-widget-modal').data('editing-widget-id', widgetId);
+            
+            // Загружаем настройки виджета через AJAX
+            $.ajax({
+                url: courseBuilderAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'course_builder_get_widget_settings',
+                    widget_type: widgetType,
+                    nonce: courseBuilderAdmin.nonce
+                },
+                success: function(response) {
+                    if (response.success && response.data && response.data.fields) {
+                        var html = '';
+                        $.each(response.data.fields, function(index, field) {
+                            var fieldValue = currentSettings[field.name] || (field.default || '');
+                            html += CourseBuilderAdmin.renderSettingsField(field, fieldValue);
+                        });
+                        $('#course-builder-widget-settings').html(html);
+                        $('#course-builder-widget-modal').show();
+                    } else {
+                        alert('Не удалось загрузить настройки виджета');
+                    }
+                },
+                error: function() {
+                    alert('Ошибка загрузки настроек виджета');
+                }
+            });
+        },
+        
+        saveWidgetSettings: function() {
+            var widgetId = $('#course-builder-widget-modal').data('editing-widget-id');
+            var $widget = $('.course-builder-widget[data-widget-id="' + widgetId + '"]');
+            var settings = {};
+            
+            // Собираем значения полей из формы
+            $('#course-builder-widget-settings').find('input, textarea, select').each(function() {
+                var $field = $(this);
+                var name = $field.attr('name');
+                if (name) {
+                    // Извлекаем имя поля из формата widgets[widget_id][settings][field_name]
+                    var match = name.match(/\[settings\]\[(.+?)\]$/);
+                    if (match) {
+                        var fieldName = match[1];
+                        if ($field.attr('type') === 'checkbox') {
+                            settings[fieldName] = $field.is(':checked') ? 1 : 0;
+                        } else {
+                            settings[fieldName] = $field.val();
+                        }
+                    }
+                }
+            });
+            
+            // Сохраняем настройки в виджете через data-атрибут
+            $widget.data('widget-settings', settings);
+            
+            // Также обновляем HTML атрибут для сохранения при перезагрузке страницы
+            var settingsJson = JSON.stringify(settings).replace(/"/g, '&quot;');
+            $widget.attr('data-widget-settings', settingsJson);
+            
+            // Обновляем отображение виджета
+            CourseBuilderAdmin.updateWidgetDisplay($widget);
+            
+            // Закрываем модальное окно
+            $('#course-builder-widget-modal').hide();
+            
+            // Сохраняем данные
+            CourseBuilderAdmin.saveBuilder();
+        },
+        
+        renderSettingsField: function(field, value) {
+            var fieldId = 'widget_setting_' + field.name + '_' + Date.now();
+            var fieldName = 'widgets[temp][settings][' + field.name + ']';
+            var html = '<div class="course-builder-field course-builder-field-' + field.type + '" style="margin-bottom: 15px;">';
+            html += '<label for="' + fieldId + '" style="display: block; margin-bottom: 5px; font-weight: bold;">' + field.label + '</label>';
+            
+            switch (field.type) {
+                case 'text':
+                case 'url':
+                case 'email':
+                    html += '<input type="' + field.type + '" id="' + fieldId + '" name="' + fieldName + '" value="' + (value || '') + '" class="widefat">';
+                    break;
+                case 'textarea':
+                    html += '<textarea id="' + fieldId + '" name="' + fieldName + '" class="widefat" rows="5">' + (value || '') + '</textarea>';
+                    break;
+                case 'select':
+                    html += '<select id="' + fieldId + '" name="' + fieldName + '" class="widefat">';
+                    if (field.options) {
+                        $.each(field.options, function(optValue, optLabel) {
+                            html += '<option value="' + optValue + '" ' + (value == optValue ? 'selected' : '') + '>' + optLabel + '</option>';
+                        });
+                    }
+                    html += '</select>';
+                    break;
+                case 'checkbox':
+                    html += '<input type="checkbox" id="' + fieldId + '" name="' + fieldName + '" value="1" ' + (value ? 'checked' : '') + '>';
+                    break;
+                case 'number':
+                    html += '<input type="number" id="' + fieldId + '" name="' + fieldName + '" value="' + (value || '') + '" class="widefat" min="' + (field.min || '') + '" max="' + (field.max || '') + '" step="' + (field.step || '1') + '">';
+                    break;
+                case 'color':
+                    html += '<input type="color" id="' + fieldId + '" name="' + fieldName + '" value="' + (value || '#000000') + '">';
+                    break;
+            }
+            
+            if (field.description) {
+                html += '<p class="description" style="margin-top: 5px; color: #666; font-size: 12px;">' + field.description + '</p>';
+            }
+            
+            html += '</div>';
+            return html;
+        },
+        
+        updateWidgetDisplay: function($widget) {
+            var widgetType = $widget.data('widget-type');
+            var settings = $widget.data('widget-settings') || {};
+            
+            // Обновляем содержимое виджета в зависимости от типа
+            var $content = $widget.find('.course-builder-widget-content');
+            var displayText = 'Widget: ' + widgetType;
+            
+            // Показываем основные настройки в превью
+            if (settings.content) {
+                displayText = settings.content.substring(0, 50) + (settings.content.length > 50 ? '...' : '');
+            } else if (settings.title) {
+                displayText = settings.title;
+            } else if (settings.text) {
+                displayText = settings.text.substring(0, 50) + (settings.text.length > 50 ? '...' : '');
+            }
+            
+            $content.html('<p>' + displayText + '</p>');
         },
         
         loadBuilder: function() {
