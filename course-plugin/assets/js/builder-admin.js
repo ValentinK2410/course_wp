@@ -307,10 +307,13 @@
                         var widgetId = $widget.data('widget-id');
                         var widgetType = $widget.data('widget-type');
                         
+                        console.log('Processing widget:', widgetIndex, 'ID:', widgetId, 'Type:', widgetType);
+                        
                         // Если ID нет, создаем новый
                         if (!widgetId) {
                             widgetId = 'widget_' + Date.now() + '_' + widgetIndex;
                             $widget.attr('data-widget-id', widgetId);
+                            console.log('Generated new widget ID:', widgetId);
                         }
                         
                         // Если тип не указан, пропускаем виджет
@@ -319,15 +322,21 @@
                             return;
                         }
                         
+                        var widgetSettings = CourseBuilderAdmin.getWidgetSettings($widget);
+                        console.log('Widget settings:', widgetSettings);
+                        
                         var widget = {
                             id: widgetId,
                             type: widgetType,
-                            settings: CourseBuilderAdmin.getWidgetSettings($widget)
+                            settings: widgetSettings
                         };
                         
+                        console.log('Adding widget to column:', widget);
                         column.widgets.push(widget);
                         console.log('Added widget:', widgetId, 'type:', widgetType, 'settings:', widget.settings);
                     });
+                    
+                    console.log('Column ' + columnId + ' final widgets count:', column.widgets.length);
                     
                     section.columns.push(column);
                 });
