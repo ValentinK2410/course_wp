@@ -108,6 +108,9 @@
             var postId = courseBuilderAdmin.postId;
             var data = CourseBuilderAdmin.getBuilderData();
             
+            console.log('Saving builder data for post:', postId);
+            console.log('Data to save:', data);
+            
             $.ajax({
                 url: courseBuilderAdmin.ajaxUrl,
                 type: 'POST',
@@ -121,17 +124,21 @@
                     $('.course-builder-save').text(courseBuilderAdmin.strings.saving).prop('disabled', true);
                 },
                 success: function(response) {
+                    console.log('Save response:', response);
                     if (response.success) {
                         $('.course-builder-save').text(courseBuilderAdmin.strings.saved).prop('disabled', false);
                         setTimeout(function() {
                             $('.course-builder-save').text(courseBuilderAdmin.strings.save);
                         }, 2000);
+                        console.log('Data saved successfully');
                     } else {
+                        console.error('Save failed:', response.data);
                         alert(courseBuilderAdmin.strings.error + ': ' + (response.data.message || 'Unknown error'));
                         $('.course-builder-save').text(courseBuilderAdmin.strings.save).prop('disabled', false);
                     }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error('Save AJAX error:', xhr, status, error);
                     alert(courseBuilderAdmin.strings.error);
                     $('.course-builder-save').text(courseBuilderAdmin.strings.save).prop('disabled', false);
                 }
