@@ -172,23 +172,71 @@
         },
         
         addWidget: function(widgetType) {
-            var widgetId = 'widget_' + Date.now();
-            var widgetHtml = '<div class="course-builder-widget" data-widget-id="' + widgetId + '" data-widget-type="' + widgetType + '">';
-            widgetHtml += '<div class="course-builder-widget-handle">';
-            widgetHtml += '<span class="dashicons dashicons-move"></span>';
-            widgetHtml += '<span class="widget-title">' + widgetType + '</span>';
-            widgetHtml += '</div>';
-            widgetHtml += '<div class="course-builder-widget-content">';
-            widgetHtml += '<p>Widget: ' + widgetType + '</p>';
-            widgetHtml += '</div>';
-            widgetHtml += '<div class="course-builder-widget-actions">';
-            widgetHtml += '<button class="course-builder-edit-widget">' + courseBuilderAdmin.strings.edit + '</button>';
-            widgetHtml += '<button class="course-builder-delete-widget">' + courseBuilderAdmin.strings.delete + '</button>';
-            widgetHtml += '</div>';
-            widgetHtml += '</div>';
+            console.log('Adding widget:', widgetType);
             
-            $('.course-builder-widgets-list').append(widgetHtml);
+            // Проверяем, есть ли уже секции в редакторе
+            var $editor = $('#course-builder-editor');
+            var $sections = $editor.find('.course-builder-section');
+            
+            // Если секций нет, создаем первую секцию с колонкой
+            if ($sections.length === 0) {
+                console.log('Creating first section and column');
+                var sectionId = 'section_' + Date.now();
+                var columnId = 'col_' + Date.now();
+                
+                var sectionHtml = '<div class="course-builder-section" data-section-id="' + sectionId + '">';
+                sectionHtml += '<div class="course-builder-section-header">';
+                sectionHtml += '<h3>Секция 1</h3>';
+                sectionHtml += '<button class="course-builder-delete-section" style="float: right;">Удалить секцию</button>';
+                sectionHtml += '</div>';
+                sectionHtml += '<div class="course-builder-section-content">';
+                sectionHtml += '<div class="course-builder-column" data-column-id="' + columnId + '" style="width: 100%;">';
+                sectionHtml += '<div class="course-builder-widgets-list"></div>';
+                sectionHtml += '</div>';
+                sectionHtml += '</div>';
+                sectionHtml += '</div>';
+                
+                // Удаляем пустое состояние, если оно есть
+                $editor.find('.course-builder-empty-state').remove();
+                $editor.html(sectionHtml);
+            }
+            
+            // Находим первую колонку или создаем новую
+            var $firstSection = $editor.find('.course-builder-section').first();
+            var $columns = $firstSection.find('.course-builder-column');
+            
+            if ($columns.length === 0) {
+                // Создаем колонку, если её нет
+                var columnId = 'col_' + Date.now();
+                var columnHtml = '<div class="course-builder-column" data-column-id="' + columnId + '" style="width: 100%;">';
+                columnHtml += '<div class="course-builder-widgets-list"></div>';
+                columnHtml += '</div>';
+                $firstSection.find('.course-builder-section-content').html(columnHtml);
+                $columns = $firstSection.find('.course-builder-column');
+            }
+            
+            // Используем первую колонку
+            var $firstColumn = $columns.first();
+            var $widgetsList = $firstColumn.find('.course-builder-widgets-list');
+            
+            if ($widgetsList.length === 0) {
+                // Создаем список виджетов, если его нет
+                $firstColumn.append('<div class="course-builder-widgets-list"></div>');
+                $widgetsList = $firstColumn.find('.course-builder-widgets-list');
+            }
+            
+            // Создаем виджет
+            var widgetId = 'widget_' + Date.now();
+            var widgetHtml = CourseBuilderAdmin.renderWidget({
+                id: widgetId,
+                type: widgetType,
+                settings: {}
+            });
+            
+            $widgetsList.append(widgetHtml);
             CourseBuilderAdmin.initSortable();
+            
+            console.log('Widget added successfully');
         },
         
         editWidget: function(widgetId) {
