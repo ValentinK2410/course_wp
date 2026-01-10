@@ -149,22 +149,28 @@ class Course_Builder_Admin {
         </div>
         <?php
         // Добавляем inline скрипт в футер через хук, чтобы он выполнялся после загрузки основного скрипта
-        add_action('admin_footer', function() {
+        // Используем замыкание для передачи post_id
+        $footer_script_post_id = $post_id;
+        add_action('admin_footer', function() use ($footer_script_post_id) {
             // Проверяем, что мы на странице builder
             if (!isset($_GET['page']) || $_GET['page'] !== 'course-builder') {
                 return;
             }
             ?>
             <script type="text/javascript">
-            jQuery(document).ready(function($) {
+            (function($) {
+                'use strict';
+                
                 // Функция инициализации страницы builder
                 function initBuilderPage() {
                     // Проверяем доступность переменных
                     if (typeof courseBuilderAdmin === 'undefined') {
                         console.log('Waiting for courseBuilderAdmin to load...');
-                        setTimeout(initBuilderPage, 200);
+                        setTimeout(initBuilderPage, 300);
                         return;
                     }
+                    
+                    console.log('courseBuilderAdmin loaded, initializing...');
                     
                     // Загружаем список виджетов
                     $.ajax({
@@ -192,22 +198,26 @@ class Course_Builder_Admin {
                     });
                     
                     // Загружаем данные builder после загрузки скрипта
-                    if (typeof CourseBuilderAdmin !== 'undefined') {
-                        CourseBuilderAdmin.loadBuilder();
-                    } else {
-                        setTimeout(function() {
-                            if (typeof CourseBuilderAdmin !== 'undefined') {
-                                CourseBuilderAdmin.loadBuilder();
-                            } else {
-                                console.error('CourseBuilderAdmin object is not defined');
-                            }
-                        }, 500);
+                    // Проверяем наличие объекта CourseBuilderAdmin
+                    function loadBuilderData() {
+                        if (typeof CourseBuilderAdmin !== 'undefined' && typeof CourseBuilderAdmin.loadBuilder === 'function') {
+                            console.log('Loading builder data...');
+                            CourseBuilderAdmin.loadBuilder();
+                        } else {
+                            console.log('Waiting for CourseBuilderAdmin object...');
+                            setTimeout(loadBuilderData, 300);
+                        }
                     }
+                    
+                    loadBuilderData();
                 }
                 
-                // Запускаем инициализацию
-                initBuilderPage();
-            });
+                // Запускаем инициализацию после полной загрузки DOM
+                $(document).ready(function() {
+                    // Даем время на загрузку всех скриптов
+                    setTimeout(initBuilderPage, 500);
+                });
+            })(jQuery);
             </script>
             <?php
         }, 999);
@@ -448,13 +458,13 @@ class Course_Builder_Admin {
             COURSE_PLUGIN_VERSION
         );
         
-        // Скрипты
+        // Скрипты - загружаем в футере, но с высоким приоритетом
         wp_enqueue_script(
             'course-builder-admin',
             COURSE_PLUGIN_URL . 'assets/js/builder-admin.js',
             array('jquery', 'jquery-ui-sortable'),
             COURSE_PLUGIN_VERSION,
-            true
+            false // Загружаем в head, чтобы был доступен раньше
         );
         
         // Локализация
