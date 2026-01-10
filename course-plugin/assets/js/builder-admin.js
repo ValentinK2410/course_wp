@@ -648,22 +648,33 @@
                     console.log('Load builder response:', response);
                     console.log('Response success:', response.success);
                     console.log('Response data:', response.data);
+                    console.log('Response data type:', typeof response.data);
+                    console.log('Response data keys:', response.data ? Object.keys(response.data) : 'no data');
                     
                     if (response.success && response.data) {
-                        // PHP возвращает данные в структуре: { success: true, data: { data: { sections: [...] } } }
-                        // Нужно извлечь вложенные данные
-                        var builderData = response.data.data || response.data;
+                        // wp_send_json_success() автоматически оборачивает данные в объект с ключом 'data'
+                        // Структура ответа: { success: true, data: { sections: [...] } }
+                        // Но если данные были обернуты дважды, может быть: { success: true, data: { data: { sections: [...] } } }
+                        var builderData = response.data;
+                        
+                        // Проверяем, не обернуты ли данные дважды
+                        if (builderData.data && builderData.data.sections) {
+                            console.log('Data wrapped twice, extracting inner data');
+                            builderData = builderData.data;
+                        }
                         
                         console.log('Extracted builder data:', builderData);
+                        console.log('Builder data keys:', Object.keys(builderData));
                         console.log('Builder data sections:', builderData.sections);
+                        console.log('Builder data sections count:', builderData.sections ? builderData.sections.length : 0);
                         
                         // Проверяем наличие секций в данных
-                        if (builderData.sections && builderData.sections.length > 0) {
+                        if (builderData.sections && Array.isArray(builderData.sections) && builderData.sections.length > 0) {
                             console.log('Found ' + builderData.sections.length + ' sections, rendering...');
                             CourseBuilderAdmin.renderBuilder(builderData);
                         } else {
                             console.log('No sections found in data, showing empty state');
-                            console.log('Data structure:', JSON.stringify(builderData, null, 2));
+                            console.log('Full data structure:', JSON.stringify(builderData, null, 2));
                             $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
                         }
                     } else {
