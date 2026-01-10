@@ -458,6 +458,8 @@
         loadBuilder: function() {
             var postId = courseBuilderAdmin.postId;
             
+            console.log('Loading builder data for post:', postId);
+            
             $.ajax({
                 url: courseBuilderAdmin.ajaxUrl,
                 type: 'POST',
@@ -467,14 +469,26 @@
                     nonce: courseBuilderAdmin.loadNonce
                 },
                 success: function(response) {
+                    console.log('Load builder response:', response);
                     if (response.success && response.data) {
                         CourseBuilderAdmin.renderBuilder(response.data);
+                    } else {
+                        console.error('Failed to load builder data:', response);
+                        // Показываем пустое состояние при ошибке
+                        $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
                     }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading builder data:', xhr, status, error);
+                    // Показываем пустое состояние при ошибке
+                    $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Ошибка загрузки данных. Начните добавлять виджеты из боковой панели</p></div>');
                 }
             });
         },
         
         renderBuilder: function(data) {
+            console.log('Rendering builder data:', data);
+            
             // Рендеринг структуры builder из данных
             if (data.sections && data.sections.length > 0) {
                 var html = '';
@@ -483,12 +497,14 @@
                     html += '<div class="course-builder-section" data-section-id="' + section.id + '">';
                     html += '<div class="course-builder-section-header">';
                     html += '<h3>Секция ' + (index + 1) + '</h3>';
+                    html += '<button class="course-builder-delete-section" style="float: right;">Удалить секцию</button>';
                     html += '</div>';
                     html += '<div class="course-builder-section-content">';
                     
                     if (section.columns && section.columns.length > 0) {
                         $.each(section.columns, function(colIndex, column) {
-                            html += '<div class="course-builder-column" data-column-id="' + column.id + '" style="width: ' + column.width + '%;">';
+                            var columnWidth = column.width || 100;
+                            html += '<div class="course-builder-column" data-column-id="' + column.id + '" style="width: ' + columnWidth + '%;">';
                             html += '<div class="course-builder-widgets-list">';
                             
                             if (column.widgets && column.widgets.length > 0) {
@@ -500,14 +516,26 @@
                             html += '</div>';
                             html += '</div>';
                         });
+                    } else {
+                        // Если колонок нет, создаем одну по умолчанию
+                        var columnId = 'col_' + Date.now();
+                        html += '<div class="course-builder-column" data-column-id="' + columnId + '" style="width: 100%;">';
+                        html += '<div class="course-builder-widgets-list"></div>';
+                        html += '</div>';
                     }
                     
                     html += '</div>';
                     html += '</div>';
                 });
                 
-                $('.course-builder-editor').html(html);
+                $('#course-builder-editor').html(html);
                 CourseBuilderAdmin.initSortable();
+                
+                console.log('Builder rendered successfully');
+            } else {
+                console.log('No sections found in data, showing empty state');
+                // Показываем пустое состояние, если секций нет
+                $('#course-builder-editor').html('<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>');
             }
         },
         
