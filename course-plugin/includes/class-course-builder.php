@@ -164,10 +164,25 @@ class Course_Builder {
         $data['version'] = self::DATA_VERSION;
         $data['updated_at'] = current_time('mysql');
         
-        // Сохраняем как JSON
-        $json_data = wp_json_encode($data);
+        error_log('Course Builder: Validated data before save: ' . print_r($data, true));
         
-        return update_post_meta($post_id, self::META_KEY, $json_data);
+        // Сохраняем как JSON
+        $json_data = wp_json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        
+        if ($json_data === false) {
+            error_log('Course Builder: JSON encode error: ' . json_last_error_msg());
+            return false;
+        }
+        
+        error_log('Course Builder: JSON data to save: ' . $json_data);
+        
+        $result = update_post_meta($post_id, self::META_KEY, $json_data);
+        
+        // Проверяем, что данные действительно сохранились
+        $saved = get_post_meta($post_id, self::META_KEY, true);
+        error_log('Course Builder: Data saved, verification: ' . ($saved ? 'exists' : 'missing'));
+        
+        return $result !== false;
     }
     
     /**
@@ -259,11 +274,13 @@ class Course_Builder {
     public function ajax_save_builder_data() {
         // Проверка nonce
         if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'course_builder_save')) {
+            error_log('Course Builder: Nonce verification failed');
             wp_send_json_error(array('message' => __('Ошибка безопасности', 'course-plugin')));
         }
         
         // Проверка прав
         if (!current_user_can('edit_posts')) {
+            error_log('Course Builder: User does not have edit_posts capability');
             wp_send_json_error(array('message' => __('Недостаточно прав', 'course-plugin')));
         }
         
@@ -271,23 +288,40 @@ class Course_Builder {
         $data = isset($_POST['data']) ? $_POST['data'] : array();
         
         if (!$post_id) {
+            error_log('Course Builder: Post ID is missing');
             wp_send_json_error(array('message' => __('Не указан ID поста', 'course-plugin')));
         }
+        
+        error_log('Course Builder: Saving data for post ' . $post_id);
+        error_log('Course Builder: Raw data: ' . print_r($data, true));
         
         // Декодируем JSON данные, если они пришли как строка
         if (is_string($data)) {
             $data = json_decode(stripslashes($data), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log('Course Builder: JSON decode error: ' . json_last_error_msg());
+                wp_send_json_error(array('message' => __('Ошибка декодирования данных', 'course-plugin')));
+            }
         }
+        
+        error_log('Course Builder: Decoded data: ' . print_r($data, true));
         
         // Сохраняем данные
         $result = $this->save_builder_data($post_id, $data);
         
+        error_log('Course Builder: Save result: ' . ($result ? 'success' : 'failed'));
+        
         if ($result) {
+            // Проверяем, что данные действительно сохранились
+            $saved_data = $this->get_builder_data($post_id);
+            error_log('Course Builder: Saved data retrieved: ' . print_r($saved_data, true));
+            
             wp_send_json_success(array(
                 'message' => __('Данные сохранены', 'course-plugin'),
-                'data' => $this->get_builder_data($post_id)
+                'data' => $saved_data
             ));
         } else {
+            error_log('Course Builder: Failed to save data');
             wp_send_json_error(array('message' => __('Ошибка сохранения', 'course-plugin')));
         }
     }
