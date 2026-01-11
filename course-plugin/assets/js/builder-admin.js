@@ -1146,6 +1146,9 @@
       
       // Сохраняем данные builder для дальнейшего использования
       CourseBuilderAdmin.builderData = data;
+      
+      // Старый код рендеринга структуры (оставлен для совместимости, но не используется)
+      if (false && data.sections && data.sections.length > 0) {
         console.log("Found " + data.sections.length + " sections to render");
         var html = "";
         var totalWidgets = 0;
