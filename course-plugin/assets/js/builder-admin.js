@@ -626,6 +626,10 @@
               html += CourseBuilderAdmin.renderSettingsField(field, fieldValue);
             });
             $("#course-builder-widget-settings").html(html);
+            
+            // Инициализируем условное отображение полей
+            CourseBuilderAdmin.initConditionalFields();
+            
             $("#course-builder-widget-modal").show();
           } else {
             var errorMsg = "Не удалось загрузить настройки виджета";
@@ -694,10 +698,23 @@
     renderSettingsField: function (field, value) {
       var fieldId = "widget_setting_" + field.name + "_" + Date.now();
       var fieldName = "widgets[temp][settings][" + field.name + "]";
+      
+      // Проверяем условия показа поля
+      var fieldClass = "course-builder-field course-builder-field-" + field.type;
+      var fieldStyle = "margin-bottom: 15px;";
+      var conditionAttrs = "";
+      
+      if (field.condition) {
+        // Добавляем класс для условного показа
+        fieldClass += " course-builder-field-conditional";
+        // Добавляем data-атрибуты для условий
+        var conditionField = Object.keys(field.condition)[0];
+        var conditionValue = field.condition[conditionField];
+        conditionAttrs = ' data-condition-field="' + conditionField + '" data-condition-value="' + conditionValue + '"';
+      }
+      
       var html =
-        '<div class="course-builder-field course-builder-field-' +
-        field.type +
-        '" style="margin-bottom: 15px;">';
+        '<div class="' + fieldClass + '" style="' + fieldStyle + '"' + conditionAttrs + '>';
       html +=
         '<label for="' +
         fieldId +
@@ -798,6 +815,62 @@
 
       html += "</div>";
       return html;
+    },
+
+    initConditionalFields: function () {
+      // Обработчик изменения полей для условного показа/скрытия других полей
+      $("#course-builder-widget-settings").off("change", "input, select").on("change", "input, select", function () {
+        var $changedField = $(this).closest(".course-builder-field");
+        var fieldName = $(this).attr("name");
+        if (!fieldName) return;
+        
+        // Извлекаем имя поля из формата widgets[temp][settings][field_name]
+        var match = fieldName.match(/\[settings\]\[(.+?)\]$/);
+        if (!match) return;
+        
+        var changedFieldName = match[1];
+        var changedValue = $(this).is(":checkbox") ? ($(this).is(":checked") ? 1 : 0) : $(this).val();
+        
+        // Обновляем видимость всех полей с условиями
+        $("#course-builder-widget-settings").find(".course-builder-field-conditional").each(function () {
+          var $conditionalField = $(this);
+          var conditionField = $conditionalField.data("condition-field");
+          var conditionValue = $conditionalField.data("condition-value");
+          
+          if (conditionField === changedFieldName) {
+            if (changedValue == conditionValue) {
+              $conditionalField.slideDown(200);
+            } else {
+              $conditionalField.slideUp(200);
+            }
+          }
+        });
+      });
+      
+      // Инициализируем видимость полей при загрузке
+      setTimeout(function () {
+        $("#course-builder-widget-settings").find(".course-builder-field-conditional").each(function () {
+          var $conditionalField = $(this);
+          var conditionField = $conditionalField.data("condition-field");
+          var conditionValue = $conditionalField.data("condition-value");
+          
+          if (conditionField) {
+            var $targetField = $("#course-builder-widget-settings").find('[name*="[settings][' + conditionField + ']"]').closest(".course-builder-field");
+            if ($targetField.length) {
+              var $input = $targetField.find("input, select");
+              var currentValue = $input.is(":checkbox") ? ($input.is(":checked") ? 1 : 0) : $input.val();
+              if (currentValue == conditionValue) {
+                $conditionalField.show();
+              } else {
+                $conditionalField.hide();
+              }
+            } else {
+              // Если поле условия еще не загружено, скрываем условное поле
+              $conditionalField.hide();
+            }
+          }
+        });
+      }, 100);
     },
 
     updateWidgetDisplay: function ($widget) {
