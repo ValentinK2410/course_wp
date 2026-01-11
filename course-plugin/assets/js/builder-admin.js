@@ -963,21 +963,6 @@
           );
         },
       });
-
-      // Показываем основные настройки в превью
-      if (settings.content) {
-        displayText =
-          settings.content.substring(0, 50) +
-          (settings.content.length > 50 ? "..." : "");
-      } else if (settings.title) {
-        displayText = settings.title;
-      } else if (settings.text) {
-        displayText =
-          settings.text.substring(0, 50) +
-          (settings.text.length > 50 ? "..." : "");
-      }
-
-      $content.html("<p>" + displayText + "</p>");
     },
 
     loadBuilder: function () {
