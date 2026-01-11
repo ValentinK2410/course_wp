@@ -520,29 +520,88 @@
         $widgetsList = $targetColumn.find(".course-builder-widgets-list");
       }
 
-      // Создаем виджет
-      var widgetId = "widget_" + Date.now();
-      var $widget = $(
-        CourseBuilderAdmin.renderWidget({
+      // Проверяем, используется ли предпросмотр страницы
+      var isPreviewMode = $("#course-builder-editor .course-builder-page-preview").length > 0 || 
+                          $("#course-builder-editor .course-builder-content-wrapper").length > 0;
+      
+      if (isPreviewMode) {
+        // Если используется предпросмотр, просто сохраняем данные и перезагружаем предпросмотр
+        // Виджет будет добавлен через сохранение данных builder
+        console.log("Preview mode detected, will reload preview after save");
+        
+        // Сначала сохраняем текущие данные
+        var currentData = CourseBuilderAdmin.getBuilderData();
+        
+        // Добавляем новый виджет в данные
+        if (!currentData.sections || currentData.sections.length === 0) {
+          currentData.sections = [{
+            id: "section_" + Date.now(),
+            settings: {},
+            columns: [{
+              id: "col_" + Date.now(),
+              width: 100,
+              settings: {},
+              widgets: []
+            }]
+          }];
+        }
+        
+        // Находим последнюю секцию и колонку
+        var lastSection = currentData.sections[currentData.sections.length - 1];
+        if (!lastSection.columns || lastSection.columns.length === 0) {
+          lastSection.columns = [{
+            id: "col_" + Date.now(),
+            width: 100,
+            settings: {},
+            widgets: []
+          }];
+        }
+        
+        var lastColumn = lastSection.columns[lastSection.columns.length - 1];
+        if (!lastColumn.widgets) {
+          lastColumn.widgets = [];
+        }
+        
+        // Добавляем новый виджет
+        var widgetId = "widget_" + Date.now();
+        lastColumn.widgets.push({
           id: widgetId,
           type: widgetType,
-          settings: {},
-        })
-      );
+          settings: {}
+        });
+        
+        // Временно устанавливаем данные и сохраняем
+        CourseBuilderAdmin.builderData = currentData;
+        
+        // Сохраняем и перезагружаем предпросмотр
+        CourseBuilderAdmin.saveBuilder(function() {
+          CourseBuilderAdmin.loadPagePreview();
+        });
+      } else {
+        // Старый способ - создаем карточку виджета
+        var widgetId = "widget_" + Date.now();
+        var $widget = $(
+          CourseBuilderAdmin.renderWidget({
+            id: widgetId,
+            type: widgetType,
+            settings: {},
+          })
+        );
 
-      // Сохраняем настройки в data-атрибуте
-      $widget.data("widget-settings", {});
+        // Сохраняем настройки в data-атрибуте
+        $widget.data("widget-settings", {});
 
-      $widgetsList.append($widget);
-      CourseBuilderAdmin.initSortable();
+        $widgetsList.append($widget);
+        CourseBuilderAdmin.initSortable();
 
-      console.log(
-        "Widget added successfully to section:",
-        $targetSection.data("section-id")
-      );
+        console.log(
+          "Widget added successfully to section:",
+          $targetSection.data("section-id")
+        );
 
-      // Автоматическое сохранение после добавления виджета
-      CourseBuilderAdmin.saveBuilder();
+        // Автоматическое сохранение после добавления виджета
+        CourseBuilderAdmin.saveBuilder();
+      }
     },
 
     addSection: function () {
