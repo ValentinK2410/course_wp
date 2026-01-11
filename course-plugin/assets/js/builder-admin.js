@@ -1319,6 +1319,92 @@
 
       return html;
     },
+
+    loadPagePreview: function () {
+      var postId = courseBuilderAdmin.postId;
+      
+      if (!postId) {
+        console.error("Post ID is missing for page preview");
+        return;
+      }
+      
+      // Показываем индикатор загрузки
+      $("#course-builder-editor").html(
+        '<div class="course-builder-preview-loading" style="padding: 100px; text-align: center; color: #667eea;">' +
+        '<div style="font-size: 18px; margin-bottom: 10px;">Загрузка предпросмотра...</div>' +
+        '<div style="font-size: 14px; color: #6b7280;">Рендеринг страницы курса</div>' +
+        '</div>'
+      );
+      
+      // Загружаем полный предпросмотр страницы через AJAX
+      $.ajax({
+        url: courseBuilderAdmin.ajaxUrl,
+        type: "POST",
+        data: {
+          action: "course_builder_preview_page",
+          post_id: postId,
+          nonce: courseBuilderAdmin.nonce,
+        },
+        success: function (response) {
+          if (response.success && response.data && response.data.content) {
+            // Вставляем полный контент страницы
+            $("#course-builder-editor").html(
+              '<div class="course-builder-page-preview">' + response.data.content + '</div>'
+            );
+            
+            // Инициализируем редактирование виджетов на странице
+            CourseBuilderAdmin.initPageWidgetEditing();
+          } else {
+            console.error("Failed to load page preview:", response);
+            $("#course-builder-editor").html(
+              '<div class="course-builder-empty-state"><p>Ошибка загрузки предпросмотра</p></div>'
+            );
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("Error loading page preview:", error);
+          $("#course-builder-editor").html(
+            '<div class="course-builder-empty-state"><p>Ошибка загрузки предпросмотра: ' + error + '</p></div>'
+          );
+        },
+      });
+    },
+
+    initPageWidgetEditing: function () {
+      // Добавляем возможность редактирования виджетов прямо на странице
+      $("#course-builder-editor .course-builder-widget").each(function () {
+        var $widget = $(this);
+        var widgetId = $widget.attr("id");
+        
+        if (!widgetId) return;
+        
+        // Добавляем обертку для редактирования
+        if (!$widget.closest(".course-builder-widget-editable").length) {
+          $widget.wrap('<div class="course-builder-widget-editable"></div>');
+        }
+        
+        var $editable = $widget.closest(".course-builder-widget-editable");
+        
+        // Добавляем кнопки редактирования при наведении
+        if ($editable.find(".course-builder-edit-overlay").length === 0) {
+          $editable.append(
+            '<div class="course-builder-edit-overlay">' +
+            '<button class="course-builder-edit-widget-btn" data-widget-id="' + widgetId + '">' +
+            '<span class="dashicons dashicons-edit"></span> Редактировать' +
+            '</button>' +
+            '</div>'
+          );
+        }
+      });
+      
+      // Обработчик клика на кнопку редактирования
+      $(document).off("click", ".course-builder-edit-widget-btn").on("click", ".course-builder-edit-widget-btn", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var widgetId = $(this).data("widget-id");
+        CourseBuilderAdmin.editWidget(widgetId);
+      });
+    },
   };
 
   $(document).ready(function () {

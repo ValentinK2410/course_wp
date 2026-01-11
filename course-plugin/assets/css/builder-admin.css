@@ -684,6 +684,82 @@
     animation: pulse 1.5s ease-in-out infinite;
 }
 
+/* Предпросмотр полной страницы */
+.course-builder-page-preview {
+    width: 100%;
+    background: #fff;
+    min-height: 100vh;
+}
+
+.course-builder-page-preview * {
+    max-width: 100%;
+}
+
+/* Редактируемые виджеты на странице */
+.course-builder-widget-editable {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.course-builder-widget-editable:hover {
+    outline: 2px solid #667eea;
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+.course-builder-edit-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(102, 126, 234, 0.1);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    border-radius: 4px;
+}
+
+.course-builder-widget-editable:hover .course-builder-edit-overlay {
+    display: flex;
+}
+
+.course-builder-edit-widget-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transition: all 0.2s ease;
+}
+
+.course-builder-edit-widget-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.course-builder-edit-widget-btn .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.course-builder-preview-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+}
+
 /* Адаптивность */
 @media (max-width: 1200px) {
     .course-builder-sidebar {
