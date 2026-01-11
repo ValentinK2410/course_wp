@@ -465,6 +465,10 @@
       };
 
       console.log("Getting builder data - total sections:", sections.length);
+      
+      // Сохраняем данные для дальнейшего использования
+      CourseBuilderAdmin.builderData = data;
+      
       return data;
     },
 
