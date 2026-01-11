@@ -214,6 +214,11 @@
             if (response.data) {
               console.log("Saved data verified:", response.data);
             }
+            
+            // Вызываем callback, если он передан
+            if (callback && typeof callback === 'function') {
+              callback();
+            }
           } else {
             $saveIndicator
               .text("✗ Ошибка сохранения")
