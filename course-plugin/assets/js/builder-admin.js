@@ -905,21 +905,23 @@
       var widgetType = $widget.data("widget-type");
       var settings = $widget.data("widget-settings") || {};
       var $content = $widget.find(".course-builder-widget-content");
-      
+
       // Показываем индикатор загрузки
-      $content.html('<p style="color: #666; font-style: italic;">Загрузка...</p>');
-      
+      $content.html(
+        '<p style="color: #666; font-style: italic;">Загрузка...</p>'
+      );
+
       // Загружаем реальный контент виджета через AJAX
       $.ajax({
         url: courseBuilderAdmin.ajaxUrl,
-        type: 'POST',
+        type: "POST",
         data: {
-          action: 'course_builder_render_widget',
+          action: "course_builder_render_widget",
           nonce: courseBuilderAdmin.nonce,
           widget_type: widgetType,
-          widget_settings: settings
+          widget_settings: settings,
         },
-        success: function(response) {
+        success: function (response) {
           if (response.success && response.data && response.data.content) {
             // Вставляем реальный контент виджета
             $content.html(response.data.content);
@@ -927,27 +929,39 @@
             // Если не удалось загрузить, показываем текстовое превью
             var displayText = "Widget: " + widgetType;
             if (settings.content) {
-              displayText = settings.content.substring(0, 50) + (settings.content.length > 50 ? "..." : "");
+              displayText =
+                settings.content.substring(0, 50) +
+                (settings.content.length > 50 ? "..." : "");
             } else if (settings.title) {
               displayText = settings.title;
             } else if (settings.text) {
-              displayText = settings.text.substring(0, 50) + (settings.text.length > 50 ? "..." : "");
+              displayText =
+                settings.text.substring(0, 50) +
+                (settings.text.length > 50 ? "..." : "");
             }
-            $content.html('<p>' + displayText + '</p>');
+            $content.html("<p>" + displayText + "</p>");
           }
         },
-        error: function() {
+        error: function () {
           // При ошибке показываем текстовое превью
           var displayText = "Widget: " + widgetType;
           if (settings.content) {
-            displayText = settings.content.substring(0, 50) + (settings.content.length > 50 ? "..." : "");
+            displayText =
+              settings.content.substring(0, 50) +
+              (settings.content.length > 50 ? "..." : "");
           } else if (settings.title) {
             displayText = settings.title;
           } else if (settings.text) {
-            displayText = settings.text.substring(0, 50) + (settings.text.length > 50 ? "..." : "");
+            displayText =
+              settings.text.substring(0, 50) +
+              (settings.text.length > 50 ? "..." : "");
           }
-          $content.html('<p style="color: #dc3232;">Ошибка загрузки. ' + displayText + '</p>');
-        }
+          $content.html(
+            '<p style="color: #dc3232;">Ошибка загрузки. ' +
+              displayText +
+              "</p>"
+          );
+        },
       });
 
       // Показываем основные настройки в превью
@@ -1254,8 +1268,9 @@
       html += '<span class="dashicons dashicons-move"></span>';
       html += '<span class="widget-title">' + widget.type + "</span>";
       html += "</div>";
-      html += '<div class="course-builder-widget-content">';
-      html += "<p>" + displayText + "</p>";
+      html +=
+        '<div class="course-builder-widget-content course-builder-widget-preview">';
+      html += '<p style="color: #666; font-style: italic;">Загрузка...</p>';
       html += "</div>";
       html += '<div class="course-builder-widget-actions">';
       html +=
