@@ -339,7 +339,7 @@
         var $sections = $editor.find(".course-builder-section");
         console.log("Found " + $sections.length + " sections in editor");
 
-      $sections.each(function (index) {
+        $sections.each(function (index) {
         var $section = $(this);
         var sectionId = $section.data("section-id");
 
