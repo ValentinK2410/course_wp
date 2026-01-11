@@ -1205,14 +1205,15 @@
       console.log("Rendering builder data:", data);
       console.log("Data structure:", JSON.stringify(data, null, 2));
 
+      // ВСЕГДА используем предпросмотр страницы - никаких карточек!
       // Загружаем полный предпросмотр страницы с виджетами
       CourseBuilderAdmin.loadPagePreview();
       
       // Сохраняем данные builder для дальнейшего использования
       CourseBuilderAdmin.builderData = data;
       
-      // Старый код рендеринга структуры (оставлен для совместимости, но не используется)
-      if (false && data.sections && data.sections.length > 0) {
+      // Старый код рендеринга карточек полностью отключен
+      if (false) {
         console.log("Found " + data.sections.length + " sections to render");
         var html = "";
         var totalWidgets = 0;
