@@ -1330,13 +1330,13 @@
       
       // Показываем индикатор загрузки
       $("#course-builder-editor").html(
-        '<div class="course-builder-preview-loading" style="padding: 100px; text-align: center; color: #667eea;">' +
-        '<div style="font-size: 18px; margin-bottom: 10px;">Загрузка предпросмотра...</div>' +
-        '<div style="font-size: 14px; color: #6b7280;">Рендеринг страницы курса</div>' +
+        '<div class="course-builder-preview-loading">' +
+        '<div style="font-size: 18px; margin-bottom: 10px; color: #667eea;">Загрузка предпросмотра...</div>' +
+        '<div style="font-size: 14px; color: #6b7280;">Подготовка страницы курса</div>' +
         '</div>'
       );
       
-      // Загружаем полный предпросмотр страницы через AJAX
+      // Получаем URL страницы для предпросмотра
       $.ajax({
         url: courseBuilderAdmin.ajaxUrl,
         type: "POST",
@@ -1346,16 +1346,27 @@
           nonce: courseBuilderAdmin.nonce,
         },
         success: function (response) {
-          if (response.success && response.data && response.data.content) {
-            // Вставляем полный контент страницы
-            $("#course-builder-editor").html(
-              '<div class="course-builder-page-preview">' + response.data.content + '</div>'
-            );
+          if (response.success && response.data && response.data.url) {
+            // Создаем iframe для загрузки реальной страницы
+            var iframeHtml = 
+              '<div class="course-builder-preview-container">' +
+              '<iframe id="course-builder-preview-iframe" ' +
+              'src="' + response.data.url + '" ' +
+              'style="width: 100%; height: 100vh; border: none; background: #fff;" ' +
+              'sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox">' +
+              '</iframe>' +
+              '</div>';
             
-            // Инициализируем редактирование виджетов на странице
-            CourseBuilderAdmin.initPageWidgetEditing();
+            $("#course-builder-editor").html(iframeHtml);
+            
+            // Обрабатываем загрузку iframe
+            $("#course-builder-preview-iframe").on("load", function() {
+              console.log("Page preview loaded successfully");
+              // Инициализируем редактирование виджетов после загрузки
+              CourseBuilderAdmin.initPageWidgetEditing();
+            });
           } else {
-            console.error("Failed to load page preview:", response);
+            console.error("Failed to get preview URL:", response);
             $("#course-builder-editor").html(
               '<div class="course-builder-empty-state"><p>Ошибка загрузки предпросмотра</p></div>'
             );
