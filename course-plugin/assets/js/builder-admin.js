@@ -1350,10 +1350,19 @@
             // Вставляем полный контент страницы
             $("#course-builder-editor").html(response.data.content);
             
-            // Инициализируем редактирование виджетов на странице
+            // Инициализируем редактирование виджетов на странице после небольшой задержки
             setTimeout(function() {
               CourseBuilderAdmin.initPageWidgetEditing();
-            }, 100);
+              
+              // Обновляем отображение виджетов после инициализации
+              $("#course-builder-editor .course-builder-widget").each(function() {
+                var $widget = $(this);
+                var widgetId = $widget.data("widget-id");
+                if (widgetId) {
+                  CourseBuilderAdmin.updateWidgetDisplay($widget);
+                }
+              });
+            }, 200);
           } else {
             console.error("Failed to load page preview:", response);
             $("#course-builder-editor").html(
