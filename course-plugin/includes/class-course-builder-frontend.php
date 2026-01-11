@@ -260,7 +260,14 @@ class Course_Builder_Frontend {
         try {
             $widget_instance = new $widget_class($widget_id, $widget_settings);
             
-            echo '<div class="course-builder-widget course-builder-widget-' . esc_attr($widget_type) . '" id="' . esc_attr($widget_id) . '">';
+            // Добавляем data-атрибуты для редактирования в админке
+            $is_admin = is_admin() || (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && $_POST['action'] === 'course_builder_preview_page');
+            $data_attrs = 'class="course-builder-widget course-builder-widget-' . esc_attr($widget_type) . '" id="' . esc_attr($widget_id) . '"';
+            $data_attrs .= ' data-widget-id="' . esc_attr($widget_id) . '"';
+            $data_attrs .= ' data-widget-type="' . esc_attr($widget_type) . '"';
+            $data_attrs .= ' data-widget-settings="' . esc_attr(json_encode($widget_settings)) . '"';
+            
+            echo '<div ' . $data_attrs . '>';
             $widget_content = $widget_instance->render($widget_settings);
             echo $widget_content;
             echo '</div>';

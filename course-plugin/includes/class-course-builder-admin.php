@@ -706,7 +706,7 @@ class Course_Builder_Admin {
     }
     
     /**
-     * AJAX предпросмотр полной страницы курса - возвращает URL для iframe
+     * AJAX предпросмотр полной страницы курса - возвращает полный HTML страницы
      */
     public function ajax_preview_page() {
         // Проверка nonce
@@ -725,12 +725,135 @@ class Course_Builder_Admin {
             wp_send_json_error(array('message' => __('Не указан ID поста', 'course-plugin')));
         }
         
-        // Возвращаем URL страницы курса для загрузки в iframe
-        $preview_url = get_permalink($post_id);
+        // Устанавливаем глобальные переменные для правильного рендеринга
+        global $post, $wp_query;
+        $post = get_post($post_id);
         
-        // Добавляем параметр для режима предпросмотра (если нужно)
-        $preview_url = add_query_arg('course_builder_preview', '1', $preview_url);
+        if (!$post) {
+            wp_send_json_error(array('message' => __('Пост не найден', 'course-plugin')));
+        }
         
-        wp_send_json_success(array('url' => $preview_url));
+        setup_postdata($post);
+        
+        // Устанавливаем query для правильного рендеринга
+        $wp_query->is_single = true;
+        $wp_query->is_singular = true;
+        $wp_query->queried_object = $post;
+        $wp_query->queried_object_id = $post_id;
+        
+        // Начинаем буферизацию
+        ob_start();
+        
+        // Рендерим контент страницы курса (копируем логику из single-course.php)
+        echo '<div class="course-builder-page-preview">';
+        
+        // Получаем данные курса
+        $course_code = get_post_meta($post_id, '_course_code', true);
+        $course_duration = get_post_meta($post_id, '_course_duration', true);
+        $course_price = get_post_meta($post_id, '_course_price', true);
+        $course_old_price = get_post_meta($post_id, '_course_old_price', true);
+        $course_start_date = get_post_meta($post_id, '_course_start_date', true);
+        $course_video_url = get_post_meta($post_id, '_course_video_url', true);
+        
+        // Получаем преподавателя
+        $teachers = get_the_terms($post_id, 'course_teacher');
+        $teacher_name = '';
+        if ($teachers && !is_wp_error($teachers) && !empty($teachers)) {
+            $teacher_name = $teachers[0]->name;
+        }
+        
+        // Вычисляем скидку
+        $discount = 0;
+        if ($course_old_price && $course_price && $course_price < $course_old_price) {
+            $discount = round((($course_old_price - $course_price) / $course_old_price) * 100);
+        }
+        
+        // Рендерим структуру страницы
+        echo '<div class="single-course-wrapper">';
+        
+        // Большой баннер
+        echo '<div class="course-hero-banner">';
+        echo '<div class="course-hero-content">';
+        echo '<h1 class="course-hero-title">' . mb_strtoupper(get_the_title($post_id), 'UTF-8') . '</h1>';
+        if ($teacher_name) {
+            echo '<p class="course-hero-teacher">' . mb_strtoupper($teacher_name, 'UTF-8') . '</p>';
+        }
+        if ($course_code) {
+            echo '<p class="course-hero-code">' . __('КОД КУРСА:', 'course-plugin') . ' ' . esc_html($course_code) . '</p>';
+        }
+        echo '</div>';
+        if (has_post_thumbnail($post_id)) {
+            echo '<div class="course-hero-image">';
+            echo get_the_post_thumbnail($post_id, 'full');
+            echo '</div>';
+        }
+        echo '</div>';
+        
+        echo '<div class="single-course-container">';
+        echo '<main class="single-course-main">';
+        
+        // Код курса и название
+        if ($course_code) {
+            echo '<div class="course-code-title">';
+            echo '<span class="course-code">' . esc_html($course_code) . '</span>';
+            echo '<h2>' . get_the_title($post_id) . '</h2>';
+            echo '</div>';
+        }
+        
+        // Описание курса
+        echo '<div class="course-description-section">';
+        echo '<h3>' . __('Описание курса:', 'course-plugin') . '</h3>';
+        echo '<div class="course-description">';
+        echo apply_filters('the_content', $post->post_content);
+        echo '</div>';
+        echo '</div>';
+        
+        // Course Builder контент - здесь будут виджеты
+        if (class_exists('Course_Builder_Frontend')) {
+            $builder_frontend = Course_Builder_Frontend::get_instance();
+            $builder_content = $builder_frontend->render($post_id);
+            
+            if (!empty($builder_content)) {
+                echo '<div class="course-builder-content-wrapper">';
+                echo $builder_content;
+                echo '</div>';
+            }
+        }
+        
+        echo '</main>';
+        echo '</div>';
+        echo '</div>';
+        echo '</div>';
+        
+        // Fallback если что-то пошло не так
+        if (false) {
+            // Fallback - рендерим базовую структуру
+            echo '<div class="course-builder-page-preview">';
+            echo '<div class="single-course-wrapper">';
+            echo '<div class="single-course-container">';
+            echo '<main class="single-course-main">';
+            
+            if (class_exists('Course_Builder_Frontend')) {
+                $builder_frontend = Course_Builder_Frontend::get_instance();
+                $builder_content = $builder_frontend->render($post_id);
+                
+                if (!empty($builder_content)) {
+                    echo '<div class="course-builder-content-wrapper">';
+                    echo $builder_content;
+                    echo '</div>';
+                }
+            }
+            
+            echo '</main>';
+            echo '</div>';
+            echo '</div>';
+            echo '</div>';
+        }
+        
+        wp_reset_postdata();
+        
+        $content = ob_get_clean();
+        
+        wp_send_json_success(array('content' => $content));
     }
 }

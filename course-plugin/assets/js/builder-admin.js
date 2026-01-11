@@ -1141,11 +1141,11 @@
       console.log("Rendering builder data:", data);
       console.log("Data structure:", JSON.stringify(data, null, 2));
 
-      // Загружаем полный предпросмотр страницы
+      // Загружаем полный предпросмотр страницы с виджетами
       CourseBuilderAdmin.loadPagePreview();
       
-      // Также рендерим структуру builder для редактирования (скрытую)
-      if (data.sections && data.sections.length > 0) {
+      // Сохраняем данные builder для дальнейшего использования
+      CourseBuilderAdmin.builderData = data;
         console.log("Found " + data.sections.length + " sections to render");
         var html = "";
         var totalWidgets = 0;
@@ -1332,11 +1332,11 @@
       $("#course-builder-editor").html(
         '<div class="course-builder-preview-loading">' +
         '<div style="font-size: 18px; margin-bottom: 10px; color: #667eea;">Загрузка предпросмотра...</div>' +
-        '<div style="font-size: 14px; color: #6b7280;">Подготовка страницы курса</div>' +
+        '<div style="font-size: 14px; color: #6b7280;">Рендеринг страницы курса</div>' +
         '</div>'
       );
       
-      // Получаем URL страницы для предпросмотра
+      // Загружаем полный HTML страницы через AJAX
       $.ajax({
         url: courseBuilderAdmin.ajaxUrl,
         type: "POST",
@@ -1346,27 +1346,16 @@
           nonce: courseBuilderAdmin.nonce,
         },
         success: function (response) {
-          if (response.success && response.data && response.data.url) {
-            // Создаем iframe для загрузки реальной страницы
-            var iframeHtml = 
-              '<div class="course-builder-preview-container">' +
-              '<iframe id="course-builder-preview-iframe" ' +
-              'src="' + response.data.url + '" ' +
-              'style="width: 100%; height: 100vh; border: none; background: #fff;" ' +
-              'sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox">' +
-              '</iframe>' +
-              '</div>';
+          if (response.success && response.data && response.data.content) {
+            // Вставляем полный контент страницы
+            $("#course-builder-editor").html(response.data.content);
             
-            $("#course-builder-editor").html(iframeHtml);
-            
-            // Обрабатываем загрузку iframe
-            $("#course-builder-preview-iframe").on("load", function() {
-              console.log("Page preview loaded successfully");
-              // Инициализируем редактирование виджетов после загрузки
+            // Инициализируем редактирование виджетов на странице
+            setTimeout(function() {
               CourseBuilderAdmin.initPageWidgetEditing();
-            });
+            }, 100);
           } else {
-            console.error("Failed to get preview URL:", response);
+            console.error("Failed to load page preview:", response);
             $("#course-builder-editor").html(
               '<div class="course-builder-empty-state"><p>Ошибка загрузки предпросмотра</p></div>'
             );
@@ -1387,20 +1376,27 @@
         var $widget = $(this);
         var widgetId = $widget.attr("id");
         
-        if (!widgetId) return;
+        if (!widgetId) {
+          // Генерируем ID если его нет
+          widgetId = "widget_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+          $widget.attr("id", widgetId);
+        }
         
-        // Добавляем обертку для редактирования
+        // Добавляем обертку для редактирования, если её еще нет
         if (!$widget.closest(".course-builder-widget-editable").length) {
-          $widget.wrap('<div class="course-builder-widget-editable"></div>');
+          $widget.wrap('<div class="course-builder-widget-editable" data-widget-id="' + widgetId + '"></div>');
         }
         
         var $editable = $widget.closest(".course-builder-widget-editable");
         
         // Добавляем кнопки редактирования при наведении
         if ($editable.find(".course-builder-edit-overlay").length === 0) {
+          var widgetType = $widget.data("widget-type") || $widget.attr("class").match(/course-builder-widget-(\w+)/);
+          widgetType = widgetType ? (Array.isArray(widgetType) ? widgetType[1] : widgetType) : "unknown";
+          
           $editable.append(
             '<div class="course-builder-edit-overlay">' +
-            '<button class="course-builder-edit-widget-btn" data-widget-id="' + widgetId + '">' +
+            '<button class="course-builder-edit-widget-btn" data-widget-id="' + widgetId + '" data-widget-type="' + widgetType + '">' +
             '<span class="dashicons dashicons-edit"></span> Редактировать' +
             '</button>' +
             '</div>'
