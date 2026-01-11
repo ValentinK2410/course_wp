@@ -1356,15 +1356,8 @@
             // Инициализируем редактирование виджетов на странице после небольшой задержки
             setTimeout(function() {
               CourseBuilderAdmin.initPageWidgetEditing();
-              
-              // Обновляем отображение виджетов после инициализации
-              $("#course-builder-editor .course-builder-widget").each(function() {
-                var $widget = $(this);
-                var widgetId = $widget.data("widget-id");
-                if (widgetId) {
-                  CourseBuilderAdmin.updateWidgetDisplay($widget);
-                }
-              });
+              // Виджеты уже отрендерены как реальный контент через ajax_preview_page,
+              // не нужно вызывать updateWidgetDisplay, который предназначен для карточек
             }, 200);
           } else {
             console.error("Failed to load page preview:", response);
