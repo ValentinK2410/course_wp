@@ -119,30 +119,43 @@ while (have_posts()) : the_post();
             <!-- Course Builder контент -->
             <?php
             // Проверяем, есть ли данные Course Builder
+            $post_id = get_the_ID();
+            error_log('Course Builder Template: Starting render for post ' . $post_id);
+            error_log('Course Builder Template: Class exists? ' . (class_exists('Course_Builder_Frontend') ? 'yes' : 'no'));
+            
             if (class_exists('Course_Builder_Frontend')) {
-                $post_id = get_the_ID();
+                error_log('Course Builder Template: Getting instance');
                 $builder_frontend = Course_Builder_Frontend::get_instance();
                 
-                // Отладочная информация (только для администраторов)
-                if (current_user_can('manage_options') && defined('WP_DEBUG') && WP_DEBUG) {
-                    $builder = Course_Builder::get_instance();
-                    $builder_data = $builder->get_builder_data($post_id);
-                    $is_enabled = $builder->is_builder_enabled($post_id);
-                    error_log('Course Builder Frontend Debug - Post ID: ' . $post_id);
-                    error_log('Course Builder Frontend Debug - Builder enabled: ' . ($is_enabled ? 'yes' : 'no'));
-                    error_log('Course Builder Frontend Debug - Builder data sections count: ' . (isset($builder_data['sections']) ? count($builder_data['sections']) : 0));
-                }
+                // Отладочная информация
+                $builder = Course_Builder::get_instance();
+                $builder_data = $builder->get_builder_data($post_id);
+                $is_enabled = $builder->is_builder_enabled($post_id);
+                error_log('Course Builder Template - Post ID: ' . $post_id);
+                error_log('Course Builder Template - Builder enabled: ' . ($is_enabled ? 'yes' : 'no'));
+                error_log('Course Builder Template - Builder data sections count: ' . (isset($builder_data['sections']) ? count($builder_data['sections']) : 0));
                 
-                $builder_content = $builder_frontend->render($post_id);
-                
-                if (!empty($builder_content)) {
-                    echo '<div class="course-builder-content-wrapper">';
-                    echo $builder_content;
-                    echo '</div>';
-                } elseif (current_user_can('manage_options')) {
-                    // Показываем отладочную информацию только администраторам
-                    echo '<!-- Course Builder: Контент пуст для поста ID ' . esc_html($post_id) . ' -->';
+                if (isset($builder_data['sections']) && !empty($builder_data['sections'])) {
+                    error_log('Course Builder Template: Calling render() method');
+                    $builder_content = $builder_frontend->render($post_id);
+                    error_log('Course Builder Template: Render returned content length: ' . strlen($builder_content));
+                    
+                    if (!empty($builder_content)) {
+                        echo '<div class="course-builder-content-wrapper">';
+                        echo $builder_content;
+                        echo '</div>';
+                        error_log('Course Builder Template: Content outputted');
+                    } else {
+                        error_log('Course Builder Template: Content is empty after render');
+                        if (current_user_can('manage_options')) {
+                            echo '<!-- Course Builder: Контент пуст для поста ID ' . esc_html($post_id) . ' -->';
+                        }
+                    }
+                } else {
+                    error_log('Course Builder Template: No sections in builder data');
                 }
+            } else {
+                error_log('Course Builder Template: Course_Builder_Frontend class not found');
             }
             ?>
             
