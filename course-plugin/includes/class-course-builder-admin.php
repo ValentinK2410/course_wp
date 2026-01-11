@@ -57,6 +57,7 @@ class Course_Builder_Admin {
         add_action('wp_ajax_course_builder_get_widgets', array($this, 'ajax_get_widgets'));
         add_action('wp_ajax_course_builder_enable', array($this, 'ajax_enable_builder'));
         add_action('wp_ajax_course_builder_get_widget_settings', array($this, 'ajax_get_widget_settings'));
+        add_action('wp_ajax_course_builder_render_widget', array($this, 'ajax_render_widget'));
     }
     
     /**
@@ -491,11 +492,19 @@ class Course_Builder_Admin {
             return;
         }
         
-        // Стили
+        // Стили админки
         wp_enqueue_style(
             'course-builder-admin',
             COURSE_PLUGIN_URL . 'assets/css/builder-admin.css',
             array(),
+            COURSE_PLUGIN_VERSION
+        );
+        
+        // Фронтенд стили для предпросмотра в редакторе
+        wp_enqueue_style(
+            'course-builder-frontend',
+            COURSE_PLUGIN_URL . 'assets/css/builder-frontend.css',
+            array('course-builder-admin'),
             COURSE_PLUGIN_VERSION
         );
         

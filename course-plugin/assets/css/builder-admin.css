@@ -227,6 +227,52 @@
     padding: 0;
 }
 
+/* Стили для предпросмотра виджетов в редакторе - используем фронтенд стили */
+.course-builder-editor .course-builder-section {
+    background: #fff;
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.course-builder-editor .course-builder-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.course-builder-editor .course-builder-row {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.course-builder-editor .course-builder-column {
+    flex: 1;
+    min-width: 0;
+    border: 2px dashed #ddd;
+    padding: 15px;
+    background: #fafafa;
+    border-radius: 4px;
+}
+
+.course-builder-editor .course-builder-column:hover {
+    border-color: #0073aa;
+}
+
+.course-builder-editor .course-builder-widget {
+    background: #fff;
+    border: 1px solid #ddd;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    position: relative;
+}
+
+.course-builder-editor .course-builder-widget-preview {
+    padding: 15px;
+}
+
 .course-builder-editor-wrapper {
     display: flex;
     position: relative;
