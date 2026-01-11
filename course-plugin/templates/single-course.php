@@ -120,13 +120,28 @@ while (have_posts()) : the_post();
             <?php
             // Проверяем, есть ли данные Course Builder
             if (class_exists('Course_Builder_Frontend')) {
+                $post_id = get_the_ID();
                 $builder_frontend = Course_Builder_Frontend::get_instance();
-                $builder_content = $builder_frontend->render(get_the_ID());
+                
+                // Отладочная информация (только для администраторов)
+                if (current_user_can('manage_options') && defined('WP_DEBUG') && WP_DEBUG) {
+                    $builder = Course_Builder::get_instance();
+                    $builder_data = $builder->get_builder_data($post_id);
+                    $is_enabled = $builder->is_builder_enabled($post_id);
+                    error_log('Course Builder Frontend Debug - Post ID: ' . $post_id);
+                    error_log('Course Builder Frontend Debug - Builder enabled: ' . ($is_enabled ? 'yes' : 'no'));
+                    error_log('Course Builder Frontend Debug - Builder data sections count: ' . (isset($builder_data['sections']) ? count($builder_data['sections']) : 0));
+                }
+                
+                $builder_content = $builder_frontend->render($post_id);
                 
                 if (!empty($builder_content)) {
                     echo '<div class="course-builder-content-wrapper">';
                     echo $builder_content;
                     echo '</div>';
+                } elseif (current_user_can('manage_options')) {
+                    // Показываем отладочную информацию только администраторам
+                    echo '<!-- Course Builder: Контент пуст для поста ID ' . esc_html($post_id) . ' -->';
                 }
             }
             ?>

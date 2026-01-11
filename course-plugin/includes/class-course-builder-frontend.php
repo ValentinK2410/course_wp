@@ -104,19 +104,36 @@ class Course_Builder_Frontend {
         }
         
         if (!$post_id) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Course Builder Frontend: No post ID provided');
+            }
             return '';
         }
         
         $builder = Course_Builder::get_instance();
         $data = $builder->get_builder_data($post_id);
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Course Builder Frontend: Rendering for post ' . $post_id);
+            error_log('Course Builder Frontend: Data sections count: ' . (isset($data['sections']) ? count($data['sections']) : 0));
+        }
+        
         if (empty($data['sections'])) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Course Builder Frontend: No sections found, returning empty');
+            }
             return '';
         }
         
         ob_start();
         $this->render_sections($data['sections']);
-        return ob_get_clean();
+        $content = ob_get_clean();
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Course Builder Frontend: Rendered content length: ' . strlen($content));
+        }
+        
+        return $content;
     }
     
     /**
@@ -198,14 +215,28 @@ class Course_Builder_Frontend {
         $widget_type = isset($widget['type']) ? $widget['type'] : '';
         $widget_settings = isset($widget['settings']) ? $widget['settings'] : array();
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Course Builder Frontend: Rendering widget ' . $widget_id . ' of type ' . $widget_type);
+        }
+        
         if (!$widget_type) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Course Builder Frontend: Widget has no type');
+            }
             return;
         }
         
         // Получаем класс виджета
         $widget_class = Course_Builder::get_widget_class($widget_type);
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Course Builder Frontend: Widget class: ' . ($widget_class ? $widget_class : 'not found'));
+        }
+        
         if (!$widget_class || !class_exists($widget_class)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Course Builder Frontend: Widget class not found or does not exist: ' . ($widget_class ? $widget_class : 'null'));
+            }
             return;
         }
         
@@ -214,11 +245,17 @@ class Course_Builder_Frontend {
             $widget_instance = new $widget_class($widget_id, $widget_settings);
             
             echo '<div class="course-builder-widget course-builder-widget-' . esc_attr($widget_type) . '" id="' . esc_attr($widget_id) . '">';
-            echo $widget_instance->render($widget_settings);
+            $widget_content = $widget_instance->render($widget_settings);
+            echo $widget_content;
             echo '</div>';
+            
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Course Builder Frontend: Widget rendered successfully, content length: ' . strlen($widget_content));
+            }
         } catch (Exception $e) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('Course Builder: Ошибка рендеринга виджета ' . $widget_type . ': ' . $e->getMessage());
+                error_log('Course Builder Frontend: Ошибка рендеринга виджета ' . $widget_type . ': ' . $e->getMessage());
+                error_log('Course Builder Frontend: Stack trace: ' . $e->getTraceAsString());
             }
         }
     }
