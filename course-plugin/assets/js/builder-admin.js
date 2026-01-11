@@ -620,9 +620,29 @@
             var html = "";
             $.each(response.data.fields, function (index, field) {
               var fieldValue = currentSettings[field.name];
-              if (fieldValue === undefined || fieldValue === null) {
-                fieldValue = field.default !== undefined ? field.default : "";
+              
+              // Если значение не найдено, используем значение по умолчанию из виджета
+              if (fieldValue === undefined || fieldValue === null || fieldValue === '') {
+                // Получаем значение по умолчанию из виджета
+                var widgetClass = Course_Builder.get_widget_class ? Course_Builder.get_widget_class(widgetType) : null;
+                if (widgetClass && typeof window[widgetClass] !== 'undefined') {
+                  var defaults = window[widgetClass].get_defaults ? window[widgetClass].get_defaults() : {};
+                  fieldValue = defaults[field.name] !== undefined ? defaults[field.name] : (field.default !== undefined ? field.default : "");
+                } else {
+                  fieldValue = field.default !== undefined ? field.default : "";
+                }
               }
+              
+              // Нормализуем значения checkbox (true/false/1/0 -> 1/0)
+              if (field.type === 'checkbox') {
+                if (fieldValue === true || fieldValue === 'true' || fieldValue === 1 || fieldValue === '1') {
+                  fieldValue = 1;
+                } else {
+                  fieldValue = 0;
+                }
+              }
+              
+              console.log("Field:", field.name, "Value:", fieldValue, "Type:", field.type);
               html += CourseBuilderAdmin.renderSettingsField(field, fieldValue);
             });
             $("#course-builder-widget-settings").html(html);
