@@ -723,10 +723,11 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     gap: 2px;
     flex-direction: row;
+    white-space: nowrap;
 }
 
 .course-builder-widget-editable:hover .course-builder-widget-controls {
-    display: flex;
+    display: flex !important;
 }
 
 .course-builder-control-btn {

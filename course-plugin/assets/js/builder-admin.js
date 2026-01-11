@@ -1383,21 +1383,40 @@
     },
 
     initPageWidgetEditing: function () {
+      console.log("Initializing page widget editing...");
+      
       // Добавляем возможность редактирования виджетов прямо на странице
-      $("#course-builder-editor .course-builder-widget").each(function () {
+      var widgetCount = $("#course-builder-editor .course-builder-widget").length;
+      console.log("Found " + widgetCount + " widgets to initialize");
+      
+      $("#course-builder-editor .course-builder-widget").each(function (index) {
         var $widget = $(this);
-        var widgetId = $widget.attr("id");
+        var widgetId = $widget.attr("id") || $widget.data("widget-id");
         var widgetType = $widget.data("widget-type");
+        
+        console.log("Processing widget " + (index + 1) + ":", widgetId, widgetType);
         
         if (!widgetId) {
           // Генерируем ID если его нет
-          widgetId = "widget_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+          widgetId = "widget_" + Date.now() + "_" + index;
           $widget.attr("id", widgetId);
+          $widget.attr("data-widget-id", widgetId);
+        }
+        
+        if (!widgetType) {
+          // Пытаемся определить тип из класса
+          var classes = $widget.attr("class") || "";
+          var match = classes.match(/course-builder-widget-(\w+)/);
+          if (match) {
+            widgetType = match[1];
+            $widget.attr("data-widget-type", widgetType);
+          }
         }
         
         // Добавляем обертку для редактирования, если её еще нет
         if (!$widget.closest(".course-builder-widget-editable").length) {
-          $widget.wrap('<div class="course-builder-widget-editable" data-widget-id="' + widgetId + '" data-widget-type="' + widgetType + '"></div>');
+          $widget.wrap('<div class="course-builder-widget-editable" data-widget-id="' + widgetId + '" data-widget-type="' + (widgetType || 'unknown') + '"></div>');
+          console.log("Wrapped widget " + widgetId + " in editable container");
         }
         
         var $editable = $widget.closest(".course-builder-widget-editable");
@@ -1420,13 +1439,17 @@
             '</button>' +
             '</div>'
           );
+          console.log("Added controls for widget " + widgetId);
         }
         
         // Для виджетов текста и заголовков добавляем инлайн-редактирование
         if (widgetType === 'text' || widgetType === 'heading') {
           CourseBuilderAdmin.initInlineEditing($widget, widgetType);
+          console.log("Initialized inline editing for widget " + widgetId + " (type: " + widgetType + ")");
         }
       });
+      
+      console.log("Page widget editing initialization complete");
       
       // Обработчик клика на кнопку редактирования
       $(document).off("click", ".course-builder-control-edit").on("click", ".course-builder-control-edit", function (e) {
@@ -1451,41 +1474,59 @@
       var $editable = $widget.closest(".course-builder-widget-editable");
       var settings = CourseBuilderAdmin.getWidgetSettings($widget);
       
+      console.log("Initializing inline editing for widget type:", widgetType, "settings:", settings);
+      
       if (widgetType === 'heading') {
         // Инлайн-редактирование заголовка
         var $heading = $widget.find('h1, h2, h3, h4, h5, h6').first();
         if ($heading.length) {
+          console.log("Found heading element:", $heading[0]);
           $heading.attr('contenteditable', 'true')
             .attr('data-placeholder', 'Введите текст заголовка')
             .addClass('course-builder-inline-editable');
           
           // Обработчик изменения текста
-          $heading.on('blur', function() {
+          $heading.off('blur.inline-edit').on('blur.inline-edit', function() {
             var newText = $(this).text().trim();
+            console.log("Heading text changed:", newText);
             if (newText !== settings.text) {
               settings.text = newText;
               CourseBuilderAdmin.updateWidgetSettings($widget, settings);
               CourseBuilderAdmin.saveBuilder();
             }
           });
+        } else {
+          console.warn("No heading element found in widget");
         }
       } else if (widgetType === 'text') {
         // Инлайн-редактирование текста
         var $textContent = $widget.find('.course-builder-text').first();
+        if ($textContent.length === 0) {
+          // Если класс не найден, используем сам виджет или его содержимое
+          $textContent = $widget.children().first();
+          if ($textContent.length === 0) {
+            $textContent = $widget;
+          }
+        }
+        
         if ($textContent.length) {
+          console.log("Found text content element:", $textContent[0]);
           $textContent.attr('contenteditable', 'true')
             .attr('data-placeholder', 'Введите текст')
             .addClass('course-builder-inline-editable');
           
           // Обработчик изменения текста
-          $textContent.on('blur', function() {
+          $textContent.off('blur.inline-edit').on('blur.inline-edit', function() {
             var newContent = $(this).html();
+            console.log("Text content changed:", newContent);
             if (newContent !== settings.content) {
               settings.content = newContent;
               CourseBuilderAdmin.updateWidgetSettings($widget, settings);
               CourseBuilderAdmin.saveBuilder();
             }
           });
+        } else {
+          console.warn("No text content element found in widget");
         }
       }
     },
