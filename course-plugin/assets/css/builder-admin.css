@@ -704,57 +704,113 @@
 }
 
 .course-builder-widget-editable:hover {
-    outline: 2px solid #667eea;
+    outline: 2px dashed #667eea;
     outline-offset: 2px;
     border-radius: 4px;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
-.course-builder-edit-overlay {
+/* Маленькие кнопки управления сверху (как в Elementor) */
+.course-builder-widget-controls {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(102, 126, 234, 0.05);
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
     display: none;
+    background: #667eea;
+    border-radius: 4px;
+    padding: 2px;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    gap: 2px;
+    flex-direction: row;
+}
+
+.course-builder-widget-editable:hover .course-builder-widget-controls {
+    display: flex;
+}
+
+.course-builder-control-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 4px 6px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
-    border-radius: 4px;
-    backdrop-filter: blur(2px);
-}
-
-.course-builder-widget-editable:hover .course-builder-edit-overlay {
-    display: flex;
-}
-
-.course-builder-edit-widget-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     transition: all 0.2s ease;
-    z-index: 1001;
+    border-radius: 3px;
+    min-width: 24px;
+    height: 24px;
 }
 
-.course-builder-edit-widget-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+.course-builder-control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
-.course-builder-edit-widget-btn .dashicons {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+.course-builder-control-btn .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+}
+
+/* Инлайн-редактирование */
+.course-builder-inline-editable {
+    position: relative;
+    min-height: 1.5em;
+    outline: none;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.course-builder-inline-editable:focus {
+    background: rgba(102, 126, 234, 0.05);
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.course-builder-inline-editable:empty:before {
+    content: attr(data-placeholder);
+    color: #999;
+    font-style: italic;
+}
+
+/* Для заголовков - стиль как на картинке */
+.course-builder-widget-editable[data-widget-type="heading"] .course-builder-heading {
+    position: relative;
+    padding-right: 40px;
+}
+
+.course-builder-widget-editable[data-widget-type="heading"]:hover .course-builder-heading:after {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>');
+    background-size: 16px;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+/* Для текста - инпут поле как на картинке */
+.course-builder-widget-editable[data-widget-type="text"] .course-builder-text {
+    position: relative;
+}
+
+.course-builder-widget-editable[data-widget-type="text"] .course-builder-text:focus {
+    background: #fff;
+    border: 2px solid #667eea;
+    border-radius: 4px;
+    padding: 8px 40px 8px 12px;
 }
 
 /* Редактируемые виджеты на странице */

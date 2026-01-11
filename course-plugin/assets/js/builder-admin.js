@@ -1387,6 +1387,7 @@
       $("#course-builder-editor .course-builder-widget").each(function () {
         var $widget = $(this);
         var widgetId = $widget.attr("id");
+        var widgetType = $widget.data("widget-type");
         
         if (!widgetId) {
           // Генерируем ID если его нет
@@ -1396,33 +1397,116 @@
         
         // Добавляем обертку для редактирования, если её еще нет
         if (!$widget.closest(".course-builder-widget-editable").length) {
-          $widget.wrap('<div class="course-builder-widget-editable" data-widget-id="' + widgetId + '"></div>');
+          $widget.wrap('<div class="course-builder-widget-editable" data-widget-id="' + widgetId + '" data-widget-type="' + widgetType + '"></div>');
         }
         
         var $editable = $widget.closest(".course-builder-widget-editable");
         
-        // Добавляем кнопки редактирования при наведении
-        if ($editable.find(".course-builder-edit-overlay").length === 0) {
-          var widgetType = $widget.data("widget-type") || $widget.attr("class").match(/course-builder-widget-(\w+)/);
-          widgetType = widgetType ? (Array.isArray(widgetType) ? widgetType[1] : widgetType) : "unknown";
-          
-          $editable.append(
-            '<div class="course-builder-edit-overlay">' +
-            '<button class="course-builder-edit-widget-btn" data-widget-id="' + widgetId + '" data-widget-type="' + widgetType + '">' +
-            '<span class="dashicons dashicons-edit"></span> Редактировать' +
+        // Добавляем маленькие кнопки управления сверху (как в Elementor)
+        if ($editable.find(".course-builder-widget-controls").length === 0) {
+          $editable.prepend(
+            '<div class="course-builder-widget-controls">' +
+            '<button class="course-builder-control-btn course-builder-control-add" title="Добавить">' +
+            '<span class="dashicons dashicons-plus-alt"></span>' +
+            '</button>' +
+            '<button class="course-builder-control-btn course-builder-control-menu" title="Меню">' +
+            '<span class="dashicons dashicons-menu-alt"></span>' +
+            '</button>' +
+            '<button class="course-builder-control-btn course-builder-control-edit" data-widget-id="' + widgetId + '" title="Редактировать">' +
+            '<span class="dashicons dashicons-edit"></span>' +
+            '</button>' +
+            '<button class="course-builder-control-btn course-builder-control-delete" data-widget-id="' + widgetId + '" title="Удалить">' +
+            '<span class="dashicons dashicons-dismiss"></span>' +
             '</button>' +
             '</div>'
           );
         }
+        
+        // Для виджетов текста и заголовков добавляем инлайн-редактирование
+        if (widgetType === 'text' || widgetType === 'heading') {
+          CourseBuilderAdmin.initInlineEditing($widget, widgetType);
+        }
       });
       
       // Обработчик клика на кнопку редактирования
-      $(document).off("click", ".course-builder-edit-widget-btn").on("click", ".course-builder-edit-widget-btn", function (e) {
+      $(document).off("click", ".course-builder-control-edit").on("click", ".course-builder-control-edit", function (e) {
         e.preventDefault();
         e.stopPropagation();
         var widgetId = $(this).data("widget-id");
         CourseBuilderAdmin.editWidget(widgetId);
       });
+      
+      // Обработчик клика на кнопку удаления
+      $(document).off("click", ".course-builder-control-delete").on("click", ".course-builder-control-delete", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var widgetId = $(this).data("widget-id");
+        if (confirm("Вы уверены, что хотите удалить этот виджет?")) {
+          CourseBuilderAdmin.deleteWidget(widgetId);
+        }
+      });
+    },
+    
+    initInlineEditing: function ($widget, widgetType) {
+      var $editable = $widget.closest(".course-builder-widget-editable");
+      var settings = CourseBuilderAdmin.getWidgetSettings($widget);
+      
+      if (widgetType === 'heading') {
+        // Инлайн-редактирование заголовка
+        var $heading = $widget.find('h1, h2, h3, h4, h5, h6').first();
+        if ($heading.length) {
+          $heading.attr('contenteditable', 'true')
+            .attr('data-placeholder', 'Введите текст заголовка')
+            .addClass('course-builder-inline-editable');
+          
+          // Обработчик изменения текста
+          $heading.on('blur', function() {
+            var newText = $(this).text().trim();
+            if (newText !== settings.text) {
+              settings.text = newText;
+              CourseBuilderAdmin.updateWidgetSettings($widget, settings);
+              CourseBuilderAdmin.saveBuilder();
+            }
+          });
+        }
+      } else if (widgetType === 'text') {
+        // Инлайн-редактирование текста
+        var $textContent = $widget.find('.course-builder-text').first();
+        if ($textContent.length) {
+          $textContent.attr('contenteditable', 'true')
+            .attr('data-placeholder', 'Введите текст')
+            .addClass('course-builder-inline-editable');
+          
+          // Обработчик изменения текста
+          $textContent.on('blur', function() {
+            var newContent = $(this).html();
+            if (newContent !== settings.content) {
+              settings.content = newContent;
+              CourseBuilderAdmin.updateWidgetSettings($widget, settings);
+              CourseBuilderAdmin.saveBuilder();
+            }
+          });
+        }
+      }
+    },
+    
+    updateWidgetSettings: function ($widget, settings) {
+      // Обновляем data-атрибут с настройками
+      var settingsJson = JSON.stringify(settings);
+      var settingsAttr = $('<div>').text(settingsJson).html();
+      $widget.attr('data-widget-settings', settingsAttr);
+      $widget.data('widget-settings', settings);
+      
+      // Обновляем отображение виджета
+      CourseBuilderAdmin.updateWidgetDisplay($widget);
+    },
+    
+    deleteWidget: function (widgetId) {
+      var $widget = $('.course-builder-widget[data-widget-id="' + widgetId + '"]');
+      if ($widget.length) {
+        $widget.closest('.course-builder-widget-editable').remove();
+        CourseBuilderAdmin.saveBuilder();
+      }
     },
   };
 
