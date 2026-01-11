@@ -2,7 +2,7 @@
 # Скрипт для обновления course-plugin из GitHub (выполняется на сервере)
 
 PLUGIN_DIR="/var/www/www-root/data/www/site.dekan.pro/wp-content/plugins/course-plugin"
-GITHUB_REPO="git@github.com:ValentinK2410/course_wp.git"
+GITHUB_REPO="https://github.com/ValentinK2410/course_wp.git"
 TEMP_DIR="/tmp/course_wp_update_$$"
 
 echo "=== Обновление course-plugin из GitHub ==="
