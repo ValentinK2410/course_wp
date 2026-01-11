@@ -4,8 +4,9 @@
  * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
  * Version: 1.0.0
- * Author: valentink2410
+ * Author: Кузьменко Валентин (Valentink2410)
  * Author URI: https://github.com/ValentinK2410
+ * Copyright: Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: course-plugin

@@ -1,6 +1,9 @@
 <?php
 /**
  * Шаблон для шорткода курсов
+ * 
+ * @copyright Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
+ * @author Кузьменко Валентин (Valentink2410)
  */
 
 if (!defined('ABSPATH')) {

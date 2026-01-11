@@ -9,6 +9,9 @@
  * 2. Откройте в браузере: https://site.dekan.pro/test-course-sync.php
  * 3. Проверьте вывод
  * 4. УДАЛИТЕ файл после использования!
+ * 
+ * @copyright Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
+ * @author Кузьменко Валентин (Valentink2410)
  */
 
 // Определяем путь к корню WordPress

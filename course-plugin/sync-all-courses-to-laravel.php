@@ -9,6 +9,9 @@
  * 2. Откройте в браузере: https://site.dekan.pro/sync-all-courses-to-laravel.php
  * 3. Дождитесь завершения синхронизации
  * 4. УДАЛИТЕ файл после использования!
+ * 
+ * @copyright Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
+ * @author Кузьменко Валентин (Valentink2410)
  */
 
 // Загружаем WordPress

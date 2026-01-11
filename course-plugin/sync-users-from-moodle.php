@@ -8,6 +8,9 @@
  * 3. Или запустите через командную строку: php sync-users-from-moodle.php
  * 
  * ВАЖНО: После использования удалите этот файл с сервера!
+ * 
+ * @copyright Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
+ * @author Кузьменко Валентин (Valentink2410)
  */
 
 // Загружаем WordPress
