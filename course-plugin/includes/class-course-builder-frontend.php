@@ -79,7 +79,19 @@ class Course_Builder_Frontend {
             return false;
         }
         
-        return Course_Builder::get_instance()->is_builder_enabled($post->ID);
+        // Проверяем, включен ли builder или есть ли данные builder
+        $builder = Course_Builder::get_instance();
+        if ($builder->is_builder_enabled($post->ID)) {
+            return true;
+        }
+        
+        // Проверяем, есть ли данные builder (даже если формально не включен)
+        $data = $builder->get_builder_data($post->ID);
+        if (!empty($data['sections'])) {
+            return true;
+        }
+        
+        return false;
     }
     
     /**
