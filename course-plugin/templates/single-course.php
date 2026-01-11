@@ -116,22 +116,6 @@ while (have_posts()) : the_post();
                 </div>
             </div>
             
-            <!-- Course Builder контент -->
-            <?php
-            // Проверяем, есть ли данные Course Builder
-            if (class_exists('Course_Builder_Frontend')) {
-                $post_id = get_the_ID();
-                $builder_frontend = Course_Builder_Frontend::get_instance();
-                $builder_content = $builder_frontend->render($post_id);
-                
-                if (!empty($builder_content)) {
-                    echo '<div class="course-builder-content-wrapper">';
-                    echo $builder_content;
-                    echo '</div>';
-                }
-            }
-            ?>
-            
             <!-- Цели и задачи курса -->
             <?php if ($course_cognitive_goals || $course_emotional_goals || $course_psychomotor_goals) : ?>
                 <div class="course-goals-section">
