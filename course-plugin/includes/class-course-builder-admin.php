@@ -813,11 +813,17 @@ class Course_Builder_Admin {
             $builder_frontend = Course_Builder_Frontend::get_instance();
             $builder_content = $builder_frontend->render($post_id);
             
+            // Всегда показываем обертку, даже если контент пустой (для отладки)
+            echo '<div class="course-builder-content-wrapper" id="course-builder-preview-content">';
             if (!empty($builder_content)) {
-                echo '<div class="course-builder-content-wrapper">';
                 echo $builder_content;
+            } else {
+                // Показываем сообщение, если виджетов нет
+                echo '<div class="course-builder-empty-message" style="padding: 20px; text-align: center; color: #999; border: 2px dashed #ddd; border-radius: 4px; margin: 20px 0;">';
+                echo '<p>' . __('Виджеты Course Builder не найдены. Добавьте виджеты из боковой панели.', 'course-plugin') . '</p>';
                 echo '</div>';
             }
+            echo '</div>';
         }
         
         echo '</main>';
