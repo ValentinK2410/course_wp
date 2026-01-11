@@ -661,4 +661,46 @@ class Course_Builder_Admin {
             wp_send_json_error(array('message' => __('Критическая ошибка загрузки настроек', 'course-plugin'), 'debug' => array('error' => $e->getMessage())));
         }
     }
+    
+    /**
+     * AJAX рендеринг виджета для предпросмотра в редакторе
+     */
+    public function ajax_render_widget() {
+        // Проверка nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'course_builder_save')) {
+            wp_send_json_error(array('message' => __('Ошибка безопасности', 'course-plugin')));
+        }
+        
+        // Проверка прав
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(array('message' => __('Недостаточно прав', 'course-plugin')));
+        }
+        
+        $widget_type = isset($_POST['widget_type']) ? sanitize_text_field($_POST['widget_type']) : '';
+        $widget_settings = isset($_POST['widget_settings']) ? $_POST['widget_settings'] : array();
+        
+        if (empty($widget_type)) {
+            wp_send_json_error(array('message' => __('Не указан тип виджета', 'course-plugin')));
+        }
+        
+        // Получаем класс виджета
+        $widget_class = Course_Builder::get_widget_class($widget_type);
+        
+        if (!$widget_class || !class_exists($widget_class)) {
+            wp_send_json_error(array('message' => __('Виджет не найден', 'course-plugin')));
+        }
+        
+        try {
+            // Создаем экземпляр виджета
+            $widget = new $widget_class('preview', $widget_settings);
+            
+            // Рендерим виджет
+            $content = $widget->render($widget_settings);
+            
+            wp_send_json_success(array('content' => $content));
+        } catch (Exception $e) {
+            error_log('Course Builder: Ошибка рендеринга виджета: ' . $e->getMessage());
+            wp_send_json_error(array('message' => __('Ошибка рендеринга виджета', 'course-plugin'), 'debug' => $e->getMessage()));
+        }
+    }
 }
