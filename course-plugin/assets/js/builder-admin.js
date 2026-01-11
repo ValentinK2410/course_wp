@@ -275,6 +275,13 @@
     },
 
     getBuilderData: function () {
+      // Если есть сохраненные данные builder, используем их
+      if (CourseBuilderAdmin.builderData && CourseBuilderAdmin.builderData.sections) {
+        console.log("Using cached builder data, sections count:", CourseBuilderAdmin.builderData.sections.length);
+        return CourseBuilderAdmin.builderData;
+      }
+      
+      // Иначе пытаемся получить данные из DOM
       var sections = [];
       var $editor = $("#course-builder-editor");
 
@@ -287,8 +294,50 @@
         };
       }
 
-      var $sections = $editor.find(".course-builder-section");
-      console.log("Found " + $sections.length + " sections in editor");
+      // Проверяем, используется ли предпросмотр страницы
+      var isPreviewMode = $editor.find(".course-builder-page-preview").length > 0 || 
+                          $editor.find(".course-builder-content-wrapper").length > 0;
+      
+      if (isPreviewMode) {
+        // В режиме предпросмотра получаем данные из виджетов
+        console.log("Preview mode detected, getting data from widgets");
+        var $widgets = $editor.find(".course-builder-widget");
+        console.log("Found " + $widgets.length + " widgets in preview");
+        
+        if ($widgets.length > 0) {
+          // Создаем одну секцию с одной колонкой и всеми виджетами
+          var section = {
+            id: "section_" + Date.now(),
+            settings: {},
+            columns: [{
+              id: "col_" + Date.now(),
+              width: 100,
+              settings: {},
+              widgets: []
+            }]
+          };
+          
+          $widgets.each(function() {
+            var $widget = $(this);
+            var widgetId = $widget.data("widget-id") || $widget.attr("id");
+            var widgetType = $widget.data("widget-type");
+            var widgetSettings = CourseBuilderAdmin.getWidgetSettings($widget);
+            
+            if (widgetId && widgetType) {
+              section.columns[0].widgets.push({
+                id: widgetId,
+                type: widgetType,
+                settings: widgetSettings || {}
+              });
+            }
+          });
+          
+          sections.push(section);
+        }
+      } else {
+        // Старый способ - получаем данные из секций и колонок
+        var $sections = $editor.find(".course-builder-section");
+        console.log("Found " + $sections.length + " sections in editor");
 
       $sections.each(function (index) {
         var $section = $(this);
