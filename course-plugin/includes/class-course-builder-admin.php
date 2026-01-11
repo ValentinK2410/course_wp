@@ -704,4 +704,87 @@ class Course_Builder_Admin {
             wp_send_json_error(array('message' => __('Ошибка рендеринга виджета', 'course-plugin'), 'debug' => $e->getMessage()));
         }
     }
+    
+    /**
+     * AJAX предпросмотр полной страницы курса
+     */
+    public function ajax_preview_page() {
+        // Проверка nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'course_builder_save')) {
+            wp_send_json_error(array('message' => __('Ошибка безопасности', 'course-plugin')));
+        }
+        
+        // Проверка прав
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(array('message' => __('Недостаточно прав', 'course-plugin')));
+        }
+        
+        $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+        
+        if (!$post_id) {
+            wp_send_json_error(array('message' => __('Не указан ID поста', 'course-plugin')));
+        }
+        
+        // Устанавливаем глобальную переменную $post для правильного рендеринга
+        global $post, $wp_query;
+        $post = get_post($post_id);
+        
+        if (!$post) {
+            wp_send_json_error(array('message' => __('Пост не найден', 'course-plugin')));
+        }
+        
+        // Устанавливаем query для правильного рендеринга
+        $wp_query->is_single = true;
+        $wp_query->is_singular = true;
+        $wp_query->queried_object = $post;
+        $wp_query->queried_object_id = $post_id;
+        
+        // Начинаем буферизацию вывода
+        ob_start();
+        
+        // Подключаем шаблон страницы курса
+        $template_path = COURSE_PLUGIN_DIR . 'templates/single-course.php';
+        
+        if (file_exists($template_path)) {
+            // Подключаем стили фронтенда
+            wp_enqueue_style('course-builder-frontend', COURSE_PLUGIN_URL . 'assets/css/builder-frontend.css', array(), COURSE_PLUGIN_VERSION);
+            
+            // Подключаем стили темы, если они есть
+            if (function_exists('wp_get_theme')) {
+                $theme = wp_get_theme();
+                if ($theme->exists()) {
+                    // Подключаем основные стили темы
+                    wp_enqueue_style('theme-style', get_stylesheet_uri(), array(), $theme->get('Version'));
+                }
+            }
+            
+            // Рендерим шаблон
+            include $template_path;
+        } else {
+            // Если шаблон не найден, рендерим базовую структуру
+            echo '<div class="single-course-wrapper">';
+            echo '<div class="single-course-container">';
+            echo '<main class="single-course-main">';
+            
+            // Course Builder контент
+            if (class_exists('Course_Builder_Frontend')) {
+                $builder_frontend = Course_Builder_Frontend::get_instance();
+                $builder_content = $builder_frontend->render($post_id);
+                
+                if (!empty($builder_content)) {
+                    echo '<div class="course-builder-content-wrapper">';
+                    echo $builder_content;
+                    echo '</div>';
+                }
+            }
+            
+            echo '</main>';
+            echo '</div>';
+            echo '</div>';
+        }
+        
+        $content = ob_get_clean();
+        
+        wp_send_json_success(array('content' => $content));
+    }
 }
