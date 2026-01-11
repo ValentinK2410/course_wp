@@ -1150,29 +1150,19 @@
                 console.log(
                   "Found " +
                     builderData.sections.length +
-                    " sections, rendering..."
+                    " sections, loading preview..."
                 );
-                CourseBuilderAdmin.renderBuilder(builderData);
               } else {
-                console.log("No sections found in data, showing empty state");
-                console.log(
-                  "Full data structure:",
-                  JSON.stringify(builderData, null, 2)
-                );
-                console.log("builderData type:", typeof builderData);
-                console.log("builderData.sections:", builderData.sections);
-                console.log(
-                  "builderData.sections type:",
-                  typeof builderData.sections
-                );
-                console.log(
-                  "builderData.sections is array:",
-                  Array.isArray(builderData.sections)
-                );
-                $("#course-builder-editor").html(
-                  '<div class="course-builder-empty-state"><p>Начните добавлять виджеты из боковой панели</p></div>'
-                );
+                console.log("No sections found in data, loading empty preview");
               }
+              
+              // ВСЕГДА используем предпросмотр страницы - никаких карточек!
+              // Сохраняем данные для дальнейшего использования
+              CourseBuilderAdmin.builderData = builderData;
+              
+              // Загружаем предпросмотр страницы с виджетами
+              console.log("Loading page preview with builder data");
+              CourseBuilderAdmin.loadPagePreview();
             } else {
               console.error("Invalid builder data structure:", builderData);
               $("#course-builder-editor").html(
