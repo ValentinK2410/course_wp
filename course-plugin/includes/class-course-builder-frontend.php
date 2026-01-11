@@ -40,6 +40,22 @@ class Course_Builder_Frontend {
         
         // Шорткод для рендеринга builder контента
         add_shortcode('course_builder_content', array($this, 'render_builder_content_shortcode'));
+        
+        // Убеждаемся, что виджеты зарегистрированы перед рендерингом
+        add_action('wp', array($this, 'ensure_widgets_registered'));
+    }
+    
+    /**
+     * Убедиться, что виджеты зарегистрированы
+     */
+    public function ensure_widgets_registered() {
+        // Регистрируем виджеты, если они еще не зарегистрированы
+        do_action('course_builder_register_widgets');
+        
+        // Если виджеты все еще не зарегистрированы, регистрируем вручную
+        if (class_exists('Course_Builder_Register')) {
+            Course_Builder_Register::register_widgets();
+        }
     }
     
     /**
