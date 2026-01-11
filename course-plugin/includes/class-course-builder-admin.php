@@ -58,6 +58,7 @@ class Course_Builder_Admin {
         add_action('wp_ajax_course_builder_enable', array($this, 'ajax_enable_builder'));
         add_action('wp_ajax_course_builder_get_widget_settings', array($this, 'ajax_get_widget_settings'));
         add_action('wp_ajax_course_builder_render_widget', array($this, 'ajax_render_widget'));
+        add_action('wp_ajax_course_builder_preview_page', array($this, 'ajax_preview_page'));
     }
     
     /**
