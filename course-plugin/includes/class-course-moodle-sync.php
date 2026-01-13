@@ -627,8 +627,16 @@ class Course_Moodle_Sync {
             $courses_count = 0;
         }
         
-        // Синхронизируем студентов
-        $this->sync_students();
+        // Синхронизируем студентов (с обработкой ошибок)
+        try {
+            $this->sync_students();
+        } catch (Exception $e) {
+            error_log('Moodle Sync: Ошибка при синхронизации студентов: ' . $e->getMessage());
+            error_log('Moodle Sync: Stack trace: ' . $e->getTraceAsString());
+        } catch (Error $e) {
+            error_log('Moodle Sync: Критическая ошибка при синхронизации студентов: ' . $e->getMessage());
+            error_log('Moodle Sync: Stack trace: ' . $e->getTraceAsString());
+        }
         
         // Возвращаем результат синхронизации
         return array(
@@ -854,24 +862,31 @@ class Course_Moodle_Sync {
         
         // Проверяем, успешно ли получены данные
         if (!$courses || !is_array($courses)) {
-            error_log('Moodle Sync: Не удалось получить курсы для синхронизации студентов');
+            $error_message = 'Moodle Sync: Не удалось получить курсы для синхронизации студентов';
+            error_log($error_message);
+            if (is_array($courses) && isset($courses['exception'])) {
+                error_log('Moodle API Exception: ' . (isset($courses['message']) ? $courses['message'] : 'неизвестная ошибка'));
+            }
+            
             // Пробуем альтернативный метод - получаем курсы по категориям
             error_log('Moodle Sync: Пробуем получить курсы по категориям для синхронизации студентов');
             $courses = $this->get_courses_by_categories();
             if (!$courses || !is_array($courses) || empty($courses)) {
-                error_log('Moodle Sync: Не удалось получить курсы для синхронизации студентов (альтернативный метод также не сработал)');
+                error_log('Moodle Sync: Альтернативный метод не вернул курсы для синхронизации студентов');
                 return;
             }
         }
         
         // Проверяем, не является ли ответ ошибкой API
         if (isset($courses['exception'])) {
-            error_log('Moodle Sync: API вернул ошибку при получении курсов для студентов - ' . (isset($courses['message']) ? $courses['message'] : 'неизвестная ошибка'));
+            $error_message = 'Moodle Sync: API вернул ошибку при получении курсов для студентов - ' . (isset($courses['message']) ? $courses['message'] : 'неизвестная ошибка');
+            error_log($error_message);
+            
             // Пробуем альтернативный метод - получаем курсы по категориям
             error_log('Moodle Sync: Пробуем получить курсы по категориям для синхронизации студентов');
             $courses = $this->get_courses_by_categories();
             if (!$courses || !is_array($courses) || empty($courses)) {
-                error_log('Moodle Sync: Не удалось получить курсы для синхронизации студентов (альтернативный метод также не сработал)');
+                error_log('Moodle Sync: Альтернативный метод не вернул курсы для синхронизации студентов');
                 return;
             }
         }
@@ -885,7 +900,7 @@ class Course_Moodle_Sync {
         foreach ($courses as $course) {
             // Пропускаем, если курс не является массивом
             if (!is_array($course)) {
-                error_log('Moodle Sync: Пропущен курс (не является массивом): ' . print_r($course, true));
+                error_log('Moodle Sync: Пропущен курс (не является массивом) при синхронизации студентов: ' . print_r($course, true));
                 continue;
             }
             
@@ -899,6 +914,7 @@ class Course_Moodle_Sync {
             
             // Проверяем, успешно ли получены данные
             if (!$students || !is_array($students)) {
+                error_log('Moodle Sync: Не удалось получить студентов для курса ID: ' . $course['id']);
                 continue; // Переходим к следующему курсу
             }
             

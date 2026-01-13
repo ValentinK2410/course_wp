@@ -111,6 +111,13 @@ function create_user_in_laravel($user_data, $moodle_user_id) {
  * Для диагностики проверьте логи WordPress (wp-content/debug.log)
  */
 function send_sync_notification_email($user_email, $user_login, $temp_password, $moodle_url, $moodle_password_changed = false) {
+    // Проверяем, отключена ли отправка писем в настройках
+    $disable_emails = get_option('moodle_sync_disable_emails', false);
+    if ($disable_emails) {
+        error_log('Moodle Sync: Отправка писем отключена в настройках. Письмо не отправлено пользователю: ' . $user_email);
+        return array('success' => true, 'message' => 'Отправка писем отключена в настройках', 'skipped' => true);
+    }
+    
     // Проверяем настройки email перед отправкой
     if (!function_exists('wp_mail')) {
         return array('success' => false, 'message' => 'Функция wp_mail недоступна');
