@@ -244,6 +244,22 @@ class Course_Moodle_API {
     }
     
     /**
+     * Получить курсы по категории
+     * Возвращает список курсов для указанной категории
+     * 
+     * @param int $category_id ID категории в Moodle
+     * @return array|false Массив курсов или false в случае ошибки
+     */
+    public function get_courses_by_category($category_id) {
+        // Вызываем функцию Moodle API 'core_course_get_courses_by_field'
+        // Эта функция возвращает курсы по категории
+        return $this->call('core_course_get_courses_by_field', array(
+            'field' => 'category',   // Поле для поиска (по категории)
+            'value' => $category_id   // Значение (ID категории)
+        ));
+    }
+    
+    /**
      * Создать пользователя в Moodle
      * Создает нового пользователя в системе Moodle с указанными данными
      * 

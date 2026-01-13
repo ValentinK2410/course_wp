@@ -790,12 +790,8 @@ class Course_Moodle_Sync {
                 continue;
             }
             
-            // Получаем курсы для этой категории через core_course_get_courses_by_field
-            // Используем метод get_course() с ID категории или напрямую вызываем API
-            $category_courses = $this->api->call('core_course_get_courses_by_field', array(
-                'field' => 'category',
-                'value' => $category['id']
-            ));
+            // Получаем курсы для этой категории через новый метод API
+            $category_courses = $this->api->get_courses_by_category($category['id']);
             
             if (is_array($category_courses) && !isset($category_courses['exception'])) {
                 // Проверяем формат ответа
