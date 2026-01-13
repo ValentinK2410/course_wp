@@ -182,12 +182,22 @@ class Course_Moodle_Sync {
      * Отображает форму для настройки синхронизации с Moodle
      */
     public function admin_page() {
-        // Проверяем права доступа пользователя
-        // current_user_can() проверяет, имеет ли текущий пользователь указанные права
-        if (!current_user_can('manage_options')) {
-            // Если нет прав, прекращаем выполнение
-            wp_die(__('У вас нет прав для доступа к этой странице.', 'course-plugin'));
-        }
+        try {
+            // Проверяем права доступа пользователя
+            // current_user_can() проверяет, имеет ли текущий пользователь указанные права
+            if (!current_user_can('manage_options')) {
+                // Если нет прав, прекращаем выполнение
+                wp_die(__('У вас нет прав для доступа к этой странице.', 'course-plugin'));
+            }
+            
+            // Проверяем, что необходимые классы загружены
+            if (!class_exists('Course_Moodle_API')) {
+                wp_die(
+                    '<h1>' . __('Ошибка загрузки плагина', 'course-plugin') . '</h1>' .
+                    '<p>' . __('Класс Course_Moodle_API не найден. Пожалуйста, убедитесь, что все файлы плагина загружены правильно.', 'course-plugin') . '</p>' .
+                    '<p><a href="' . admin_url('plugins.php') . '">' . __('Вернуться к списку плагинов', 'course-plugin') . '</a></p>'
+                );
+            }
         
         // Обновляем настройки URL и токена при сохранении формы
         if (isset($_POST['submit']) && isset($_POST['option_page']) && $_POST['option_page'] === 'moodle_sync_settings') {
@@ -501,6 +511,21 @@ class Course_Moodle_Sync {
             </form>
         </div>
         <?php
+        } catch (Exception $e) {
+            // Логируем ошибку
+            error_log('Course Plugin Error in admin_page(): ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
+            // Выводим понятное сообщение об ошибке
+            wp_die(
+                '<h1>' . __('Ошибка загрузки страницы настроек', 'course-plugin') . '</h1>' .
+                '<p><strong>' . __('Произошла ошибка:', 'course-plugin') . '</strong> ' . esc_html($e->getMessage()) . '</p>' .
+                '<p>' . __('Пожалуйста, проверьте логи WordPress для получения дополнительной информации.', 'course-plugin') . '</p>' .
+                '<p><a href="' . admin_url('plugins.php') . '">' . __('Вернуться к списку плагинов', 'course-plugin') . '</a></p>',
+                __('Ошибка плагина', 'course-plugin'),
+                array('back_link' => true)
+            );
+        }
     }
     
     /**
