@@ -281,6 +281,7 @@ class Course_Moodle_Sync {
         $laravel_api_token = get_option('laravel_api_token', '');
         $sso_api_key = get_option('sso_api_key', '');
         $moodle_sso_api_key = get_option('moodle_sso_api_key', '');
+        $disable_email_sending = get_option('disable_email_sending', false);
         
         ?>
         <div class="wrap">
