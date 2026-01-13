@@ -675,6 +675,13 @@ class Course_SSO {
                 $headers[] = 'List-Unsubscribe: <' . $site_url . '>, <mailto:' . $from_email . '?subject=unsubscribe>';
             }
             
+            // Проверяем, не отключена ли отправка писем (для тестирования)
+            $disable_email_sending = get_option('disable_email_sending', false);
+            if ($disable_email_sending) {
+                error_log("Course SSO Email: Отправка писем отключена в настройках. Письмо не отправлено на {$user_email}");
+                return false;
+            }
+            
             $mail_result = wp_mail($user_email, $subject, $message, $headers);
             
             if ($mail_result) {

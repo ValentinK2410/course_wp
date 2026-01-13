@@ -719,6 +719,16 @@ class Course_Registration {
             'From: ' . $blogname . ' <' . $admin_email . '>'
         );
         
+        // Проверяем, не отключена ли отправка писем (для тестирования)
+        $disable_email_sending = get_option('disable_email_sending', false);
+        if ($disable_email_sending) {
+            $log_message = '[' . date('Y-m-d H:i:s') . '] Отправка писем отключена в настройках. Письмо не отправлено на ' . $user->user_email . "\n";
+            $log_message .= 'Тема: ' . $subject . "\n";
+            @file_put_contents($log_file, $log_message, FILE_APPEND);
+            error_log('Course Registration: Отправка писем отключена в настройках. Письмо не отправлено пользователю ' . $user->user_email);
+            return;
+        }
+        
         // Логируем перед отправкой
         $log_message = '[' . date('Y-m-d H:i:s') . '] Попытка отправки письма через wp_mail()' . "\n";
         $log_message .= 'Тема: ' . $subject . "\n";
