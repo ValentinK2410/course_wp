@@ -112,8 +112,8 @@ function create_user_in_laravel($user_data, $moodle_user_id) {
  */
 function send_sync_notification_email($user_email, $user_login, $temp_password, $moodle_url, $moodle_password_changed = false) {
     // Проверяем, отключена ли отправка писем в настройках
-    $disable_emails = get_option('moodle_sync_disable_emails', false);
-    if ($disable_emails) {
+    $disable_email_sending = get_option('disable_email_sending', false);
+    if ($disable_email_sending) {
         error_log('Moodle Sync: Отправка писем отключена в настройках. Письмо не отправлено пользователю: ' . $user_email);
         return array('success' => true, 'message' => 'Отправка писем отключена в настройках', 'skipped' => true);
     }
