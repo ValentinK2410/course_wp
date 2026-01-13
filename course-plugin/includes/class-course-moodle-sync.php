@@ -686,8 +686,23 @@ class Course_Moodle_Sync {
             $error_message = 'Moodle Sync: Не удалось получить курсы из Moodle';
             error_log($error_message);
             if (is_array($courses) && isset($courses['exception'])) {
-                error_log('Moodle API Exception: ' . $courses['message']);
+                error_log('Moodle API Exception: ' . (isset($courses['message']) ? $courses['message'] : 'неизвестная ошибка'));
             }
+            return false;
+        }
+        
+        // Проверяем, не является ли ответ ошибкой API
+        if (isset($courses['exception'])) {
+            $error_message = 'Moodle Sync: API вернул ошибку - ' . (isset($courses['message']) ? $courses['message'] : 'неизвестная ошибка');
+            error_log($error_message);
+            return false;
+        }
+        
+        // Проверяем, что это массив курсов (не объект ошибки)
+        // Если первый элемент массива не является массивом курса, возможно это ошибка
+        if (!empty($courses) && !isset($courses[0]) && !isset($courses['courses'])) {
+            // Это может быть объект ошибки в другом формате
+            error_log('Moodle Sync: Неожиданный формат ответа от API: ' . print_r($courses, true));
             return false;
         }
         

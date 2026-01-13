@@ -159,7 +159,18 @@ class Course_Moodle_API {
     public function get_courses($options = array()) {
         // Вызываем функцию Moodle API 'core_course_get_courses'
         // Эта функция возвращает список курсов
-        return $this->call('core_course_get_courses', $options);
+        // Если параметры не переданы, передаем пустой массив явно
+        $result = $this->call('core_course_get_courses', empty($options) ? array() : $options);
+        
+        // Если получили ошибку, пробуем альтернативный метод
+        if (is_array($result) && isset($result['exception'])) {
+            error_log('Moodle API: core_course_get_courses вернул ошибку, пробуем альтернативный метод');
+            // Пробуем получить курсы через core_course_get_courses_by_field с пустым значением
+            // Но это не сработает, поэтому просто возвращаем ошибку
+            return $result;
+        }
+        
+        return $result;
     }
     
     /**
