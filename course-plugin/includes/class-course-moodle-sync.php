@@ -688,14 +688,26 @@ class Course_Moodle_Sync {
             if (is_array($courses) && isset($courses['exception'])) {
                 error_log('Moodle API Exception: ' . (isset($courses['message']) ? $courses['message'] : 'неизвестная ошибка'));
             }
-            return false;
+            
+            // Пробуем альтернативный метод - получаем курсы по категориям
+            error_log('Moodle Sync: Пробуем получить курсы по категориям');
+            $courses = $this->get_courses_by_categories();
+            if (!$courses || !is_array($courses) || empty($courses)) {
+                return false;
+            }
         }
         
         // Проверяем, не является ли ответ ошибкой API
         if (isset($courses['exception'])) {
             $error_message = 'Moodle Sync: API вернул ошибку - ' . (isset($courses['message']) ? $courses['message'] : 'неизвестная ошибка');
             error_log($error_message);
-            return false;
+            
+            // Пробуем альтернативный метод - получаем курсы по категориям
+            error_log('Moodle Sync: Пробуем получить курсы по категориям');
+            $courses = $this->get_courses_by_categories();
+            if (!$courses || !is_array($courses) || empty($courses)) {
+                return false;
+            }
         }
         
         // Проверяем, что это массив курсов (не объект ошибки)
@@ -703,7 +715,18 @@ class Course_Moodle_Sync {
         if (!empty($courses) && !isset($courses[0]) && !isset($courses['courses'])) {
             // Это может быть объект ошибки в другом формате
             error_log('Moodle Sync: Неожиданный формат ответа от API: ' . print_r($courses, true));
-            return false;
+            
+            // Пробуем альтернативный метод - получаем курсы по категориям
+            error_log('Moodle Sync: Пробуем получить курсы по категориям');
+            $courses = $this->get_courses_by_categories();
+            if (!$courses || !is_array($courses) || empty($courses)) {
+                return false;
+            }
+        }
+        
+        // Если courses это объект с ключом 'courses', извлекаем массив
+        if (isset($courses['courses']) && is_array($courses['courses'])) {
+            $courses = $courses['courses'];
         }
         
         $count = 0;
