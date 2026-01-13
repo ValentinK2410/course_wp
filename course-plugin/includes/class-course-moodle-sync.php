@@ -768,6 +768,55 @@ class Course_Moodle_Sync {
     }
     
     /**
+     * Альтернативный метод получения курсов по категориям
+     * Используется, когда основной метод get_courses() возвращает ошибку
+     * 
+     * @return array|false Массив курсов или false в случае ошибки
+     */
+    private function get_courses_by_categories() {
+        // Получаем все категории из Moodle
+        $categories = $this->api->get_categories(0);
+        
+        if (!$categories || !is_array($categories) || isset($categories['exception'])) {
+            error_log('Moodle Sync: Не удалось получить категории для альтернативного метода получения курсов');
+            return false;
+        }
+        
+        $all_courses = array();
+        
+        // Проходим по каждой категории и получаем курсы
+        foreach ($categories as $category) {
+            if (!is_array($category) || !isset($category['id'])) {
+                continue;
+            }
+            
+            // Получаем курсы для этой категории через core_course_get_courses_by_field
+            // Используем метод get_course() с ID категории или напрямую вызываем API
+            $category_courses = $this->api->call('core_course_get_courses_by_field', array(
+                'field' => 'category',
+                'value' => $category['id']
+            ));
+            
+            if (is_array($category_courses) && !isset($category_courses['exception'])) {
+                // Проверяем формат ответа
+                if (isset($category_courses['courses']) && is_array($category_courses['courses'])) {
+                    $all_courses = array_merge($all_courses, $category_courses['courses']);
+                } elseif (isset($category_courses[0])) {
+                    $all_courses = array_merge($all_courses, $category_courses);
+                }
+            }
+        }
+        
+        if (empty($all_courses)) {
+            error_log('Moodle Sync: Альтернативный метод не вернул курсы');
+            return false;
+        }
+        
+        error_log('Moodle Sync: Альтернативный метод вернул ' . count($all_courses) . ' курсов');
+        return $all_courses;
+    }
+    
+    /**
      * Синхронизация студентов из Moodle
      * Получает список студентов для каждого курса и сохраняет информацию о них
      */
