@@ -71,7 +71,11 @@ class Course_Moodle_Sync {
         
         // Создаем объект для работы с Moodle API, если настроены URL и токен
         if ($this->moodle_url && $this->moodle_token) {
-            $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+            if (class_exists('Course_Moodle_API')) {
+                $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+            } else {
+                error_log('Course Plugin Error: Course_Moodle_API class not found');
+            }
         }
         
         // Регистрируем хук для добавления меню в админку WordPress
@@ -193,7 +197,11 @@ class Course_Moodle_Sync {
             
             // Пересоздаем объект API с новыми настройками
             if ($this->moodle_url && $this->moodle_token) {
-                $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+                if (class_exists('Course_Moodle_API')) {
+                    $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+                } else {
+                    error_log('Course Plugin Error: Course_Moodle_API class not found');
+                }
             }
         }
         
@@ -529,7 +537,17 @@ class Course_Moodle_Sync {
         
         // Создаем объект API, если он еще не создан
         if (!$this->api) {
-            $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+            if (class_exists('Course_Moodle_API')) {
+                $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+            } else {
+                error_log('Course Plugin Error: Course_Moodle_API class not found');
+                return array(
+                    'success' => false,
+                    'message' => __('Ошибка: класс Course_Moodle_API не найден. Проверьте, что все файлы плагина загружены.', 'course-plugin'),
+                    'courses' => 0,
+                    'categories' => 0
+                );
+            }
         }
         
         // Счетчики для статистики
