@@ -162,11 +162,34 @@ class Course_Moodle_API {
         // Если параметры не переданы, передаем пустой массив явно
         $result = $this->call('core_course_get_courses', empty($options) ? array() : $options);
         
-        // Если получили ошибку, пробуем альтернативный метод
+        // Если получили ошибку, пробуем альтернативный метод через core_course_get_courses_by_field
         if (is_array($result) && isset($result['exception'])) {
-            error_log('Moodle API: core_course_get_courses вернул ошибку, пробуем альтернативный метод');
-            // Пробуем получить курсы через core_course_get_courses_by_field с пустым значением
-            // Но это не сработает, поэтому просто возвращаем ошибку
+            error_log('Moodle API: core_course_get_courses вернул ошибку, пробуем альтернативный метод через core_course_get_courses_by_field');
+            
+            // Пробуем получить все курсы через core_course_get_courses_by_field
+            // Передаем пустое значение для получения всех курсов
+            $alternative_result = $this->call('core_course_get_courses_by_field', array(
+                'field' => 'id',
+                'value' => ''  // Пустое значение должно вернуть все курсы
+            ));
+            
+            // Если альтернативный метод тоже вернул ошибку, возвращаем исходную ошибку
+            if (is_array($alternative_result) && isset($alternative_result['exception'])) {
+                error_log('Moodle API: Альтернативный метод тоже вернул ошибку');
+                return $result;
+            }
+            
+            // Если альтернативный метод сработал, возвращаем результат
+            // Но нужно проверить формат ответа - возможно, это объект с ключом 'courses'
+            if (is_array($alternative_result)) {
+                if (isset($alternative_result['courses']) && is_array($alternative_result['courses'])) {
+                    return $alternative_result['courses'];
+                } elseif (isset($alternative_result[0])) {
+                    // Если это массив курсов напрямую
+                    return $alternative_result;
+                }
+            }
+            
             return $result;
         }
         
