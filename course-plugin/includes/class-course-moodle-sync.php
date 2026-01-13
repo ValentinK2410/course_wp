@@ -698,8 +698,14 @@ class Course_Moodle_Sync {
         
         // Проходим по каждому курсу из Moodle
         foreach ($courses as $course) {
+            // Пропускаем, если курс не является массивом
+            if (!is_array($course)) {
+                error_log('Moodle Sync: Пропущен курс (не является массивом): ' . print_r($course, true));
+                continue;
+            }
+            
             // Пропускаем системные курсы (ID = 1 обычно является системным курсом)
-            if (isset($course['id']) && $course['id'] == 1) {
+            if (!isset($course['id']) || $course['id'] == 1) {
                 continue;
             }
             
@@ -739,8 +745,14 @@ class Course_Moodle_Sync {
         
         // Проходим по каждому курсу
         foreach ($courses as $course) {
+            // Пропускаем, если курс не является массивом
+            if (!is_array($course)) {
+                error_log('Moodle Sync: Пропущен курс (не является массивом): ' . print_r($course, true));
+                continue;
+            }
+            
             // Пропускаем системные курсы
-            if (isset($course['id']) && $course['id'] == 1) {
+            if (!isset($course['id']) || $course['id'] == 1) {
                 continue;
             }
             
