@@ -48,6 +48,17 @@ class Course_Email_Sender {
      * @return array Результат отправки ['success' => bool, 'message' => string, 'method' => string]
      */
     public function send_email($to, $subject, $message, $headers = array()) {
+        // Проверяем, не отключена ли отправка писем (для тестирования)
+        $disable_email_sending = get_option('disable_email_sending', false);
+        if ($disable_email_sending) {
+            error_log("Course Email: Отправка писем отключена в настройках. Письмо не отправлено на {$to}. Тема: {$subject}");
+            return array(
+                'success' => true,
+                'message' => 'Отправка писем отключена в настройках (режим тестирования)',
+                'method' => 'disabled'
+            );
+        }
+        
         // Пробуем разные методы отправки по порядку приоритета
         
         // Метод 1: SMTP через PHPMailer (если доступен и настроен)

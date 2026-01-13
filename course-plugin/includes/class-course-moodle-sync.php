@@ -175,6 +175,12 @@ class Course_Moodle_Sync {
             'type' => 'string',
             'sanitize_callback' => 'sanitize_text_field'  // Очистка текста для безопасности
         ));
+        
+        // Регистрируем опцию для отключения отправки писем (для тестирования)
+        register_setting('moodle_sync_settings', 'disable_email_sending', array(
+            'type' => 'boolean',
+            'default' => false  // По умолчанию письма отправляются
+        ));
     }
     
     /**

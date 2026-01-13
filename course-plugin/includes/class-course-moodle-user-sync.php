@@ -1003,6 +1003,13 @@ class Course_Moodle_User_Sync {
      * @param string $password Пароль пользователя
      */
     private function send_password_email($user_id, $password) {
+        // Проверяем, не отключена ли отправка писем (для тестирования)
+        $disable_email_sending = get_option('disable_email_sending', false);
+        if ($disable_email_sending) {
+            error_log('Moodle User Sync: Отправка писем отключена в настройках. Письмо с паролем не отправлено пользователю ID: ' . $user_id);
+            return;
+        }
+        
         $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
         $log_message = '[' . date('Y-m-d H:i:s') . '] ========== ОТПРАВКА ПИСЬМА С ПАРОЛЕМ ==========' . "\n";
         $log_message .= 'User ID: ' . $user_id . "\n";
