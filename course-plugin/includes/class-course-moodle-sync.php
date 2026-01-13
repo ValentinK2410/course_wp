@@ -492,6 +492,31 @@ class Course_Moodle_Sync {
                     </tr>
                 </table>
                 
+                <h2><?php _e('Настройки тестирования', 'course-plugin'); ?></h2>
+                <table class="form-table">
+                    <!-- Чекбокс для отключения отправки писем (для тестирования) -->
+                    <tr>
+                        <th scope="row">
+                            <label for="disable_email_sending"><?php _e('Отключить отправку писем', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="checkbox" 
+                                   id="disable_email_sending" 
+                                   name="disable_email_sending" 
+                                   value="1" 
+                                   <?php checked(1, $disable_email_sending); ?> />
+                            <p class="description">
+                                <?php _e('Если включено, все письма пользователям будут отключены. Используйте это для тестирования плагина без отправки реальных писем. Письма будут логироваться, но не будут отправляться.', 'course-plugin'); ?>
+                            </p>
+                            <?php if ($disable_email_sending): ?>
+                            <p class="description" style="color: #d63638;">
+                                <strong><?php _e('Внимание:', 'course-plugin'); ?></strong> <?php _e('Отправка писем отключена. Пользователи не будут получать письма с паролями и другой информацией.', 'course-plugin'); ?>
+                            </p>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                </table>
+                
                 <?php 
                 // Выводим кнопку "Сохранить изменения"
                 submit_button(); 
