@@ -855,7 +855,30 @@ class Course_Moodle_Sync {
         // Проверяем, успешно ли получены данные
         if (!$courses || !is_array($courses)) {
             error_log('Moodle Sync: Не удалось получить курсы для синхронизации студентов');
-            return;
+            // Пробуем альтернативный метод - получаем курсы по категориям
+            error_log('Moodle Sync: Пробуем получить курсы по категориям для синхронизации студентов');
+            $courses = $this->get_courses_by_categories();
+            if (!$courses || !is_array($courses) || empty($courses)) {
+                error_log('Moodle Sync: Не удалось получить курсы для синхронизации студентов (альтернативный метод также не сработал)');
+                return;
+            }
+        }
+        
+        // Проверяем, не является ли ответ ошибкой API
+        if (isset($courses['exception'])) {
+            error_log('Moodle Sync: API вернул ошибку при получении курсов для студентов - ' . (isset($courses['message']) ? $courses['message'] : 'неизвестная ошибка'));
+            // Пробуем альтернативный метод - получаем курсы по категориям
+            error_log('Moodle Sync: Пробуем получить курсы по категориям для синхронизации студентов');
+            $courses = $this->get_courses_by_categories();
+            if (!$courses || !is_array($courses) || empty($courses)) {
+                error_log('Moodle Sync: Не удалось получить курсы для синхронизации студентов (альтернативный метод также не сработал)');
+                return;
+            }
+        }
+        
+        // Если courses это объект с ключом 'courses', извлекаем массив
+        if (isset($courses['courses']) && is_array($courses['courses'])) {
+            $courses = $courses['courses'];
         }
         
         // Проходим по каждому курсу
