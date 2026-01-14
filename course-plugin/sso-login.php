@@ -79,10 +79,15 @@ if (!empty($sso_api_key)) {
 
 sso_log('Параметры запроса: ' . print_r($params, true));
 $post_data = http_build_query($params);
+sso_log('POST данные (длина): ' . strlen($post_data));
 sso_log('POST данные: ' . $post_data);
 sso_log('URL запроса: ' . $api_url);
 
 // Выполняем запрос к WordPress API через POST (AJAX в WordPress ожидает POST)
+// Также добавляем параметры в URL на случай, если POST не работает
+$full_url = $api_url . '?' . http_build_query($params);
+sso_log('Полный URL с параметрами: ' . $full_url);
+
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $api_url);
 curl_setopt($ch, CURLOPT_POST, true);
@@ -91,17 +96,35 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false); // Не следовать редиректам
 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
     'Content-Type: application/x-www-form-urlencoded',
     'Content-Length: ' . strlen($post_data)
 ));
+
+// Включаем отладку cURL
+$verbose = fopen('php://temp', 'w+');
+curl_setopt($ch, CURLOPT_VERBOSE, true);
+curl_setopt($ch, CURLOPT_STDERR, $verbose);
+
 $response = curl_exec($ch);
 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curl_error = curl_error($ch);
 $curl_info = curl_getinfo($ch);
+
+// Читаем отладочную информацию
+rewind($verbose);
+$verbose_log = stream_get_contents($verbose);
+fclose($verbose);
+
 curl_close($ch);
 
-sso_log('cURL info: ' . print_r($curl_info, true));
+sso_log('HTTP код ответа: ' . $http_code);
+sso_log('cURL ошибка: ' . ($curl_error ? $curl_error : 'нет'));
+sso_log('cURL info (method): ' . (isset($curl_info['request_header']) ? $curl_info['request_header'] : 'не доступно'));
+if (!empty($verbose_log)) {
+    sso_log('cURL verbose (первые 500 символов): ' . substr($verbose_log, 0, 500));
+}
 
 // Логируем попытку входа
 sso_log('Отправка запроса к WordPress API: ' . $api_url);
