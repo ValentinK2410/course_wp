@@ -78,24 +78,30 @@ if (!empty($sso_api_key)) {
 }
 
 sso_log('Параметры запроса: ' . print_r($params, true));
-sso_log('URL запроса: ' . $api_url . '?' . http_build_query($params));
+$post_data = http_build_query($params);
+sso_log('POST данные: ' . $post_data);
+sso_log('URL запроса: ' . $api_url);
 
 // Выполняем запрос к WordPress API через POST (AJAX в WordPress ожидает POST)
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $api_url);
 curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
+curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
     'Content-Type: application/x-www-form-urlencoded',
+    'Content-Length: ' . strlen($post_data)
 ));
 $response = curl_exec($ch);
 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curl_error = curl_error($ch);
+$curl_info = curl_getinfo($ch);
 curl_close($ch);
+
+sso_log('cURL info: ' . print_r($curl_info, true));
 
 // Логируем попытку входа
 sso_log('Отправка запроса к WordPress API: ' . $api_url);

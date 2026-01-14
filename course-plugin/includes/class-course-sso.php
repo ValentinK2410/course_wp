@@ -508,6 +508,10 @@ class Course_SSO {
      */
     public function ajax_verify_sso_token() {
         error_log('Course SSO: Начало проверки SSO токена');
+        error_log('Course SSO: REQUEST метод: ' . $_SERVER['REQUEST_METHOD']);
+        error_log('Course SSO: REQUEST данные: ' . print_r($_REQUEST, true));
+        error_log('Course SSO: POST данные: ' . print_r($_POST, true));
+        error_log('Course SSO: GET данные: ' . print_r($_GET, true));
         
         // Проверяем API ключ для безопасности (опционально)
         $api_key = isset($_REQUEST['api_key']) ? sanitize_text_field($_REQUEST['api_key']) : '';
