@@ -15,8 +15,13 @@
 // config.php находится в корневой директории Moodle
 require_once(__DIR__ . '/config.php');
 
+// Логируем начало выполнения скрипта
+error_log('Moodle SSO Login: Скрипт запущен. Время: ' . date('Y-m-d H:i:s'));
+error_log('Moodle SSO Login: PHP error_log настроен на: ' . ini_get('error_log'));
+
 // Получаем токен из URL
 $token = optional_param('token', '', PARAM_RAW);
+error_log('Moodle SSO Login: Получен токен из URL. Длина: ' . strlen($token) . ', первые 20 символов: ' . substr($token, 0, 20) . '...');
 
 if (empty($token)) {
     // Если токен не предоставлен, перенаправляем на страницу входа

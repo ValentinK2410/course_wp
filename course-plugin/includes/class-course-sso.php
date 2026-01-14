@@ -507,6 +507,8 @@ class Course_SSO {
      * AJAX обработчик для проверки SSO токена (используется Moodle/Laravel)
      */
     public function ajax_verify_sso_token() {
+        error_log('Course SSO: Начало проверки SSO токена');
+        
         // Проверяем API ключ для безопасности (опционально)
         $api_key = isset($_REQUEST['api_key']) ? sanitize_text_field($_REQUEST['api_key']) : '';
         $expected_key = get_option('sso_api_key', '');
@@ -529,10 +531,15 @@ class Course_SSO {
         $token = isset($_REQUEST['token']) ? sanitize_text_field($_REQUEST['token']) : '';
         $service = isset($_REQUEST['service']) ? sanitize_text_field($_REQUEST['service']) : '';
         
+        error_log('Course SSO: Получен токен (длина): ' . strlen($token) . ', первые 20 символов: ' . substr($token, 0, 20) . '...');
+        error_log('Course SSO: Сервис: ' . $service);
+        
         if (empty($token) || empty($service)) {
+            error_log('Course SSO: Ошибка - токен или сервис не указаны. Токен: ' . (empty($token) ? 'пусто' : 'указан') . ', Сервис: ' . (empty($service) ? 'пусто' : $service));
             wp_send_json_error(array('message' => 'Token and service required'));
         }
         
+        error_log('Course SSO: Вызываем verify_token()');
         $user_data = self::verify_token($token, $service);
         
         if ($user_data) {
