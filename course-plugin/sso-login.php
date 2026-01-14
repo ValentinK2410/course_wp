@@ -26,7 +26,9 @@ if (empty($token)) {
 // Настройки WordPress SSO
 // ВАЖНО: Замените эти значения на ваши настройки из WordPress
 $wordpress_url = 'https://mbs.russianseminary.org'; // URL вашего WordPress сайта
-$sso_api_key = ''; // Ключ из WordPress: Настройки → Moodle Sync → SSO API Key (если используется)
+// SSO API Key (НЕ Moodle SSO API Key!) из WordPress: Настройки → Moodle Sync → SSO API Key
+// Этот ключ используется для проверки токенов при переходе из WordPress в Moodle
+$sso_api_key = ''; // Если пусто, проверка будет работать без ключа (только по токену)
 
 // Проверяем, что настройки заполнены
 if (empty($wordpress_url)) {
