@@ -83,23 +83,20 @@ sso_log('POST данные (длина): ' . strlen($post_data));
 sso_log('POST данные: ' . $post_data);
 sso_log('URL запроса: ' . $api_url);
 
-// Выполняем запрос к WordPress API через POST (AJAX в WordPress ожидает POST)
-// Также добавляем параметры в URL на случай, если POST не работает
+// Выполняем запрос к WordPress API
+// WordPress AJAX работает и через GET, и через POST, поэтому отправляем параметры в URL
 $full_url = $api_url . '?' . http_build_query($params);
 sso_log('Полный URL с параметрами: ' . $full_url);
 
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $api_url);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+curl_setopt($ch, CURLOPT_URL, $full_url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false); // Не следовать редиректам
 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-    'Content-Type: application/x-www-form-urlencoded',
-    'Content-Length: ' . strlen($post_data)
+    'User-Agent: Moodle-SSO/1.0'
 ));
 
 // Включаем отладку cURL
