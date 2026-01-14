@@ -532,8 +532,23 @@ class Course_SSO {
             }
         }
         
-        $token = isset($_REQUEST['token']) ? sanitize_text_field($_REQUEST['token']) : '';
-        $service = isset($_REQUEST['service']) ? sanitize_text_field($_REQUEST['service']) : '';
+        // Получаем токен и сервис, проверяя оба варианта (обычный и с экранированием amp;)
+        $token = '';
+        $service = '';
+        
+        if (isset($_REQUEST['token'])) {
+            $token = sanitize_text_field($_REQUEST['token']);
+        } elseif (isset($_REQUEST['amp;token'])) {
+            // Если параметр пришел как amp;token (из-за HTML экранирования)
+            $token = sanitize_text_field($_REQUEST['amp;token']);
+        }
+        
+        if (isset($_REQUEST['service'])) {
+            $service = sanitize_text_field($_REQUEST['service']);
+        } elseif (isset($_REQUEST['amp;service'])) {
+            // Если параметр пришел как amp;service (из-за HTML экранирования)
+            $service = sanitize_text_field($_REQUEST['amp;service']);
+        }
         
         error_log('Course SSO: Получен токен (длина): ' . strlen($token) . ', первые 20 символов: ' . substr($token, 0, 20) . '...');
         error_log('Course SSO: Сервис: ' . $service);
