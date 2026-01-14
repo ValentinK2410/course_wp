@@ -536,9 +536,31 @@ class Course_SSO {
         $user_data = self::verify_token($token, $service);
         
         if ($user_data) {
+            error_log('Course SSO: Токен успешно проверен для пользователя ID: ' . $user_data['user_id'] . ', email: ' . $user_data['email']);
             wp_send_json_success($user_data);
         } else {
-            error_log('Course SSO: Токен недействителен или истек. Токен (первые 20 символов): ' . substr($token, 0, 20) . '..., Сервис: ' . $service);
+            // Подробное логирование для отладки
+            $user_id_from_token = 0;
+            $decoded = base64_decode($token);
+            if ($decoded) {
+                $parts = explode(':', $decoded);
+                if (count($parts) >= 1) {
+                    $user_id_from_token = intval($parts[0]);
+                }
+            }
+            $expires = get_user_meta($user_id_from_token, 'sso_' . $service . '_token_expires', true);
+            $stored_token = get_user_meta($user_id_from_token, 'sso_' . $service . '_token', true);
+            
+            error_log('Course SSO: Токен недействителен или истек.');
+            error_log('Course SSO: Токен (первые 20 символов): ' . substr($token, 0, 20) . '...');
+            error_log('Course SSO: Сервис: ' . $service);
+            error_log('Course SSO: User ID из токена: ' . $user_id_from_token);
+            error_log('Course SSO: Срок действия токена: ' . ($expires ? date('Y-m-d H:i:s', $expires) : 'не установлен'));
+            error_log('Course SSO: Текущее время: ' . date('Y-m-d H:i:s', time()));
+            error_log('Course SSO: Токен истек: ' . ($expires && $expires < time() ? 'ДА' : 'НЕТ'));
+            error_log('Course SSO: Сохраненный токен (первые 20 символов): ' . ($stored_token ? substr($stored_token, 0, 20) . '...' : 'не найден'));
+            error_log('Course SSO: Токены совпадают: ' . ($stored_token === $token ? 'ДА' : 'НЕТ'));
+            
             wp_send_json_error(array('message' => 'Invalid or expired token'));
         }
     }
