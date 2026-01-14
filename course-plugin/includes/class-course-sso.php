@@ -43,6 +43,10 @@ class Course_SSO {
         add_action('wp_footer', array($this, 'add_sso_scripts'));
         add_action('admin_footer', array($this, 'add_sso_scripts'));
         
+        // Добавляем стили для admin bar
+        add_action('admin_head', array($this, 'add_admin_bar_styles'));
+        add_action('wp_head', array($this, 'add_admin_bar_styles'));
+        
         // AJAX endpoint для получения SSO токенов
         add_action('wp_ajax_get_sso_tokens', array($this, 'ajax_get_sso_tokens'));
         add_action('wp_ajax_nopriv_get_sso_tokens', array($this, 'ajax_get_sso_tokens'));
@@ -60,6 +64,9 @@ class Course_SSO {
         
         // Регистрируем шорткод для кнопок SSO
         add_shortcode('sso_buttons', array($this, 'sso_buttons_shortcode'));
+        
+        // Добавляем кнопки в WordPress admin bar (верхняя панель)
+        add_action('admin_bar_menu', array($this, 'add_admin_bar_items'), 100);
         
         // Генерируем SSO API ключ при первой загрузке, если он не установлен
         if (empty(get_option('sso_api_key', ''))) {
@@ -304,6 +311,102 @@ class Course_SSO {
         </div>
         <?php
         return ob_get_clean();
+    }
+    
+    /**
+     * Добавление кнопок в WordPress admin bar (верхняя панель)
+     * 
+     * @param WP_Admin_Bar $wp_admin_bar Объект admin bar
+     */
+    public function add_admin_bar_items($wp_admin_bar) {
+        // Показываем только для авторизованных пользователей
+        if (!is_user_logged_in()) {
+            return;
+        }
+        
+        $moodle_url = get_option('moodle_sync_url', '');
+        $laravel_url = get_option('laravel_api_url', '');
+        
+        // Если не настроены URL, не добавляем кнопки
+        if (empty($moodle_url) && empty($laravel_url)) {
+            return;
+        }
+        
+        // Добавляем родительский элемент меню
+        $wp_admin_bar->add_node(array(
+            'id'    => 'course-sso',
+            'title' => __('Быстрый переход', 'course-plugin'),
+            'meta'  => array(
+                'title' => __('Перейти в Moodle или Laravel', 'course-plugin'),
+            ),
+        ));
+        
+        // Добавляем кнопку Moodle
+        if (!empty($moodle_url)) {
+            $wp_admin_bar->add_node(array(
+                'parent' => 'course-sso',
+                'id'     => 'course-sso-moodle',
+                'title'  => __('Перейти в Moodle', 'course-plugin'),
+                'href'   => 'javascript:void(0);',
+                'meta'   => array(
+                    'onclick' => 'goToMoodle(); return false;',
+                    'class'  => 'course-sso-moodle',
+                    'title'  => __('Перейти в Moodle без ввода пароля', 'course-plugin'),
+                ),
+            ));
+        }
+        
+        // Добавляем кнопку Laravel
+        if (!empty($laravel_url)) {
+            $wp_admin_bar->add_node(array(
+                'parent' => 'course-sso',
+                'id'     => 'course-sso-laravel',
+                'title'  => __('Перейти в Laravel', 'course-plugin'),
+                'href'   => 'javascript:void(0);',
+                'meta'   => array(
+                    'onclick' => 'goToLaravel(); return false;',
+                    'class'  => 'course-sso-laravel',
+                    'title'  => __('Перейти в Laravel без ввода пароля', 'course-plugin'),
+                ),
+            ));
+        }
+    }
+    
+    /**
+     * Добавление стилей для кнопок в admin bar
+     */
+    public function add_admin_bar_styles() {
+        // Показываем только для авторизованных пользователей
+        if (!is_user_logged_in()) {
+            return;
+        }
+        
+        $moodle_url = get_option('moodle_sync_url', '');
+        $laravel_url = get_option('laravel_api_url', '');
+        
+        // Если не настроены URL, не добавляем стили
+        if (empty($moodle_url) && empty($laravel_url)) {
+            return;
+        }
+        ?>
+        <style type="text/css">
+        #wpadminbar #wp-admin-bar-course-sso .ab-item {
+            cursor: pointer;
+        }
+        #wpadminbar #wp-admin-bar-course-sso-moodle .ab-item {
+            color: #f98012 !important;
+        }
+        #wpadminbar #wp-admin-bar-course-sso-moodle:hover .ab-item {
+            color: #ff9a3c !important;
+        }
+        #wpadminbar #wp-admin-bar-course-sso-laravel .ab-item {
+            color: #f9322c !important;
+        }
+        #wpadminbar #wp-admin-bar-course-sso-laravel:hover .ab-item {
+            color: #ff4d4d !important;
+        }
+        </style>
+        <?php
     }
     
     /**
