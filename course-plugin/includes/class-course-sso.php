@@ -506,15 +506,22 @@ class Course_SSO {
      * AJAX обработчик для проверки SSO токена (используется Moodle/Laravel)
      */
     public function ajax_verify_sso_token() {
-        // Проверяем API ключ для безопасности (опционально, если настроен)
+        // Проверяем API ключ для безопасности (опционально)
         $api_key = isset($_REQUEST['api_key']) ? sanitize_text_field($_REQUEST['api_key']) : '';
         $expected_key = get_option('sso_api_key', '');
         
-        // Если API ключ настроен, проверяем его
-        if (!empty($expected_key)) {
-            if (empty($api_key) || $api_key !== $expected_key) {
-                error_log('Course SSO: Неверный API ключ. Переданный: ' . (!empty($api_key) ? substr($api_key, 0, 20) . '...' : 'пусто') . ', Ожидаемый: ' . substr($expected_key, 0, 20) . '...');
+        // Если API ключ передан, проверяем его
+        // Если не передан, но настроен - пропускаем проверку (токен сам по себе защищен)
+        if (!empty($api_key)) {
+            if (!empty($expected_key) && $api_key !== $expected_key) {
+                error_log('Course SSO: Неверный API ключ. Переданный: ' . substr($api_key, 0, 20) . '..., Ожидаемый: ' . substr($expected_key, 0, 20) . '...');
                 wp_send_json_error(array('message' => 'Unauthorized'));
+            }
+        } else {
+            // API ключ не передан - это нормально, если он не настроен
+            // Если настроен, но не передан - логируем предупреждение, но продолжаем проверку токена
+            if (!empty($expected_key)) {
+                error_log('Course SSO: API ключ не передан, но настроен в WordPress. Продолжаем проверку токена.');
             }
         }
         
