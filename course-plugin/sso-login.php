@@ -73,10 +73,21 @@ if ($http_code !== 200) {
 
 $data = json_decode($response, true);
 
-if (!isset($data['success']) || !$data['success'] || !isset($data['data'])) {
+// Логируем полный ответ для отладки
+error_log('Moodle SSO Login: Ответ от WordPress API: ' . print_r($data, true));
+error_log('Moodle SSO Login: Raw response: ' . substr($response, 0, 500));
+
+if (!isset($data['success']) || !$data['success']) {
     // Токен недействителен
-    error_log('Moodle SSO Login: Токен недействителен. Ответ: ' . print_r($data, true));
-    redirect(new moodle_url('/login/index.php'), 'Токен SSO недействителен или истек', null, \core\output\notification::NOTIFY_ERROR);
+    $error_message = isset($data['data']['message']) ? $data['data']['message'] : 'Неизвестная ошибка';
+    error_log('Moodle SSO Login: Токен недействителен. Ошибка: ' . $error_message);
+    error_log('Moodle SSO Login: Полный ответ: ' . print_r($data, true));
+    redirect(new moodle_url('/login/index.php'), 'Токен SSO недействителен или истек: ' . htmlspecialchars($error_message), null, \core\output\notification::NOTIFY_ERROR);
+}
+
+if (!isset($data['data'])) {
+    error_log('Moodle SSO Login: Данные пользователя не найдены в ответе');
+    redirect(new moodle_url('/login/index.php'), 'Ошибка: данные пользователя не найдены', null, \core\output\notification::NOTIFY_ERROR);
 }
 
 $user_data = $data['data'];

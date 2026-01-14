@@ -506,12 +506,16 @@ class Course_SSO {
      * AJAX обработчик для проверки SSO токена (используется Moodle/Laravel)
      */
     public function ajax_verify_sso_token() {
-        // Проверяем API ключ для безопасности
+        // Проверяем API ключ для безопасности (опционально, если настроен)
         $api_key = isset($_REQUEST['api_key']) ? sanitize_text_field($_REQUEST['api_key']) : '';
         $expected_key = get_option('sso_api_key', '');
         
-        if (empty($expected_key) || $api_key !== $expected_key) {
-            wp_send_json_error(array('message' => 'Unauthorized'));
+        // Если API ключ настроен, проверяем его
+        if (!empty($expected_key)) {
+            if (empty($api_key) || $api_key !== $expected_key) {
+                error_log('Course SSO: Неверный API ключ. Переданный: ' . (!empty($api_key) ? substr($api_key, 0, 20) . '...' : 'пусто') . ', Ожидаемый: ' . substr($expected_key, 0, 20) . '...');
+                wp_send_json_error(array('message' => 'Unauthorized'));
+            }
         }
         
         $token = isset($_REQUEST['token']) ? sanitize_text_field($_REQUEST['token']) : '';
@@ -526,6 +530,7 @@ class Course_SSO {
         if ($user_data) {
             wp_send_json_success($user_data);
         } else {
+            error_log('Course SSO: Токен недействителен или истек. Токен (первые 20 символов): ' . substr($token, 0, 20) . '..., Сервис: ' . $service);
             wp_send_json_error(array('message' => 'Invalid or expired token'));
         }
     }
