@@ -287,6 +287,125 @@ class Course_Moodle_Sync {
         <div class="wrap">
             <h1><?php _e('Настройки синхронизации Moodle', 'course-plugin'); ?></h1>
             
+            <?php
+            // Добавляем кнопки для перехода в Moodle и Laravel через SSO
+            if (is_user_logged_in() && class_exists('Course_SSO')) {
+                $moodle_url = get_option('moodle_sync_url', '');
+                $laravel_url = get_option('laravel_api_url', '');
+                
+                if (!empty($moodle_url) || !empty($laravel_url)) {
+                    // Получаем URL для AJAX
+                    $ajax_url = admin_url('admin-ajax.php');
+                    $nonce = wp_create_nonce('sso_tokens');
+                    ?>
+                    <div style="margin: 20px 0; padding: 15px; background: #f0f0f1; border-left: 4px solid #2271b1; border-radius: 4px;">
+                        <h2 style="margin-top: 0;"><?php _e('Быстрый переход', 'course-plugin'); ?></h2>
+                        <p style="margin-bottom: 10px;"><?php _e('Перейдите в системы без ввода пароля:', 'course-plugin'); ?></p>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <?php if (!empty($moodle_url)): ?>
+                            <button type="button" onclick="goToMoodle();" class="button button-primary" style="background: #f98012; border-color: #f98012; color: white; padding: 8px 16px; font-size: 14px; height: auto;">
+                                <?php _e('Перейти в Moodle', 'course-plugin'); ?>
+                            </button>
+                            <?php endif; ?>
+                            
+                            <?php if (!empty($laravel_url)): ?>
+                            <button type="button" onclick="goToLaravel();" class="button button-primary" style="background: #f9322c; border-color: #f9322c; color: white; padding: 8px 16px; font-size: 14px; height: auto;">
+                                <?php _e('Перейти в Laravel', 'course-plugin'); ?>
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <script type="text/javascript">
+                    (function() {
+                        // Функция для выполнения AJAX запроса
+                        function ssoAjaxRequest(action, callback) {
+                            var ajaxUrl = '<?php echo esc_js($ajax_url); ?>';
+                            var nonce = '<?php echo esc_js($nonce); ?>';
+                            
+                            // Используем Fetch API если доступен, иначе XMLHttpRequest
+                            if (typeof fetch !== 'undefined') {
+                                var formData = new FormData();
+                                formData.append('action', action);
+                                formData.append('nonce', nonce);
+                                
+                                fetch(ajaxUrl, {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(function(response) {
+                                    return response.json();
+                                })
+                                .then(function(data) {
+                                    callback(data);
+                                })
+                                .catch(function(error) {
+                                    console.error('SSO Error:', error);
+                                    alert('Ошибка при получении токена');
+                                });
+                            } else if (typeof XMLHttpRequest !== 'undefined') {
+                                var xhr = new XMLHttpRequest();
+                                xhr.open('POST', ajaxUrl, true);
+                                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                                xhr.onreadystatechange = function() {
+                                    if (xhr.readyState === 4) {
+                                        if (xhr.status === 200) {
+                                            try {
+                                                var data = JSON.parse(xhr.responseText);
+                                                callback(data);
+                                            } catch (e) {
+                                                console.error('SSO Parse Error:', e);
+                                                alert('Ошибка при обработке ответа');
+                                            }
+                                        } else {
+                                            alert('Ошибка при получении токена');
+                                        }
+                                    }
+                                };
+                                xhr.send('action=' + encodeURIComponent(action) + '&nonce=' + encodeURIComponent(nonce));
+                            } else {
+                                alert('Браузер не поддерживает необходимые функции для SSO');
+                            }
+                        }
+                        
+                        // Функция для перехода в Moodle
+                        window.goToMoodle = function() {
+                            <?php if (!empty($moodle_url)): ?>
+                            ssoAjaxRequest('get_sso_tokens', function(response) {
+                                if (response.success && response.data && response.data.moodle_token) {
+                                    var moodleUrl = '<?php echo esc_js(rtrim($moodle_url, '/')); ?>' + '/sso-login.php?token=' + encodeURIComponent(response.data.moodle_token);
+                                    window.location.href = moodleUrl;
+                                } else {
+                                    alert('Ошибка получения токена для входа в Moodle');
+                                }
+                            });
+                            <?php else: ?>
+                            alert('Moodle URL не настроен');
+                            <?php endif; ?>
+                        };
+                        
+                        // Функция для перехода в Laravel
+                        window.goToLaravel = function() {
+                            <?php if (!empty($laravel_url)): ?>
+                            ssoAjaxRequest('get_sso_tokens', function(response) {
+                                if (response.success && response.data && response.data.laravel_token) {
+                                    var laravelUrl = '<?php echo esc_js(rtrim($laravel_url, '/')); ?>' + '/sso/login?token=' + encodeURIComponent(response.data.laravel_token);
+                                    window.location.href = laravelUrl;
+                                } else {
+                                    alert('Ошибка получения токена для входа в Laravel');
+                                }
+                            });
+                            <?php else: ?>
+                            alert('Laravel URL не настроен');
+                            <?php endif; ?>
+                        };
+                    })();
+                    </script>
+                    <?php
+                }
+            }
+            ?>
+            
             <!-- Форма для сохранения настроек -->
             <form method="post" action="options.php">
                 <?php 
