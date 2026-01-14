@@ -85,8 +85,11 @@ sso_log('URL запроса: ' . $api_url);
 
 // Выполняем запрос к WordPress API
 // WordPress AJAX работает и через GET, и через POST, поэтому отправляем параметры в URL
-$full_url = $api_url . '?' . http_build_query($params);
+// Используем http_build_query с правильными опциями, чтобы избежать экранирования
+$query_string = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+$full_url = $api_url . '?' . $query_string;
 sso_log('Полный URL с параметрами: ' . $full_url);
+sso_log('Query string: ' . $query_string);
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $full_url);
