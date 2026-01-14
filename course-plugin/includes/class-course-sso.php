@@ -131,8 +131,9 @@ class Course_SSO {
         }
         
         // Создаем токен на основе данных пользователя и секретного ключа
+        // НЕ используем time() в данных, чтобы токен был стабильным до истечения срока действия
         $secret = wp_salt('auth');
-        $data = $user_id . '|' . $user->user_email . '|' . $service . '|' . time();
+        $data = $user_id . '|' . $user->user_email . '|' . $service;
         $token = hash_hmac('sha256', $data, $secret);
         
         return base64_encode($user_id . ':' . $token);
