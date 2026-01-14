@@ -18,11 +18,23 @@ require_once(__DIR__ . '/config.php');
 // Функция для логирования (записывает в moodledata/error.log)
 function sso_log($message) {
     global $CFG;
-    $log_file = $CFG->dataroot . '/error.log';
+    // Определяем путь к файлу логов
+    if (isset($CFG->dataroot) && !empty($CFG->dataroot)) {
+        $log_file = $CFG->dataroot . '/error.log';
+    } else {
+        // Fallback: используем системный error_log, если dataroot не определен
+        $log_file = null;
+    }
+    
     $timestamp = date('Y-m-d H:i:s');
     $log_message = "[{$timestamp}] Moodle SSO Login: {$message}\n";
-    @file_put_contents($log_file, $log_message, FILE_APPEND);
-    // Также пишем в PHP error_log для системных логов
+    
+    // Записываем в файл логов Moodle, если путь определен
+    if ($log_file) {
+        @file_put_contents($log_file, $log_message, FILE_APPEND);
+    }
+    
+    // Также пишем в PHP error_log для системных логов (всегда работает)
     error_log('Moodle SSO Login: ' . $message);
 }
 
