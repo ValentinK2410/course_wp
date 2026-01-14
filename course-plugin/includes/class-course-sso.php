@@ -43,10 +43,6 @@ class Course_SSO {
         add_action('wp_footer', array($this, 'add_sso_scripts'));
         add_action('admin_footer', array($this, 'add_sso_scripts'));
         
-        // Добавляем стили для admin bar
-        add_action('admin_head', array($this, 'add_admin_bar_styles'));
-        add_action('wp_head', array($this, 'add_admin_bar_styles'));
-        
         // AJAX endpoint для получения SSO токенов
         add_action('wp_ajax_get_sso_tokens', array($this, 'ajax_get_sso_tokens'));
         add_action('wp_ajax_nopriv_get_sso_tokens', array($this, 'ajax_get_sso_tokens'));
@@ -64,9 +60,6 @@ class Course_SSO {
         
         // Регистрируем шорткод для кнопок SSO
         add_shortcode('sso_buttons', array($this, 'sso_buttons_shortcode'));
-        
-        // Добавляем кнопки в WordPress admin bar (верхняя панель)
-        add_action('admin_bar_menu', array($this, 'add_admin_bar_items'), 100);
         
         // Генерируем SSO API ключ при первой загрузке, если он не установлен
         if (empty(get_option('sso_api_key', ''))) {
