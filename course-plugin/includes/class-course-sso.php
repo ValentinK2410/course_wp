@@ -337,7 +337,7 @@ class Course_SSO {
             'id'    => 'course-sso',
             'title' => __('Быстрый переход', 'course-plugin'),
             'meta'  => array(
-                'title' => __('Перейти в Moodle или Laravel', 'course-plugin'),
+                'title' => __('Перейти в Виртуальный класс или Деканат', 'course-plugin'),
             ),
         ));
         
@@ -346,12 +346,12 @@ class Course_SSO {
             $wp_admin_bar->add_node(array(
                 'parent' => 'course-sso',
                 'id'     => 'course-sso-moodle',
-                'title'  => __('Перейти в Moodle', 'course-plugin'),
+                'title'  => __('Виртуальный класс', 'course-plugin'),
                 'href'   => 'javascript:void(0);',
                 'meta'   => array(
                     'onclick' => 'goToMoodle(); return false;',
                     'class'  => 'course-sso-moodle',
-                    'title'  => __('Перейти в Moodle без ввода пароля', 'course-plugin'),
+                    'title'  => __('Перейти в Виртуальный класс без ввода пароля', 'course-plugin'),
                 ),
             ));
         }
@@ -361,12 +361,12 @@ class Course_SSO {
             $wp_admin_bar->add_node(array(
                 'parent' => 'course-sso',
                 'id'     => 'course-sso-laravel',
-                'title'  => __('Перейти в Laravel', 'course-plugin'),
+                'title'  => __('Деканат', 'course-plugin'),
                 'href'   => 'javascript:void(0);',
                 'meta'   => array(
                     'onclick' => 'goToLaravel(); return false;',
                     'class'  => 'course-sso-laravel',
-                    'title'  => __('Перейти в Laravel без ввода пароля', 'course-plugin'),
+                    'title'  => __('Перейти в Деканат без ввода пароля', 'course-plugin'),
                 ),
             ));
         }
