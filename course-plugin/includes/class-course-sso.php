@@ -1040,10 +1040,17 @@ class Course_SSO {
      */
     public function ajax_get_sso_tokens_from_moodle() {
         // Логируем все входящие данные для отладки
+        // ВАЖНО: Эта функция ДОЛЖНА вызываться при каждом запросе к /wp-admin/admin-ajax.php?action=get_sso_tokens_from_moodle
         error_log('Course SSO: ========== НАЧАЛО ajax_get_sso_tokens_from_moodle [VERSION 2.0] ==========');
+        error_log('Course SSO: Функция ВЫЗВАНА! Время: ' . date('Y-m-d H:i:s'));
         error_log('Course SSO: REQUEST метод: ' . (isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'НЕИЗВЕСТНО'));
+        error_log('Course SSO: REQUEST_URI: ' . (isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'НЕИЗВЕСТНО'));
         error_log('Course SSO: Content-Type: ' . (isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : 'НЕИЗВЕСТНО'));
-        error_log('Course SSO: php://input (первые 500 символов): ' . substr(file_get_contents('php://input'), 0, 500));
+        
+        // Читаем сырые данные из потока
+        $raw_input = file_get_contents('php://input');
+        error_log('Course SSO: php://input (длина: ' . strlen($raw_input) . ', первые 500 символов): ' . substr($raw_input, 0, 500));
+        
         error_log('Course SSO: REQUEST данные: ' . print_r($_REQUEST, true));
         error_log('Course SSO: POST данные: ' . print_r($_POST, true));
         error_log('Course SSO: GET данные: ' . print_r($_GET, true));
