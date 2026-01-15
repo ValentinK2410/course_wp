@@ -78,7 +78,8 @@ if (empty($user_email)) {
 }
 
 // Генерируем токены через WordPress API
-$ajax_url = rtrim($wordpress_url, '/') . '/wp-admin/admin-ajax.php';
+// ВАЖНО: WordPress AJAX требует параметр 'action' в URL, а не только в POST данных
+$ajax_url = rtrim($wordpress_url, '/') . '/wp-admin/admin-ajax.php?action=get_sso_tokens_from_moodle';
 
 // Проверяем, что email не пустой перед отправкой запроса
 if (empty($user_email)) {
@@ -89,8 +90,8 @@ if (empty($user_email)) {
 }
 
 // Создаем запрос для получения токенов
+// Параметр 'action' уже в URL, поэтому не добавляем его в POST данные
 $params = array(
-    'action' => 'get_sso_tokens_from_moodle',
     'email' => $user_email,
     'moodle_user_id' => $user_id,
 );
