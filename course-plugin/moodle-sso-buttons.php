@@ -106,8 +106,11 @@ $laravel_sso_url = rtrim($laravel_url, '/') . '/sso/login?token=' . urlencode($l
 header('Content-Type: application/javascript; charset=utf-8');
 ?>
 (function() {
+    console.log('Moodle SSO: Скрипт запущен');
+    
     // Проверяем, не добавлены ли уже кнопки
     if (document.querySelector('.moodle-sso-buttons-container')) {
+        console.log('Moodle SSO: Кнопки уже существуют');
         return;
     }
 
@@ -149,16 +152,44 @@ header('Content-Type: application/javascript; charset=utf-8');
     document.head.appendChild(style);
 
     function addSSOButtons() {
-        // Ищем верхнюю панель или меню пользователя
-        var container = document.querySelector('.top-bar, .header-top, .navbar-top, .usermenu, .navbar-nav, nav.navbar, header');
+        console.log('Moodle SSO: Функция addSSOButtons вызвана');
         
-        if (!container) {
-            container = document.body;
+        // Ищем верхнюю панель (темно-бордовая полоса с иконками)
+        var topBar = document.querySelector('.top-bar, .header-top, .top-header, .navbar-top');
+        
+        // Ищем меню пользователя
+        var userMenu = document.querySelector('.usermenu, .user-menu, .dropdown-toggle');
+        
+        // Ищем навигационную панель
+        var navBar = document.querySelector('.navbar-nav, nav.navbar, .navbar');
+        
+        var container = null;
+        
+        // Приоритет 1: верхняя панель
+        if (topBar) {
+            container = topBar;
+            console.log('Moodle SSO: Найден topBar');
+        }
+        // Приоритет 2: рядом с меню пользователя
+        else if (userMenu && userMenu.parentElement) {
+            container = userMenu.parentElement;
+            console.log('Moodle SSO: Найден userMenu parent');
+        }
+        // Приоритет 3: навигационная панель
+        else if (navBar) {
+            container = navBar;
+            console.log('Moodle SSO: Найден navBar');
+        }
+        // Приоритет 4: header
+        else {
+            container = document.querySelector('header') || document.body;
+            console.log('Moodle SSO: Используем header или body');
         }
 
         // Создаем контейнер для кнопок
         var buttonsContainer = document.createElement('div');
         buttonsContainer.className = 'moodle-sso-buttons-container';
+        console.log('Moodle SSO: Контейнер создан');
 
         <?php if (!empty($wordpress_token)): ?>
         var wordpressBtn = document.createElement('a');
@@ -180,18 +211,41 @@ header('Content-Type: application/javascript; charset=utf-8');
 
         // Если нет кнопок, не вставляем контейнер
         if (buttonsContainer.children.length === 0) {
+            console.log('Moodle SSO: Нет кнопок для вставки');
             return;
         }
 
-        // Вставляем кнопки перед меню пользователя или в начало контейнера
-        var userMenu = container.querySelector('.usermenu, .dropdown-toggle, .nav-item.dropdown');
-        if (userMenu && userMenu.parentElement) {
-            userMenu.parentElement.insertBefore(buttonsContainer, userMenu);
-        } else if (container.firstChild) {
-            container.insertBefore(buttonsContainer, container.firstChild);
-        } else {
-            container.appendChild(buttonsContainer);
+        console.log('Moodle SSO: Кнопок для вставки: ' + buttonsContainer.children.length);
+
+        // Вставляем кнопки в верхнюю панель справа от иконок
+        if (topBar) {
+            // Ищем контейнер с иконками (уведомления, сообщения, профиль)
+            var iconsContainer = topBar.querySelector('.d-flex, .ml-auto, .navbar-nav');
+            if (iconsContainer) {
+                iconsContainer.appendChild(buttonsContainer);
+                console.log('Moodle SSO: Кнопки вставлены в iconsContainer');
+            } else {
+                topBar.appendChild(buttonsContainer);
+                console.log('Moodle SSO: Кнопки вставлены в topBar');
+            }
         }
+        // Вставляем перед меню пользователя
+        else if (userMenu && userMenu.parentElement) {
+            userMenu.parentElement.insertBefore(buttonsContainer, userMenu);
+            console.log('Moodle SSO: Кнопки вставлены перед userMenu');
+        }
+        // Вставляем в начало контейнера
+        else if (container.firstChild) {
+            container.insertBefore(buttonsContainer, container.firstChild);
+            console.log('Moodle SSO: Кнопки вставлены в начало контейнера');
+        }
+        // Вставляем в конец контейнера
+        else {
+            container.appendChild(buttonsContainer);
+            console.log('Moodle SSO: Кнопки вставлены в конец контейнера');
+        }
+        
+        console.log('Moodle SSO: Кнопки успешно добавлены!');
     }
 
     // Ждем загрузки DOM
