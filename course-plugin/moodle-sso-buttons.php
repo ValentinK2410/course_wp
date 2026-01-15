@@ -53,11 +53,29 @@ $sso_api_key = ''; // SSO API Key из WordPress (опционально)
 
 // Получаем данные текущего пользователя Moodle
 global $USER;
-$user_email = $USER->email;
-$user_id = $USER->id;
-$user_username = $USER->username;
+$user_email = isset($USER->email) ? $USER->email : '';
+$user_id = isset($USER->id) ? $USER->id : 0;
+$user_username = isset($USER->username) ? $USER->username : '';
 
-sso_log('Пользователь Moodle - Email: ' . $user_email . ', Username: ' . $user_username . ', ID: ' . $user_id);
+sso_log('Пользователь Moodle - Email: ' . ($user_email ? $user_email : 'ПУСТО') . ', Username: ' . ($user_username ? $user_username : 'ПУСТО') . ', ID: ' . $user_id);
+
+// Проверяем, что email не пустой
+if (empty($user_email)) {
+    sso_log('ОШИБКА: Email пользователя пустой! Проверяем альтернативные источники...');
+    // Пробуем получить email из других источников
+    if (isset($USER->email) && !empty($USER->email)) {
+        $user_email = $USER->email;
+    } elseif (isset($USER->username) && !empty($USER->username)) {
+        // Если email пустой, пробуем использовать username
+        $user_email = $USER->username;
+        sso_log('Используем username как email: ' . $user_email);
+    } else {
+        sso_log('КРИТИЧЕСКАЯ ОШИБКА: Не удалось получить email или username пользователя!');
+        header('Content-Type: application/javascript; charset=utf-8');
+        echo 'console.error("Moodle SSO: Не удалось получить email пользователя");';
+        exit;
+    }
+}
 sso_log('Запрос к WordPress API: ' . $ajax_url);
 sso_log('Параметры запроса: ' . print_r($params, true));
 
