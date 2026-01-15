@@ -30,7 +30,7 @@ function sso_log($message) {
 }
 
 // Логируем время выполнения файла для проверки кеша
-sso_log('========== moodle-sso-buttons.php ВЫПОЛНЕН [ВРЕМЯ: ' . date('Y-m-d H:i:s') . '] ==========');
+sso_log('========== moodle-sso-buttons.php ВЫПОЛНЕН [VERSION 3.0] [ВРЕМЯ: ' . date('Y-m-d H:i:s') . '] ==========');
 
 // Проверяем, что пользователь авторизован (без редиректа)
 global $USER, $CFG;
