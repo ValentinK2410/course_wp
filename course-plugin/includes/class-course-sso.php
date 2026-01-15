@@ -1043,7 +1043,10 @@ class Course_SSO {
         $email = isset($_REQUEST['email']) ? sanitize_email($_REQUEST['email']) : '';
         $moodle_user_id = isset($_REQUEST['moodle_user_id']) ? intval($_REQUEST['moodle_user_id']) : 0;
         
+        error_log('Course SSO: Запрос токенов из Moodle. Email: ' . $email . ', Moodle ID: ' . $moodle_user_id);
+        
         if (empty($email)) {
+            error_log('Course SSO: Ошибка - email не указан');
             wp_send_json_error(array('message' => 'Email required'));
         }
         
@@ -1051,7 +1054,17 @@ class Course_SSO {
         $user = get_user_by('email', $email);
         
         if (!$user) {
-            wp_send_json_error(array('message' => 'User not found in WordPress'));
+            error_log('Course SSO: Пользователь с email ' . $email . ' не найден в WordPress');
+            // Пробуем найти по username (если email совпадает с username)
+            $user = get_user_by('login', $email);
+            if ($user) {
+                error_log('Course SSO: Пользователь найден по username: ' . $email);
+            } else {
+                error_log('Course SSO: Пользователь не найден ни по email, ни по username');
+                wp_send_json_error(array('message' => 'User not found in WordPress. Email: ' . $email));
+            }
+        } else {
+            error_log('Course SSO: Пользователь найден по email. WordPress ID: ' . $user->ID);
         }
         
         // Генерируем токены для WordPress и Laravel
