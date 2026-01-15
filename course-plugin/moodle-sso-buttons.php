@@ -41,9 +41,17 @@ if (isset($USER) && isset($USER->id) && $USER->id > 1) {
     }
 }
 
+// Логируем для отладки
+if (isset($CFG->dataroot) && !empty($CFG->dataroot)) {
+    $log_file = $CFG->dataroot . '/error.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $log_message = "[{$timestamp}] Moodle SSO: USER->id=" . (isset($USER->id) ? $USER->id : 'не установлен') . ", is_logged_in=" . ($is_logged_in ? 'true' : 'false') . "\n";
+    @file_put_contents($log_file, $log_message, FILE_APPEND);
+}
+
 if (!$is_logged_in) {
     header('Content-Type: application/javascript; charset=utf-8');
-    echo '// Пользователь не авторизован';
+    echo 'console.log("Moodle SSO: Пользователь не авторизован. USER->id=' . (isset($USER->id) ? $USER->id : 'не установлен') . '");';
     exit;
 }
 
