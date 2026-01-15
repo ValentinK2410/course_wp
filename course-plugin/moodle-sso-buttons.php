@@ -103,8 +103,13 @@ if (!empty($sso_api_key)) {
     $params['api_key'] = $sso_api_key;
 }
 
+sso_log('Отправка POST запроса к WordPress API: ' . $ajax_url);
+sso_log('POST параметры: ' . print_r($params, true));
+
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $ajax_url . '?' . http_build_query($params));
+curl_setopt($ch, CURLOPT_URL, $ajax_url);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
