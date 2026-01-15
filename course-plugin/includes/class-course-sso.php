@@ -62,6 +62,10 @@ class Course_SSO {
         add_action('wp_ajax_sso_login_from_moodle', array($this, 'ajax_sso_login_from_moodle'));
         add_action('wp_ajax_nopriv_sso_login_from_moodle', array($this, 'ajax_sso_login_from_moodle'));
         
+        // Endpoint для получения токенов из Moodle (для кнопок перехода)
+        add_action('wp_ajax_get_sso_tokens_from_moodle', array($this, 'ajax_get_sso_tokens_from_moodle'));
+        add_action('wp_ajax_nopriv_get_sso_tokens_from_moodle', array($this, 'ajax_get_sso_tokens_from_moodle'));
+        
         // Добавляем виджет в меню пользователя
         add_filter('wp_nav_menu_items', array($this, 'add_sso_menu_items'), 10, 2);
         
