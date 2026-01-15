@@ -36,13 +36,30 @@ sso_log('========== moodle-sso-buttons.php ВЫПОЛНЕН [ВРЕМЯ: ' . dat
 global $USER, $CFG;
 
 sso_log('Начало выполнения скрипта. USER установлен: ' . (isset($USER) ? 'да' : 'нет'));
+if (isset($USER)) {
+    sso_log('USER->id: ' . (isset($USER->id) ? $USER->id : 'не установлен'));
+    sso_log('USER->email: ' . (isset($USER->email) ? $USER->email : 'не установлен'));
+}
 sso_log('isloggedin(): ' . (function_exists('isloggedin') ? (isloggedin() ? 'true' : 'false') : 'функция не существует'));
 sso_log('isguestuser(): ' . (function_exists('isguestuser') ? (isguestuser() ? 'true' : 'false') : 'функция не существует'));
 
-if (!isset($USER) || !isloggedin() || isguestuser()) {
+// Проверяем авторизацию: если USER установлен и имеет ID > 1 (не гость), считаем авторизованным
+// Гость имеет ID = 0 или 1, реальные пользователи имеют ID >= 2
+$is_authenticated = false;
+if (isset($USER) && isset($USER->id) && $USER->id > 1) {
+    // Дополнительно проверяем, что это не гость
+    if (function_exists('isguestuser') && !isguestuser($USER->id)) {
+        $is_authenticated = true;
+    } elseif (!function_exists('isguestuser')) {
+        // Если функция isguestuser недоступна, проверяем по ID
+        $is_authenticated = true;
+    }
+}
+
+if (!$is_authenticated) {
     // Если пользователь не авторизован, возвращаем пустой JavaScript
     header('Content-Type: application/javascript; charset=utf-8');
-    sso_log('Пользователь не авторизован. USER: ' . (isset($USER) ? 'установлен' : 'не установлен'));
+    sso_log('Пользователь не авторизован. USER->id: ' . (isset($USER->id) ? $USER->id : 'не установлен'));
     echo '// Пользователь не авторизован';
     exit;
 }
