@@ -26,17 +26,6 @@ function sso_log($message) {
 
 sso_log('========== СКРИПТ ЗАПУЩЕН ==========');
 
-// Функция для логирования
-function sso_log($message) {
-    global $CFG;
-    if (isset($CFG->dataroot) && !empty($CFG->dataroot)) {
-        $log_file = $CFG->dataroot . '/error.log';
-        $timestamp = date('Y-m-d H:i:s');
-        $log_message = "[{$timestamp}] Moodle SSO Buttons: {$message}\n";
-        @file_put_contents($log_file, $log_message, FILE_APPEND);
-    }
-}
-
 // Проверяем авторизацию
 global $USER;
 $is_logged_in = false;
