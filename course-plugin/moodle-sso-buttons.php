@@ -273,13 +273,23 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
         console.log('Moodle SSO: Кнопки успешно добавлены!');
     }
 
-    // Ждем загрузки DOM
+    // Ждем загрузки DOM и вызываем только один раз
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addSSOButtons);
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.moodleSSOButtonsAdded) {
+                addSSOButtons();
+            }
+        });
     } else {
-        addSSOButtons();
+        if (!window.moodleSSOButtonsAdded) {
+            addSSOButtons();
+        }
     }
 
-    // Также пробуем добавить после небольшой задержки
-    setTimeout(addSSOButtons, 500);
+    // Дополнительная попытка через задержку (только если кнопки еще не добавлены)
+    setTimeout(function() {
+        if (!window.moodleSSOButtonsAdded && !document.querySelector('.moodle-sso-buttons-container')) {
+            addSSOButtons();
+        }
+    }, 500);
 })();
