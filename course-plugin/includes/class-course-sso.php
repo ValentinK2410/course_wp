@@ -1041,8 +1041,13 @@ class Course_SSO {
     public function ajax_get_sso_tokens_from_moodle() {
         // Логируем все входящие данные для отладки
         // ВАЖНО: Эта функция ДОЛЖНА вызываться при каждом запросе к /wp-admin/admin-ajax.php?action=get_sso_tokens_from_moodle
-        error_log('Course SSO: ========== НАЧАЛО ajax_get_sso_tokens_from_moodle [VERSION 2.0] ==========');
+        // Записываем в несколько мест для надежности
+        error_log('Course SSO: ========== НАЧАЛО ajax_get_sso_tokens_from_moodle [VERSION 2.1] ==========');
         error_log('Course SSO: Функция ВЫЗВАНА! Время: ' . date('Y-m-d H:i:s'));
+        
+        // Также пишем напрямую в файл для отладки (на случай если error_log не работает)
+        $log_file = WP_CONTENT_DIR . '/sso-debug.log';
+        @file_put_contents($log_file, date('Y-m-d H:i:s') . ' - ajax_get_sso_tokens_from_moodle ВЫЗВАНА [VERSION 2.1]' . "\n", FILE_APPEND);
         error_log('Course SSO: REQUEST метод: ' . (isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'НЕИЗВЕСТНО'));
         error_log('Course SSO: REQUEST_URI: ' . (isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'НЕИЗВЕСТНО'));
         error_log('Course SSO: Content-Type: ' . (isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : 'НЕИЗВЕСТНО'));
