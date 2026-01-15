@@ -6,7 +6,12 @@
  * /var/www/www-root/data/www/class.russianseminary.org/moodle-sso-buttons.php
  * 
  * Отображает кнопки для перехода в WordPress и Laravel для авторизованных пользователей Moodle.
- * Кнопки можно встроить в шапку Moodle или отобразить на отдельной странице.
+ * Кнопки автоматически вставляются в шапку Moodle через JavaScript.
+ * 
+ * Для подключения добавьте в footer.mustache темы:
+ * {{#isloggedin}}
+ * <script src="{{config.wwwroot}}/moodle-sso-buttons.php" async></script>
+ * {{/isloggedin}}
  */
 
 // Загружаем конфигурацию Moodle
@@ -87,36 +92,33 @@ if ($http_code === 200 && !empty($response)) {
     sso_log('Ошибка HTTP запроса к WordPress: ' . $http_code . ($curl_error ? ', ' . $curl_error : ''));
 }
 
-// Если токены не получены, пытаемся сгенерировать их локально
-if (empty($wordpress_token) || empty($laravel_token)) {
-    // Генерируем простой токен на основе email и времени
-    $token_data = $user_email . '|' . $user_id . '|' . time();
-    $token_hash = hash('sha256', $token_data . '|' . $CFG->passwordsaltmain);
-    $wordpress_token = base64_encode($token_data . '|' . $token_hash);
-    $laravel_token = base64_encode($token_data . '|' . $token_hash);
-    sso_log('Токены сгенерированы локально');
-}
-
 // Формируем URL для перехода
 $wordpress_sso_url = rtrim($wordpress_url, '/') . '/wp-admin/admin-ajax.php?action=sso_login_from_moodle&token=' . urlencode($wordpress_token);
 $laravel_sso_url = rtrim($laravel_url, '/') . '/sso/login?token=' . urlencode($laravel_token);
 
+// Устанавливаем заголовок для JavaScript
+header('Content-Type: application/javascript; charset=utf-8');
+
+// Выводим JavaScript и CSS для автоматической вставки кнопок в шапку Moodle
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Быстрый переход</title>
-    <style>
-        .sso-buttons-container {
-            display: flex;
+(function() {
+    // Проверяем, не добавлены ли уже кнопки
+    if (document.querySelector('.moodle-sso-buttons-container')) {
+        return;
+    }
+    
+    // Добавляем стили
+    var style = document.createElement('style');
+    style.textContent = `
+        .moodle-sso-buttons-container {
+            display: inline-flex;
             gap: 10px;
             align-items: center;
-            padding: 10px;
+            margin-left: 15px;
         }
-        .sso-button {
+        .moodle-sso-buttons-container .sso-button {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 4px;
             text-decoration: none;
             font-size: 14px;
@@ -126,36 +128,113 @@ $laravel_sso_url = rtrim($laravel_url, '/') . '/sso/login?token=' . urlencode($l
             border: none;
             white-space: nowrap;
         }
-        .sso-button-wordpress {
+        .moodle-sso-buttons-container .sso-button-wordpress {
             background: #2271b1;
             color: white;
         }
-        .sso-button-wordpress:hover {
+        .moodle-sso-buttons-container .sso-button-wordpress:hover {
             background: #135e96;
             color: white;
         }
-        .sso-button-laravel {
+        .moodle-sso-buttons-container .sso-button-laravel {
             background: #f9322c;
             color: white;
         }
-        .sso-button-laravel:hover {
+        .moodle-sso-buttons-container .sso-button-laravel:hover {
             background: #e02823;
             color: white;
         }
-    </style>
-</head>
-<body>
-    <div class="sso-buttons-container">
+    `;
+    document.head.appendChild(style);
+    
+    function addSSOButtons() {
+        // Ищем контейнер с меню пользователя или навигацией в Moodle
+        var selectors = [
+            '.usermenu',
+            '.navbar-nav',
+            '.navbar .navbar-nav',
+            '.header-actions',
+            '.header-actions-container',
+            '.user-menu',
+            '.usermenu .dropdown',
+            '#usermenu',
+            '.nav-link.dropdown-toggle',
+            '.navbar .ml-auto',
+            'header .container-fluid',
+            '.navbar .navbar-collapse'
+        ];
+        
+        var container = null;
+        for (var i = 0; i < selectors.length; i++) {
+            var elements = document.querySelectorAll(selectors[i]);
+            if (elements.length > 0) {
+                for (var j = 0; j < elements.length; j++) {
+                    var text = elements[j].textContent || elements[j].innerText;
+                    if (text.indexOf('Профиль') !== -1 || text.indexOf('Выход') !== -1 || 
+                        text.indexOf('Profile') !== -1 || text.indexOf('Logout') !== -1 ||
+                        elements[j].querySelector('.usermenu') || elements[j].querySelector('.dropdown-toggle')) {
+                        container = elements[j];
+                        break;
+                    }
+                }
+                if (container) break;
+            }
+        }
+        
+        if (!container) {
+            var header = document.querySelector('header, .navbar, nav.navbar, .navbar-nav');
+            if (header) {
+                container = header;
+            }
+        }
+        
+        if (!container) {
+            console.log('Moodle SSO: Не найден контейнер для вставки кнопок');
+            return;
+        }
+        
+        // Создаем контейнер для кнопок
+        var buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'moodle-sso-buttons-container';
+        
         <?php if (!empty($wordpress_token)): ?>
-        <a href="<?php echo htmlspecialchars($wordpress_sso_url); ?>" class="sso-button sso-button-wordpress" target="_blank">
-            Сайт семинарии
-        </a>
+        var wordpressBtn = document.createElement('a');
+        wordpressBtn.href = '<?php echo addslashes($wordpress_sso_url); ?>';
+        wordpressBtn.className = 'sso-button sso-button-wordpress';
+        wordpressBtn.textContent = 'Сайт семинарии';
+        wordpressBtn.target = '_blank';
+        buttonsContainer.appendChild(wordpressBtn);
         <?php endif; ?>
+        
         <?php if (!empty($laravel_token)): ?>
-        <a href="<?php echo htmlspecialchars($laravel_sso_url); ?>" class="sso-button sso-button-laravel" target="_blank">
-            Деканат
-        </a>
+        var laravelBtn = document.createElement('a');
+        laravelBtn.href = '<?php echo addslashes($laravel_sso_url); ?>';
+        laravelBtn.className = 'sso-button sso-button-laravel';
+        laravelBtn.textContent = 'Деканат';
+        laravelBtn.target = '_blank';
+        buttonsContainer.appendChild(laravelBtn);
         <?php endif; ?>
-    </div>
-</body>
-</html>
+        
+        // Вставляем кнопки перед меню пользователя или в конец контейнера
+        if (container.querySelector('.usermenu, .dropdown-toggle')) {
+            var userMenu = container.querySelector('.usermenu, .dropdown-toggle').parentElement;
+            if (userMenu && userMenu.parentElement) {
+                userMenu.parentElement.insertBefore(buttonsContainer, userMenu);
+            } else {
+                container.appendChild(buttonsContainer);
+            }
+        } else {
+            container.appendChild(buttonsContainer);
+        }
+    }
+    
+    // Ждем загрузки DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', addSSOButtons);
+    } else {
+        addSSOButtons();
+    }
+    
+    // Также пробуем добавить после небольшой задержки (на случай динамической загрузки)
+    setTimeout(addSSOButtons, 500);
+})();
