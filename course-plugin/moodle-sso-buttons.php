@@ -31,9 +31,15 @@ function sso_log($message) {
 
 // Проверяем, что пользователь авторизован (без редиректа)
 global $USER, $CFG;
+
+sso_log('Начало выполнения скрипта. USER установлен: ' . (isset($USER) ? 'да' : 'нет'));
+sso_log('isloggedin(): ' . (function_exists('isloggedin') ? (isloggedin() ? 'true' : 'false') : 'функция не существует'));
+sso_log('isguestuser(): ' . (function_exists('isguestuser') ? (isguestuser() ? 'true' : 'false') : 'функция не существует'));
+
 if (!isset($USER) || !isloggedin() || isguestuser()) {
     // Если пользователь не авторизован, возвращаем пустой JavaScript
     header('Content-Type: application/javascript; charset=utf-8');
+    sso_log('Пользователь не авторизован. USER: ' . (isset($USER) ? 'установлен' : 'не установлен'));
     echo '// Пользователь не авторизован';
     exit;
 }
