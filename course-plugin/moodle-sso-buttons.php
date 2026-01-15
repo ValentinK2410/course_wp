@@ -106,6 +106,9 @@ $laravel_sso_url = rtrim($laravel_url, '/') . '/sso/login?token=' . urlencode($l
 
 // Устанавливаем заголовок для JavaScript
 header('Content-Type: application/javascript; charset=utf-8');
+
+// Добавляем явный маркер для проверки загрузки
+echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН в ' + new Date().toLocaleString());\n";
 ?>
 (function() {
     console.log('Moodle SSO: Скрипт запущен');
