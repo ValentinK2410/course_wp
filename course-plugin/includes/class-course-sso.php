@@ -1108,7 +1108,13 @@ class Course_SSO {
         $wordpress_token = $this->generate_token($user->ID, 'wordpress');
         $laravel_token = $this->generate_token($user->ID, 'laravel');
         
-        error_log('Course SSO: Токены сгенерированы. WordPress токен (длина): ' . strlen($wordpress_token) . ', Laravel токен (длина): ' . strlen($laravel_token));
+        // Сохраняем токены в user_meta с временем истечения (1 час)
+        update_user_meta($user->ID, 'sso_wordpress_token', $wordpress_token);
+        update_user_meta($user->ID, 'sso_wordpress_token_expires', time() + 3600);
+        update_user_meta($user->ID, 'sso_laravel_token', $laravel_token);
+        update_user_meta($user->ID, 'sso_laravel_token_expires', time() + 3600);
+        
+        error_log('Course SSO: Токены сгенерированы и сохранены. WordPress токен (длина): ' . strlen($wordpress_token) . ', Laravel токен (длина): ' . strlen($laravel_token));
         error_log('Course SSO: Отправляем успешный ответ с токенами');
         
         wp_send_json_success(array(

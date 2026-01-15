@@ -105,12 +105,29 @@ if ($http_code === 200 && !empty($response)) {
     if (isset($data['success']) && $data['success']) {
         $wordpress_token = isset($data['data']['wordpress_token']) ? $data['data']['wordpress_token'] : '';
         $laravel_token = isset($data['data']['laravel_token']) ? $data['data']['laravel_token'] : '';
+        
+        sso_log('Токены получены от WordPress. WordPress токен (длина): ' . strlen($wordpress_token) . ', Laravel токен (длина): ' . strlen($laravel_token));
+    } else {
+        sso_log('Ошибка получения токенов от WordPress. Ответ: ' . substr($response, 0, 500));
     }
+} else {
+    sso_log('HTTP ошибка при получении токенов. Код: ' . $http_code . ', Ответ: ' . substr($response, 0, 500));
 }
 
 // Формируем URL для перехода
-$wordpress_sso_url = rtrim($wordpress_url, '/') . '/wp-admin/admin-ajax.php?action=sso_login_from_moodle&token=' . urlencode($wordpress_token);
-$laravel_sso_url = rtrim($laravel_url, '/') . '/sso/login?token=' . urlencode($laravel_token);
+$wordpress_sso_url = '';
+$laravel_sso_url = '';
+
+if (!empty($wordpress_token)) {
+    $wordpress_sso_url = rtrim($wordpress_url, '/') . '/wp-admin/admin-ajax.php?action=sso_login_from_moodle&token=' . urlencode($wordpress_token);
+}
+
+if (!empty($laravel_token)) {
+    $laravel_sso_url = rtrim($laravel_url, '/') . '/sso/login?token=' . urlencode($laravel_token);
+    sso_log('Laravel SSO URL сформирован: ' . substr($laravel_sso_url, 0, 100) . '...');
+} else {
+    sso_log('ВНИМАНИЕ: Laravel токен пустой, кнопка не будет отображена');
+}
 
 // Устанавливаем заголовок для JavaScript
 header('Content-Type: application/javascript; charset=utf-8');
@@ -258,7 +275,13 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
         laravelBtn.className = 'sso-button sso-button-laravel';
         laravelBtn.textContent = 'Деканат';
         laravelBtn.target = '_blank';
+        laravelBtn.onclick = function() {
+            console.log('Moodle SSO: Переход в Laravel. URL: ' + this.href);
+        };
         buttonsContainer.appendChild(laravelBtn);
+        console.log('Moodle SSO: Кнопка Laravel создана. URL длина: ' + laravelBtn.href.length);
+        <?php else: ?>
+        console.log('Moodle SSO: Laravel токен пустой, кнопка не создана');
         <?php endif; ?>
 
         // Если нет кнопок, не вставляем контейнер и сбрасываем флаги
