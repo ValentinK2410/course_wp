@@ -1041,29 +1041,37 @@ class Course_SSO {
     public function ajax_get_sso_tokens_from_moodle() {
         // Логируем все входящие данные для отладки
         error_log('Course SSO: ========== НАЧАЛО ajax_get_sso_tokens_from_moodle ==========');
-        error_log('Course SSO: REQUEST метод: ' . $_SERVER['REQUEST_METHOD']);
+        error_log('Course SSO: REQUEST метод: ' . (isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'НЕИЗВЕСТНО'));
+        error_log('Course SSO: Content-Type: ' . (isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : 'НЕИЗВЕСТНО'));
+        error_log('Course SSO: php://input (первые 500 символов): ' . substr(file_get_contents('php://input'), 0, 500));
         error_log('Course SSO: REQUEST данные: ' . print_r($_REQUEST, true));
         error_log('Course SSO: POST данные: ' . print_r($_POST, true));
         error_log('Course SSO: GET данные: ' . print_r($_GET, true));
         
         // Получаем email и ID пользователя Moodle
-        $email = isset($_REQUEST['email']) ? sanitize_email($_REQUEST['email']) : '';
-        $moodle_user_id = isset($_REQUEST['moodle_user_id']) ? intval($_REQUEST['moodle_user_id']) : 0;
+        // Сначала пробуем из POST (так как это POST запрос)
+        $email = '';
+        $moodle_user_id = 0;
+        
+        if (isset($_POST['email']) && !empty($_POST['email'])) {
+            $email = sanitize_email($_POST['email']);
+            error_log('Course SSO: Email найден в $_POST: ' . $email);
+        } elseif (isset($_REQUEST['email']) && !empty($_REQUEST['email'])) {
+            $email = sanitize_email($_REQUEST['email']);
+            error_log('Course SSO: Email найден в $_REQUEST: ' . $email);
+        }
+        
+        if (isset($_POST['moodle_user_id']) && !empty($_POST['moodle_user_id'])) {
+            $moodle_user_id = intval($_POST['moodle_user_id']);
+        } elseif (isset($_REQUEST['moodle_user_id']) && !empty($_REQUEST['moodle_user_id'])) {
+            $moodle_user_id = intval($_REQUEST['moodle_user_id']);
+        }
         
         error_log('Course SSO: Запрос токенов из Moodle. Email: ' . ($email ? $email : 'ПУСТО') . ', Moodle ID: ' . $moodle_user_id);
         
         if (empty($email)) {
-            error_log('Course SSO: Ошибка - email не указан. Проверяем альтернативные источники...');
-            // Пробуем получить из POST напрямую
-            if (isset($_POST['email']) && !empty($_POST['email'])) {
-                $email = sanitize_email($_POST['email']);
-                error_log('Course SSO: Email найден в $_POST: ' . $email);
-            }
-            
-            if (empty($email)) {
-                error_log('Course SSO: Email не найден ни в $_REQUEST, ни в $_POST');
-                wp_send_json_error(array('message' => 'Email required'));
-            }
+            error_log('Course SSO: Ошибка - email не указан');
+            wp_send_json_error(array('message' => 'Email required'));
         }
         
         // Находим пользователя WordPress по email
