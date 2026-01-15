@@ -177,6 +177,19 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
     document.head.appendChild(style);
 
     function addSSOButtons() {
+        // Проверяем флаг перед выполнением
+        if (window.moodleSSOButtonsAdded) {
+            console.log('Moodle SSO: Кнопки уже добавлены, пропускаем');
+            return;
+        }
+        
+        // Проверяем, не добавлены ли уже кнопки
+        if (document.querySelector('.moodle-sso-buttons-container')) {
+            console.log('Moodle SSO: Кнопки уже существуют в DOM');
+            window.moodleSSOButtonsAdded = true;
+            return;
+        }
+        
         console.log('Moodle SSO: Функция addSSOButtons вызвана');
         
         // Ищем верхнюю панель (темно-бордовая полоса с иконками)
