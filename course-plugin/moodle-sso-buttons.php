@@ -137,6 +137,8 @@ $laravel_token = '';
 sso_log('HTTP код ответа от WordPress: ' . $http_code);
 sso_log('Ответ от WordPress (длина: ' . strlen($response) . ', первые 500 символов): ' . substr($response, 0, 500));
 sso_log('Полный ответ от WordPress: ' . $response);
+sso_log('URL запроса был: ' . $ajax_url);
+sso_log('POST данные были: ' . $post_data);
 
 if ($http_code === 200 && !empty($response)) {
     $data = json_decode($response, true);
