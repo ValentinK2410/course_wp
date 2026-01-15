@@ -123,21 +123,26 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
     
     // Глобальный флаг для предотвращения множественных вызовов
     if (window.moodleSSOButtonsProcessing) {
-        console.log('Moodle SSO: Скрипт уже обрабатывается');
+        console.log('Moodle SSO: Скрипт уже обрабатывается, выходим');
         return;
     }
-    window.moodleSSOButtonsProcessing = true;
     
     // Проверяем, не добавлены ли уже кнопки
     var existingButtons = document.querySelectorAll('.moodle-sso-buttons-container');
     if (existingButtons.length > 0) {
-        console.log('Moodle SSO: Кнопки уже существуют (' + existingButtons.length + ' контейнеров)');
-        // Удаляем все существующие и создадим заново
-        existingButtons.forEach(function(btn) {
-            btn.remove();
-        });
-        console.log('Moodle SSO: Все существующие кнопки удалены');
+        console.log('Moodle SSO: Кнопки уже существуют (' + existingButtons.length + ' контейнеров), выходим');
+        // Если кнопки уже есть, просто выходим - не удаляем и не добавляем заново
+        return;
     }
+    
+    // Если кнопки уже были добавлены (флаг установлен), но их нет в DOM - сбрасываем флаг
+    if (window.moodleSSOButtonsAdded && existingButtons.length === 0) {
+        console.log('Moodle SSO: Флаг установлен, но кнопок нет в DOM - сбрасываем флаг');
+        window.moodleSSOButtonsAdded = false;
+    }
+    
+    // Устанавливаем флаг обработки
+    window.moodleSSOButtonsProcessing = true;
 
     // Добавляем стили
     var style = document.createElement('style');
@@ -179,18 +184,27 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
     function addSSOButtons() {
         // Проверяем флаг перед выполнением
         if (window.moodleSSOButtonsAdded) {
-            console.log('Moodle SSO: Кнопки уже добавлены, пропускаем');
+            console.log('Moodle SSO: Кнопки уже добавлены (флаг установлен), пропускаем');
             return;
         }
         
-        // Проверяем, не добавлены ли уже кнопки
-        if (document.querySelector('.moodle-sso-buttons-container')) {
-            console.log('Moodle SSO: Кнопки уже существуют в DOM');
+        // Проверяем, не добавлены ли уже кнопки в DOM
+        var existingInDOM = document.querySelector('.moodle-sso-buttons-container');
+        if (existingInDOM) {
+            console.log('Moodle SSO: Кнопки уже существуют в DOM, устанавливаем флаг и выходим');
             window.moodleSSOButtonsAdded = true;
+            window.moodleSSOButtonsProcessing = false;
             return;
         }
         
-        console.log('Moodle SSO: Функция addSSOButtons вызвана');
+        // Проверяем флаг обработки
+        if (window.moodleSSOButtonsProcessing && !window.moodleSSOButtonsAdded) {
+            // Это нормально - мы в процессе добавления
+            console.log('Moodle SSO: Функция addSSOButtons вызвана (в процессе обработки)');
+        } else if (!window.moodleSSOButtonsProcessing) {
+            console.log('Moodle SSO: Функция addSSOButtons вызвана, но обработка не начата - устанавливаем флаг');
+            window.moodleSSOButtonsProcessing = true;
+        }
         
         // Ищем верхнюю панель (темно-бордовая полоса с иконками)
         var topBar = document.querySelector('.top-bar, .header-top, .top-header, .navbar-top');
@@ -247,11 +261,16 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
         buttonsContainer.appendChild(laravelBtn);
         <?php endif; ?>
 
-        // Если нет кнопок, не вставляем контейнер
+        // Если нет кнопок, не вставляем контейнер и сбрасываем флаги
         if (buttonsContainer.children.length === 0) {
-            console.log('Moodle SSO: Нет кнопок для вставки');
+            console.log('Moodle SSO: Нет кнопок для вставки, сбрасываем флаги');
+            window.moodleSSOButtonsProcessing = false;
             return;
         }
+        
+        // Устанавливаем флаг сразу после создания контейнера с кнопками
+        // Это предотвратит повторные вызовы функции
+        window.moodleSSOButtonsAdded = true;
 
         console.log('Moodle SSO: Кнопок для вставки: ' + buttonsContainer.children.length);
 
@@ -284,27 +303,40 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
         }
         
         console.log('Moodle SSO: Кнопки успешно добавлены!');
-        window.moodleSSOButtonsAdded = true;
+        // Флаг moodleSSOButtonsAdded уже установлен выше, сбрасываем только флаг обработки
         window.moodleSSOButtonsProcessing = false;
     }
 
     // Ждем загрузки DOM и вызываем только один раз
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            if (!window.moodleSSOButtonsAdded) {
+            // Проверяем флаги и наличие кнопок перед вызовом
+            if (!window.moodleSSOButtonsAdded && !window.moodleSSOButtonsProcessing && !document.querySelector('.moodle-sso-buttons-container')) {
                 addSSOButtons();
+            } else {
+                console.log('Moodle SSO: DOMContentLoaded - пропускаем (флаги или кнопки уже есть)');
+                window.moodleSSOButtonsProcessing = false;
             }
         });
     } else {
-        if (!window.moodleSSOButtonsAdded) {
+        // DOM уже загружен, проверяем перед вызовом
+        if (!window.moodleSSOButtonsAdded && !window.moodleSSOButtonsProcessing && !document.querySelector('.moodle-sso-buttons-container')) {
             addSSOButtons();
+        } else {
+            console.log('Moodle SSO: DOM загружен - пропускаем (флаги или кнопки уже есть)');
+            window.moodleSSOButtonsProcessing = false;
         }
     }
 
     // Дополнительная попытка через задержку (только если кнопки еще не добавлены)
     setTimeout(function() {
-        if (!window.moodleSSOButtonsAdded && !document.querySelector('.moodle-sso-buttons-container')) {
+        // Проверяем все условия перед вызовом
+        if (!window.moodleSSOButtonsAdded && !window.moodleSSOButtonsProcessing && !document.querySelector('.moodle-sso-buttons-container')) {
+            console.log('Moodle SSO: setTimeout - пытаемся добавить кнопки');
             addSSOButtons();
+        } else {
+            console.log('Moodle SSO: setTimeout - пропускаем (флаги или кнопки уже есть)');
+            window.moodleSSOButtonsProcessing = false;
         }
     }, 500);
 })();
