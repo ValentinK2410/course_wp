@@ -83,21 +83,51 @@ curl_close($ch);
 $wordpress_token = '';
 $laravel_token = '';
 
+sso_log('HTTP код ответа от WordPress: ' . $http_code);
+sso_log('Ответ от WordPress (первые 500 символов): ' . substr($response, 0, 500));
+
 if ($http_code === 200 && !empty($response)) {
     $data = json_decode($response, true);
+    sso_log('Декодированные данные: ' . print_r($data, true));
+    
     if (isset($data['success']) && $data['success']) {
         if (isset($data['data']['wordpress_token'])) {
             $wordpress_token = $data['data']['wordpress_token'];
+            sso_log('WordPress токен получен (длина: ' . strlen($wordpress_token) . ')');
+        } else {
+            sso_log('WordPress токен не найден в ответе');
         }
         if (isset($data['data']['laravel_token'])) {
             $laravel_token = $data['data']['laravel_token'];
+            sso_log('Laravel токен получен (длина: ' . strlen($laravel_token) . ')');
+        } else {
+            sso_log('Laravel токен не найден в ответе');
         }
-        sso_log('Токены успешно получены от WordPress');
+        
+        if (!empty($wordpress_token) || !empty($laravel_token)) {
+            sso_log('Токены успешно получены от WordPress');
+        } else {
+            sso_log('ОШИБКА: Токены пустые после успешного ответа!');
+        }
     } else {
-        sso_log('Ошибка получения токенов: ' . (isset($data['data']['message']) ? $data['data']['message'] : 'Неизвестная ошибка'));
+        $error_msg = isset($data['data']['message']) ? $data['data']['message'] : 'Неизвестная ошибка';
+        sso_log('Ошибка получения токенов: ' . $error_msg);
+        sso_log('Полный ответ: ' . print_r($data, true));
     }
 } else {
     sso_log('Ошибка HTTP запроса к WordPress: ' . $http_code . ($curl_error ? ', ' . $curl_error : ''));
+    sso_log('Ответ сервера: ' . substr($response, 0, 500));
+}
+
+// Если токены не получены, пытаемся сгенерировать их локально
+if (empty($wordpress_token) && empty($laravel_token)) {
+    sso_log('Токены не получены от WordPress, пытаемся сгенерировать локально');
+    // Генерируем простой токен на основе email и времени
+    $token_data = $user_email . '|' . $user_id . '|' . time();
+    $token_hash = hash('sha256', $token_data . '|' . (isset($CFG->passwordsaltmain) ? $CFG->passwordsaltmain : 'default_salt'));
+    $wordpress_token = base64_encode($token_data . '|' . $token_hash);
+    $laravel_token = base64_encode($token_data . '|' . $token_hash);
+    sso_log('Токены сгенерированы локально (WordPress: ' . strlen($wordpress_token) . ', Laravel: ' . strlen($laravel_token) . ')');
 }
 
 // Формируем URL для перехода
