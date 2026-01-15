@@ -767,16 +767,65 @@ class Course_SSO {
      * https://site.dekan.pro/wp-admin/admin-ajax.php?action=sso_login_from_moodle&token=TOKEN&moodle_api_key=API_KEY
      */
     public function ajax_sso_login_from_moodle() {
-        // Проверяем API ключ Moodle для безопасности
-        // Используем raw значение из REQUEST, так как sanitize_text_field может изменить ключ
+        // Получаем токен из запроса
+        $token = isset($_REQUEST['token']) ? sanitize_text_field($_REQUEST['token']) : '';
+        
+        if (empty($token)) {
+            wp_die('Token required', 'Bad Request', array('response' => 400));
+        }
+        
+        error_log('Course SSO: Попытка входа из Moodle. Токен получен (длина): ' . strlen($token));
+        
+        // Сначала пытаемся проверить токен WordPress формата (из moodle-sso-buttons.php)
+        // Формат: base64(user_id:hash) - проверяется через verify_token()
+        $user_data = self::verify_token($token, 'wordpress');
+        
+        if ($user_data) {
+            // Токен WordPress формата валиден
+            error_log('Course SSO: Токен WordPress формата успешно проверен для пользователя ID: ' . $user_data['user_id']);
+            $user = get_user_by('ID', $user_data['user_id']);
+            
+            if (!$user) {
+                wp_die('User not found', 'Not Found', array('response' => 404));
+            }
+            
+            // Автоматически входим пользователя в WordPress
+            wp_set_current_user($user->ID);
+            wp_set_auth_cookie($user->ID, true);
+            
+            error_log('Course SSO: Пользователь ' . $user->user_email . ' успешно вошел в WordPress через SSO (WordPress формат токена)');
+            
+            // Перенаправляем на главную страницу
+            $redirect_url = isset($_REQUEST['redirect_to']) ? esc_url_raw($_REQUEST['redirect_to']) : admin_url();
+            
+            // Используем JavaScript для перенаправления, так как заголовки могут быть уже отправлены
+            ?>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Вход в WordPress...</title>
+                <script type="text/javascript">
+                    window.location.href = <?php echo json_encode($redirect_url); ?>;
+                </script>
+            </head>
+            <body>
+                <p>Выполняется вход в WordPress...</p>
+                <p>Если перенаправление не произошло автоматически, <a href="<?php echo esc_url($redirect_url); ?>">нажмите здесь</a>.</p>
+            </body>
+            </html>
+            <?php
+            exit;
+        }
+        
+        // Если токен WordPress формата не подошел, проверяем токен Moodle формата
+        // Формат токена Moodle: base64(user_id:email:timestamp:hash)
+        // Для этого формата требуется API ключ
+        
         $moodle_api_key = isset($_REQUEST['moodle_api_key']) ? trim($_REQUEST['moodle_api_key']) : '';
         $expected_key = get_option('moodle_sso_api_key', '');
         
-        // Логируем попытку входа для отладки (первые 20 символов для безопасности)
-        error_log('Course SSO: Попытка входа из Moodle. Переданный ключ (первые 20 символов): ' . (!empty($moodle_api_key) ? substr($moodle_api_key, 0, 20) . '...' : 'пусто'));
-        error_log('Course SSO: Переданный ключ (длина): ' . strlen($moodle_api_key));
-        error_log('Course SSO: Ожидаемый ключ (первые 20 символов): ' . (!empty($expected_key) ? substr($expected_key, 0, 20) . '...' : 'пусто'));
-        error_log('Course SSO: Ожидаемый ключ (длина): ' . strlen($expected_key));
+        error_log('Course SSO: Токен WordPress формата не подошел, проверяем Moodle формат. Переданный ключ (первые 20 символов): ' . (!empty($moodle_api_key) ? substr($moodle_api_key, 0, 20) . '...' : 'пусто'));
         
         if (empty($expected_key)) {
             error_log('Course SSO: ОШИБКА - Moodle SSO API ключ не настроен в WordPress!');
@@ -786,20 +835,10 @@ class Course_SSO {
         // Используем hash_equals для безопасного сравнения строк (защита от timing attacks)
         if (!hash_equals($expected_key, $moodle_api_key)) {
             error_log('Course SSO: ОШИБКА - Неверный Moodle SSO API ключ!');
-            error_log('Course SSO: Переданный ключ (первые 30): ' . substr($moodle_api_key, 0, 30));
-            error_log('Course SSO: Ожидаемый ключ (первые 30): ' . substr($expected_key, 0, 30));
             wp_die('Несанкционированный доступ: Недействительный ключ API Moodle SSO. Убедитесь, что ключ в файле moodle-sso-to-wordpress.php совпадает с ключом в WordPress (Настройки → Moodle Sync → Moodle SSO API Key).', 'Несанкционированный доступ', array('response' => 401));
         }
         
-        // Получаем токен из запроса
-        $token = isset($_REQUEST['token']) ? sanitize_text_field($_REQUEST['token']) : '';
-        
-        if (empty($token)) {
-            wp_die('Token required', 'Bad Request', array('response' => 400));
-        }
-        
         // Декодируем токен от Moodle
-        // Формат токена: base64(user_id:email:timestamp:hash)
         $decoded = base64_decode($token);
         if (!$decoded) {
             wp_die('Invalid token format', 'Bad Request', array('response' => 400));
