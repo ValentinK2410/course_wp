@@ -30,13 +30,15 @@ function sso_log($message) {
 }
 
 // Проверяем, что пользователь авторизован (без редиректа)
-global $USER;
-if (!isloggedin() || isguestuser()) {
+global $USER, $CFG;
+if (!isset($USER) || !isloggedin() || isguestuser()) {
     // Если пользователь не авторизован, возвращаем пустой JavaScript
     header('Content-Type: application/javascript; charset=utf-8');
     echo '// Пользователь не авторизован';
     exit;
 }
+
+sso_log('Проверка авторизации пройдена. Пользователь: ' . $USER->email . ' (ID: ' . $USER->id . ')');
 
 // Настройки WordPress SSO
 $wordpress_url = 'https://mbs.russianseminary.org'; // URL вашего WordPress сайта
@@ -157,26 +159,40 @@ header('Content-Type: application/javascript; charset=utf-8');
         // Ищем контейнер с меню пользователя или навигацией в Moodle
         // Добавляем селекторы для темы Academi
         var selectors = [
+            // Селекторы для верхней панели (темно-бордовая полоса)
+            '.top-bar',
+            '.header-top',
+            '.top-header',
+            '.navbar-top',
+            '.top-navbar',
+            '.header-top-bar',
+            // Селекторы для меню пользователя
             '.usermenu',
-            '.navbar-nav',
-            '.navbar .navbar-nav',
-            '.header-actions',
-            '.header-actions-container',
             '.user-menu',
             '.usermenu .dropdown',
             '#usermenu',
-            '.nav-link.dropdown-toggle',
+            // Селекторы для навигации
+            '.navbar-nav',
+            '.navbar .navbar-nav',
+            '.navbar-nav.d-none.d-md-flex',
+            '.navbar-nav.d-flex',
+            '.navbar .navbar-nav.d-none.d-md-flex',
+            // Селекторы для контейнеров действий
+            '.header-actions',
+            '.header-actions-container',
             '.navbar .ml-auto',
-            'header .container-fluid',
-            '.navbar .navbar-collapse',
             '.navbar-nav.ml-auto',
             '.navbar .navbar-nav.ml-auto',
+            // Общие селекторы
             '.navbar .d-flex',
             '.navbar .navbar-nav .nav-item',
             '.navbar .nav-item.dropdown',
             'nav.navbar',
             '.navbar-header',
-            '.navbar-collapse'
+            '.navbar-collapse',
+            'header .container-fluid',
+            '.navbar-light',
+            '.navbar-expand'
         ];
         
         var container = null;
@@ -185,14 +201,29 @@ header('Content-Type: application/javascript; charset=utf-8');
             if (elements.length > 0) {
                 for (var j = 0; j < elements.length; j++) {
                     var text = elements[j].textContent || elements[j].innerText;
+                    // Ищем контейнер с текстом меню или элементами пользователя
                     if (text.indexOf('Профиль') !== -1 || text.indexOf('Выход') !== -1 || 
+                        text.indexOf('Личный кабинет') !== -1 || text.indexOf('Мои курсы') !== -1 ||
+                        text.indexOf('Администрирование') !== -1 || text.indexOf('Поиск курса') !== -1 ||
                         text.indexOf('Profile') !== -1 || text.indexOf('Logout') !== -1 ||
-                        elements[j].querySelector('.usermenu') || elements[j].querySelector('.dropdown-toggle')) {
+                        elements[j].querySelector('.usermenu') || elements[j].querySelector('.dropdown-toggle') ||
+                        elements[j].querySelector('.nav-link') || elements[j].querySelector('.navbar-nav')) {
                         container = elements[j];
+                        console.log('Moodle SSO: Найден контейнер по селектору:', selectors[i]);
                         break;
                     }
                 }
                 if (container) break;
+            }
+        }
+        
+        // Если не нашли по тексту, пробуем найти по структуре
+        if (!container) {
+            // Ищем верхнюю темно-бордовую панель
+            var topBar = document.querySelector('.top-bar, .header-top, .top-header, .navbar-top');
+            if (topBar) {
+                container = topBar;
+                console.log('Moodle SSO: Найден верхний бар');
             }
         }
         
