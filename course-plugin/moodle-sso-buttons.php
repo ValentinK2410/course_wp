@@ -49,7 +49,7 @@ if (!$is_logged_in) {
 
 // Настройки
 $wordpress_url = 'https://mbs.russianseminary.org';
-$laravel_url = 'https://dekanat.russianseminary.org';
+$laravel_url = 'https://dean.russianseminary.org';
 $sso_api_key = '';
 
 // Получаем данные пользователя
