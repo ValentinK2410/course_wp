@@ -1104,8 +1104,12 @@ class Course_SSO {
         }
         
         // Генерируем токены для WordPress и Laravel
+        error_log('Course SSO: Генерируем токены для пользователя WordPress ID: ' . $user->ID);
         $wordpress_token = $this->generate_token($user->ID, 'wordpress');
         $laravel_token = $this->generate_token($user->ID, 'laravel');
+        
+        error_log('Course SSO: Токены сгенерированы. WordPress токен (длина): ' . strlen($wordpress_token) . ', Laravel токен (длина): ' . strlen($laravel_token));
+        error_log('Course SSO: Отправляем успешный ответ с токенами');
         
         wp_send_json_success(array(
             'wordpress_token' => $wordpress_token,
