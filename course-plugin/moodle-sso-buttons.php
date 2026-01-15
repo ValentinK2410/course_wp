@@ -121,11 +121,24 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
 (function() {
     console.log('Moodle SSO: Скрипт запущен');
     
-    // Проверяем, не добавлены ли уже кнопки
-    if (document.querySelector('.moodle-sso-buttons-container')) {
-        console.log('Moodle SSO: Кнопки уже существуют');
+    // Проверяем, не добавлены ли уже кнопки (более строгая проверка)
+    var existingButtons = document.querySelectorAll('.moodle-sso-buttons-container');
+    if (existingButtons.length > 0) {
+        console.log('Moodle SSO: Кнопки уже существуют (' + existingButtons.length + ' контейнеров)');
+        // Удаляем дубликаты, оставляем только первый
+        for (var i = 1; i < existingButtons.length; i++) {
+            existingButtons[i].remove();
+            console.log('Moodle SSO: Удален дубликат кнопок #' + i);
+        }
         return;
     }
+    
+    // Флаг для предотвращения множественных вызовов
+    if (window.moodleSSOButtonsAdded) {
+        console.log('Moodle SSO: Кнопки уже добавлены (флаг установлен)');
+        return;
+    }
+    window.moodleSSOButtonsAdded = true;
 
     // Добавляем стили
     var style = document.createElement('style');
