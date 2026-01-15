@@ -1040,7 +1040,7 @@ class Course_SSO {
      */
     public function ajax_get_sso_tokens_from_moodle() {
         // Логируем все входящие данные для отладки
-        error_log('Course SSO: ========== НАЧАЛО ajax_get_sso_tokens_from_moodle ==========');
+        error_log('Course SSO: ========== НАЧАЛО ajax_get_sso_tokens_from_moodle [VERSION 2.0] ==========');
         error_log('Course SSO: REQUEST метод: ' . (isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'НЕИЗВЕСТНО'));
         error_log('Course SSO: Content-Type: ' . (isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : 'НЕИЗВЕСТНО'));
         error_log('Course SSO: php://input (первые 500 символов): ' . substr(file_get_contents('php://input'), 0, 500));
