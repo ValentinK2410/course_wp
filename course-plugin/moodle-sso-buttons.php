@@ -49,8 +49,11 @@ $sso_api_key = ''; // SSO API Key из WordPress (опционально)
 global $USER;
 $user_email = $USER->email;
 $user_id = $USER->id;
+$user_username = $USER->username;
 
-sso_log('Пользователь ' . $user_email . ' (ID: ' . $user_id . ') запросил кнопки SSO');
+sso_log('Пользователь Moodle - Email: ' . $user_email . ', Username: ' . $user_username . ', ID: ' . $user_id);
+sso_log('Запрос к WordPress API: ' . $ajax_url);
+sso_log('Параметры запроса: ' . print_r($params, true));
 
 // Генерируем токены через WordPress API
 $ajax_url = rtrim($wordpress_url, '/') . '/wp-admin/admin-ajax.php';
