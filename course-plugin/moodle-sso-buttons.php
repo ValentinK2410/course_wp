@@ -29,8 +29,14 @@ function sso_log($message) {
     error_log('Moodle SSO Buttons: ' . $message);
 }
 
-// Проверяем, что пользователь авторизован
-require_login();
+// Проверяем, что пользователь авторизован (без редиректа)
+global $USER;
+if (!isloggedin() || isguestuser()) {
+    // Если пользователь не авторизован, возвращаем пустой JavaScript
+    header('Content-Type: application/javascript; charset=utf-8');
+    echo '// Пользователь не авторизован';
+    exit;
+}
 
 // Настройки WordPress SSO
 $wordpress_url = 'https://mbs.russianseminary.org'; // URL вашего WordPress сайта
@@ -149,6 +155,7 @@ header('Content-Type: application/javascript; charset=utf-8');
     
     function addSSOButtons() {
         // Ищем контейнер с меню пользователя или навигацией в Moodle
+        // Добавляем селекторы для темы Academi
         var selectors = [
             '.usermenu',
             '.navbar-nav',
@@ -161,7 +168,15 @@ header('Content-Type: application/javascript; charset=utf-8');
             '.nav-link.dropdown-toggle',
             '.navbar .ml-auto',
             'header .container-fluid',
-            '.navbar .navbar-collapse'
+            '.navbar .navbar-collapse',
+            '.navbar-nav.ml-auto',
+            '.navbar .navbar-nav.ml-auto',
+            '.navbar .d-flex',
+            '.navbar .navbar-nav .nav-item',
+            '.navbar .nav-item.dropdown',
+            'nav.navbar',
+            '.navbar-header',
+            '.navbar-collapse'
         ];
         
         var container = null;
@@ -189,9 +204,16 @@ header('Content-Type: application/javascript; charset=utf-8');
         }
         
         if (!container) {
-            console.log('Moodle SSO: Не найден контейнер для вставки кнопок');
-            return;
+            console.log('Moodle SSO: Не найден контейнер для вставки кнопок. Пробуем добавить в body.');
+            // Если не нашли контейнер, добавляем в начало body
+            container = document.body;
+            if (!container) {
+                console.error('Moodle SSO: Body не найден!');
+                return;
+            }
         }
+        
+        console.log('Moodle SSO: Найден контейнер:', container);
         
         // Создаем контейнер для кнопок
         var buttonsContainer = document.createElement('div');
@@ -216,16 +238,31 @@ header('Content-Type: application/javascript; charset=utf-8');
         <?php endif; ?>
         
         // Вставляем кнопки перед меню пользователя или в конец контейнера
-        if (container.querySelector('.usermenu, .dropdown-toggle')) {
-            var userMenu = container.querySelector('.usermenu, .dropdown-toggle').parentElement;
-            if (userMenu && userMenu.parentElement) {
-                userMenu.parentElement.insertBefore(buttonsContainer, userMenu);
+        var inserted = false;
+        if (container.querySelector('.usermenu, .dropdown-toggle, .nav-item.dropdown')) {
+            var userMenu = container.querySelector('.usermenu, .dropdown-toggle, .nav-item.dropdown');
+            if (userMenu) {
+                var parent = userMenu.parentElement;
+                if (parent && parent.parentElement) {
+                    parent.parentElement.insertBefore(buttonsContainer, parent);
+                    inserted = true;
+                    console.log('Moodle SSO: Кнопки вставлены перед меню пользователя');
+                }
+            }
+        }
+        
+        if (!inserted) {
+            // Пробуем вставить в начало контейнера
+            if (container.firstChild) {
+                container.insertBefore(buttonsContainer, container.firstChild);
+                console.log('Moodle SSO: Кнопки вставлены в начало контейнера');
             } else {
                 container.appendChild(buttonsContainer);
+                console.log('Moodle SSO: Кнопки вставлены в конец контейнера');
             }
-        } else {
-            container.appendChild(buttonsContainer);
         }
+        
+        console.log('Moodle SSO: Кнопки успешно добавлены!');
     }
     
     // Ждем загрузки DOM
