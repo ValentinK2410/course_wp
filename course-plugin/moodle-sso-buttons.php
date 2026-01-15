@@ -280,6 +280,8 @@ header('Content-Type: application/javascript; charset=utf-8');
         var buttonsContainer = document.createElement('div');
         buttonsContainer.className = 'moodle-sso-buttons-container';
         
+        var hasButtons = false;
+        
         <?php if (!empty($wordpress_token)): ?>
         var wordpressBtn = document.createElement('a');
         wordpressBtn.href = '<?php echo addslashes($wordpress_sso_url); ?>';
@@ -287,6 +289,10 @@ header('Content-Type: application/javascript; charset=utf-8');
         wordpressBtn.textContent = 'Сайт семинарии';
         wordpressBtn.target = '_blank';
         buttonsContainer.appendChild(wordpressBtn);
+        hasButtons = true;
+        console.log('Moodle SSO: Добавлена кнопка WordPress');
+        <?php else: ?>
+        console.warn('Moodle SSO: WordPress токен пустой!');
         <?php endif; ?>
         
         <?php if (!empty($laravel_token)): ?>
@@ -296,7 +302,19 @@ header('Content-Type: application/javascript; charset=utf-8');
         laravelBtn.textContent = 'Деканат';
         laravelBtn.target = '_blank';
         buttonsContainer.appendChild(laravelBtn);
+        hasButtons = true;
+        console.log('Moodle SSO: Добавлена кнопка Laravel');
+        <?php else: ?>
+        console.warn('Moodle SSO: Laravel токен пустой!');
         <?php endif; ?>
+        
+        // Если кнопок нет, не добавляем контейнер
+        if (!hasButtons) {
+            console.error('Moodle SSO: ОШИБКА - нет токенов, кнопки не будут добавлены!');
+            console.error('Moodle SSO: WordPress токен: <?php echo !empty($wordpress_token) ? "есть" : "пусто"; ?>');
+            console.error('Moodle SSO: Laravel токен: <?php echo !empty($laravel_token) ? "есть" : "пусто"; ?>');
+            return;
+        }
         
         // Вставляем кнопки перед меню пользователя или в конец контейнера
         var inserted = false;
