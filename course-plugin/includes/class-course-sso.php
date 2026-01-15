@@ -47,6 +47,9 @@ class Course_SSO {
         add_action('admin_head', array($this, 'add_admin_bar_styles'));
         add_action('wp_head', array($this, 'add_admin_bar_styles'));
         
+        // Добавляем кнопки SSO в шапку сайта для авторизованных пользователей
+        add_action('wp_head', array($this, 'add_header_sso_buttons'));
+        
         // AJAX endpoint для получения SSO токенов
         add_action('wp_ajax_get_sso_tokens', array($this, 'ajax_get_sso_tokens'));
         add_action('wp_ajax_nopriv_get_sso_tokens', array($this, 'ajax_get_sso_tokens'));
