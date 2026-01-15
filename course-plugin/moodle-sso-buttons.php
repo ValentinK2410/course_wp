@@ -76,11 +76,17 @@ if (empty($user_email)) {
         exit;
     }
 }
-sso_log('Запрос к WordPress API: ' . $ajax_url);
-sso_log('Параметры запроса: ' . print_r($params, true));
 
 // Генерируем токены через WordPress API
 $ajax_url = rtrim($wordpress_url, '/') . '/wp-admin/admin-ajax.php';
+
+// Проверяем, что email не пустой перед отправкой запроса
+if (empty($user_email)) {
+    sso_log('КРИТИЧЕСКАЯ ОШИБКА: Email пустой, невозможно сгенерировать токены');
+    header('Content-Type: application/javascript; charset=utf-8');
+    echo 'console.error("Moodle SSO: Email пользователя не найден");';
+    exit;
+}
 
 // Создаем запрос для получения токенов
 $params = array(
@@ -88,6 +94,9 @@ $params = array(
     'email' => $user_email,
     'moodle_user_id' => $user_id,
 );
+
+sso_log('Запрос к WordPress API: ' . $ajax_url);
+sso_log('Параметры запроса к WordPress: email=' . $user_email . ', moodle_user_id=' . $user_id);
 
 // Если используется API ключ, добавляем его
 if (!empty($sso_api_key)) {
