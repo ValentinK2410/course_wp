@@ -413,6 +413,168 @@ class Course_SSO {
     }
     
     /**
+     * Добавление кнопок SSO в шапку сайта
+     */
+    public function add_header_sso_buttons() {
+        // Показываем только для авторизованных пользователей и только на фронтенде
+        if (!is_user_logged_in() || is_admin()) {
+            return;
+        }
+        
+        $moodle_url = get_option('moodle_sync_url', '');
+        $laravel_url = get_option('laravel_api_url', '');
+        
+        // Если не настроены URL, не добавляем кнопки
+        if (empty($moodle_url) && empty($laravel_url)) {
+            return;
+        }
+        
+        // Получаем URL для AJAX
+        $ajax_url = admin_url('admin-ajax.php');
+        $nonce = wp_create_nonce('sso_tokens');
+        ?>
+        <style type="text/css">
+        .course-sso-header-buttons {
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+            margin-left: 15px;
+        }
+        .course-sso-header-buttons .sso-header-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            white-space: nowrap;
+        }
+        .course-sso-header-buttons .sso-header-btn-moodle {
+            background: #f98012;
+            color: white;
+        }
+        .course-sso-header-buttons .sso-header-btn-moodle:hover {
+            background: #e0700f;
+            color: white;
+        }
+        .course-sso-header-buttons .sso-header-btn-laravel {
+            background: #f9322c;
+            color: white;
+        }
+        .course-sso-header-buttons .sso-header-btn-laravel:hover {
+            background: #e02823;
+            color: white;
+        }
+        </style>
+        <script type="text/javascript">
+        (function() {
+            // Ждем загрузки DOM
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', addSSOButtons);
+            } else {
+                addSSOButtons();
+            }
+            
+            function addSSOButtons() {
+                // Ищем контейнер с кнопками "Войти" и "Регистрация"
+                // Пробуем разные селекторы, которые могут быть в разных темах
+                var selectors = [
+                    '.header-actions',
+                    '.site-header .header-right',
+                    '.site-header .header-actions',
+                    '.main-header .header-actions',
+                    '.header .header-actions',
+                    '.site-header .menu-right',
+                    '.header-right',
+                    '.header-actions-wrapper',
+                    'header .actions',
+                    '.header-buttons'
+                ];
+                
+                var container = null;
+                for (var i = 0; i < selectors.length; i++) {
+                    var elements = document.querySelectorAll(selectors[i]);
+                    if (elements.length > 0) {
+                        // Ищем контейнер, который содержит кнопки "Войти" или "Регистрация"
+                        for (var j = 0; j < elements.length; j++) {
+                            var text = elements[j].textContent || elements[j].innerText;
+                            if (text.indexOf('Войти') !== -1 || text.indexOf('Регистрация') !== -1 || 
+                                text.indexOf('Login') !== -1 || text.indexOf('Register') !== -1) {
+                                container = elements[j];
+                                break;
+                            }
+                        }
+                        if (container) break;
+                    }
+                }
+                
+                // Если не нашли контейнер, ищем кнопки напрямую
+                if (!container) {
+                    var loginButtons = document.querySelectorAll('a[href*="login"], a[href*="wp-login"], .login-button, .register-button');
+                    if (loginButtons.length > 0) {
+                        container = loginButtons[0].parentElement;
+                    }
+                }
+                
+                // Если все еще не нашли, добавляем в конец header
+                if (!container) {
+                    var header = document.querySelector('header, .site-header, .main-header, .header');
+                    if (header) {
+                        container = header;
+                    }
+                }
+                
+                if (!container) return;
+                
+                // Проверяем, не добавлены ли уже кнопки
+                if (container.querySelector('.course-sso-header-buttons')) {
+                    return;
+                }
+                
+                // Создаем контейнер для кнопок
+                var buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'course-sso-header-buttons';
+                
+                <?php if (!empty($moodle_url)): ?>
+                var moodleBtn = document.createElement('a');
+                moodleBtn.href = 'javascript:void(0);';
+                moodleBtn.className = 'sso-header-btn sso-header-btn-moodle';
+                moodleBtn.textContent = 'Виртуальный класс';
+                moodleBtn.onclick = function(e) {
+                    e.preventDefault();
+                    goToMoodle();
+                };
+                buttonsContainer.appendChild(moodleBtn);
+                <?php endif; ?>
+                
+                <?php if (!empty($laravel_url)): ?>
+                var laravelBtn = document.createElement('a');
+                laravelBtn.href = 'javascript:void(0);';
+                laravelBtn.className = 'sso-header-btn sso-header-btn-laravel';
+                laravelBtn.textContent = 'Деканат';
+                laravelBtn.onclick = function(e) {
+                    e.preventDefault();
+                    goToLaravel();
+                };
+                buttonsContainer.appendChild(laravelBtn);
+                <?php endif; ?>
+                
+                // Добавляем кнопки в контейнер
+                if (container.querySelector('.header-actions, .actions, .header-right')) {
+                    container.querySelector('.header-actions, .actions, .header-right').appendChild(buttonsContainer);
+                } else {
+                    container.appendChild(buttonsContainer);
+                }
+            }
+        })();
+        </script>
+        <?php
+    }
+    
+    /**
      * AJAX обработчик для получения SSO токенов
      */
     public function ajax_get_sso_tokens() {
