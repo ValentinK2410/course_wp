@@ -1031,5 +1031,37 @@ class Course_SSO {
             }
         }
     }
+    
+    /**
+     * AJAX обработчик для получения SSO токенов из Moodle
+     * Используется для генерации токенов для кнопок перехода в WordPress и Laravel
+     * 
+     * @return void
+     */
+    public function ajax_get_sso_tokens_from_moodle() {
+        // Получаем email и ID пользователя Moodle
+        $email = isset($_REQUEST['email']) ? sanitize_email($_REQUEST['email']) : '';
+        $moodle_user_id = isset($_REQUEST['moodle_user_id']) ? intval($_REQUEST['moodle_user_id']) : 0;
+        
+        if (empty($email)) {
+            wp_send_json_error(array('message' => 'Email required'));
+        }
+        
+        // Находим пользователя WordPress по email
+        $user = get_user_by('email', $email);
+        
+        if (!$user) {
+            wp_send_json_error(array('message' => 'User not found in WordPress'));
+        }
+        
+        // Генерируем токены для WordPress и Laravel
+        $wordpress_token = $this->generate_token($user->ID, 'wordpress');
+        $laravel_token = $this->generate_token($user->ID, 'laravel');
+        
+        wp_send_json_success(array(
+            'wordpress_token' => $wordpress_token,
+            'laravel_token' => $laravel_token,
+        ));
+    }
 }
 
