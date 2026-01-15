@@ -284,6 +284,8 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
         }
         
         console.log('Moodle SSO: Кнопки успешно добавлены!');
+        window.moodleSSOButtonsAdded = true;
+        window.moodleSSOButtonsProcessing = false;
     }
 
     // Ждем загрузки DOM и вызываем только один раз
