@@ -166,9 +166,10 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
     style.textContent = `
         .moodle-sso-buttons-container {
             display: inline-flex;
-            gap: 15px;
+            gap: 10px;
             align-items: center;
-            margin-left: 15px;
+            margin-left: 5px;
+            margin-right: 10px;
         }
         .moodle-sso-buttons-container .sso-button {
             display: inline-block;
@@ -191,7 +192,6 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
         }
         .moodle-sso-buttons-container .sso-button-laravel {
             background: #f9322c;
-            margin-right: 10px;
         }
         .moodle-sso-buttons-container .sso-button-laravel:hover {
             background: #e02823;
