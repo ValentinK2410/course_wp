@@ -16,8 +16,13 @@ $is_course_archive = false;
 
 if (is_post_type_archive('course')) {
     $is_course_archive = true;
-} elseif (isset($_SERVER['REQUEST_URI']) && preg_match('#/course/?$#', $_SERVER['REQUEST_URI'])) {
-    $is_course_archive = true;
+} elseif (isset($_SERVER['REQUEST_URI'])) {
+    $request_uri = $_SERVER['REQUEST_URI'];
+    // Убираем query string для проверки
+    $path = parse_url($request_uri, PHP_URL_PATH);
+    if (preg_match('#/(course|courses)(/page/\d+)?/?$#', $path)) {
+        $is_course_archive = true;
+    }
 } elseif (get_query_var('post_type') === 'course' && !is_singular()) {
     $is_course_archive = true;
 } elseif ($wp_query->get('post_type') === 'course') {

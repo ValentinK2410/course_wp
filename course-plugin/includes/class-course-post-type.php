@@ -121,7 +121,7 @@ class Course_Post_Type {
             'map_meta_cap'          => true,                                                                // Автоматически сопоставлять права доступа
             'show_in_rest'          => true,                                                                // Поддержка REST API (Gutenberg редактор)
             'rest_base'             => 'courses',                                                           // Базовый URL для REST API
-            'rewrite'               => array('slug' => 'course'),                                          // Правило перезаписи URL (slug для постоянных ссылок)
+            'rewrite'               => array('slug' => 'courses'),                                         // Правило перезаписи URL (slug для постоянных ссылок)
         );
         
         // Регистрируем тип поста с названием 'course' и указанными параметрами

@@ -70,9 +70,14 @@ class Course_Frontend {
         if (is_post_type_archive('course')) {
             $is_course_archive = true;
         }
-        // Проверка через URL (если URL содержит /course/)
-        elseif (isset($_SERVER['REQUEST_URI']) && preg_match('#/course/?$#', $_SERVER['REQUEST_URI'])) {
-            $is_course_archive = true;
+        // Проверка через URL (если URL содержит /course/ или /courses/)
+        elseif (isset($_SERVER['REQUEST_URI'])) {
+            $request_uri = $_SERVER['REQUEST_URI'];
+            // Убираем query string для проверки
+            $path = parse_url($request_uri, PHP_URL_PATH);
+            if (preg_match('#/(course|courses)(/page/\d+)?/?$#', $path)) {
+                $is_course_archive = true;
+            }
         }
         // Проверка через query_var
         elseif (get_query_var('post_type') === 'course' && !is_singular()) {
@@ -122,13 +127,23 @@ class Course_Frontend {
         $is_course_archive = false;
         
         // Проверка через URL (самый надежный способ)
-        if (isset($_SERVER['REQUEST_URI']) && preg_match('#/course/?$#', $_SERVER['REQUEST_URI'])) {
+        // Поддерживаем как /course/, так и /courses/ (с учетом пагинации и параметров)
+        if (isset($_SERVER['REQUEST_URI'])) {
+            $request_uri = $_SERVER['REQUEST_URI'];
+            // Убираем query string для проверки
+            $path = parse_url($request_uri, PHP_URL_PATH);
+            if (preg_match('#/(course|courses)(/page/\d+)?/?$#', $path)) {
+                $is_course_archive = true;
+                // Принудительно устанавливаем post_type для запроса
+                $query->set('post_type', 'course');
+            }
+        }
+        
+        if (!$is_course_archive && is_post_type_archive('course')) {
             $is_course_archive = true;
-            // Принудительно устанавливаем post_type для запроса
-            $query->set('post_type', 'course');
-        } elseif (is_post_type_archive('course')) {
-            $is_course_archive = true;
-        } elseif ($query->get('post_type') === 'course') {
+        }
+        
+        if (!$is_course_archive && $query->get('post_type') === 'course') {
             $is_course_archive = true;
         }
         
