@@ -172,7 +172,7 @@ echo "console.log('MOODLE SSO: Файл moodle-sso-buttons.php ЗАГРУЖЕН 
             margin-right: 10px;
         }
         .moodle-sso-buttons-container .sso-button {
-            display: inline-block;
+            display: none; /* Временно скрыты кнопки */
             padding: 8px 16px;
             border-radius: 4px;
             text-decoration: none;
