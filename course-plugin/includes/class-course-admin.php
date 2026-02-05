@@ -100,7 +100,7 @@ class Course_Admin {
         $new_columns['title'] = $columns['title'];
         
         // Добавляем колонки с таксономиями для быстрого просмотра информации о курсе
-        $new_columns['course_specialization'] = __('Специализация', 'course-plugin');
+        $new_columns['course_specialization'] = __('Программы', 'course-plugin');
         $new_columns['course_level'] = __('Уровень', 'course-plugin');
         $new_columns['course_topic'] = __('Тема', 'course-plugin');
         $new_columns['course_teacher'] = __('Преподаватель', 'course-plugin');
@@ -240,7 +240,7 @@ class Course_Admin {
         
         // Добавляем фильтр по специализации
         // Вызываем метод для отображения выпадающего списка с терминами таксономии
-        $this->render_taxonomy_filter('course_specialization', __('Все специализации', 'course-plugin'));
+        $this->render_taxonomy_filter('course_specialization', __('Все программы', 'course-plugin'));
         
         // Добавляем фильтр по уровню образования
         $this->render_taxonomy_filter('course_level', __('Все уровни', 'course-plugin'));

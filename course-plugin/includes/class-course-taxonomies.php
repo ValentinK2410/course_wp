@@ -6,7 +6,7 @@
  * Например: категории и метки для записей
  * 
  * Этот класс регистрирует 4 таксономии для курсов:
- * 1. Специализация и программы (иерархическая, как категории)
+ * 1. Программы (иерархическая, как категории)
  * 2. Уровень образования (иерархическая, как категории)
  * 3. Тема (иерархическая, как категории)
  * 4. Преподаватель (неиерархическая, как метки)
@@ -56,7 +56,7 @@ class Course_Taxonomies {
      * Вызывается на хуке 'init'
      */
     public function register_taxonomies() {
-        // Регистрируем таксономию "Специализация и программы"
+        // Регистрируем таксономию "Программы"
         $this->register_specialization_taxonomy();
         
         // Регистрируем таксономию "Уровень образования"
@@ -70,33 +70,33 @@ class Course_Taxonomies {
     }
     
     /**
-     * Регистрация таксономии "Специализация и программы"
+     * Регистрация таксономии "Программы"
      * Иерархическая таксономия (можно создавать подкатегории)
-     * Пример: Программирование -> Веб-разработка -> Backend
+     * Используется для связи курсов с программами
      */
     private function register_specialization_taxonomy() {
         // Массив с переводами названий для таксономии
         $labels = array(
-            'name'                       => _x('Специализации и программы', 'Taxonomy General Name', 'course-plugin'),
-            'singular_name'              => _x('Специализация и программа', 'Taxonomy Singular Name', 'course-plugin'),
-            'menu_name'                  => __('Специализации и программы', 'course-plugin'),
-            'all_items'                  => __('Все специализации', 'course-plugin'),
-            'parent_item'                => __('Родительская специализация', 'course-plugin'),
-            'parent_item_colon'          => __('Родительская специализация:', 'course-plugin'),
-            'new_item_name'              => __('Новая специализация', 'course-plugin'),
-            'add_new_item'               => __('Добавить специализацию', 'course-plugin'),
-            'edit_item'                  => __('Редактировать специализацию', 'course-plugin'),
-            'update_item'                => __('Обновить специализацию', 'course-plugin'),
-            'view_item'                  => __('Просмотреть специализацию', 'course-plugin'),
-            'separate_items_with_commas' => __('Разделить специализации запятыми', 'course-plugin'),
-            'add_or_remove_items'        => __('Добавить или удалить специализации', 'course-plugin'),
+            'name'                       => _x('Программы', 'Taxonomy General Name', 'course-plugin'),
+            'singular_name'              => _x('Программа', 'Taxonomy Singular Name', 'course-plugin'),
+            'menu_name'                  => __('Программы', 'course-plugin'),
+            'all_items'                  => __('Все программии', 'course-plugin'),
+            'parent_item'                => __('Родительская программия', 'course-plugin'),
+            'parent_item_colon'          => __('Родительская программия:', 'course-plugin'),
+            'new_item_name'              => __('Новая программия', 'course-plugin'),
+            'add_new_item'               => __('Добавить программию', 'course-plugin'),
+            'edit_item'                  => __('Редактировать программию', 'course-plugin'),
+            'update_item'                => __('Обновить программию', 'course-plugin'),
+            'view_item'                  => __('Просмотреть программию', 'course-plugin'),
+            'separate_items_with_commas' => __('Разделить программии запятыми', 'course-plugin'),
+            'add_or_remove_items'        => __('Добавить или удалить программии', 'course-plugin'),
             'choose_from_most_used'      => __('Выбрать из наиболее используемых', 'course-plugin'),
-            'popular_items'              => __('Популярные специализации', 'course-plugin'),
-            'search_items'               => __('Поиск специализаций', 'course-plugin'),
+            'popular_items'              => __('Популярные программии', 'course-plugin'),
+            'search_items'               => __('Поиск программий', 'course-plugin'),
             'not_found'                  => __('Не найдено', 'course-plugin'),
-            'no_terms'                   => __('Нет специализаций', 'course-plugin'),
-            'items_list'                 => __('Список специализаций', 'course-plugin'),
-            'items_list_navigation'      => __('Навигация по списку специализаций', 'course-plugin'),
+            'no_terms'                   => __('Нет программий', 'course-plugin'),
+            'items_list'                 => __('Список программий', 'course-plugin'),
+            'items_list_navigation'      => __('Навигация по списку программий', 'course-plugin'),
         );
         
         // Массив с параметрами регистрации таксономии
@@ -111,7 +111,7 @@ class Course_Taxonomies {
             'show_in_rest'               => true,                                                            // Поддержка REST API (Gutenberg)
             'show_in_quick_edit'         => true,                                                            // Показывать в быстром редактировании
             'meta_box_cb'                => 'post_categories_meta_box',                                    // Использовать стандартный метабокс категорий WordPress
-            'rewrite'                    => array('slug' => 'specialization'),                              // Slug для URL (например: /specialization/programming/)
+            'rewrite'                    => array('slug' => 'programs'),                                    // Slug для URL (например: /programs/programming/)
         );
         
         // Регистрируем таксономию 'course_specialization' для типа поста 'course'

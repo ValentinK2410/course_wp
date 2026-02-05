@@ -684,7 +684,7 @@ class Course_Moodle_Sync {
         foreach ($categories as $category) {
             // Сохраняем категорию в WordPress
             // Примечание: категории из Moodle больше не создают термины в таксономии course_specialization
-            // В таксономию "Специализации и программы" попадают только программы из WordPress
+            // В таксономию "Программы" попадают только программы из WordPress
             $result = $this->save_category($category);
             if ($result) {
                 $count++;
@@ -695,7 +695,7 @@ class Course_Moodle_Sync {
         }
         
         error_log('Moodle Sync: Обработано категорий: ' . $count . ' (пропущено: ' . $skipped . ')');
-        error_log('Moodle Sync: Примечание - категории из Moodle не создают термины в таксономии "Специализации и программы". Эта таксономия предназначена только для программ.');
+        error_log('Moodle Sync: Примечание - категории из Moodle не создают термины в таксономии "Программы". Эта таксономия предназначена только для программ.');
         
         return array('count' => $count, 'created' => 0, 'updated' => 0, 'skipped' => $skipped);
     }
@@ -917,7 +917,7 @@ class Course_Moodle_Sync {
     
     /**
      * Сохранение категории в WordPress
-     * НЕ создает термины в таксономии "course_specialization" - эта таксономия предназначена только для программ
+     * НЕ создает термины в таксономии "course_specialization" (Программы) - эта таксономия предназначена только для программ
      * Категории из Moodle сохраняются только в метаполях курсов (moodle_category_id)
      * 
      * @param array $category Массив с данными категории из Moodle
@@ -929,9 +929,9 @@ class Course_Moodle_Sync {
             return false;
         }
         
-        // НЕ создаем термины в таксономии course_specialization из категорий Moodle
-        // В таксономию "Специализации и программы" должны попадать только программы,
-        // которые были созданы в WordPress
+            // НЕ создаем термины в таксономии course_specialization (Программы) из категорий Moodle
+            // В таксономию "Программы" должны попадать только программы,
+            // которые были созданы в WordPress
         // 
         // Информация о категориях из Moodle сохраняется в метаполях курсов (moodle_category_id)
         // через метод save_course()
@@ -1033,8 +1033,8 @@ class Course_Moodle_Sync {
         if (isset($course['categoryid'])) {
             update_post_meta($post_id, 'moodle_category_id', absint($course['categoryid']));
             
-            // НЕ связываем курс с категорией из Moodle через таксономию course_specialization
-            // В таксономию "Специализации и программы" должны попадать только программы,
+            // НЕ связываем курс с категорией из Moodle через таксономию course_specialization (Программы)
+            // В таксономию "Программы" должны попадать только программы,
             // которые были созданы в WordPress, а не категории из Moodle
         }
         

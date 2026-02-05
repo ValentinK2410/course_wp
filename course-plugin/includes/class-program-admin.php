@@ -73,7 +73,7 @@ class Program_Admin {
         $new_columns['cb'] = $columns['cb'];
         $new_columns['thumbnail'] = __('Изображение', 'course-plugin');
         $new_columns['title'] = $columns['title'];
-        $new_columns['course_specialization'] = __('Специализация', 'course-plugin');
+        $new_columns['course_specialization'] = __('Программы', 'course-plugin');
         $new_columns['course_level'] = __('Уровень', 'course-plugin');
         $new_columns['course_topic'] = __('Тема', 'course-plugin');
         $new_columns['course_teacher'] = __('Преподаватель', 'course-plugin');
