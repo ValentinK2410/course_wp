@@ -168,6 +168,32 @@ class Program_Meta_Boxes {
                     <input type="date" id="program_end_date" name="program_end_date" value="<?php echo esc_attr($program_end_date); ?>" class="regular-text" />
                 </td>
             </tr>
+            
+            <tr>
+                <th>
+                    <label for="program_tag"><?php _e('Тег программы', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <?php
+                    $program_tag = get_post_meta($post->ID, '_program_tag', true);
+                    ?>
+                    <input type="text" id="program_tag" name="program_tag" value="<?php echo esc_attr($program_tag); ?>" class="regular-text" placeholder="<?php _e('Например: С нуля, Новый, Можно без опыта', 'course-plugin'); ?>" />
+                    <span class="description"><?php _e('Отображается на карточке программы как цветная метка', 'course-plugin'); ?></span>
+                </td>
+            </tr>
+            
+            <tr>
+                <th>
+                    <label for="program_additional_text"><?php _e('Дополнительный текст', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <?php
+                    $program_additional_text = get_post_meta($post->ID, '_program_additional_text', true);
+                    ?>
+                    <input type="text" id="program_additional_text" name="program_additional_text" value="<?php echo esc_attr($program_additional_text); ?>" class="regular-text" placeholder="<?php _e('Например: Учись в своем темпе, 9 месяцев', 'course-plugin'); ?>" />
+                    <span class="description"><?php _e('Дополнительная информация на карточке программы', 'course-plugin'); ?></span>
+                </td>
+            </tr>
         </table>
         <?php
     }
@@ -272,6 +298,16 @@ class Program_Meta_Boxes {
         // Сохранение количества курсов
         if (isset($_POST['program_courses_count'])) {
             update_post_meta($post_id, '_program_courses_count', intval($_POST['program_courses_count']));
+        }
+        
+        // Сохранение тега программы
+        if (isset($_POST['program_tag'])) {
+            update_post_meta($post_id, '_program_tag', sanitize_text_field($_POST['program_tag']));
+        }
+        
+        // Сохранение дополнительного текста
+        if (isset($_POST['program_additional_text'])) {
+            update_post_meta($post_id, '_program_additional_text', sanitize_text_field($_POST['program_additional_text']));
         }
         
         // Сохранение даты начала

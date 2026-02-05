@@ -217,73 +217,115 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                             $courses_count = get_post_meta(get_the_ID(), '_program_courses_count', true);
                             $start_date = get_post_meta(get_the_ID(), '_program_start_date', true);
                             $certificate = get_post_meta(get_the_ID(), '_program_certificate', true);
-                            $discount = 0;
-                            if ($old_price && $price) {
-                                $discount = round((($old_price - $price) / $old_price) * 100);
+                            
+                            // Получаем тег программы
+                            $program_tag = get_post_meta(get_the_ID(), '_program_tag', true);
+                            if (!$program_tag) {
+                                $levels = get_the_terms(get_the_ID(), 'course_level');
+                                if ($levels && !is_wp_error($levels) && !empty($levels)) {
+                                    $program_tag = $levels[0]->name;
+                                }
                             }
+                            
+                            // Дополнительный текст
+                            $program_additional_text = get_post_meta(get_the_ID(), '_program_additional_text', true);
+                            if (!$program_additional_text && $duration) {
+                                $program_additional_text = $duration;
+                            }
+                            
+                            // Определяем градиент фона
+                            $gradient_index = (get_the_ID() % 4);
+                            $gradient_classes = array(
+                                'gradient-blue-gray',
+                                'gradient-peach-orange',
+                                'gradient-cream',
+                                'gradient-light-blue'
+                            );
+                            $gradient_class = $gradient_classes[$gradient_index];
+                            
+                            // Определяем цвет тега
+                            $tag_colors = array(
+                                'tag-yellow-green',
+                                'tag-orange',
+                                'tag-red-orange',
+                                'tag-yellow-green'
+                            );
+                            $tag_color_class = $tag_colors[$gradient_index];
                         ?>
-                            <article id="program-<?php the_ID(); ?>" <?php post_class('course-item program-item'); ?>>
-                                <div class="course-thumbnail program-thumbnail">
-                                    <?php if ($discount > 0) : ?>
-                                        <span class="course-discount-badge program-discount-badge">-<?php echo $discount; ?>%</span>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (has_post_thumbnail()) : ?>
-                                        <a href="<?php the_permalink(); ?>">
-                                            <?php the_post_thumbnail('medium_large'); ?>
-                                        </a>
-                                    <?php else : ?>
-                                        <a href="<?php the_permalink(); ?>">
-                                            <div class="course-placeholder program-placeholder">
-                                                <span class="dashicons dashicons-welcome-learn-more"></span>
+                            <article id="program-<?php the_ID(); ?>" <?php post_class('course-item course-card-modern program-item'); ?>>
+                                <a href="<?php the_permalink(); ?>" class="course-card-link">
+                                    <div class="course-card-wrapper <?php echo esc_attr($gradient_class); ?>">
+                                        <div class="course-card-header">
+                                            <h2 class="course-card-title"><?php the_title(); ?></h2>
+                                            <p class="course-card-subtitle"><?php _e('Оплата во время обучения', 'course-plugin'); ?></p>
+                                        </div>
+                                        
+                                        <?php if ($program_tag) : ?>
+                                            <div class="course-card-tag <?php echo esc_attr($tag_color_class); ?>">
+                                                <?php echo esc_html($program_tag); ?>
                                             </div>
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <!-- Название поверх изображения -->
-                                    <h2 class="course-title-overlay program-title-overlay">
-                                        <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
-                                    </h2>
-                                </div>
-                                
-                                <div class="course-content program-content">
-                                    <div class="course-price-section program-price-section">
-                                        <?php if ($price || $old_price) : ?>
-                                            <div class="course-price-wrapper program-price-wrapper">
-                                                <?php if ($old_price && $price < $old_price) : ?>
-                                                    <span class="course-old-price program-old-price"><?php echo number_format($old_price, 2, ',', ' '); ?> Р</span>
-                                                <?php endif; ?>
-                                                <span class="course-price program-price"><?php echo $price ? number_format($price, 2, ',', ' ') : '0,00'; ?> Р</span>
-                                            </div>
-                                        <?php else : ?>
-                                            <span class="course-price program-price">0,00 Р</span>
                                         <?php endif; ?>
+                                        
+                                        <?php if ($program_additional_text) : ?>
+                                            <p class="course-card-additional"><?php echo esc_html($program_additional_text); ?></p>
+                                        <?php elseif ($courses_count) : ?>
+                                            <p class="course-card-additional"><?php echo sprintf(_n('%d курс', '%d курсов', $courses_count, 'course-plugin'), $courses_count); ?></p>
+                                        <?php endif; ?>
+                                        
+                                        <div class="course-card-illustration">
+                                            <?php
+                                            $illustration_index = (get_the_ID() % 4);
+                                            ?>
+                                            <?php if ($illustration_index == 0) : ?>
+                                                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="30" y="40" width="80" height="50" rx="4" fill="rgba(255,255,255,0.4)"/>
+                                                    <rect x="35" y="45" width="70" height="40" rx="2" fill="rgba(255,255,255,0.6)"/>
+                                                    <rect x="40" y="50" width="60" height="30" rx="2" fill="rgba(102,126,234,0.3)"/>
+                                                    <circle cx="50" cy="60" r="2" fill="rgba(255,255,255,0.8)"/>
+                                                    <circle cx="70" cy="60" r="2" fill="rgba(255,255,255,0.8)"/>
+                                                    <rect x="45" y="70" width="50" height="2" rx="1" fill="rgba(255,255,255,0.6)"/>
+                                                    <rect x="55" y="90" width="30" height="4" rx="2" fill="rgba(255,255,255,0.3)"/>
+                                                    <circle cx="70" cy="110" r="12" fill="rgba(255,255,255,0.3)"/>
+                                                    <rect x="58" y="110" width="24" height="20" rx="12" fill="rgba(255,255,255,0.3)"/>
+                                                </svg>
+                                            <?php elseif ($illustration_index == 1) : ?>
+                                                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="25" y="50" width="90" height="55" rx="3" fill="rgba(255,255,255,0.4)"/>
+                                                    <rect x="30" y="55" width="80" height="45" rx="2" fill="rgba(255,255,255,0.6)"/>
+                                                    <rect x="35" y="60" width="70" height="35" rx="2" fill="rgba(118,75,162,0.3)"/>
+                                                    <rect x="40" y="65" width="20" height="3" rx="1" fill="rgba(255,255,255,0.7)"/>
+                                                    <rect x="40" y="72" width="30" height="3" rx="1" fill="rgba(255,255,255,0.5)"/>
+                                                    <rect x="40" y="79" width="25" height="3" rx="1" fill="rgba(255,255,255,0.5)"/>
+                                                    <rect x="40" y="86" width="35" height="3" rx="1" fill="rgba(255,255,255,0.5)"/>
+                                                    <rect x="30" y="105" width="80" height="8" rx="2" fill="rgba(255,255,255,0.3)"/>
+                                                    <circle cx="70" cy="125" r="10" fill="rgba(255,255,255,0.3)"/>
+                                                </svg>
+                                            <?php elseif ($illustration_index == 2) : ?>
+                                                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="40" y="45" width="60" height="75" rx="6" fill="rgba(255,255,255,0.4)"/>
+                                                    <rect x="43" y="48" width="54" height="69" rx="4" fill="rgba(255,255,255,0.6)"/>
+                                                    <rect x="46" y="52" width="48" height="61" rx="3" fill="rgba(254,202,202,0.3)"/>
+                                                    <circle cx="70" cy="70" r="8" fill="rgba(255,255,255,0.6)"/>
+                                                    <rect x="60" y="82" width="20" height="3" rx="1" fill="rgba(255,255,255,0.5)"/>
+                                                    <rect x="55" y="88" width="30" height="3" rx="1" fill="rgba(255,255,255,0.5)"/>
+                                                    <circle cx="70" cy="125" r="10" fill="rgba(255,255,255,0.3)"/>
+                                                    <rect x="60" y="125" width="20" height="15" rx="10" fill="rgba(255,255,255,0.3)"/>
+                                                </svg>
+                                            <?php else : ?>
+                                                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="30" y="50" width="80" height="50" rx="4" fill="rgba(255,255,255,0.4)"/>
+                                                    <rect x="35" y="55" width="70" height="40" rx="2" fill="rgba(255,255,255,0.6)"/>
+                                                    <rect x="40" y="60" width="60" height="30" rx="2" fill="rgba(230,243,255,0.4)"/>
+                                                    <path d="M65 72 L70 75 L75 72 L70 68 Z" fill="rgba(0,0,0,0.3)"/>
+                                                    <circle cx="70" cy="110" r="12" fill="rgba(255,255,255,0.3)"/>
+                                                    <rect x="58" y="110" width="24" height="20" rx="12" fill="rgba(255,255,255,0.3)"/>
+                                                    <rect x="95" y="75" width="8" height="12" rx="2" fill="rgba(255,255,255,0.4)"/>
+                                                    <rect x="93" y="87" width="12" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+                                                </svg>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
-                                    
-                                    <?php if ($duration) : ?>
-                                        <div class="program-duration">
-                                            <strong><?php _e('Длительность:', 'course-plugin'); ?></strong> <?php echo esc_html($duration); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($courses_count) : ?>
-                                        <div class="program-courses-count">
-                                            <strong><?php _e('Курсов в программе:', 'course-plugin'); ?></strong> <?php echo esc_html($courses_count); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($certificate) : ?>
-                                        <div class="program-certificate-info">
-                                            <span class="dashicons dashicons-awards"></span> <?php _e('Сертификат', 'course-plugin'); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($start_date) : ?>
-                                        <div class="course-start-date program-start-date">
-                                            <?php _e('Дата начала:', 'course-plugin'); ?> <?php echo date_i18n('Y-m-d', strtotime($start_date)); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
+                                </a>
                             </article>
                         <?php endwhile; ?>
                     </div>
