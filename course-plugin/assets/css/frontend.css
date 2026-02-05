@@ -1978,7 +1978,8 @@
 
 /* Программы используют те же стили, что и курсы, но с дополнительными классами */
 .program-archive-wrapper {
-    /* Наследует стили от .course-archive-wrapper */
+    background: #1a1a1a;
+    min-height: 100vh;
 }
 
 .program-archive-container {
