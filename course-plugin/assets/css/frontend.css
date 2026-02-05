@@ -18,111 +18,359 @@
     box-sizing: border-box;
 }
 
-/* Левая боковая панель с фильтрами */
-.course-filters-sidebar {
+/* Левая боковая панель с фильтрами - Современный дизайн */
+.course-filters-sidebar,
+.program-filters-sidebar {
     width: 20%;
     flex: 0 0 20%;
     flex-shrink: 0;
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: none;
+    border-radius: 16px;
+    padding: 24px;
     position: sticky;
     top: 20px;
     align-self: flex-start;
     max-height: calc(100vh - 40px);
     overflow-y: auto;
     box-sizing: border-box;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.course-filters-sidebar:hover,
+.program-filters-sidebar:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .filters-title {
-    font-size: 1.3em;
-    margin: 0 0 20px 0;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #e0e0e0;
+    font-size: 1.5em;
+    margin: 0 0 24px 0;
+    padding-bottom: 16px;
+    border-bottom: 3px solid;
+    border-image: linear-gradient(90deg, #667eea 0%, #764ba2 100%) 1;
+    color: #2d3748;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filters-title::before {
+    content: "⚡";
+    font-size: 1.2em;
 }
 
 .filter-section {
-    margin-bottom: 25px;
+    margin-bottom: 28px;
+    background: #fff;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.filter-section:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
 }
 
 .filter-section-title {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #2d3748;
     font-size: 0.95em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+    color: #667eea;
+}
+
+.filter-section-title::before {
+    content: "▸";
+    font-size: 14px;
+    color: #764ba2;
+}
+
+/* Поиск по фильтрам */
+.filter-search {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.filter-search:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .filter-select {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
     font-size: 14px;
     background: #fff;
     cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+}
+
+.filter-select:hover {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
 }
 
 .filter-checkboxes {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.filter-checkboxes::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filter-checkboxes::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.filter-checkboxes::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+.filter-checkboxes::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #5568d3 0%, #6a3f8f 100%);
 }
 
 .filter-checkbox-label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     cursor: pointer;
     font-size: 14px;
-    padding: 5px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.filter-checkbox-label:hover {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    transform: translateX(4px);
 }
 
 .filter-checkbox-label input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
-    accent-color: #0073aa;
+    accent-color: #667eea;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.filter-checkbox-label input[type="checkbox"]:checked {
+    transform: scale(1.1);
 }
 
 .filter-checkbox-label span {
     flex: 1;
-    color: #555;
+    color: #4a5568;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.filter-checkbox-label:hover span {
+    color: #667eea;
+}
+
+.filter-checkbox-label input[type="checkbox"]:checked + span {
+    color: #667eea;
+    font-weight: 600;
 }
 
 .filter-submit-btn,
 .filter-reset-btn {
     width: 100%;
-    padding: 12px;
+    padding: 14px 20px;
     border: none;
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 10px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 15px;
-    transition: all 0.3s;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
 }
 
 .filter-submit-btn {
-    background: #0073aa;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.filter-submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.filter-submit-btn:hover::before {
+    width: 300px;
+    height: 300px;
 }
 
 .filter-submit-btn:hover {
-    background: #005a87;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.filter-submit-btn:active {
+    transform: translateY(0);
 }
 
 .filter-reset-btn {
-    background: #f5f5f5;
-    color: #333;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    color: #4a5568;
     text-decoration: none;
     display: block;
     text-align: center;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .filter-reset-btn:hover {
-    background: #e0e0e0;
+    background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+    border-color: #cbd5e0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: #2d3748;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 1024px) {
+    .course-archive-container,
+    .program-archive-container {
+        flex-direction: column;
+    }
+    
+    .course-filters-sidebar,
+    .program-filters-sidebar {
+        width: 100%;
+        flex: 1 1 100%;
+        position: relative;
+        top: 0;
+        max-height: none;
+        margin-bottom: 30px;
+    }
+    
+    .course-main-content,
+    .program-main-content {
+        width: 100%;
+        flex: 1 1 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .course-filters-sidebar,
+    .program-filters-sidebar {
+        padding: 16px;
+        border-radius: 12px;
+    }
+    
+    .filters-title {
+        font-size: 1.3em;
+    }
+    
+    .filter-section {
+        padding: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .filter-checkboxes {
+        max-height: 200px;
+    }
+    
+    .filter-submit-btn,
+    .filter-reset-btn {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+}
+
+/* Анимации для фильтров */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filter-section {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+/* Улучшенный скроллбар для фильтров */
+.course-filters-sidebar::-webkit-scrollbar,
+.program-filters-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.course-filters-sidebar::-webkit-scrollbar-track,
+.program-filters-sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.course-filters-sidebar::-webkit-scrollbar-thumb,
+.program-filters-sidebar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+.course-filters-sidebar::-webkit-scrollbar-thumb:hover,
+.program-filters-sidebar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #5568d3 0%, #6a3f8f 100%);
 }
 
 /* Элементы управления в левой панели */

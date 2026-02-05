@@ -56,8 +56,13 @@ if (defined('WP_DEBUG') && WP_DEBUG) {
             <h3 class="filters-title"><?php _e('Фильтры', 'course-plugin'); ?></h3>
             
             <form method="get" class="course-filters-form" id="course-filters-form">
+                <!-- Поиск по фильтрам -->
+                <div class="filter-search-wrapper" style="margin-bottom: 20px;">
+                    <input type="text" class="filter-search" id="filter-search-input" placeholder="<?php _e('Поиск по фильтрам...', 'course-plugin'); ?>" autocomplete="off">
+                </div>
+                
                 <!-- Преподаватель -->
-                <div class="filter-section">
+                <div class="filter-section" data-filter-type="teacher">
                     <label class="filter-section-title"><?php _e('Преподаватель', 'course-plugin'); ?></label>
                     <?php
                     wp_dropdown_categories(array(
@@ -74,7 +79,7 @@ if (defined('WP_DEBUG') && WP_DEBUG) {
                 </div>
                 
                 <!-- Уровень -->
-                <div class="filter-section">
+                <div class="filter-section" data-filter-type="level">
                     <label class="filter-section-title"><?php _e('Уровень', 'course-plugin'); ?></label>
                     <div class="filter-checkboxes">
                         <?php
@@ -100,7 +105,7 @@ if (defined('WP_DEBUG') && WP_DEBUG) {
                 </div>
                 
                 <!-- Специализация (Программа) -->
-                <div class="filter-section">
+                <div class="filter-section" data-filter-type="program">
                     <label class="filter-section-title"><?php _e('Программа', 'course-plugin'); ?></label>
                     <div class="filter-checkboxes">
                         <?php
@@ -143,7 +148,7 @@ if (defined('WP_DEBUG') && WP_DEBUG) {
                 </div>
                 
                 <!-- Тема -->
-                <div class="filter-section">
+                <div class="filter-section" data-filter-type="topic">
                     <label class="filter-section-title"><?php _e('Тема', 'course-plugin'); ?></label>
                     <div class="filter-checkboxes">
                         <?php
