@@ -1,9 +1,6 @@
 <?php
 /**
- * Шаблон для отображения отдельного курса
- * 
- * Этот шаблон используется для отображения страницы конкретного курса
- * Структура соответствует дизайну с большим баннером, описанием, целями и боковой панелью
+ * Шаблон для отображения отдельного курса - Премиальный дизайн
  * 
  * @copyright Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
  * @author Кузьменко Валентин (Valentink2410)
@@ -26,7 +23,7 @@ while (have_posts()) : the_post();
     $course_rating = get_post_meta(get_the_ID(), '_course_rating', true) ?: 0;
     $course_reviews_count = get_post_meta(get_the_ID(), '_course_reviews_count', true) ?: 0;
     
-    // Дополнительные поля для расширенной информации
+    // Дополнительные поля
     $course_weeks = get_post_meta(get_the_ID(), '_course_weeks', true);
     $course_credits = get_post_meta(get_the_ID(), '_course_credits', true);
     $course_hours_per_week = get_post_meta(get_the_ID(), '_course_hours_per_week', true);
@@ -46,7 +43,7 @@ while (have_posts()) : the_post();
     $levels = get_the_terms(get_the_ID(), 'course_level');
     $topics = get_the_terms(get_the_ID(), 'course_topic');
     
-    // Получаем данные преподавателя (первый из списка)
+    // Получаем данные преподавателя
     $teacher_name = '';
     $teacher_photo = '';
     $teacher_position = '';
@@ -54,7 +51,6 @@ while (have_posts()) : the_post();
     if ($teachers && !is_wp_error($teachers) && !empty($teachers)) {
         $teacher = $teachers[0];
         $teacher_name = $teacher->name;
-        // Получаем метаполя преподавателя
         $teacher_photo = get_term_meta($teacher->term_id, 'teacher_photo', true);
         $teacher_position = get_term_meta($teacher->term_id, 'teacher_position', true);
     }
@@ -69,336 +65,503 @@ while (have_posts()) : the_post();
     if ($course_old_price && $course_price && $course_price < $course_old_price) {
         $discount = round((($course_old_price - $course_price) / $course_old_price) * 100);
     }
+    
+    // Форматируем даты
+    $formatted_dates = '';
+    if ($course_start_date) {
+        $start = date_i18n('j F', strtotime($course_start_date));
+        if ($course_end_date) {
+            $end = date_i18n('j F Y', strtotime($course_end_date));
+            $formatted_dates = $start . ' — ' . $end;
+        } else {
+            $formatted_dates = __('Начало:', 'course-plugin') . ' ' . $start;
+        }
+    }
+    
+    // Определяем цветовую схему
+    $color_schemes = array(
+        array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea', 'light' => 'rgba(102, 126, 234, 0.1)'),
+        array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c', 'light' => 'rgba(245, 87, 108, 0.1)'),
+        array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe', 'light' => 'rgba(79, 172, 254, 0.1)'),
+        array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b', 'light' => 'rgba(67, 233, 123, 0.1)'),
+    );
+    $scheme = $color_schemes[get_the_ID() % count($color_schemes)];
 ?>
 
-<div class="single-course-wrapper">
-    <!-- Большой синий баннер с названием курса -->
-    <div class="course-hero-banner">
-        <div class="course-hero-content">
-            <h1 class="course-hero-title"><?php echo mb_strtoupper(get_the_title(), 'UTF-8'); ?></h1>
-            <?php if ($teacher_name) : ?>
-                <p class="course-hero-teacher"><?php echo mb_strtoupper($teacher_name, 'UTF-8'); ?></p>
-            <?php endif; ?>
-            <?php if ($course_code) : ?>
-                <p class="course-hero-code"><?php _e('КОД КУРСА:', 'course-plugin'); ?> <?php echo esc_html($course_code); ?></p>
-            <?php endif; ?>
-            <?php if ($course_video_url) : ?>
-                <div class="course-hero-video-overlay">
-                    <button class="course-play-button" data-video-url="<?php echo esc_url($course_video_url); ?>">
-                        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
-                            <circle cx="30" cy="30" r="30" fill="white" fill-opacity="0.9"/>
-                            <path d="M24 18L42 30L24 42V18Z" fill="#0073aa"/>
-                        </svg>
-                    </button>
-                </div>
-            <?php endif; ?>
+<div class="premium-single-course">
+    <!-- Hero Section -->
+    <header class="premium-course-hero" style="background: <?php echo $scheme['gradient']; ?>">
+        <div class="hero-decoration">
+            <div class="hero-circle hero-circle-1"></div>
+            <div class="hero-circle hero-circle-2"></div>
+            <div class="hero-circle hero-circle-3"></div>
+            <svg class="hero-wave" viewBox="0 0 1440 320" preserveAspectRatio="none">
+                <path fill="rgba(255,255,255,0.1)" d="M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,181.3C672,192,768,160,864,154.7C960,149,1056,171,1152,165.3C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            </svg>
         </div>
-        <?php if (has_post_thumbnail()) : ?>
-            <div class="course-hero-image">
-                <?php the_post_thumbnail('full'); ?>
+        
+        <div class="hero-container">
+            <div class="hero-content">
+                <!-- Breadcrumbs -->
+                <nav class="hero-breadcrumbs">
+                    <a href="<?php echo home_url(); ?>"><?php _e('Главная', 'course-plugin'); ?></a>
+                    <span class="breadcrumb-separator">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    <a href="<?php echo get_post_type_archive_link('course'); ?>"><?php _e('Курсы', 'course-plugin'); ?></a>
+                    <span class="breadcrumb-separator">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    <span class="breadcrumb-current"><?php the_title(); ?></span>
+                </nav>
+                
+                <!-- Tags -->
+                <div class="hero-tags">
+                    <?php if ($course_code) : ?>
+                        <span class="hero-tag hero-tag-code">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4.5 4L1.5 7L4.5 10M9.5 4L12.5 7L9.5 10M8 2L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <?php echo esc_html($course_code); ?>
+                        </span>
+                    <?php endif; ?>
+                    <?php if ($levels && !is_wp_error($levels)) : ?>
+                        <span class="hero-tag hero-tag-level">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="8" width="3" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5"/><rect x="5.5" y="5" width="3" height="7" rx="0.5" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="2" width="3" height="10" rx="0.5" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <?php echo esc_html($levels[0]->name); ?>
+                        </span>
+                    <?php endif; ?>
+                    <?php if ($formatted_dates) : ?>
+                        <span class="hero-tag hero-tag-date">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 5H13M4 1V3M10 1V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            <?php echo esc_html($formatted_dates); ?>
+                        </span>
+                    <?php endif; ?>
+                </div>
+                
+                <!-- Title -->
+                <h1 class="hero-title"><?php the_title(); ?></h1>
+                
+                <!-- Subtitle / Teacher -->
+                <?php if ($teacher_name) : ?>
+                    <div class="hero-instructor">
+                        <?php if ($teacher_photo) : ?>
+                            <img src="<?php echo esc_url($teacher_photo); ?>" alt="<?php echo esc_attr($teacher_name); ?>" class="instructor-avatar">
+                        <?php else : ?>
+                            <div class="instructor-avatar-placeholder">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            </div>
+                        <?php endif; ?>
+                        <div class="instructor-info">
+                            <span class="instructor-label"><?php _e('Преподаватель', 'course-plugin'); ?></span>
+                            <a href="<?php echo $teacher ? esc_url(get_term_link($teacher->term_id, 'course_teacher')) : '#'; ?>" class="instructor-name"><?php echo esc_html($teacher_name); ?></a>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Quick Stats -->
+                <div class="hero-stats">
+                    <?php if ($course_duration) : ?>
+                        <div class="hero-stat">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 5V10L13 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            <span><?php echo esc_html($course_duration); ?></span>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($course_language) : ?>
+                        <div class="hero-stat">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M2 10H18M10 2C12.5 4.5 14 7 14 10C14 13 12.5 15.5 10 18M10 2C7.5 4.5 6 7 6 10C6 13 7.5 15.5 10 18" stroke="currentColor" stroke-width="2"/></svg>
+                            <span><?php echo esc_html($course_language); ?></span>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($course_certificate) : ?>
+                        <div class="hero-stat">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="12" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2" stroke="currentColor" stroke-width="2"/><path d="M8 15V17M12 15V17" stroke="currentColor" stroke-width="2"/></svg>
+                            <span><?php _e('Сертификат', 'course-plugin'); ?></span>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
-        <?php endif; ?>
+            
+            <!-- Hero Image/Video -->
+            <div class="hero-media">
+                <?php if ($course_video_url) : ?>
+                    <div class="hero-video-wrapper">
+                        <button class="hero-play-btn" data-video-url="<?php echo esc_url($course_video_url); ?>">
+                            <span class="play-icon">
+                                <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M12 8L24 16L12 24V8Z" fill="currentColor"/></svg>
+                            </span>
+                            <span class="play-text"><?php _e('Смотреть видео', 'course-plugin'); ?></span>
+                        </button>
+                        <?php if (has_post_thumbnail()) : ?>
+                            <?php the_post_thumbnail('large', array('class' => 'hero-video-poster')); ?>
+                        <?php else : ?>
+                            <div class="hero-video-poster-placeholder">
+                                <svg width="80" height="80" viewBox="0 0 80 80" fill="none"><rect x="10" y="15" width="60" height="40" rx="4" stroke="currentColor" stroke-width="3"/><path d="M35 30L50 40L35 50V30Z" fill="currentColor"/><rect x="25" y="60" width="30" height="4" rx="2" fill="currentColor"/></svg>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php elseif (has_post_thumbnail()) : ?>
+                    <div class="hero-image">
+                        <?php the_post_thumbnail('large'); ?>
+                    </div>
+                <?php else : ?>
+                    <div class="hero-image-placeholder">
+                        <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+                            <rect x="20" y="30" width="80" height="50" rx="4" stroke="currentColor" stroke-width="3"/>
+                            <path d="M50 45L75 60L50 75V45Z" fill="currentColor"/>
+                            <rect x="40" y="85" width="40" height="6" rx="3" fill="currentColor"/>
+                        </svg>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <div class="premium-course-content">
+        <div class="content-container">
+            <!-- Main Column -->
+            <main class="content-main">
+                <!-- Description Section -->
+                <section class="content-section section-description">
+                    <div class="section-header">
+                        <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 6H20M4 10H20M4 14H14M4 18H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        </div>
+                        <h2 class="section-title"><?php _e('Описание курса:', 'course-plugin'); ?></h2>
+                    </div>
+                    <div class="section-content course-description">
+                        <?php the_content(); ?>
+                    </div>
+                </section>
+                
+                <!-- Goals Section -->
+                <?php if ($course_cognitive_goals || $course_emotional_goals || $course_psychomotor_goals) : ?>
+                    <section class="content-section section-goals">
+                        <div class="section-header">
+                            <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+                            </div>
+                            <h2 class="section-title"><?php _e('Цели и задачи курса:', 'course-plugin'); ?></h2>
+                        </div>
+                        <p class="goals-intro"><?php _e('Изучив этот курс, студенты смогут:', 'course-plugin'); ?></p>
+                        
+                        <div class="goals-grid">
+                            <?php if ($course_cognitive_goals) : ?>
+                                <div class="goal-card">
+                                    <div class="goal-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor"/><circle cx="12" cy="10" r="3" fill="currentColor"/><path d="M12 14c-3 0-6 1.5-6 3v1h12v-1c0-1.5-3-3-6-3z" fill="currentColor"/></svg>
+                                    </div>
+                                    <h4 class="goal-title"><?php _e('Когнитивные цели', 'course-plugin'); ?></h4>
+                                    <span class="goal-subtitle"><?php _e('Знать', 'course-plugin'); ?></span>
+                                    <div class="goal-content">
+                                        <?php echo wpautop($course_cognitive_goals); ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($course_emotional_goals) : ?>
+                                <div class="goal-card">
+                                    <div class="goal-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/></svg>
+                                    </div>
+                                    <h4 class="goal-title"><?php _e('Эмоциональные цели', 'course-plugin'); ?></h4>
+                                    <span class="goal-subtitle"><?php _e('Чувствовать', 'course-plugin'); ?></span>
+                                    <div class="goal-content">
+                                        <?php echo wpautop($course_emotional_goals); ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($course_psychomotor_goals) : ?>
+                                <div class="goal-card">
+                                    <div class="goal-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M13.5 5.5C14.59 5.5 15.5 4.59 15.5 3.5C15.5 2.41 14.59 1.5 13.5 1.5C12.41 1.5 11.5 2.41 11.5 3.5C11.5 4.59 12.41 5.5 13.5 5.5ZM9.89 19.38L10.89 15L13 17V23H15V15.5L12.89 13.5L13.5 10.5C14.79 12 16.79 13 19 13V11C17.09 11 15.5 10 14.69 8.58L13.69 7C13.29 6.38 12.61 6 11.89 6C11.54 6 11.19 6.08 10.89 6.25L6 8.83V13H8V10.17L9.45 9.38L8 17L2.62 16L2.16 18L9.89 19.38Z" fill="currentColor"/></svg>
+                                    </div>
+                                    <h4 class="goal-title"><?php _e('Психомоторные цели', 'course-plugin'); ?></h4>
+                                    <span class="goal-subtitle"><?php _e('Уметь', 'course-plugin'); ?></span>
+                                    <div class="goal-content">
+                                        <?php echo wpautop($course_psychomotor_goals); ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </section>
+                <?php endif; ?>
+                
+                <!-- Course Content Section -->
+                <?php if ($course_content) : ?>
+                    <section class="content-section section-curriculum">
+                        <div class="section-header">
+                            <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 6H2V20C2 21.1 2.9 22 4 22H18V20H4V6ZM20 2H8C6.9 2 6 2.9 6 4V16C6 17.1 6.9 18 8 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H8V4H20V16ZM10 9H18V11H10V9ZM10 12H14V14H10V12ZM10 6H18V8H10V6Z" fill="currentColor"/></svg>
+                            </div>
+                            <h2 class="section-title"><?php _e('Содержание курса', 'course-plugin'); ?></h2>
+                        </div>
+                        <div class="section-content curriculum-content">
+                            <?php echo wpautop($course_content); ?>
+                        </div>
+                    </section>
+                <?php endif; ?>
+                
+                <!-- Video Section -->
+                <?php if ($course_video_url) : ?>
+                    <section class="content-section section-video">
+                        <div class="section-header">
+                            <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 3H3C1.89 3 1 3.89 1 5V17C1 18.1 1.89 19 3 19H8V21H16V19H21C22.1 19 23 18.1 23 17V5C23 3.89 22.1 3 21 3ZM21 17H3V5H21V17ZM16 11L9 15V7L16 11Z" fill="currentColor"/></svg>
+                            </div>
+                            <h2 class="section-title"><?php _e('Видео о курсе', 'course-plugin'); ?></h2>
+                        </div>
+                        <div class="video-wrapper">
+                            <?php
+                            if (strpos($course_video_url, 'youtube.com') !== false || strpos($course_video_url, 'youtu.be') !== false) {
+                                preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $course_video_url, $matches);
+                                $youtube_id = isset($matches[1]) ? $matches[1] : '';
+                                if ($youtube_id) {
+                                    ?>
+                                    <iframe src="https://www.youtube.com/embed/<?php echo esc_attr($youtube_id); ?>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                    <?php
+                                }
+                            } elseif (strpos($course_video_url, 'vimeo.com') !== false) {
+                                preg_match('/vimeo.com\/(\d+)/', $course_video_url, $matches);
+                                $vimeo_id = isset($matches[1]) ? $matches[1] : '';
+                                if ($vimeo_id) {
+                                    ?>
+                                    <iframe src="https://player.vimeo.com/video/<?php echo esc_attr($vimeo_id); ?>" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+                                    <?php
+                                }
+                            } else {
+                                ?>
+                                <video controls>
+                                    <source src="<?php echo esc_url($course_video_url); ?>" type="video/mp4">
+                                </video>
+                                <?php
+                            }
+                            ?>
+                        </div>
+                    </section>
+                <?php endif; ?>
+                
+                <!-- Related Courses -->
+                <?php
+                $related_args = array(
+                    'post_type' => 'course',
+                    'posts_per_page' => 3,
+                    'post__not_in' => array(get_the_ID()),
+                    'orderby' => 'rand',
+                );
+                
+                if ($specializations && !is_wp_error($specializations) && !empty($specializations)) {
+                    $related_args['tax_query'] = array(
+                        array(
+                            'taxonomy' => 'course_specialization',
+                            'field' => 'term_id',
+                            'terms' => array($specializations[0]->term_id),
+                        ),
+                    );
+                }
+                
+                $related_courses = new WP_Query($related_args);
+                
+                if ($related_courses->have_posts()) :
+                ?>
+                    <section class="content-section section-related">
+                        <div class="section-header">
+                            <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                            </div>
+                            <h2 class="section-title"><?php _e('Другие курсы по теме', 'course-plugin'); ?></h2>
+                        </div>
+                        <div class="related-courses-grid">
+                            <?php 
+                            $related_schemes = array(
+                                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                            );
+                            $i = 0;
+                            while ($related_courses->have_posts()) : $related_courses->the_post(); 
+                                $rel_teacher = get_the_terms(get_the_ID(), 'course_teacher');
+                                $rel_teacher_name = ($rel_teacher && !is_wp_error($rel_teacher)) ? $rel_teacher[0]->name : '';
+                            ?>
+                                <article class="related-course-card">
+                                    <a href="<?php the_permalink(); ?>" class="related-card-link">
+                                        <div class="related-card-header" style="background: <?php echo $related_schemes[$i % 3]; ?>">
+                                            <span class="related-card-badge"><?php _e('Курс', 'course-plugin'); ?></span>
+                                            <div class="related-card-icon">
+                                                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                                                    <circle cx="20" cy="20" r="16" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+                                                    <path d="M16 14L26 20L16 26V14Z" fill="rgba(255,255,255,0.8)"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div class="related-card-content">
+                                            <h4 class="related-card-title"><?php the_title(); ?></h4>
+                                            <?php if ($rel_teacher_name) : ?>
+                                                <p class="related-card-teacher"><?php echo esc_html($rel_teacher_name); ?></p>
+                                            <?php endif; ?>
+                                        </div>
+                                    </a>
+                                </article>
+                            <?php 
+                            $i++;
+                            endwhile; 
+                            ?>
+                        </div>
+                    </section>
+                    <?php wp_reset_postdata(); ?>
+                <?php endif; ?>
+            </main>
+            
+            <!-- Sidebar -->
+            <aside class="content-sidebar">
+                <!-- Course Overview Card -->
+                <div class="sidebar-card overview-card">
+                    <div class="card-header" style="background: <?php echo $scheme['gradient']; ?>">
+                        <h3><?php _e('Краткий обзор курса', 'course-plugin'); ?></h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="overview-list">
+                            <?php if ($course_language) : ?>
+                                <li class="overview-item">
+                                    <span class="overview-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M2 10H18M10 2C12 4 13 7 13 10C13 13 12 16 10 18M10 2C8 4 7 7 7 10C7 13 8 16 10 18" stroke="currentColor" stroke-width="1.5"/></svg>
+                                    </span>
+                                    <span class="overview-label"><?php _e('Язык:', 'course-plugin'); ?></span>
+                                    <span class="overview-value"><?php echo esc_html($course_language); ?></span>
+                                </li>
+                            <?php endif; ?>
+                            <?php if ($course_weeks) : ?>
+                                <li class="overview-item">
+                                    <span class="overview-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 7H18M6 1V4M14 1V4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                    </span>
+                                    <span class="overview-label"><?php _e('Недель:', 'course-plugin'); ?></span>
+                                    <span class="overview-value"><?php echo esc_html($course_weeks); ?></span>
+                                </li>
+                            <?php endif; ?>
+                            <?php if ($course_credits) : ?>
+                                <li class="overview-item">
+                                    <span class="overview-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L12.5 7H17.5L13.5 11L15 17L10 14L5 17L6.5 11L2.5 7H7.5L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                                    </span>
+                                    <span class="overview-label"><?php _e('Кредитов:', 'course-plugin'); ?></span>
+                                    <span class="overview-value"><?php echo esc_html($course_credits); ?></span>
+                                </li>
+                            <?php endif; ?>
+                            <?php if ($course_hours_per_week) : ?>
+                                <li class="overview-item">
+                                    <span class="overview-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M10 5V10L13 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                    </span>
+                                    <span class="overview-label"><?php _e('Часов / неделя:', 'course-plugin'); ?></span>
+                                    <span class="overview-value"><?php echo esc_html($course_hours_per_week); ?></span>
+                                </li>
+                            <?php endif; ?>
+                            <?php if ($course_certificate) : ?>
+                                <li class="overview-item">
+                                    <span class="overview-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="16" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 14V16M12 14V16" stroke="currentColor" stroke-width="1.5"/></svg>
+                                    </span>
+                                    <span class="overview-label"><?php _e('Сертификат:', 'course-plugin'); ?></span>
+                                    <span class="overview-value overview-value-yes"><?php _e('Да', 'course-plugin'); ?></span>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <?php if ($course_seminary_new_url || $course_seminary_student_url || $course_lite_course_url) : ?>
+                    <div class="sidebar-card action-card">
+                        <div class="action-buttons">
+                            <?php if ($course_seminary_new_url) : ?>
+                                <a href="<?php echo esc_url($course_seminary_new_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-primary">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                    <?php _e('Записаться на курс', 'course-plugin'); ?>
+                                </a>
+                            <?php endif; ?>
+                            
+                            <?php if ($course_seminary_student_url) : ?>
+                                <a href="<?php echo esc_url($course_seminary_student_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-secondary">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 18C3 14.134 6.134 11 10 11C13.866 11 17 14.134 17 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                    <?php _e('Для студентов семинарии', 'course-plugin'); ?>
+                                </a>
+                            <?php endif; ?>
+                            
+                            <?php if ($course_lite_course_url) : ?>
+                                <a href="<?php echo esc_url($course_lite_course_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-outline">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10L10 3L17 10M5 8V16H15V8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    <?php _e('Лайт курс', 'course-plugin'); ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Price Card -->
+                <?php if ($course_price) : ?>
+                    <div class="sidebar-card price-card">
+                        <?php if ($discount > 0) : ?>
+                            <div class="price-discount-badge">-<?php echo $discount; ?>%</div>
+                        <?php endif; ?>
+                        <div class="price-content">
+                            <?php if ($discount > 0) : ?>
+                                <span class="price-old"><?php echo number_format($course_old_price, 0, ',', ' '); ?> ₽</span>
+                            <?php endif; ?>
+                            <span class="price-current"><?php echo number_format($course_price, 0, ',', ' '); ?> ₽</span>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Instructor Card -->
+                <?php if ($teacher_name) : ?>
+                    <div class="sidebar-card instructor-card">
+                        <h4 class="card-title"><?php _e('Преподаватель', 'course-plugin'); ?></h4>
+                        <a href="<?php echo $teacher ? esc_url(get_term_link($teacher->term_id, 'course_teacher')) : '#'; ?>" class="instructor-link">
+                            <div class="instructor-avatar-wrapper">
+                                <?php if ($teacher_photo) : ?>
+                                    <img src="<?php echo esc_url($teacher_photo); ?>" alt="<?php echo esc_attr($teacher_name); ?>">
+                                <?php else : ?>
+                                    <div class="avatar-placeholder">
+                                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="14" r="8" stroke="currentColor" stroke-width="2"/><path d="M6 36C6 28.268 12.268 22 20 22C27.732 22 34 28.268 34 36" stroke="currentColor" stroke-width="2"/></svg>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="instructor-details">
+                                <span class="instructor-name"><?php echo esc_html($teacher_name); ?></span>
+                                <?php if ($teacher_position) : ?>
+                                    <span class="instructor-position"><?php echo esc_html($teacher_position); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <svg class="instructor-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7 4L13 10L7 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </aside>
+        </div>
     </div>
     
-    <div class="single-course-container">
-        <!-- Основной контент слева -->
-        <main class="single-course-main">
-            <!-- Код курса и название -->
-            <?php if ($course_code) : ?>
-                <div class="course-code-title">
-                    <span class="course-code"><?php echo esc_html($course_code); ?></span>
-                    <h2><?php the_title(); ?></h2>
-                </div>
-            <?php endif; ?>
-            
-            <!-- Описание курса -->
-            <div class="course-description-section">
-                <h3><?php _e('Описание курса:', 'course-plugin'); ?></h3>
-                <div class="course-description">
-                    <?php the_content(); ?>
-                </div>
+    <!-- CTA Section -->
+    <section class="premium-course-cta" style="background: <?php echo $scheme['gradient']; ?>">
+        <div class="cta-container">
+            <div class="cta-content">
+                <h2 class="cta-title"><?php _e('Готовы начать обучение?', 'course-plugin'); ?></h2>
+                <p class="cta-text"><?php _e('Запишитесь на курс и начните свой путь к новым знаниям!', 'course-plugin'); ?></p>
             </div>
-            
-            <!-- Цели и задачи курса -->
-            <?php if ($course_cognitive_goals || $course_emotional_goals || $course_psychomotor_goals) : ?>
-                <div class="course-goals-section">
-                    <h3><?php _e('Цели и задачи курса:', 'course-plugin'); ?></h3>
-                    <p class="goals-intro"><?php _e('Изучив этот курс, студенты смогут:', 'course-plugin'); ?></p>
-                    
-                    <?php if ($course_cognitive_goals) : ?>
-                        <div class="goal-category">
-                            <h4><?php _e('Когнитивные цели (знать):', 'course-plugin'); ?></h4>
-                            <div class="goal-content">
-                                <?php echo wpautop($course_cognitive_goals); ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                    
-                    <?php if ($course_emotional_goals) : ?>
-                        <div class="goal-category">
-                            <h4><?php _e('Эмоциональные цели (уметь):', 'course-plugin'); ?></h4>
-                            <div class="goal-content">
-                                <?php echo wpautop($course_emotional_goals); ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                    
-                    <?php if ($course_psychomotor_goals) : ?>
-                        <div class="goal-category">
-                            <h4><?php _e('Психомоторные цели (уметь):', 'course-plugin'); ?></h4>
-                            <div class="goal-content">
-                                <?php echo wpautop($course_psychomotor_goals); ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </div>
+            <?php if ($course_seminary_new_url) : ?>
+                <a href="<?php echo esc_url($course_seminary_new_url); ?>" target="_blank" rel="noopener" class="cta-btn">
+                    <?php _e('Записаться на курс', 'course-plugin'); ?>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
             <?php endif; ?>
-            
-            <!-- Содержание курса -->
-            <?php if ($course_content) : ?>
-                <div class="course-content-section">
-                    <h3><?php _e('Содержание курса', 'course-plugin'); ?></h3>
-                    <div class="course-content-outline">
-                        <?php echo wpautop($course_content); ?>
-                    </div>
-                </div>
-            <?php endif; ?>
-            
-            <!-- Встроенное видео -->
-            <?php if ($course_video_url) : ?>
-                <div class="course-video-section">
-                    <div class="course-video-wrapper">
-                        <?php
-                        // Определяем тип видео (YouTube, Vimeo или прямой URL)
-                        if (strpos($course_video_url, 'youtube.com') !== false || strpos($course_video_url, 'youtu.be') !== false) {
-                            // Извлекаем ID видео из YouTube URL
-                            preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $course_video_url, $matches);
-                            $youtube_id = isset($matches[1]) ? $matches[1] : '';
-                            if ($youtube_id) {
-                                ?>
-                                <iframe 
-                                    width="100%" 
-                                    height="500" 
-                                    src="https://www.youtube.com/embed/<?php echo esc_attr($youtube_id); ?>" 
-                                    frameborder="0" 
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                    allowfullscreen>
-                                </iframe>
-                                <div class="video-youtube-link">
-                                    <a href="<?php echo esc_url($course_video_url); ?>" target="_blank" rel="noopener">
-                                        <?php _e('Посмотреть на YouTube', 'course-plugin'); ?>
-                                    </a>
-                                </div>
-                                <?php
-                            }
-                        } elseif (strpos($course_video_url, 'vimeo.com') !== false) {
-                            // Извлекаем ID видео из Vimeo URL
-                            preg_match('/vimeo.com\/(\d+)/', $course_video_url, $matches);
-                            $vimeo_id = isset($matches[1]) ? $matches[1] : '';
-                            if ($vimeo_id) {
-                                ?>
-                                <iframe 
-                                    src="https://player.vimeo.com/video/<?php echo esc_attr($vimeo_id); ?>" 
-                                    width="100%" 
-                                    height="500" 
-                                    frameborder="0" 
-                                    allow="autoplay; fullscreen; picture-in-picture" 
-                                    allowfullscreen>
-                                </iframe>
-                                <?php
-                            }
-                        } else {
-                            // Прямой URL видео
-                            ?>
-                            <video width="100%" height="500" controls>
-                                <source src="<?php echo esc_url($course_video_url); ?>" type="video/mp4">
-                                <?php _e('Ваш браузер не поддерживает видео.', 'course-plugin'); ?>
-                            </video>
-                            <?php
-                        }
-                        ?>
-                    </div>
-                </div>
-            <?php endif; ?>
-            
-            <!-- Другие курсы по теме -->
-            <?php
-            // Получаем другие курсы из той же специализации или темы
-            $related_args = array(
-                'post_type' => 'course',
-                'posts_per_page' => 3,
-                'post__not_in' => array(get_the_ID()),
-                'orderby' => 'rand',
-            );
-            
-            // Добавляем фильтр по специализации, если она есть
-            if ($specializations && !is_wp_error($specializations) && !empty($specializations)) {
-                $related_args['tax_query'] = array(
-                    array(
-                        'taxonomy' => 'course_specialization',
-                        'field' => 'term_id',
-                        'terms' => array($specializations[0]->term_id),
-                    ),
-                );
-            }
-            
-            $related_courses = new WP_Query($related_args);
-            
-            if ($related_courses->have_posts()) :
-            ?>
-                <div class="related-courses-section">
-                    <h3><?php _e('Другие курсы по теме', 'course-plugin'); ?></h3>
-                    <div class="related-courses-grid">
-                        <?php while ($related_courses->have_posts()) : $related_courses->the_post(); ?>
-                            <article class="related-course-item">
-                                <a href="<?php the_permalink(); ?>">
-                                    <?php if (has_post_thumbnail()) : ?>
-                                        <div class="related-course-thumbnail">
-                                            <?php the_post_thumbnail('medium'); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    <h4><?php the_title(); ?></h4>
-                                </a>
-                            </article>
-                        <?php endwhile; ?>
-                    </div>
-                </div>
-                <?php wp_reset_postdata(); ?>
-            <?php endif; ?>
-        </main>
-        
-        <!-- Боковая панель справа -->
-        <aside class="single-course-sidebar">
-            <!-- Кнопки действий -->
-            <?php if ($course_seminary_new_url || $course_seminary_student_url || $course_lite_course_url) : ?>
-                <div class="course-action-buttons">
-                    <?php if ($course_seminary_new_url) : ?>
-                        <a href="<?php echo esc_url($course_seminary_new_url); ?>" target="_blank" rel="noopener" class="course-action-btn course-btn-seminary-new">
-                            <?php _e('Курс на семинарском уровне (если вы не студент SEMINARY)', 'course-plugin'); ?>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if ($course_seminary_student_url) : ?>
-                        <a href="<?php echo esc_url($course_seminary_student_url); ?>" target="_blank" rel="noopener" class="course-action-btn course-btn-seminary-student">
-                            <?php _e('Курс на семинарском уровне (если вы уже студент SEMINARY)', 'course-plugin'); ?>
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if ($course_lite_course_url) : ?>
-                        <a href="<?php echo esc_url($course_lite_course_url); ?>" target="_blank" rel="noopener" class="course-action-btn course-btn-buy">
-                            <?php _e('Лайт курс', 'course-plugin'); ?>
-                        </a>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
-            
-            <!-- Краткий обзор курса -->
-            <div class="course-overview-box">
-                <h4><?php _e('Краткий обзор курса', 'course-plugin'); ?></h4>
-                <ul class="course-overview-list">
-                    <?php if ($course_weeks) : ?>
-                        <li>
-                            <span class="overview-label"><?php _e('Недель:', 'course-plugin'); ?></span>
-                            <span class="overview-value"><?php echo esc_html($course_weeks); ?></span>
-                        </li>
-                    <?php endif; ?>
-                    <?php if ($course_credits) : ?>
-                        <li>
-                            <span class="overview-label"><?php _e('Кредитов:', 'course-plugin'); ?></span>
-                            <span class="overview-value"><?php echo esc_html($course_credits); ?></span>
-                        </li>
-                    <?php endif; ?>
-                    <?php if ($course_hours_per_week) : ?>
-                        <li>
-                            <span class="overview-label"><?php _e('Часов работы / неделя:', 'course-plugin'); ?></span>
-                            <span class="overview-value"><?php echo esc_html($course_hours_per_week); ?></span>
-                        </li>
-                    <?php endif; ?>
-                    <li>
-                        <span class="overview-label"><?php _e('Язык:', 'course-plugin'); ?></span>
-                        <span class="overview-value"><?php echo esc_html($course_language); ?></span>
-                    </li>
-                    <?php if ($course_certificate) : ?>
-                        <li>
-                            <span class="overview-label"><?php _e('Сертификат:', 'course-plugin'); ?></span>
-                            <span class="overview-value"><?php _e('Да', 'course-plugin'); ?></span>
-                        </li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-            
-            <!-- Информация о преподавателе -->
-            <?php if ($teacher_name) : ?>
-                <div class="course-instructor-box">
-                    <h4><?php _e('Преподаватель', 'course-plugin'); ?></h4>
-                    <div class="instructor-info">
-                        <?php if ($teacher_photo) : ?>
-                            <div class="instructor-photo">
-                                <a href="<?php echo esc_url(get_term_link($teacher->term_id, 'course_teacher')); ?>">
-                                    <img src="<?php echo esc_url($teacher_photo); ?>" alt="<?php echo esc_attr($teacher_name); ?>">
-                                </a>
-                            </div>
-                        <?php endif; ?>
-                        <div class="instructor-name">
-                            <a href="<?php echo esc_url(get_term_link($teacher->term_id, 'course_teacher')); ?>">
-                                <?php echo esc_html($teacher_name); ?>
-                            </a>
-                        </div>
-                        <?php if ($teacher_position) : ?>
-                            <div class="instructor-position"><?php echo esc_html($teacher_position); ?></div>
-                        <?php endif; ?>
-                        <?php if ($specializations && !is_wp_error($specializations)) : ?>
-                            <div class="instructor-specializations">
-                                <?php foreach ($specializations as $spec) : ?>
-                                    <span class="instructor-spec-item">
-                                        <span class="dashicons dashicons-book"></span>
-                                        <?php echo esc_html($spec->name); ?>
-                                    </span>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
-            
-            <!-- Цена курса -->
-            <?php if ($course_price) : ?>
-                <div class="course-price-box">
-                    <?php if ($discount > 0) : ?>
-                        <div class="course-price-old"><?php echo number_format($course_old_price, 2, ',', ' '); ?> Р</div>
-                        <div class="course-price-discount">-<?php echo $discount; ?>%</div>
-                    <?php endif; ?>
-                    <div class="course-price-current"><?php echo number_format($course_price, 2, ',', ' '); ?> Р</div>
-                </div>
-            <?php endif; ?>
-            
-            <!-- Рейтинг курса -->
-            <?php if ($course_rating > 0) : ?>
-                <div class="course-rating-box">
-                    <div class="course-rating-stars">
-                        <?php
-                        for ($i = 1; $i <= 5; $i++) {
-                            $star_class = $i <= $course_rating ? 'star-filled' : 'star-empty';
-                            echo '<span class="star ' . $star_class . '">★</span>';
-                        }
-                        ?>
-                    </div>
-                    <?php if ($course_reviews_count > 0) : ?>
-                        <div class="course-reviews-count">(<?php echo $course_reviews_count; ?> <?php _e('отзывов', 'course-plugin'); ?>)</div>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
-        </aside>
-    </div>
-</div>
-
-<!-- Футер с призывом к действию -->
-<div class="course-footer-cta">
-    <a href="#"><?php _e('> Запишитесь на курс и наслаждайтесь!', 'course-plugin'); ?></a>
+        </div>
+        <div class="cta-decoration">
+            <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="80" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="100" cy="100" r="60" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="100" cy="100" r="40" stroke="rgba(255,255,255,0.1)" stroke-width="2"/></svg>
+        </div>
+    </section>
 </div>
 
 <?php
 endwhile;
 get_footer();
 ?>
-
