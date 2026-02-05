@@ -982,12 +982,15 @@ class Course_Moodle_Sync {
         // Очищаем HTML теги из описания курса для безопасности
         $summary = isset($course['summary']) ? wp_strip_all_tags($course['summary']) : '';
         
+        // Определяем статус курса на основе данных из Moodle
+        $post_status = $this->determine_course_status($course);
+        
         // Подготавливаем данные для создания/обновления курса
         $post_data = array(
             'post_title' => sanitize_text_field($course['fullname']),  // Название курса
             'post_content' => wp_kses_post($summary),                  // Описание курса (разрешаем безопасные HTML теги)
             'post_excerpt' => isset($course['shortname']) ? sanitize_text_field($course['shortname']) : '',  // Краткое описание
-            'post_status' => 'publish',                                 // Статус публикации
+            'post_status' => $post_status,                              // Статус публикации (определяется на основе видимости и даты начала)
             'post_type' => 'course'                                     // Тип записи
         );
         
@@ -1056,10 +1059,56 @@ class Course_Moodle_Sync {
             update_post_meta($post_id, 'moodle_course_url', $moodle_course_url);
         }
         
+        // Сохраняем статус видимости из Moodle
+        if (isset($course['visible'])) {
+            update_post_meta($post_id, 'moodle_course_visible', absint($course['visible']));
+        }
+        
         // Отправляем курс в Laravel приложение
         $this->sync_course_to_laravel($post_id, $course, $action);
         
         return $action;
+    }
+    
+    /**
+     * Определение статуса курса на основе данных из Moodle
+     * 
+     * Логика:
+     * 1. Если курс скрыт в Moodle (visible == 0) → черновик (draft)
+     * 2. Если дата начала курса еще не наступила → опубликован (publish)
+     * 3. Если дата начала курса уже прошла → черновик (draft)
+     * 4. Если дата начала не установлена → опубликован (publish)
+     * 
+     * @param array $course Данные курса из Moodle
+     * @return string Статус поста WordPress ('publish' или 'draft')
+     */
+    private function determine_course_status($course) {
+        // Проверяем видимость курса в Moodle
+        // visible == 0 означает скрыт, visible == 1 означает видим
+        if (isset($course['visible']) && $course['visible'] == 0) {
+            error_log('Moodle Sync: Курс "' . (isset($course['fullname']) ? $course['fullname'] : 'неизвестен') . '" скрыт в Moodle, устанавливаем статус "черновик"');
+            return 'draft';
+        }
+        
+        // Проверяем дату начала курса
+        if (isset($course['startdate']) && $course['startdate'] > 0) {
+            $start_date_timestamp = $course['startdate'];
+            $current_timestamp = current_time('timestamp');
+            
+            // Если дата начала курса уже прошла, делаем его черновиком
+            if ($start_date_timestamp < $current_timestamp) {
+                error_log('Moodle Sync: Дата начала курса "' . (isset($course['fullname']) ? $course['fullname'] : 'неизвестен') . '" уже прошла (' . date('Y-m-d H:i:s', $start_date_timestamp) . '), устанавливаем статус "черновик"');
+                return 'draft';
+            }
+            
+            // Если дата начала еще не наступила, публикуем курс
+            error_log('Moodle Sync: Дата начала курса "' . (isset($course['fullname']) ? $course['fullname'] : 'неизвестен') . '" еще не наступила (' . date('Y-m-d H:i:s', $start_date_timestamp) . '), публикуем курс');
+            return 'publish';
+        }
+        
+        // Если дата начала не установлена, публикуем курс
+        error_log('Moodle Sync: Дата начала курса "' . (isset($course['fullname']) ? $course['fullname'] : 'неизвестен') . '" не установлена, публикуем курс');
+        return 'publish';
     }
     
     /**
