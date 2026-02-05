@@ -303,5 +303,84 @@ class Program_Meta_Boxes {
         if (isset($_POST['program_certificate'])) {
             update_post_meta($post_id, '_program_certificate', sanitize_textarea_field($_POST['program_certificate']));
         }
+        
+        // Автоматически создаем или обновляем термин в таксономии course_specialization на основе программы
+        $this->sync_program_to_specialization_taxonomy($post_id);
+    }
+    
+    /**
+     * Синхронизация программы с таксономией course_specialization
+     * Создает или обновляет термин таксономии на основе программы
+     * и связывает курсы из программы с этим термином
+     * 
+     * @param int $program_id ID программы
+     */
+    private function sync_program_to_specialization_taxonomy($program_id) {
+        // Получаем данные программы
+        $program = get_post($program_id);
+        if (!$program || $program->post_type !== 'program') {
+            return;
+        }
+        
+        // Получаем название программы
+        $program_title = $program->post_title;
+        if (empty($program_title)) {
+            return;
+        }
+        
+        // Проверяем, существует ли уже термин с таким названием
+        $existing_term = get_term_by('name', $program_title, 'course_specialization');
+        
+        if ($existing_term && !is_wp_error($existing_term)) {
+            // Термин уже существует, используем его
+            $term_id = $existing_term->term_id;
+            
+            // Сохраняем ID программы в метаполе термина для связи
+            update_term_meta($term_id, '_program_id', $program_id);
+        } else {
+            // Создаем новый термин
+            $term_data = wp_insert_term(
+                $program_title,
+                'course_specialization',
+                array(
+                    'description' => sprintf(__('Программа: %s', 'course-plugin'), $program_title),
+                )
+            );
+            
+            if (is_wp_error($term_data)) {
+                error_log('Program Meta Boxes: Ошибка при создании термина таксономии для программы "' . $program_title . '" - ' . $term_data->get_error_message());
+                return;
+            }
+            
+            $term_id = $term_data['term_id'];
+            
+            // Сохраняем ID программы в метаполе термина для связи
+            update_term_meta($term_id, '_program_id', $program_id);
+        }
+        
+        // Связываем программу с термином таксономии
+        wp_set_post_terms($program_id, array($term_id), 'course_specialization', false);
+        
+        // Получаем связанные курсы из программы
+        $related_courses = get_post_meta($program_id, '_program_related_courses', true);
+        
+        if (is_array($related_courses) && !empty($related_courses)) {
+            // Связываем все курсы из программы с термином таксономии
+            foreach ($related_courses as $course_id) {
+                $course_id = intval($course_id);
+                if ($course_id > 0) {
+                    // Получаем текущие термины курса
+                    $current_terms = wp_get_post_terms($course_id, 'course_specialization', array('fields' => 'ids'));
+                    
+                    if (!is_wp_error($current_terms)) {
+                        // Добавляем термин программы к существующим терминам курса
+                        if (!in_array($term_id, $current_terms)) {
+                            $current_terms[] = $term_id;
+                            wp_set_post_terms($course_id, $current_terms, 'course_specialization', false);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -678,35 +678,15 @@ class Course_Moodle_Sync {
         }
         
         $count = 0;
-        $created = 0;
-        $updated = 0;
         $skipped = 0;
         
         // Проходим по каждой категории из Moodle
         foreach ($categories as $category) {
             // Сохраняем категорию в WordPress
+            // Примечание: категории из Moodle больше не создают термины в таксономии course_specialization
+            // В таксономию "Специализации и программы" попадают только программы из WordPress
             $result = $this->save_category($category);
             if ($result) {
-                // Проверяем, была ли категория создана или обновлена
-                // Для этого ищем существующую категорию
-                $args = array(
-                    'taxonomy' => 'course_specialization',
-                    'meta_query' => array(
-                        array(
-                            'key' => 'moodle_category_id',
-                            'value' => $category['id'],
-                            'compare' => '='
-                        )
-                    ),
-                    'hide_empty' => false
-                );
-                $existing = get_terms($args);
-                
-                if (!empty($existing) && !is_wp_error($existing)) {
-                    $updated++;
-                } else {
-                    $created++;
-                }
                 $count++;
             } else {
                 // Если save_category вернул false, возможно категория была пропущена
@@ -714,9 +694,10 @@ class Course_Moodle_Sync {
             }
         }
         
-        error_log('Moodle Sync: Синхронизировано категорий: ' . $count . ' (создано: ' . $created . ', обновлено: ' . $updated . ', пропущено: ' . $skipped . ')');
+        error_log('Moodle Sync: Обработано категорий: ' . $count . ' (пропущено: ' . $skipped . ')');
+        error_log('Moodle Sync: Примечание - категории из Moodle не создают термины в таксономии "Специализации и программы". Эта таксономия предназначена только для программ.');
         
-        return array('count' => $count, 'created' => $created, 'updated' => $updated, 'skipped' => $skipped);
+        return array('count' => $count, 'created' => 0, 'updated' => 0, 'skipped' => $skipped);
     }
     
     /**
@@ -936,8 +917,8 @@ class Course_Moodle_Sync {
     
     /**
      * Сохранение категории в WordPress
-     * Создает или обновляет категорию курса в таксономии "course_specialization"
-     * Учитывает настройку обновления существующих категорий
+     * НЕ создает термины в таксономии "course_specialization" - эта таксономия предназначена только для программ
+     * Категории из Moodle сохраняются только в метаполях курсов (moodle_category_id)
      * 
      * @param array $category Массив с данными категории из Moodle
      * @return bool true если успешно, false в случае ошибки или пропуска
@@ -948,87 +929,12 @@ class Course_Moodle_Sync {
             return false;
         }
         
-        // Ищем существующий термин таксономии по ID Moodle
-        // Используем метаполе для хранения ID категории из Moodle
-        $args = array(
-            'taxonomy' => 'course_specialization',
-            'meta_query' => array(
-                array(
-                    'key' => 'moodle_category_id',
-                    'value' => $category['id'],
-                    'compare' => '='
-                )
-            ),
-            'hide_empty' => false
-        );
-        
-        $existing_terms = get_terms($args);
-        
-        // Проверяем настройку обновления существующих категорий
-        // Если категория существует и обновление отключено, пропускаем её
-        $update_categories = get_option('moodle_sync_update_categories', true);
-        if (!empty($existing_terms) && !is_wp_error($existing_terms) && !$update_categories) {
-            // Категория существует, но обновление отключено - пропускаем
-            return false;
-        }
-        
-        // Подготавливаем данные для создания/обновления термина
-        $term_data = array(
-            'description' => isset($category['description']) ? $category['description'] : '',
-            'slug' => sanitize_title($category['name'])
-        );
-        
-        // Если термин уже существует, обновляем его (если обновление разрешено)
-        if (!empty($existing_terms) && !is_wp_error($existing_terms)) {
-            $term_id = $existing_terms[0]->term_id;
-            
-            // Обновляем категорию только если настройка разрешает
-            if ($update_categories) {
-                wp_update_term($term_id, 'course_specialization', array(
-                    'name' => $category['name'],
-                    'description' => $term_data['description']
-                ));
-            } else {
-                // Если обновление отключено, просто возвращаем успех без изменений
-                return true;
-            }
-        } else {
-            // Если термин не существует, создаем новый
-            $result = wp_insert_term($category['name'], 'course_specialization', $term_data);
-            
-            if (!is_wp_error($result)) {
-                $term_id = $result['term_id'];
-            } else {
-                error_log('Moodle Sync: Ошибка при создании категории "' . $category['name'] . '" - ' . $result->get_error_message());
-                return false;
-            }
-        }
-        
-        // Сохраняем ID категории из Moodle в метаполе термина
-        update_term_meta($term_id, 'moodle_category_id', absint($category['id']));
-        
-        // Сохраняем ID родительской категории, если она есть
-        if (isset($category['parent']) && $category['parent'] > 0) {
-            // Ищем родительскую категорию по ID Moodle
-            $parent_args = array(
-                'taxonomy' => 'course_specialization',
-                'meta_query' => array(
-                    array(
-                        'key' => 'moodle_category_id',
-                        'value' => $category['parent'],
-                        'compare' => '='
-                    )
-                ),
-                'hide_empty' => false
-            );
-            
-            $parent_terms = get_terms($parent_args);
-            if (!empty($parent_terms) && !is_wp_error($parent_terms)) {
-                wp_update_term($term_id, 'course_specialization', array(
-                    'parent' => $parent_terms[0]->term_id
-                ));
-            }
-        }
+        // НЕ создаем термины в таксономии course_specialization из категорий Moodle
+        // В таксономию "Специализации и программы" должны попадать только программы,
+        // которые были созданы в WordPress
+        // 
+        // Информация о категориях из Moodle сохраняется в метаполях курсов (moodle_category_id)
+        // через метод save_course()
         
         return true;
     }
@@ -1127,23 +1033,9 @@ class Course_Moodle_Sync {
         if (isset($course['categoryid'])) {
             update_post_meta($post_id, 'moodle_category_id', absint($course['categoryid']));
             
-            // Связываем курс с категорией в WordPress
-            $category_args = array(
-                'taxonomy' => 'course_specialization',
-                'meta_query' => array(
-                    array(
-                        'key' => 'moodle_category_id',
-                        'value' => absint($course['categoryid']),
-                        'compare' => '='
-                    )
-                ),
-                'hide_empty' => false
-            );
-            
-            $category_terms = get_terms($category_args);
-            if (!empty($category_terms) && !is_wp_error($category_terms)) {
-                wp_set_post_terms($post_id, array($category_terms[0]->term_id), 'course_specialization');
-            }
+            // НЕ связываем курс с категорией из Moodle через таксономию course_specialization
+            // В таксономию "Специализации и программы" должны попадать только программы,
+            // которые были созданы в WordPress, а не категории из Moodle
         }
         
         // Сохраняем дату начала курса, если она указана
