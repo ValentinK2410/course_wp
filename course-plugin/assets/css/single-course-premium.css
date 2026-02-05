@@ -614,6 +614,7 @@
     font-size: 1.125rem;
     font-weight: 600;
     margin: 0;
+    color: var(--sc-white);
 }
 
 .overview-card .card-body {
