@@ -108,10 +108,14 @@ class Course_Plugin {
         $files = array(
             'includes/class-course-logger.php',        // Класс для логирования (должен быть первым)
             'includes/class-course-post-type.php',      // Класс для регистрации Custom Post Type "Курсы"
+            'includes/class-program-post-type.php',     // Класс для регистрации Custom Post Type "Программы"
             'includes/class-course-taxonomies.php',    // Класс для регистрации таксономий (специализация, уровень, тема, преподаватель)
             'includes/class-course-admin.php',          // Класс для административного интерфейса (колонки, фильтры, дублирование)
+            'includes/class-program-admin.php',        // Класс для административного интерфейса программ
             'includes/class-course-meta-boxes.php',    // Класс для метабоксов с дополнительными полями курсов
+            'includes/class-program-meta-boxes.php',   // Класс для метабоксов с дополнительными полями программ
             'includes/class-course-frontend.php',       // Класс для фронтенда (шаблоны, фильтры, стили)
+            'includes/class-program-frontend.php',      // Класс для фронтенда программ
             'includes/class-course-teacher-meta.php',  // Класс для метаполей преподавателей (фото, описание и т.д.)
             'includes/class-course-moodle-api.php',    // Класс для работы с Moodle REST API
             'includes/class-course-moodle-sync.php',   // Класс для синхронизации данных из Moodle в WordPress
@@ -163,6 +167,11 @@ class Course_Plugin {
         // Вызываем статический метод get_instance() для создания/получения экземпляра класса
         Course_Post_Type::get_instance();
         
+        // Инициализируем Custom Post Type "Программы"
+        if (class_exists('Program_Post_Type')) {
+            Program_Post_Type::get_instance();
+        }
+        
         // Инициализируем таксономии (специализация, уровень, тема, преподаватель)
         // Проверяем существование класса перед инициализацией
         if (class_exists('Course_Taxonomies')) {
@@ -175,16 +184,31 @@ class Course_Plugin {
             Course_Admin::get_instance();
         }
         
+        // Инициализируем административный интерфейс программ
+        if (class_exists('Program_Admin')) {
+            Program_Admin::get_instance();
+        }
+        
         // Инициализируем метабоксы
         // Добавляет дополнительные поля при редактировании курса
         if (class_exists('Course_Meta_Boxes')) {
             Course_Meta_Boxes::get_instance();
         }
         
+        // Инициализируем метабоксы программ
+        if (class_exists('Program_Meta_Boxes')) {
+            Program_Meta_Boxes::get_instance();
+        }
+        
         // Инициализируем фронтенд
         // Загружает шаблоны, стили, скрипты для отображения курсов на сайте
         if (class_exists('Course_Frontend')) {
             Course_Frontend::get_instance();
+        }
+        
+        // Инициализируем фронтенд программ
+        if (class_exists('Program_Frontend')) {
+            Program_Frontend::get_instance();
         }
         
         // Инициализируем метаполя преподавателей

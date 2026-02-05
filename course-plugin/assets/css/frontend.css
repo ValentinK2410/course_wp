@@ -1529,3 +1529,352 @@
         min-width: auto;
     }
 }
+
+/* ========================================
+   Стили для программ
+   ======================================== */
+
+/* Программы используют те же стили, что и курсы, но с дополнительными классами */
+.program-archive-wrapper {
+    /* Наследует стили от .course-archive-wrapper */
+}
+
+.program-archive-container {
+    /* Наследует стили от .course-archive-container */
+}
+
+.program-filters-sidebar {
+    /* Наследует стили от .course-filters-sidebar */
+}
+
+.program-filters-form {
+    /* Наследует стили от .course-filters-form */
+}
+
+.program-main-content {
+    /* Наследует стили от .course-main-content */
+}
+
+.programs-container {
+    /* Наследует стили от .courses-container */
+}
+
+.programs-grid {
+    /* Наследует стили от .courses-grid */
+}
+
+.program-item {
+    /* Наследует стили от .course-item */
+}
+
+.program-thumbnail {
+    /* Наследует стили от .course-thumbnail */
+}
+
+.program-content {
+    /* Наследует стили от .course-content */
+}
+
+.program-price-section {
+    /* Наследует стили от .course-price-section */
+}
+
+.program-price-wrapper {
+    /* Наследует стили от .course-price-wrapper */
+}
+
+.program-price {
+    /* Наследует стили от .course-price */
+}
+
+.program-old-price {
+    /* Наследует стили от .course-old-price */
+}
+
+.program-discount-badge {
+    /* Наследует стили от .course-discount-badge */
+}
+
+/* Дополнительные стили для программ */
+.program-duration {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.program-courses-count {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.program-certificate-info {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #28a745;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.program-certificate-info .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.program-start-date {
+    /* Наследует стили от .course-start-date */
+}
+
+.program-pagination {
+    /* Наследует стили от .course-pagination */
+}
+
+.program-pagination-info {
+    /* Наследует стили от .course-pagination-info */
+}
+
+.no-programs {
+    /* Наследует стили от .no-courses */
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.no-programs p {
+    font-size: 18px;
+    color: #666;
+}
+
+/* Стили для отдельной программы */
+.single-program-wrapper {
+    /* Наследует стили от .single-course-wrapper */
+}
+
+.program-hero-banner {
+    /* Наследует стили от .course-hero-banner */
+}
+
+.program-hero-content {
+    /* Наследует стили от .course-hero-content */
+}
+
+.program-hero-title {
+    /* Наследует стили от .course-hero-title */
+}
+
+.program-hero-teacher {
+    /* Наследует стили от .course-hero-teacher */
+}
+
+.program-hero-image {
+    /* Наследует стили от .course-hero-image */
+}
+
+.single-program-container {
+    /* Наследует стили от .single-course-container */
+}
+
+.single-program-main {
+    /* Наследует стили от .single-course-main */
+}
+
+.program-title-section {
+    /* Наследует стили от .course-code-title */
+}
+
+.program-description-section {
+    /* Наследует стили от .course-description-section */
+}
+
+.program-description {
+    /* Наследует стили от .course-description */
+}
+
+.program-info-section {
+    margin: 30px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.program-info-item {
+    margin: 15px 0;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.program-info-item:last-child {
+    border-bottom: none;
+}
+
+.program-info-item strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.program-info-item span {
+    color: #666;
+}
+
+.program-certificate-item {
+    color: #28a745;
+}
+
+.program-certificate-item strong {
+    color: #28a745;
+}
+
+.program-related-courses-section {
+    margin: 40px 0;
+    padding: 30px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+}
+
+.program-related-courses-section h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.program-related-courses-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.program-related-course-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.program-related-course-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.program-related-course-link {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+}
+
+.program-related-course-thumbnail {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.program-related-course-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.program-related-course-info {
+    padding: 15px;
+}
+
+.program-related-course-info h4 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.program-related-course-info p {
+    margin: 0;
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.5;
+}
+
+.program-taxonomies-section {
+    margin: 30px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.program-taxonomy {
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.program-taxonomy strong {
+    color: #333;
+    margin-right: 5px;
+}
+
+.program-taxonomy a {
+    color: #0073aa;
+    text-decoration: none;
+}
+
+.program-taxonomy a:hover {
+    text-decoration: underline;
+}
+
+.single-program-sidebar {
+    /* Наследует стили от .single-course-sidebar */
+}
+
+.program-price-box {
+    /* Наследует стили от .course-price-box */
+}
+
+.program-price-info {
+    /* Наследует стили от .course-price-info */
+}
+
+.program-current-price {
+    /* Наследует стили от .course-current-price */
+}
+
+.program-enroll-btn {
+    /* Наследует стили от .course-enroll-btn */
+    width: 100%;
+    padding: 15px;
+    background: #0073aa;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.program-enroll-btn:hover {
+    background: #005a87;
+}
+
+.program-info-box {
+    /* Наследует стили от .course-info-box */
+}
+
+.program-teacher-box {
+    /* Наследует стили от .course-teacher-box */
+}
+
+/* Адаптивность для программ */
+@media (max-width: 768px) {
+    .program-related-courses-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .program-info-section {
+        padding: 15px;
+    }
+    
+    .program-related-courses-section {
+        padding: 20px 15px;
+    }
+}
