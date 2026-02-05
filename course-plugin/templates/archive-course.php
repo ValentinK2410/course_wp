@@ -228,73 +228,140 @@ if (defined('WP_DEBUG') && WP_DEBUG) {
                             $price = get_post_meta(get_the_ID(), '_course_price', true);
                             $old_price = get_post_meta(get_the_ID(), '_course_old_price', true);
                             $start_date = get_post_meta(get_the_ID(), '_course_start_date', true);
+                            $duration = get_post_meta(get_the_ID(), '_course_duration', true);
                             $rating = get_post_meta(get_the_ID(), '_course_rating', true) ?: 0;
                             $reviews_count = get_post_meta(get_the_ID(), '_course_reviews_count', true) ?: 0;
-                            $discount = 0;
-                            if ($old_price && $price) {
-                                $discount = round((($old_price - $price) / $old_price) * 100);
+                            
+                            // Получаем тег курса (из метаполя или таксономии)
+                            $course_tag = get_post_meta(get_the_ID(), '_course_tag', true);
+                            if (!$course_tag) {
+                                // Пробуем получить из таксономии "Уровень"
+                                $levels = get_the_terms(get_the_ID(), 'course_level');
+                                if ($levels && !is_wp_error($levels) && !empty($levels)) {
+                                    $course_tag = $levels[0]->name;
+                                }
                             }
+                            
+                            // Получаем дополнительный текст
+                            $course_additional_text = get_post_meta(get_the_ID(), '_course_additional_text', true);
+                            if (!$course_additional_text && $duration) {
+                                $course_additional_text = $duration;
+                            }
+                            
+                            // Определяем градиент фона на основе ID курса
+                            $gradient_index = (get_the_ID() % 4);
+                            $gradient_classes = array(
+                                'gradient-blue-gray',
+                                'gradient-peach-orange',
+                                'gradient-cream',
+                                'gradient-light-blue'
+                            );
+                            $gradient_class = $gradient_classes[$gradient_index];
+                            
+                            // Определяем цвет тега
+                            $tag_colors = array(
+                                'tag-yellow-green',
+                                'tag-orange',
+                                'tag-red-orange',
+                                'tag-yellow-green'
+                            );
+                            $tag_color_class = $tag_colors[$gradient_index];
                         ?>
-                            <article id="course-<?php the_ID(); ?>" <?php post_class('course-item'); ?>>
-                                <div class="course-thumbnail">
-                                    <?php if ($discount > 0) : ?>
-                                        <span class="course-discount-badge">-<?php echo $discount; ?>%</span>
-                                    <?php endif; ?>
-                                    
-                                    <?php if (has_post_thumbnail()) : ?>
-                                        <a href="<?php the_permalink(); ?>">
-                                            <?php the_post_thumbnail('medium_large'); ?>
-                                        </a>
-                                    <?php else : ?>
-                                        <a href="<?php the_permalink(); ?>">
-                                            <div class="course-placeholder">
-                                                <span class="dashicons dashicons-book-alt"></span>
+                            <article id="course-<?php the_ID(); ?>" <?php post_class('course-item course-card-modern'); ?>>
+                                <a href="<?php the_permalink(); ?>" class="course-card-link">
+                                    <div class="course-card-wrapper <?php echo esc_attr($gradient_class); ?>">
+                                        <div class="course-card-header">
+                                            <h2 class="course-card-title"><?php the_title(); ?></h2>
+                                            <p class="course-card-subtitle"><?php _e('Оплата во время обучения', 'course-plugin'); ?></p>
+                                        </div>
+                                        
+                                        <?php if ($course_tag) : ?>
+                                            <div class="course-card-tag <?php echo esc_attr($tag_color_class); ?>">
+                                                <?php echo esc_html($course_tag); ?>
                                             </div>
-                                        </a>
-                                    <?php endif; ?>
-                                    
-                                    <!-- Название поверх изображения -->
-                                    <h2 class="course-title-overlay">
-                                        <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
-                                    </h2>
-                                </div>
-                                
-                                <div class="course-content">
-                                    <div class="course-price-section">
-                                        <?php if ($price || $old_price) : ?>
-                                            <div class="course-price-wrapper">
-                                                <?php if ($old_price && $price < $old_price) : ?>
-                                                    <span class="course-old-price"><?php echo number_format($old_price, 2, ',', ' '); ?> Р</span>
-                                                <?php endif; ?>
-                                                <span class="course-price"><?php echo $price ? number_format($price, 2, ',', ' ') : '0,00'; ?> Р</span>
-                                            </div>
-                                        <?php else : ?>
-                                            <span class="course-price">0,00 Р</span>
                                         <?php endif; ?>
-                                    </div>
-                                    
-                                    <?php if ($rating > 0) : ?>
-                                        <div class="course-rating">
-                                            <div class="stars-rating">
-                                                <?php
-                                                for ($i = 1; $i <= 5; $i++) {
-                                                    $star_class = $i <= $rating ? 'star-filled' : 'star-empty';
-                                                    echo '<span class="star ' . $star_class . '">★</span>';
-                                                }
-                                                ?>
-                                            </div>
-                                            <?php if ($reviews_count > 0) : ?>
-                                                <span class="reviews-count">(<?php echo $reviews_count; ?>)</span>
+                                        
+                                        <?php if ($course_additional_text) : ?>
+                                            <p class="course-card-additional"><?php echo esc_html($course_additional_text); ?></p>
+                                        <?php endif; ?>
+                                        
+                                        <div class="course-card-illustration">
+                                            <?php
+                                            // Разные иллюстрации для разных курсов
+                                            $illustration_index = (get_the_ID() % 4);
+                                            ?>
+                                            <?php if ($illustration_index == 0) : ?>
+                                                <!-- Иллюстрация 1: Человек за компьютером -->
+                                                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <!-- Монитор -->
+                                                    <rect x="30" y="40" width="80" height="50" rx="4" fill="rgba(255,255,255,0.4)"/>
+                                                    <rect x="35" y="45" width="70" height="40" rx="2" fill="rgba(255,255,255,0.6)"/>
+                                                    <!-- Экран -->
+                                                    <rect x="40" y="50" width="60" height="30" rx="2" fill="rgba(102,126,234,0.3)"/>
+                                                    <circle cx="50" cy="60" r="2" fill="rgba(255,255,255,0.8)"/>
+                                                    <circle cx="70" cy="60" r="2" fill="rgba(255,255,255,0.8)"/>
+                                                    <rect x="45" y="70" width="50" height="2" rx="1" fill="rgba(255,255,255,0.6)"/>
+                                                    <!-- Подставка -->
+                                                    <rect x="55" y="90" width="30" height="4" rx="2" fill="rgba(255,255,255,0.3)"/>
+                                                    <!-- Человек (силуэт) -->
+                                                    <circle cx="70" cy="110" r="12" fill="rgba(255,255,255,0.3)"/>
+                                                    <rect x="58" y="110" width="24" height="20" rx="12" fill="rgba(255,255,255,0.3)"/>
+                                                </svg>
+                                            <?php elseif ($illustration_index == 1) : ?>
+                                                <!-- Иллюстрация 2: Ноутбук с кодом -->
+                                                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <!-- Ноутбук -->
+                                                    <rect x="25" y="50" width="90" height="55" rx="3" fill="rgba(255,255,255,0.4)"/>
+                                                    <rect x="30" y="55" width="80" height="45" rx="2" fill="rgba(255,255,255,0.6)"/>
+                                                    <!-- Экран -->
+                                                    <rect x="35" y="60" width="70" height="35" rx="2" fill="rgba(118,75,162,0.3)"/>
+                                                    <!-- Код на экране -->
+                                                    <rect x="40" y="65" width="20" height="3" rx="1" fill="rgba(255,255,255,0.7)"/>
+                                                    <rect x="40" y="72" width="30" height="3" rx="1" fill="rgba(255,255,255,0.5)"/>
+                                                    <rect x="40" y="79" width="25" height="3" rx="1" fill="rgba(255,255,255,0.5)"/>
+                                                    <rect x="40" y="86" width="35" height="3" rx="1" fill="rgba(255,255,255,0.5)"/>
+                                                    <!-- Клавиатура -->
+                                                    <rect x="30" y="105" width="80" height="8" rx="2" fill="rgba(255,255,255,0.3)"/>
+                                                    <!-- Человек -->
+                                                    <circle cx="70" cy="125" r="10" fill="rgba(255,255,255,0.3)"/>
+                                                </svg>
+                                            <?php elseif ($illustration_index == 2) : ?>
+                                                <!-- Иллюстрация 3: Планшет -->
+                                                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <!-- Планшет -->
+                                                    <rect x="40" y="45" width="60" height="75" rx="6" fill="rgba(255,255,255,0.4)"/>
+                                                    <rect x="43" y="48" width="54" height="69" rx="4" fill="rgba(255,255,255,0.6)"/>
+                                                    <!-- Экран -->
+                                                    <rect x="46" y="52" width="48" height="61" rx="3" fill="rgba(254,202,202,0.3)"/>
+                                                    <!-- Контент -->
+                                                    <circle cx="70" cy="70" r="8" fill="rgba(255,255,255,0.6)"/>
+                                                    <rect x="60" y="82" width="20" height="3" rx="1" fill="rgba(255,255,255,0.5)"/>
+                                                    <rect x="55" y="88" width="30" height="3" rx="1" fill="rgba(255,255,255,0.5)"/>
+                                                    <!-- Человек (сидящий) -->
+                                                    <circle cx="70" cy="125" r="10" fill="rgba(255,255,255,0.3)"/>
+                                                    <rect x="60" y="125" width="20" height="15" rx="10" fill="rgba(255,255,255,0.3)"/>
+                                                </svg>
+                                            <?php else : ?>
+                                                <!-- Иллюстрация 4: Человек с ноутбуком Apple -->
+                                                <svg width="140" height="140" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <!-- Ноутбук -->
+                                                    <rect x="30" y="50" width="80" height="50" rx="4" fill="rgba(255,255,255,0.4)"/>
+                                                    <rect x="35" y="55" width="70" height="40" rx="2" fill="rgba(255,255,255,0.6)"/>
+                                                    <!-- Экран -->
+                                                    <rect x="40" y="60" width="60" height="30" rx="2" fill="rgba(230,243,255,0.4)"/>
+                                                    <!-- Логотип Apple -->
+                                                    <path d="M65 72 L70 75 L75 72 L70 68 Z" fill="rgba(0,0,0,0.3)"/>
+                                                    <!-- Человек -->
+                                                    <circle cx="70" cy="110" r="12" fill="rgba(255,255,255,0.3)"/>
+                                                    <rect x="58" y="110" width="24" height="20" rx="12" fill="rgba(255,255,255,0.3)"/>
+                                                    <!-- Чашка -->
+                                                    <rect x="95" y="75" width="8" height="12" rx="2" fill="rgba(255,255,255,0.4)"/>
+                                                    <rect x="93" y="87" width="12" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+                                                </svg>
                                             <?php endif; ?>
                                         </div>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($start_date) : ?>
-                                        <div class="course-start-date">
-                                            <?php _e('Дата начала:', 'course-plugin'); ?> <?php echo date_i18n('Y-m-d', strtotime($start_date)); ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
+                                    </div>
+                                </a>
                             </article>
                         <?php endwhile; ?>
                     </div>

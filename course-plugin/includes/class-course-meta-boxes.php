@@ -209,6 +209,26 @@ class Course_Meta_Boxes {
             <label for="course_reviews_count"><?php _e('Количество отзывов', 'course-plugin'); ?></label>
             <input type="number" id="course_reviews_count" name="course_reviews_count" value="<?php echo esc_attr($course_reviews_count); ?>" class="small-text" min="0" />
         </p>
+        
+        <!-- Поле "Тег курса" (для отображения на карточке) -->
+        <?php
+        $course_tag = get_post_meta($post->ID, '_course_tag', true);
+        ?>
+        <p>
+            <label for="course_tag"><?php _e('Тег курса', 'course-plugin'); ?></label>
+            <input type="text" id="course_tag" name="course_tag" value="<?php echo esc_attr($course_tag); ?>" class="regular-text" placeholder="<?php _e('Например: С нуля, Новый, Можно без опыта', 'course-plugin'); ?>" />
+            <span class="description"><?php _e('Отображается на карточке курса как цветная метка', 'course-plugin'); ?></span>
+        </p>
+        
+        <!-- Поле "Дополнительный текст" -->
+        <?php
+        $course_additional_text = get_post_meta($post->ID, '_course_additional_text', true);
+        ?>
+        <p>
+            <label for="course_additional_text"><?php _e('Дополнительный текст', 'course-plugin'); ?></label>
+            <input type="text" id="course_additional_text" name="course_additional_text" value="<?php echo esc_attr($course_additional_text); ?>" class="regular-text" placeholder="<?php _e('Например: Учись в своем темпе, 9 месяцев', 'course-plugin'); ?>" />
+            <span class="description"><?php _e('Дополнительная информация на карточке курса', 'course-plugin'); ?></span>
+        </p>
         <?php
     }
     
@@ -290,6 +310,8 @@ class Course_Meta_Boxes {
             'course_enrolled',            // Количество записанных студентов
             'course_rating',              // Рейтинг курса (1-5)
             'course_reviews_count',       // Количество отзывов
+            'course_tag',                 // Тег курса (для отображения на карточке)
+            'course_additional_text',     // Дополнительный текст на карточке
             'course_seminary_new_url',    // Ссылка на кнопку "Курс на семинарском уровне (не студент)"
             'course_seminary_student_url', // Ссылка на кнопку "Курс на семинарском уровне (студент)"
             'course_lite_course_url',      // Ссылка на кнопку "Лайт курс"

@@ -8,6 +8,8 @@
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
+    background: #1a1a1a;
+    min-height: 100vh;
 }
 
 .course-archive-container {
@@ -451,6 +453,19 @@
     flex: 0 0 80%;
     min-width: 0;
     box-sizing: border-box;
+    background: transparent;
+}
+
+.course-main-content .course-top-bar {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.course-main-content .course-pagination-info,
+.course-main-content .control-label,
+.course-main-content .course-sort label {
+    color: rgba(255, 255, 255, 0.8);
 }
 
 /* Верхняя панель */
@@ -542,8 +557,17 @@
 
 .courses-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    background: #1a1a1a;
+    padding: 30px;
+    border-radius: 20px;
+}
+
+@media (min-width: 1200px) {
+    .courses-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .courses-container[data-view="list"] .courses-grid {
@@ -554,6 +578,25 @@
     display: flex;
     flex-direction: row;
     gap: 20px;
+}
+
+.courses-container[data-view="list"] .course-card-modern {
+    min-height: 200px;
+}
+
+.courses-container[data-view="list"] .course-card-wrapper {
+    min-height: 200px;
+    flex-direction: row;
+    align-items: center;
+    gap: 30px;
+}
+
+.courses-container[data-view="list"] .course-card-illustration {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    transform: none;
+    opacity: 0.5;
 }
 
 .courses-container[data-view="list"] .course-thumbnail {
@@ -567,8 +610,8 @@
     justify-content: space-between;
 }
 
-/* Карточка курса */
-.course-item {
+/* Карточка курса - Старый стиль */
+.course-item:not(.course-card-modern) {
     background: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
@@ -578,9 +621,138 @@
     flex-direction: column;
 }
 
-.course-item:hover {
+.course-item:not(.course-card-modern):hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Современная карточка курса */
+.course-card-modern {
+    border-radius: 24px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    min-height: 320px;
+}
+
+.course-card-modern:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.course-card-link {
+    display: block;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+}
+
+.course-card-wrapper {
+    position: relative;
+    padding: 32px;
+    height: 100%;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+/* Градиенты для карточек */
+.gradient-blue-gray {
+    background: linear-gradient(135deg, #e8f0f5 0%, #d4e3eb 100%);
+}
+
+.gradient-peach-orange {
+    background: linear-gradient(135deg, #fff5e6 0%, #ffe6cc 100%);
+}
+
+.gradient-cream {
+    background: linear-gradient(135deg, #faf8f3 0%, #f5f0e8 100%);
+}
+
+.gradient-light-blue {
+    background: linear-gradient(135deg, #e6f3ff 0%, #cce6ff 100%);
+}
+
+.course-card-header {
+    margin-bottom: 20px;
+    z-index: 2;
+    position: relative;
+}
+
+.course-card-title {
+    font-size: 1.8em;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: #2d3748;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+}
+
+.course-card-subtitle {
+    font-size: 0.95em;
+    color: #4a5568;
+    margin: 0;
+    font-weight: 500;
+}
+
+.course-card-tag {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-bottom: 16px;
+    z-index: 2;
+    position: relative;
+}
+
+.tag-yellow-green {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.tag-orange {
+    background: #fed7aa;
+    color: #7c2d12;
+}
+
+.tag-red-orange {
+    background: #fecaca;
+    color: #7f1d1d;
+}
+
+.course-card-additional {
+    font-size: 0.95em;
+    color: #4a5568;
+    margin: 0 0 auto 0;
+    font-weight: 500;
+    z-index: 2;
+    position: relative;
+}
+
+.course-card-illustration {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    width: 160px;
+    height: 160px;
+    opacity: 0.5;
+    z-index: 1;
+    transform: rotate(-5deg);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.course-card-modern:hover .course-card-illustration {
+    opacity: 0.7;
+    transform: rotate(0deg) scale(1.05);
+}
+
+.course-card-illustration svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
 .course-thumbnail {
