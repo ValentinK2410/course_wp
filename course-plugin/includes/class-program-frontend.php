@@ -244,6 +244,16 @@ class Program_Frontend {
                 );
             }
             
+            // Премиальный дизайн для страницы программы
+            if (is_singular('program')) {
+                wp_enqueue_style(
+                    'single-program-premium-style',
+                    COURSE_PLUGIN_URL . 'assets/css/single-program-premium.css',
+                    array('course-frontend-style'),
+                    COURSE_PLUGIN_VERSION
+                );
+            }
+            
             wp_enqueue_script(
                 'course-frontend-script',
                 COURSE_PLUGIN_URL . 'assets/js/frontend.js',
