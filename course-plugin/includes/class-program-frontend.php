@@ -234,6 +234,16 @@ class Program_Frontend {
                 COURSE_PLUGIN_VERSION
             );
             
+            // Премиальный дизайн для архивов
+            if (is_post_type_archive('program')) {
+                wp_enqueue_style(
+                    'program-premium-style',
+                    COURSE_PLUGIN_URL . 'assets/css/premium-design.css',
+                    array('course-frontend-style'),
+                    COURSE_PLUGIN_VERSION
+                );
+            }
+            
             wp_enqueue_script(
                 'course-frontend-script',
                 COURSE_PLUGIN_URL . 'assets/js/frontend.js',
