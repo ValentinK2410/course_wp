@@ -8,29 +8,61 @@
 
 ### Способ 1: Скрипт обновления (рекомендуется)
 
+**На сервере `mbs.russianseminary.org`:**
+```bash
+cd /var/www/www-root/data/www/mbs.russianseminary.org/wp-content/plugins/course-plugin
+./update-from-github.sh
+```
+
+**На сервере `site.dekan.pro`:**
 ```bash
 cd /var/www/www-root/data/www/site.dekan.pro/wp-content/plugins/course-plugin
 ./update-from-github.sh
 ```
 
-Если скрипта нет, скачайте его:
+**Если скрипта нет, скачайте его:**
 ```bash
+cd /var/www/www-root/data/www/ВАШ_САЙТ/wp-content/plugins/course-plugin
 wget -O update-from-github.sh https://raw.githubusercontent.com/ValentinK2410/course_wp/master/course-plugin/update-from-github.sh
 chmod +x update-from-github.sh
 ./update-from-github.sh
 ```
 
-### Способ 2: С локального компьютера
+**Скрипт автоматически определит путь к плагину**, если вы запустите его из директории плагина или укажете путь вручную:
+```bash
+PLUGIN_DIR=/путь/к/плагину ./update-from-github.sh
+```
+
+### Способ 2: Ручное обновление (если скрипт не работает)
 
 ```bash
-cd /Users/valentink2410/PhpstormProjects/course_wp
-./update-course-plugin-from-github.sh
+# 1. Перейдите в директорию плагина
+cd /var/www/www-root/data/www/ВАШ_САЙТ/wp-content/plugins/course-plugin
+
+# 2. Создайте временную директорию и клонируйте репозиторий
+TEMP_DIR="/tmp/course_wp_update_$$"
+mkdir -p "$TEMP_DIR"
+cd "$TEMP_DIR"
+git clone https://github.com/ValentinK2410/course_wp.git .
+
+# 3. Создайте резервную копию
+BACKUP_DIR="/tmp/course-plugin-backup-$(date +%Y%m%d-%H%M%S)"
+cp -r /var/www/www-root/data/www/ВАШ_САЙТ/wp-content/plugins/course-plugin "$BACKUP_DIR"
+
+# 4. Скопируйте файлы
+rsync -avz --delete \
+    --exclude='.git' \
+    --exclude='.DS_Store' \
+    "$TEMP_DIR/course-plugin/" /var/www/www-root/data/www/ВАШ_САЙТ/wp-content/plugins/course-plugin/
+
+# 5. Очистите временные файлы
+rm -rf "$TEMP_DIR"
 ```
 
 ## 🔍 Проверка настройки
 
 ```bash
-cd /var/www/www-root/data/www/site.dekan.pro/wp-content/plugins/course-plugin
+cd /var/www/www-root/data/www/ВАШ_САЙТ/wp-content/plugins/course-plugin
 wget -O check-setup.sh https://raw.githubusercontent.com/ValentinK2410/course_wp/master/course-plugin/check-setup.sh
 chmod +x check-setup.sh
 ./check-setup.sh
@@ -38,11 +70,12 @@ chmod +x check-setup.sh
 
 ## 📋 Что делает скрипт обновления
 
-1. Клонирует репозиторий из GitHub во временную директорию
-2. Создает резервную копию текущих файлов
-3. Копирует обновленные файлы из `course-plugin/` на сервер
-4. Устанавливает правильные права доступа
-5. Очищает временные файлы
+1. ✅ Автоматически определяет путь к плагину
+2. ✅ Клонирует репозиторий из GitHub во временную директорию
+3. ✅ Создает резервную копию текущих файлов
+4. ✅ Копирует обновленные файлы из `course-plugin/` на сервер
+5. ✅ Устанавливает правильные права доступа
+6. ✅ Очищает временные файлы
 
 ## 🚫 Что НЕ нужно делать
 
@@ -55,3 +88,21 @@ chmod +x check-setup.sh
 - ✅ Использовать скрипт `update-from-github.sh`
 - ✅ Регулярно проверять обновления через `check-setup.sh`
 - ✅ Делать резервные копии перед обновлением (скрипт делает это автоматически)
+
+## 🔧 Устранение проблем
+
+**Если скрипт не может найти плагин:**
+```bash
+# Укажите путь вручную
+PLUGIN_DIR=/var/www/www-root/data/www/ВАШ_САЙТ/wp-content/plugins/course-plugin ./update-from-github.sh
+```
+
+**Если нет прав на выполнение:**
+```bash
+chmod +x update-from-github.sh
+```
+
+**Если нет прав на запись:**
+```bash
+sudo ./update-from-github.sh
+```

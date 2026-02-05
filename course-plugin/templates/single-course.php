@@ -78,14 +78,12 @@ while (have_posts()) : the_post();
         }
     }
     
-    // Определяем цветовую схему
-    $color_schemes = array(
-        array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea', 'light' => 'rgba(102, 126, 234, 0.1)'),
-        array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c', 'light' => 'rgba(245, 87, 108, 0.1)'),
-        array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe', 'light' => 'rgba(79, 172, 254, 0.1)'),
-        array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b', 'light' => 'rgba(67, 233, 123, 0.1)'),
+    // Определяем цветовую схему - бордовый с переливом
+    $scheme = array(
+        'gradient' => 'linear-gradient(135deg, #68202d 0%, #8b2d3a 35%, #a13d4c 65%, #68202d 100%)',
+        'accent' => '#68202d',
+        'light' => 'rgba(104, 32, 45, 0.1)'
     );
-    $scheme = $color_schemes[get_the_ID() % count($color_schemes)];
 ?>
 
 <div class="premium-single-course">
@@ -247,7 +245,7 @@ while (have_posts()) : the_post();
                         <div class="goals-grid">
                             <?php if ($course_cognitive_goals) : ?>
                                 <div class="goal-card">
-                                    <div class="goal-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+                                    <div class="goal-icon" style="background: linear-gradient(135deg, #68202d 0%, #8b2d3a 100%)">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor"/><circle cx="12" cy="10" r="3" fill="currentColor"/><path d="M12 14c-3 0-6 1.5-6 3v1h12v-1c0-1.5-3-3-6-3z" fill="currentColor"/></svg>
                                     </div>
                                     <h4 class="goal-title"><?php _e('Когнитивные цели', 'course-plugin'); ?></h4>
@@ -260,7 +258,7 @@ while (have_posts()) : the_post();
                             
                             <?php if ($course_emotional_goals) : ?>
                                 <div class="goal-card">
-                                    <div class="goal-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)">
+                                    <div class="goal-icon" style="background: linear-gradient(135deg, #8b2d3a 0%, #a13d4c 100%)">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/></svg>
                                     </div>
                                     <h4 class="goal-title"><?php _e('Эмоциональные цели', 'course-plugin'); ?></h4>
@@ -273,7 +271,7 @@ while (have_posts()) : the_post();
                             
                             <?php if ($course_psychomotor_goals) : ?>
                                 <div class="goal-card">
-                                    <div class="goal-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)">
+                                    <div class="goal-icon" style="background: linear-gradient(135deg, #a13d4c 0%, #d4576b 100%)">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M13.5 5.5C14.59 5.5 15.5 4.59 15.5 3.5C15.5 2.41 14.59 1.5 13.5 1.5C12.41 1.5 11.5 2.41 11.5 3.5C11.5 4.59 12.41 5.5 13.5 5.5ZM9.89 19.38L10.89 15L13 17V23H15V15.5L12.89 13.5L13.5 10.5C14.79 12 16.79 13 19 13V11C17.09 11 15.5 10 14.69 8.58L13.69 7C13.29 6.38 12.61 6 11.89 6C11.54 6 11.19 6.08 10.89 6.25L6 8.83V13H8V10.17L9.45 9.38L8 17L2.62 16L2.16 18L9.89 19.38Z" fill="currentColor"/></svg>
                                     </div>
                                     <h4 class="goal-title"><?php _e('Психомоторные цели', 'course-plugin'); ?></h4>
@@ -374,9 +372,9 @@ while (have_posts()) : the_post();
                         <div class="related-courses-grid">
                             <?php 
                             $related_schemes = array(
-                                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                                'linear-gradient(135deg, #68202d 0%, #8b2d3a 100%)',
+                                'linear-gradient(135deg, #8b2d3a 0%, #a13d4c 100%)',
+                                'linear-gradient(135deg, #a13d4c 0%, #d4576b 100%)',
                             );
                             $i = 0;
                             while ($related_courses->have_posts()) : $related_courses->the_post(); 

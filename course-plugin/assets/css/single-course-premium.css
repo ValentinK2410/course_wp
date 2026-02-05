@@ -7,9 +7,10 @@
    ПЕРЕМЕННЫЕ
    ================================================ */
 :root {
-    --sc-primary: #667eea;
-    --sc-secondary: #764ba2;
-    --sc-accent: #f5576c;
+    --sc-primary: #68202d;
+    --sc-secondary: #8b2d3a;
+    --sc-tertiary: #a13d4c;
+    --sc-accent: #d4576b;
     --sc-success: #43e97b;
     
     --sc-dark: #1a1a2e;
@@ -692,14 +693,14 @@
 }
 
 .action-btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #68202d 0%, #8b2d3a 50%, #a13d4c 100%);
     color: var(--sc-white);
-    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 14px rgba(104, 32, 45, 0.4);
 }
 
 .action-btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 6px 20px rgba(104, 32, 45, 0.5);
 }
 
 .action-btn-secondary {
@@ -721,7 +722,7 @@
 .action-btn-outline:hover {
     border-color: var(--sc-primary);
     color: var(--sc-primary);
-    background: rgba(102, 126, 234, 0.05);
+    background: rgba(104, 32, 45, 0.05);
 }
 
 /* Price Card */
