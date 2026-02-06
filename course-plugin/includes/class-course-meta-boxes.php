@@ -478,6 +478,8 @@ class Course_Meta_Boxes {
                 <label><?php _e('Управление видимостью секций', 'course-plugin'); ?></label>
             </div>
             <div class="section-content">
+                <!-- Скрытое поле для отслеживания, что секция была обработана -->
+                <input type="hidden" name="course_visibility_processed" value="1" />
                 <p class="description"><?php _e('Отметьте секции, которые должны отображаться на странице курса:', 'course-plugin'); ?></p>
                 <table class="form-table">
                     <tr>
@@ -790,10 +792,18 @@ class Course_Meta_Boxes {
         );
         
         // Сохраняем чекбоксы видимости
-        foreach ($visibility_fields as $field) {
-            $value = isset($_POST[$field]) ? '1' : '0';
-            update_post_meta($post_id, '_' . $field, $value);
+        // Сохраняем только если секция управления видимостью была обработана
+        // Если чекбокс отмечен - сохраняем '1', если снят - сохраняем '0'
+        // Если секция не была обработана (старый курс), не трогаем мета-поля (оставляем пустыми = видимо по умолчанию)
+        if (isset($_POST['course_visibility_processed']) && $_POST['course_visibility_processed'] === '1') {
+            foreach ($visibility_fields as $field) {
+                // Если чекбокс отмечен, он будет в POST со значением '1'
+                // Если чекбокс снят, его не будет в POST вообще
+                $value = isset($_POST[$field]) && $_POST[$field] === '1' ? '1' : '0';
+                update_post_meta($post_id, '_' . $field, $value);
+            }
         }
+        // Если секция не была обработана, не трогаем мета-поля (оставляем пустыми = видимо по умолчанию)
         
         // Сохраняем дополнительные блоки контента
         if (isset($_POST['course_extra_blocks']) && is_array($_POST['course_extra_blocks'])) {

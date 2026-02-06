@@ -84,12 +84,17 @@ while (have_posts()) : the_post();
     $show_hero_language = get_post_meta(get_the_ID(), '_course_show_hero_language', true) !== '0';
     $show_hero_certificate = get_post_meta(get_the_ID(), '_course_show_hero_certificate', true) !== '0';
     
-    // Настройки видимости полей в сайдбаре
-    $show_field_language = get_post_meta(get_the_ID(), '_course_show_field_language', true) !== '0';
-    $show_field_weeks = get_post_meta(get_the_ID(), '_course_show_field_weeks', true) !== '0';
-    $show_field_credits = get_post_meta(get_the_ID(), '_course_show_field_credits', true) !== '0';
-    $show_field_hours = get_post_meta(get_the_ID(), '_course_show_field_hours', true) !== '0';
-    $show_field_certificate = get_post_meta(get_the_ID(), '_course_show_field_certificate', true) !== '0';
+    // Настройки видимости полей в сайдбаре (по умолчанию все видимы, если мета-поле не установлено)
+    $field_language_meta = get_post_meta(get_the_ID(), '_course_show_field_language', true);
+    $show_field_language = ($field_language_meta === '' || $field_language_meta === '1');
+    $field_weeks_meta = get_post_meta(get_the_ID(), '_course_show_field_weeks', true);
+    $show_field_weeks = ($field_weeks_meta === '' || $field_weeks_meta === '1');
+    $field_credits_meta = get_post_meta(get_the_ID(), '_course_show_field_credits', true);
+    $show_field_credits = ($field_credits_meta === '' || $field_credits_meta === '1');
+    $field_hours_meta = get_post_meta(get_the_ID(), '_course_show_field_hours', true);
+    $show_field_hours = ($field_hours_meta === '' || $field_hours_meta === '1');
+    $field_certificate_meta = get_post_meta(get_the_ID(), '_course_show_field_certificate', true);
+    $show_field_certificate = ($field_certificate_meta === '' || $field_certificate_meta === '1');
     
     // Дополнительные блоки контента
     $extra_blocks = get_post_meta(get_the_ID(), '_course_extra_blocks', true);
@@ -546,6 +551,19 @@ while (have_posts()) : the_post();
                                 </li>
                             <?php endif; ?>
                         </ul>
+                        <?php 
+                        // Если список пустой, показываем сообщение
+                        $has_visible_fields = ($show_field_language && $course_language) || 
+                                             ($show_field_weeks && $course_weeks) || 
+                                             ($show_field_credits && $course_credits) || 
+                                             ($show_field_hours && $course_hours_per_week) || 
+                                             ($show_field_certificate && $course_certificate);
+                        if (!$has_visible_fields) : 
+                        ?>
+                            <p class="description" style="padding: 15px; text-align: center; color: #666;">
+                                <?php _e('Нет данных для отображения. Заполните поля курса или включите их отображение в настройках страницы.', 'course-plugin'); ?>
+                            </p>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <?php endif; ?>
