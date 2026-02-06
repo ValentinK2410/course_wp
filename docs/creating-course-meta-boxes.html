@@ -221,6 +221,40 @@
         
         .code-block code.hljs .hljs-name,
         .code-block pre code.hljs .hljs-name { color: #e06c75 !important; }
+        
+        /* Дополнительные элементы для полной цветной подсветки */
+        .code-block code.hljs .hljs-selector-tag,
+        .code-block pre code.hljs .hljs-selector-tag { color: #c678dd !important; }
+        
+        .code-block code.hljs .hljs-tag,
+        .code-block pre code.hljs .hljs-tag { color: #c678dd !important; }
+        
+        .code-block code.hljs .hljs-section,
+        .code-block pre code.hljs .hljs-section { color: #98c379 !important; }
+        
+        .code-block code.hljs .hljs-attribute,
+        .code-block pre code.hljs .hljs-attribute { color: #98c379 !important; }
+        
+        .code-block code.hljs .hljs-meta,
+        .code-block pre code.hljs .hljs-meta { color: #5c6370 !important; }
+        
+        .code-block code.hljs .hljs-symbol,
+        .code-block pre code.hljs .hljs-symbol { color: #d19a66 !important; }
+        
+        .code-block code.hljs .hljs-bullet,
+        .code-block pre code.hljs .hljs-bullet { color: #d19a66 !important; }
+        
+        .code-block code.hljs .hljs-template-variable,
+        .code-block pre code.hljs .hljs-template-variable { color: #e06c75 !important; }
+        
+        .code-block code.hljs .hljs-literal,
+        .code-block pre code.hljs .hljs-literal { color: #56b6c2 !important; }
+        
+        /* Убеждаемся, что базовый текст в hljs имеет цвет */
+        .code-block code.hljs,
+        .code-block pre code.hljs {
+            color: #abb2bf !important; /* Базовый цвет текста */
+        }
 
         .highlight {
             background: #fff3cd;
@@ -1210,8 +1244,14 @@ if ($course_cognitive_goals) {
                     }
                     // Применяем подсветку ко всем блокам кода
                     document.querySelectorAll('pre code[class*="language-"]').forEach((block) => {
-                        hljs.highlightElement(block);
+                        try {
+                            hljs.highlightElement(block);
+                        } catch(e) {
+                            console.error('Error highlighting block:', e);
+                        }
                     });
+                    // Также пробуем highlightAll для надежности
+                    hljs.highlightAll();
                     console.log('Highlight.js initialized successfully');
                 } catch(e) {
                     console.error('Highlight.js error:', e);
