@@ -280,18 +280,77 @@ class Program_Meta_Boxes {
      * Рендеринг метабокса "Настройка текстов страницы"
      */
     public function render_program_page_texts_meta_box($post) {
-        // Получаем сохраненные значения
+        // Получаем сохраненные значения CTA
         $cta_title = get_post_meta($post->ID, '_program_cta_title', true);
         $cta_text = get_post_meta($post->ID, '_program_cta_text', true);
         $cta_button_text = get_post_meta($post->ID, '_program_cta_button_text', true);
+        
+        // Получаем сохраненные преимущества
+        $highlight_1_title = get_post_meta($post->ID, '_program_highlight_1_title', true);
+        $highlight_1_text = get_post_meta($post->ID, '_program_highlight_1_text', true);
+        $highlight_2_title = get_post_meta($post->ID, '_program_highlight_2_title', true);
+        $highlight_2_text = get_post_meta($post->ID, '_program_highlight_2_text', true);
+        $highlight_3_title = get_post_meta($post->ID, '_program_highlight_3_title', true);
+        $highlight_3_text = get_post_meta($post->ID, '_program_highlight_3_text', true);
+        $highlight_4_title = get_post_meta($post->ID, '_program_highlight_4_title', true);
+        $highlight_4_text = get_post_meta($post->ID, '_program_highlight_4_text', true);
+        $show_highlights = get_post_meta($post->ID, '_program_show_highlights', true);
         
         // Значения по умолчанию
         $default_cta_title = __('Готовы начать обучение?', 'course-plugin');
         $default_cta_text = __('Присоединяйтесь к программе и откройте новые возможности для профессионального роста!', 'course-plugin');
         $default_cta_button_text = __('Записаться сейчас', 'course-plugin');
+        
+        // Значения по умолчанию для преимуществ
+        $defaults = array(
+            1 => array('title' => __('Качественное образование', 'course-plugin'), 'text' => __('Программа разработана экспертами с многолетним опытом', 'course-plugin')),
+            2 => array('title' => __('Гибкий график', 'course-plugin'), 'text' => __('Учитесь в удобное время и в своём темпе', 'course-plugin')),
+            3 => array('title' => __('Официальный сертификат', 'course-plugin'), 'text' => __('Получите документ о повышении квалификации', 'course-plugin')),
+            4 => array('title' => __('Поддержка кураторов', 'course-plugin'), 'text' => __('Персональная помощь на протяжении всего обучения', 'course-plugin')),
+        );
         ?>
         
+        <!-- Блок преимуществ программы -->
         <h4 style="margin-top: 0; padding-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <?php _e('Блок "Преимущества программы"', 'course-plugin'); ?>
+        </h4>
+        
+        <p>
+            <label>
+                <input type="checkbox" name="program_show_highlights" value="1" <?php checked($show_highlights !== '0'); ?> />
+                <?php _e('Показывать блок преимуществ на странице программы', 'course-plugin'); ?>
+            </label>
+        </p>
+        
+        <table class="form-table">
+            <?php for ($i = 1; $i <= 4; $i++) : 
+                $title_var = "highlight_{$i}_title";
+                $text_var = "highlight_{$i}_text";
+                $title_value = get_post_meta($post->ID, "_program_highlight_{$i}_title", true);
+                $text_value = get_post_meta($post->ID, "_program_highlight_{$i}_text", true);
+            ?>
+            <tr>
+                <th>
+                    <label><?php printf(__('Преимущество %d', 'course-plugin'), $i); ?></label>
+                </th>
+                <td>
+                    <p>
+                        <input type="text" name="program_highlight_<?php echo $i; ?>_title" value="<?php echo esc_attr($title_value); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults[$i]['title']); ?>" />
+                        <span class="description"><?php _e('Заголовок', 'course-plugin'); ?></span>
+                    </p>
+                    <p>
+                        <input type="text" name="program_highlight_<?php echo $i; ?>_text" value="<?php echo esc_attr($text_value); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults[$i]['text']); ?>" />
+                        <span class="description"><?php _e('Описание', 'course-plugin'); ?></span>
+                    </p>
+                </td>
+            </tr>
+            <?php endfor; ?>
+        </table>
+        
+        <hr style="margin: 30px 0;" />
+        
+        <!-- Блок CTA -->
+        <h4 style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
             <?php _e('Блок призыва к действию (CTA) внизу страницы', 'course-plugin'); ?>
         </h4>
         
@@ -452,6 +511,20 @@ class Program_Meta_Boxes {
         
         if (isset($_POST['program_cta_button_text'])) {
             update_post_meta($post_id, '_program_cta_button_text', sanitize_text_field($_POST['program_cta_button_text']));
+        }
+        
+        // Сохранение настройки показа блока преимуществ
+        $show_highlights = isset($_POST['program_show_highlights']) ? '1' : '0';
+        update_post_meta($post_id, '_program_show_highlights', $show_highlights);
+        
+        // Сохранение преимуществ программы
+        for ($i = 1; $i <= 4; $i++) {
+            if (isset($_POST["program_highlight_{$i}_title"])) {
+                update_post_meta($post_id, "_program_highlight_{$i}_title", sanitize_text_field($_POST["program_highlight_{$i}_title"]));
+            }
+            if (isset($_POST["program_highlight_{$i}_text"])) {
+                update_post_meta($post_id, "_program_highlight_{$i}_text", sanitize_text_field($_POST["program_highlight_{$i}_text"]));
+            }
         }
         
         // Автоматически создаем или обновляем термин в таксономии course_specialization на основе программы

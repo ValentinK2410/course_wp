@@ -253,6 +253,41 @@ while (have_posts()) : the_post();
                 </section>
                 
                 <!-- Program Highlights -->
+                <?php 
+                // Проверяем, нужно ли показывать блок преимуществ
+                $show_highlights = get_post_meta(get_the_ID(), '_program_show_highlights', true);
+                
+                // По умолчанию показываем (если поле не установлено)
+                if ($show_highlights !== '0') :
+                    
+                    // Получаем преимущества из админки или используем значения по умолчанию
+                    $highlights = array(
+                        1 => array(
+                            'title' => get_post_meta(get_the_ID(), '_program_highlight_1_title', true) ?: __('Качественное образование', 'course-plugin'),
+                            'text' => get_post_meta(get_the_ID(), '_program_highlight_1_text', true) ?: __('Программа разработана экспертами с многолетним опытом', 'course-plugin'),
+                            'gradient' => 'linear-gradient(135deg, #68202d 0%, #8b2d3a 100%)',
+                            'icon' => '<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3L17.5 10L25 11L19.5 16L21 24L14 20L7 24L8.5 16L3 11L10.5 10L14 3Z" stroke="currentColor" stroke-width="2" fill="none"/></svg>'
+                        ),
+                        2 => array(
+                            'title' => get_post_meta(get_the_ID(), '_program_highlight_2_title', true) ?: __('Гибкий график', 'course-plugin'),
+                            'text' => get_post_meta(get_the_ID(), '_program_highlight_2_text', true) ?: __('Учитесь в удобное время и в своём темпе', 'course-plugin'),
+                            'gradient' => 'linear-gradient(135deg, #8b2d3a 0%, #a13d4c 100%)',
+                            'icon' => '<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="currentColor" stroke-width="2"/><path d="M14 8V14L18 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+                        ),
+                        3 => array(
+                            'title' => get_post_meta(get_the_ID(), '_program_highlight_3_title', true) ?: __('Официальный сертификат', 'course-plugin'),
+                            'text' => get_post_meta(get_the_ID(), '_program_highlight_3_text', true) ?: __('Получите документ о повышении квалификации', 'course-plugin'),
+                            'gradient' => 'linear-gradient(135deg, #a13d4c 0%, #d4576b 100%)',
+                            'icon' => '<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="5" width="22" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="23" r="2" stroke="currentColor" stroke-width="2"/><path d="M12 21V23M16 21V23" stroke="currentColor" stroke-width="2"/></svg>'
+                        ),
+                        4 => array(
+                            'title' => get_post_meta(get_the_ID(), '_program_highlight_4_title', true) ?: __('Поддержка кураторов', 'course-plugin'),
+                            'text' => get_post_meta(get_the_ID(), '_program_highlight_4_text', true) ?: __('Персональная помощь на протяжении всего обучения', 'course-plugin'),
+                            'gradient' => 'linear-gradient(135deg, #68202d 0%, #a13d4c 100%)',
+                            'icon' => '<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="9" r="5" stroke="currentColor" stroke-width="2"/><path d="M4 25C4 20.5817 8.47715 17 14 17C19.5228 17 24 20.5817 24 25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+                        ),
+                    );
+                ?>
                 <section class="content-section section-highlights">
                     <div class="section-header">
                         <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
@@ -261,36 +296,18 @@ while (have_posts()) : the_post();
                         <h2 class="section-title"><?php _e('Преимущества программы', 'course-plugin'); ?></h2>
                     </div>
                     <div class="highlights-grid">
+                        <?php foreach ($highlights as $highlight) : ?>
                         <div class="highlight-card">
-                            <div class="highlight-icon" style="background: linear-gradient(135deg, #68202d 0%, #8b2d3a 100%)">
-                                <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3L17.5 10L25 11L19.5 16L21 24L14 20L7 24L8.5 16L3 11L10.5 10L14 3Z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                            <div class="highlight-icon" style="background: <?php echo $highlight['gradient']; ?>">
+                                <?php echo $highlight['icon']; ?>
                             </div>
-                            <h4 class="highlight-title"><?php _e('Качественное образование', 'course-plugin'); ?></h4>
-                            <p class="highlight-text"><?php _e('Программа разработана экспертами с многолетним опытом', 'course-plugin'); ?></p>
+                            <h4 class="highlight-title"><?php echo esc_html($highlight['title']); ?></h4>
+                            <p class="highlight-text"><?php echo esc_html($highlight['text']); ?></p>
                         </div>
-                        <div class="highlight-card">
-                            <div class="highlight-icon" style="background: linear-gradient(135deg, #8b2d3a 0%, #a13d4c 100%)">
-                                <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="currentColor" stroke-width="2"/><path d="M14 8V14L18 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                            </div>
-                            <h4 class="highlight-title"><?php _e('Гибкий график', 'course-plugin'); ?></h4>
-                            <p class="highlight-text"><?php _e('Учитесь в удобное время и в своём темпе', 'course-plugin'); ?></p>
-                        </div>
-                        <div class="highlight-card">
-                            <div class="highlight-icon" style="background: linear-gradient(135deg, #a13d4c 0%, #d4576b 100%)">
-                                <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="5" width="22" height="16" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="23" r="2" stroke="currentColor" stroke-width="2"/><path d="M12 21V23M16 21V23" stroke="currentColor" stroke-width="2"/></svg>
-                            </div>
-                            <h4 class="highlight-title"><?php _e('Официальный сертификат', 'course-plugin'); ?></h4>
-                            <p class="highlight-text"><?php _e('Получите документ о повышении квалификации', 'course-plugin'); ?></p>
-                        </div>
-                        <div class="highlight-card">
-                            <div class="highlight-icon" style="background: linear-gradient(135deg, #68202d 0%, #a13d4c 100%)">
-                                <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="9" r="5" stroke="currentColor" stroke-width="2"/><path d="M4 25C4 20.5817 8.47715 17 14 17C19.5228 17 24 20.5817 24 25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                            </div>
-                            <h4 class="highlight-title"><?php _e('Поддержка кураторов', 'course-plugin'); ?></h4>
-                            <p class="highlight-text"><?php _e('Персональная помощь на протяжении всего обучения', 'course-plugin'); ?></p>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </section>
+                <?php endif; ?>
                 
                 <!-- Courses List Section -->
                 <?php if (!empty($related_courses_list)) : ?>
