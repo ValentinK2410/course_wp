@@ -54,6 +54,5 @@ composer.lock
 
 .config/
 
-# Документация (кроме README.md для установки плагина)
+# Документация - все .md файлы игнорируются
 *.md
-!course-plugin/README.md
