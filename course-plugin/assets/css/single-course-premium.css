@@ -1131,3 +1131,144 @@
 .hero-play-btn:hover .play-icon {
     animation: none;
 }
+
+/* ================================================
+   КАСТОМНЫЕ БЛОКИ САЙДБАРА
+   ================================================ */
+.custom-sidebar-block {
+    animation: fadeInUp 0.5s ease backwards;
+}
+
+.custom-sidebar-block.sidebar-block-card {
+    /* Карточка с рамкой и фоном - использует стандартные стили .sidebar-card */
+}
+
+.custom-sidebar-block.sidebar-block-simple {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+}
+
+.custom-sidebar-block.sidebar-block-simple .block-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--sc-gray-900);
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--sc-gray-200);
+}
+
+.custom-sidebar-block.sidebar-block-simple .block-content {
+    color: var(--sc-gray-700);
+    line-height: 1.6;
+}
+
+.custom-sidebar-block.sidebar-block-simple .block-content p {
+    margin: 0 0 12px;
+}
+
+.custom-sidebar-block.sidebar-block-simple .block-content ul,
+.custom-sidebar-block.sidebar-block-simple .block-content ol {
+    margin: 0 0 12px;
+    padding-left: 20px;
+}
+
+.custom-sidebar-block.sidebar-block-simple .block-content a {
+    color: var(--sc-primary);
+    text-decoration: none;
+    transition: var(--sc-transition);
+}
+
+.custom-sidebar-block.sidebar-block-simple .block-content a:hover {
+    color: var(--sc-secondary);
+    text-decoration: underline;
+}
+
+.custom-sidebar-block.sidebar-block-info .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+}
+
+.custom-sidebar-block.sidebar-block-info .block-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: var(--sc-white);
+}
+
+.custom-sidebar-block.sidebar-block-info .block-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.custom-sidebar-block.sidebar-block-info .block-icon .dashicons {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+.custom-sidebar-block.sidebar-block-info .card-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--sc-white);
+}
+
+.custom-sidebar-block .card-body {
+    padding: 20px 24px;
+    color: var(--sc-gray-700);
+    line-height: 1.6;
+}
+
+.custom-sidebar-block .card-body p {
+    margin: 0 0 12px;
+}
+
+.custom-sidebar-block .card-body p:last-child {
+    margin-bottom: 0;
+}
+
+.custom-sidebar-block .card-body ul,
+.custom-sidebar-block .card-body ol {
+    margin: 0 0 12px;
+    padding-left: 20px;
+}
+
+.custom-sidebar-block .card-body ul li,
+.custom-sidebar-block .card-body ol li {
+    margin-bottom: 8px;
+}
+
+.custom-sidebar-block .card-body a {
+    color: var(--sc-primary);
+    text-decoration: none;
+    transition: var(--sc-transition);
+    font-weight: 500;
+}
+
+.custom-sidebar-block .card-body a:hover {
+    color: var(--sc-secondary);
+    text-decoration: underline;
+}
+
+.custom-sidebar-block .card-body strong {
+    color: var(--sc-gray-900);
+    font-weight: 600;
+}
+
+.custom-sidebar-block .card-body code {
+    background: var(--sc-gray-100);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875em;
+    color: var(--sc-primary);
+}

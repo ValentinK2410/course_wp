@@ -346,6 +346,12 @@ class Course_Meta_Boxes {
             $extra_blocks = array();
         }
         
+        // Кастомные блоки сайдбара
+        $sidebar_blocks = get_post_meta($post->ID, '_course_sidebar_blocks', true);
+        if (!is_array($sidebar_blocks)) {
+            $sidebar_blocks = array();
+        }
+        
         // Значения по умолчанию для заголовков
         $defaults = array(
             'section_description' => __('Описание курса:', 'course-plugin'),
@@ -439,6 +445,29 @@ class Course_Meta_Boxes {
             #add-extra-block {
                 margin-top: 10px;
             }
+            .sidebar-block-item {
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+            .sidebar-block-item .block-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+            }
+            .sidebar-block-item .remove-sidebar-block {
+                color: #dc3545;
+                cursor: pointer;
+                margin-left: auto;
+            }
+            #add-sidebar-block {
+                margin-top: 10px;
+            }
         </style>
         
         <script>
@@ -467,6 +496,49 @@ class Course_Meta_Boxes {
             // Удаление блока
             $(document).on('click', '.remove-block', function() {
                 $(this).closest('.extra-block').remove();
+            });
+            
+            // Добавление блока сайдбара
+            var sidebarBlockIndex = <?php echo count($sidebar_blocks); ?>;
+            $('#add-sidebar-block').on('click', function() {
+                var html = '<div class="sidebar-block-item" style="background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px;">' +
+                    '<div class="block-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee;">' +
+                        '<span class="dashicons dashicons-menu" style="cursor: move;"></span>' +
+                        '<strong><?php _e('Блок', 'course-plugin'); ?> ' + (sidebarBlockIndex + 1) + '</strong>' +
+                        '<span class="remove-sidebar-block dashicons dashicons-trash" style="color: #dc3545; cursor: pointer; margin-left: auto;"></span>' +
+                    '</div>' +
+                    '<table class="form-table" style="margin-top: 10px;">' +
+                        '<tr>' +
+                            '<th><label><?php _e('Заголовок блока', 'course-plugin'); ?></label></th>' +
+                            '<td><input type="text" name="course_sidebar_blocks[' + sidebarBlockIndex + '][title]" class="regular-text" placeholder="<?php esc_attr_e('Например: Дополнительная информация', 'course-plugin'); ?>" /></td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<th><label><?php _e('Содержимое', 'course-plugin'); ?></label></th>' +
+                            '<td><textarea name="course_sidebar_blocks[' + sidebarBlockIndex + '][content]" rows="4" class="large-text" placeholder="<?php esc_attr_e('HTML контент блока', 'course-plugin'); ?>"></textarea>' +
+                            '<p class="description"><?php _e('Поддерживается HTML. Можно использовать для списков, ссылок, форматированного текста и т.д.', 'course-plugin'); ?></p></td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<th><label><?php _e('Тип блока', 'course-plugin'); ?></label></th>' +
+                            '<td><select name="course_sidebar_blocks[' + sidebarBlockIndex + '][type]" class="regular-text">' +
+                                '<option value="card"><?php _e('Карточка (с рамкой и фоном)', 'course-plugin'); ?></option>' +
+                                '<option value="simple"><?php _e('Простой блок (без рамки)', 'course-plugin'); ?></option>' +
+                                '<option value="info"><?php _e('Информационный блок (с иконкой)', 'course-plugin'); ?></option>' +
+                            '</select></td>' +
+                        '</tr>' +
+                        '<tr>' +
+                            '<th><label><?php _e('Иконка (опционально)', 'course-plugin'); ?></label></th>' +
+                            '<td><input type="text" name="course_sidebar_blocks[' + sidebarBlockIndex + '][icon]" class="regular-text" placeholder="<?php esc_attr_e('CSS класс иконки или SVG код', 'course-plugin'); ?>" />' +
+                            '<p class="description"><?php _e('Например: dashicons-info или вставьте SVG код', 'course-plugin'); ?></p></td>' +
+                        '</tr>' +
+                    '</table>' +
+                '</div>';
+                $('#sidebar-blocks-container').append(html);
+                sidebarBlockIndex++;
+            });
+            
+            // Удаление блока сайдбара
+            $(document).on('click', '.remove-sidebar-block', function() {
+                $(this).closest('.sidebar-block-item').remove();
             });
         });
         </script>
@@ -535,6 +607,63 @@ class Course_Meta_Boxes {
                 <hr style="margin: 15px 0;">
                 <p><strong><?php _e('Заголовок сайдбара:', 'course-plugin'); ?></strong></p>
                 <input type="text" name="course_sidebar_overview_title" value="<?php echo esc_attr($sidebar_overview_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['sidebar_overview']); ?>" />
+            </div>
+        </div>
+        
+        <!-- Кастомные блоки сайдбара -->
+        <div class="course-section-toggle">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('Кастомные блоки сайдбара', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p class="description"><?php _e('Добавьте дополнительные блоки в сайдбар страницы курса. Вы можете создать неограниченное количество блоков с произвольным содержимым:', 'course-plugin'); ?></p>
+                
+                <div id="sidebar-blocks-container">
+                    <?php foreach ($sidebar_blocks as $index => $block) : ?>
+                        <div class="sidebar-block-item">
+                            <div class="block-header">
+                                <span class="dashicons dashicons-menu" style="cursor: move;"></span>
+                                <strong><?php _e('Блок', 'course-plugin'); ?> <?php echo $index + 1; ?></strong>
+                                <span class="remove-sidebar-block dashicons dashicons-trash"></span>
+                            </div>
+                            <table class="form-table" style="margin-top: 10px;">
+                                <tr>
+                                    <th><label><?php _e('Заголовок блока', 'course-plugin'); ?></label></th>
+                                    <td>
+                                        <input type="text" name="course_sidebar_blocks[<?php echo $index; ?>][title]" value="<?php echo esc_attr($block['title']); ?>" class="regular-text" placeholder="<?php esc_attr_e('Например: Дополнительная информация', 'course-plugin'); ?>" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><label><?php _e('Содержимое', 'course-plugin'); ?></label></th>
+                                    <td>
+                                        <textarea name="course_sidebar_blocks[<?php echo $index; ?>][content]" rows="4" class="large-text" placeholder="<?php esc_attr_e('HTML контент блока', 'course-plugin'); ?>"><?php echo esc_textarea($block['content']); ?></textarea>
+                                        <p class="description"><?php _e('Поддерживается HTML. Можно использовать для списков, ссылок, форматированного текста и т.д.', 'course-plugin'); ?></p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><label><?php _e('Тип блока', 'course-plugin'); ?></label></th>
+                                    <td>
+                                        <select name="course_sidebar_blocks[<?php echo $index; ?>][type]" class="regular-text">
+                                            <option value="card" <?php selected($block['type'], 'card'); ?>><?php _e('Карточка (с рамкой и фоном)', 'course-plugin'); ?></option>
+                                            <option value="simple" <?php selected($block['type'], 'simple'); ?>><?php _e('Простой блок (без рамки)', 'course-plugin'); ?></option>
+                                            <option value="info" <?php selected($block['type'], 'info'); ?>><?php _e('Информационный блок (с иконкой)', 'course-plugin'); ?></option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><label><?php _e('Иконка (опционально)', 'course-plugin'); ?></label></th>
+                                    <td>
+                                        <input type="text" name="course_sidebar_blocks[<?php echo $index; ?>][icon]" value="<?php echo esc_attr($block['icon']); ?>" class="regular-text" placeholder="<?php esc_attr_e('CSS класс иконки или SVG код', 'course-plugin'); ?>" />
+                                        <p class="description"><?php _e('Например: dashicons-info или вставьте SVG код', 'course-plugin'); ?></p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                
+                <button type="button" id="add-sidebar-block" class="button"><?php _e('+ Добавить блок в сайдбар', 'course-plugin'); ?></button>
             </div>
         </div>
         
@@ -819,6 +948,24 @@ class Course_Meta_Boxes {
             update_post_meta($post_id, '_course_extra_blocks', $extra_blocks);
         } else {
             delete_post_meta($post_id, '_course_extra_blocks');
+        }
+        
+        // Сохраняем кастомные блоки сайдбара
+        if (isset($_POST['course_sidebar_blocks']) && is_array($_POST['course_sidebar_blocks'])) {
+            $sidebar_blocks = array();
+            foreach ($_POST['course_sidebar_blocks'] as $block) {
+                if (!empty($block['title']) || !empty($block['content'])) {
+                    $sidebar_blocks[] = array(
+                        'title' => sanitize_text_field($block['title']),
+                        'content' => wp_kses_post($block['content']),
+                        'type' => sanitize_text_field(isset($block['type']) ? $block['type'] : 'card'),
+                        'icon' => sanitize_text_field(isset($block['icon']) ? $block['icon'] : ''),
+                    );
+                }
+            }
+            update_post_meta($post_id, '_course_sidebar_blocks', $sidebar_blocks);
+        } else {
+            delete_post_meta($post_id, '_course_sidebar_blocks');
         }
         
         // Обрабатываем URL поля отдельно (нужна специальная очистка)

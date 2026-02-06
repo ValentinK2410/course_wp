@@ -102,6 +102,12 @@ while (have_posts()) : the_post();
         $extra_blocks = array();
     }
     
+    // Кастомные блоки сайдбара
+    $sidebar_blocks = get_post_meta(get_the_ID(), '_course_sidebar_blocks', true);
+    if (!is_array($sidebar_blocks)) {
+        $sidebar_blocks = array();
+    }
+    
     // Получаем данные преподавателя
     $teacher_name = '';
     $teacher_photo = '';
@@ -634,6 +640,52 @@ while (have_posts()) : the_post();
                             <svg class="instructor-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7 4L13 10L7 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </a>
                     </div>
+                <?php endif; ?>
+                
+                <!-- Кастомные блоки сайдбара -->
+                <?php if (!empty($sidebar_blocks)) : ?>
+                    <?php foreach ($sidebar_blocks as $block) : ?>
+                        <?php 
+                        $block_type = isset($block['type']) ? $block['type'] : 'card';
+                        $block_title = isset($block['title']) ? $block['title'] : '';
+                        $block_content = isset($block['content']) ? $block['content'] : '';
+                        $block_icon = isset($block['icon']) ? $block['icon'] : '';
+                        
+                        if (empty($block_title) && empty($block_content)) {
+                            continue; // Пропускаем пустые блоки
+                        }
+                        ?>
+                        
+                        <div class="sidebar-card custom-sidebar-block sidebar-block-<?php echo esc_attr($block_type); ?>">
+                            <?php if ($block_type === 'card' || $block_type === 'info') : ?>
+                                <?php if ($block_title) : ?>
+                                    <div class="card-header" style="<?php echo $block_type === 'info' ? 'background: ' . $scheme['light'] . ';' : 'background: ' . $scheme['gradient'] . ';'; ?>">
+                                        <?php if ($block_type === 'info' && $block_icon) : ?>
+                                            <div class="block-icon">
+                                                <?php if (strpos($block_icon, '<svg') !== false) : ?>
+                                                    <?php echo $block_icon; ?>
+                                                <?php else : ?>
+                                                    <span class="<?php echo esc_attr($block_icon); ?>"></span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <h3><?php echo esc_html($block_title); ?></h3>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="card-body">
+                                    <?php echo wp_kses_post($block_content); ?>
+                                </div>
+                            <?php else : ?>
+                                <!-- Простой блок без рамки -->
+                                <?php if ($block_title) : ?>
+                                    <h4 class="block-title"><?php echo esc_html($block_title); ?></h4>
+                                <?php endif; ?>
+                                <div class="block-content">
+                                    <?php echo wp_kses_post($block_content); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
                 <?php endif; ?>
             </aside>
         </div>
