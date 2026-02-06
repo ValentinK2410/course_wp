@@ -85,6 +85,16 @@ class Course_Meta_Boxes {
             'default'                                             // Приоритет: 'default' - стандартный
         );
         
+        // Добавляем метабокс "Цели и задачи курса"
+        add_meta_box(
+            'course_goals',                                        // ID метабокса
+            __('Цели и задачи курса', 'course-plugin'),          // Заголовок
+            array($this, 'render_course_goals_meta_box'),        // Функция для отображения
+            'course',                                             // Тип поста
+            'normal',                                             // Контекст: 'normal' - основная область
+            'default'                                             // Приоритет
+        );
+        
         // Добавляем метабокс "Настройка текстов страницы"
         add_meta_box(
             'course_page_texts',                                  // ID метабокса
@@ -349,6 +359,92 @@ class Course_Meta_Boxes {
             </label><br />
             <input type="url" id="course_lite_course_url" name="course_lite_course_url" value="<?php echo esc_url($course_lite_course_url); ?>" class="large-text" placeholder="https://..." />
             <span class="description"><?php _e('Если поле пустое, кнопка не будет отображаться', 'course-plugin'); ?></span>
+        </p>
+        <?php
+    }
+    
+    /**
+     * Рендеринг метабокса "Цели и задачи курса"
+     * Отображает поля для когнитивных, эмоциональных и психомоторных целей
+     * 
+     * @param WP_Post $post Объект текущего курса
+     */
+    public function render_course_goals_meta_box($post) {
+        // Получаем значения метаполей целей из базы данных
+        $course_cognitive_goals = get_post_meta($post->ID, '_course_cognitive_goals', true);
+        $course_emotional_goals = get_post_meta($post->ID, '_course_emotional_goals', true);
+        $course_psychomotor_goals = get_post_meta($post->ID, '_course_psychomotor_goals', true);
+        
+        ?>
+        <p class="description">
+            <?php _e('Заполните цели курса. Эти цели будут отображаться на странице курса в секции "Цели и задачи курса".', 'course-plugin'); ?>
+        </p>
+        
+        <!-- Поле "Когнитивные цели" (Знать) -->
+        <p>
+            <label for="course_cognitive_goals">
+                <strong><?php _e('Когнитивные цели (Знать)', 'course-plugin'); ?></strong>
+            </label>
+            <?php
+            // Используем wp_editor для удобного редактирования текста с форматированием
+            wp_editor(
+                $course_cognitive_goals,                          // Содержимое редактора
+                'course_cognitive_goals',                          // ID поля
+                array(
+                    'textarea_name' => 'course_cognitive_goals',   // Имя поля для POST
+                    'textarea_rows' => 8,                          // Высота редактора (строки)
+                    'media_buttons' => false,                      // Отключить кнопку добавления медиа
+                    'teeny' => true,                               // Упрощенный режим редактора
+                )
+            );
+            ?>
+            <span class="description">
+                <?php _e('Опишите, что студенты должны знать после прохождения курса. Можно использовать списки и форматирование.', 'course-plugin'); ?>
+            </span>
+        </p>
+        
+        <!-- Поле "Эмоциональные цели" (Чувствовать) -->
+        <p>
+            <label for="course_emotional_goals">
+                <strong><?php _e('Эмоциональные цели (Чувствовать)', 'course-plugin'); ?></strong>
+            </label>
+            <?php
+            wp_editor(
+                $course_emotional_goals,
+                'course_emotional_goals',
+                array(
+                    'textarea_name' => 'course_emotional_goals',
+                    'textarea_rows' => 8,
+                    'media_buttons' => false,
+                    'teeny' => true,
+                )
+            );
+            ?>
+            <span class="description">
+                <?php _e('Опишите, какие эмоции и чувства должны развиться у студентов. Можно использовать списки и форматирование.', 'course-plugin'); ?>
+            </span>
+        </p>
+        
+        <!-- Поле "Психомоторные цели" (Уметь) -->
+        <p>
+            <label for="course_psychomotor_goals">
+                <strong><?php _e('Психомоторные цели (Уметь)', 'course-plugin'); ?></strong>
+            </label>
+            <?php
+            wp_editor(
+                $course_psychomotor_goals,
+                'course_psychomotor_goals',
+                array(
+                    'textarea_name' => 'course_psychomotor_goals',
+                    'textarea_rows' => 8,
+                    'media_buttons' => false,
+                    'teeny' => true,
+                )
+            );
+            ?>
+            <span class="description">
+                <?php _e('Опишите, какие практические навыки и умения должны приобрести студенты. Можно использовать списки и форматирование.', 'course-plugin'); ?>
+            </span>
         </p>
         <?php
     }
@@ -1067,6 +1163,25 @@ class Course_Meta_Boxes {
         
         // Удаляем URL поля из основного массива, чтобы не обрабатывать их дважды
         $fields = array_diff($fields, $url_fields);
+        
+        // Сохраняем поля целей курса отдельно (содержат HTML, нужна специальная очистка)
+        // wp_kses_post() очищает HTML от опасных тегов, но сохраняет безопасные (p, ul, li, strong, em и т.д.)
+        $goals_fields = array(
+            'course_cognitive_goals',
+            'course_emotional_goals',
+            'course_psychomotor_goals',
+        );
+        
+        foreach ($goals_fields as $field) {
+            if (isset($_POST[$field])) {
+                // wp_kses_post() очищает HTML и сохраняет только безопасные теги
+                $value = wp_kses_post($_POST[$field]);
+                update_post_meta($post_id, '_' . $field, $value);
+            } else {
+                // Если поле не заполнено, удаляем метаполе
+                delete_post_meta($post_id, '_' . $field);
+            }
+        }
         
         // Сохраняем поле "Сертификат" (чекбокс) отдельно
         // Если чекбокс отмечен, сохраняем '1', если нет - '0'
