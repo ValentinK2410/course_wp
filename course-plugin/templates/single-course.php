@@ -43,6 +43,28 @@ while (have_posts()) : the_post();
     $levels = get_the_terms(get_the_ID(), 'course_level');
     $topics = get_the_terms(get_the_ID(), 'course_topic');
     
+    // Получаем настраиваемые заголовки секций
+    $section_description_title = get_post_meta(get_the_ID(), '_course_section_description_title', true) ?: __('Описание курса:', 'course-plugin');
+    $section_goals_title = get_post_meta(get_the_ID(), '_course_section_goals_title', true) ?: __('Цели и задачи курса:', 'course-plugin');
+    $section_goals_intro = get_post_meta(get_the_ID(), '_course_section_goals_intro', true) ?: __('Изучив этот курс, студенты смогут:', 'course-plugin');
+    $section_content_title = get_post_meta(get_the_ID(), '_course_section_content_title', true) ?: __('Содержание курса', 'course-plugin');
+    $section_video_title = get_post_meta(get_the_ID(), '_course_section_video_title', true) ?: __('Видео о курсе', 'course-plugin');
+    $section_related_title = get_post_meta(get_the_ID(), '_course_section_related_title', true) ?: __('Другие курсы по теме', 'course-plugin');
+    $sidebar_overview_title = get_post_meta(get_the_ID(), '_course_sidebar_overview_title', true) ?: __('Краткий обзор курса', 'course-plugin');
+    
+    // Названия целей
+    $goal_cognitive_title = get_post_meta(get_the_ID(), '_course_goal_cognitive_title', true) ?: __('Когнитивные цели', 'course-plugin');
+    $goal_cognitive_subtitle = get_post_meta(get_the_ID(), '_course_goal_cognitive_subtitle', true) ?: __('Знать', 'course-plugin');
+    $goal_emotional_title = get_post_meta(get_the_ID(), '_course_goal_emotional_title', true) ?: __('Эмоциональные цели', 'course-plugin');
+    $goal_emotional_subtitle = get_post_meta(get_the_ID(), '_course_goal_emotional_subtitle', true) ?: __('Чувствовать', 'course-plugin');
+    $goal_psychomotor_title = get_post_meta(get_the_ID(), '_course_goal_psychomotor_title', true) ?: __('Психомоторные цели', 'course-plugin');
+    $goal_psychomotor_subtitle = get_post_meta(get_the_ID(), '_course_goal_psychomotor_subtitle', true) ?: __('Уметь', 'course-plugin');
+    
+    // Тексты кнопок
+    $btn_enroll_text = get_post_meta(get_the_ID(), '_course_btn_enroll_text', true) ?: __('Записаться на курс', 'course-plugin');
+    $btn_student_text = get_post_meta(get_the_ID(), '_course_btn_student_text', true) ?: __('Для студентов семинарии', 'course-plugin');
+    $btn_lite_text = get_post_meta(get_the_ID(), '_course_btn_lite_text', true) ?: __('Лайт курс', 'course-plugin');
+    
     // Получаем данные преподавателя
     $teacher_name = '';
     $teacher_photo = '';
@@ -224,7 +246,7 @@ while (have_posts()) : the_post();
                         <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 6H20M4 10H20M4 14H14M4 18H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                         </div>
-                        <h2 class="section-title"><?php _e('Описание курса:', 'course-plugin'); ?></h2>
+                        <h2 class="section-title"><?php echo esc_html($section_description_title); ?></h2>
                     </div>
                     <div class="section-content course-description">
                         <?php the_content(); ?>
@@ -238,9 +260,9 @@ while (have_posts()) : the_post();
                             <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
                             </div>
-                            <h2 class="section-title"><?php _e('Цели и задачи курса:', 'course-plugin'); ?></h2>
+                            <h2 class="section-title"><?php echo esc_html($section_goals_title); ?></h2>
                         </div>
-                        <p class="goals-intro"><?php _e('Изучив этот курс, студенты смогут:', 'course-plugin'); ?></p>
+                        <p class="goals-intro"><?php echo esc_html($section_goals_intro); ?></p>
                         
                         <div class="goals-grid">
                             <?php if ($course_cognitive_goals) : ?>
@@ -248,8 +270,8 @@ while (have_posts()) : the_post();
                                     <div class="goal-icon" style="background: linear-gradient(135deg, #68202d 0%, #8b2d3a 100%)">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor"/><circle cx="12" cy="10" r="3" fill="currentColor"/><path d="M12 14c-3 0-6 1.5-6 3v1h12v-1c0-1.5-3-3-6-3z" fill="currentColor"/></svg>
                                     </div>
-                                    <h4 class="goal-title"><?php _e('Когнитивные цели', 'course-plugin'); ?></h4>
-                                    <span class="goal-subtitle"><?php _e('Знать', 'course-plugin'); ?></span>
+                                    <h4 class="goal-title"><?php echo esc_html($goal_cognitive_title); ?></h4>
+                                    <span class="goal-subtitle"><?php echo esc_html($goal_cognitive_subtitle); ?></span>
                                     <div class="goal-content">
                                         <?php echo wpautop($course_cognitive_goals); ?>
                                     </div>
@@ -261,8 +283,8 @@ while (have_posts()) : the_post();
                                     <div class="goal-icon" style="background: linear-gradient(135deg, #8b2d3a 0%, #a13d4c 100%)">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/></svg>
                                     </div>
-                                    <h4 class="goal-title"><?php _e('Эмоциональные цели', 'course-plugin'); ?></h4>
-                                    <span class="goal-subtitle"><?php _e('Чувствовать', 'course-plugin'); ?></span>
+                                    <h4 class="goal-title"><?php echo esc_html($goal_emotional_title); ?></h4>
+                                    <span class="goal-subtitle"><?php echo esc_html($goal_emotional_subtitle); ?></span>
                                     <div class="goal-content">
                                         <?php echo wpautop($course_emotional_goals); ?>
                                     </div>
@@ -274,8 +296,8 @@ while (have_posts()) : the_post();
                                     <div class="goal-icon" style="background: linear-gradient(135deg, #a13d4c 0%, #d4576b 100%)">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M13.5 5.5C14.59 5.5 15.5 4.59 15.5 3.5C15.5 2.41 14.59 1.5 13.5 1.5C12.41 1.5 11.5 2.41 11.5 3.5C11.5 4.59 12.41 5.5 13.5 5.5ZM9.89 19.38L10.89 15L13 17V23H15V15.5L12.89 13.5L13.5 10.5C14.79 12 16.79 13 19 13V11C17.09 11 15.5 10 14.69 8.58L13.69 7C13.29 6.38 12.61 6 11.89 6C11.54 6 11.19 6.08 10.89 6.25L6 8.83V13H8V10.17L9.45 9.38L8 17L2.62 16L2.16 18L9.89 19.38Z" fill="currentColor"/></svg>
                                     </div>
-                                    <h4 class="goal-title"><?php _e('Психомоторные цели', 'course-plugin'); ?></h4>
-                                    <span class="goal-subtitle"><?php _e('Уметь', 'course-plugin'); ?></span>
+                                    <h4 class="goal-title"><?php echo esc_html($goal_psychomotor_title); ?></h4>
+                                    <span class="goal-subtitle"><?php echo esc_html($goal_psychomotor_subtitle); ?></span>
                                     <div class="goal-content">
                                         <?php echo wpautop($course_psychomotor_goals); ?>
                                     </div>
@@ -292,7 +314,7 @@ while (have_posts()) : the_post();
                             <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 6H2V20C2 21.1 2.9 22 4 22H18V20H4V6ZM20 2H8C6.9 2 6 2.9 6 4V16C6 17.1 6.9 18 8 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H8V4H20V16ZM10 9H18V11H10V9ZM10 12H14V14H10V12ZM10 6H18V8H10V6Z" fill="currentColor"/></svg>
                             </div>
-                            <h2 class="section-title"><?php _e('Содержание курса', 'course-plugin'); ?></h2>
+                            <h2 class="section-title"><?php echo esc_html($section_content_title); ?></h2>
                         </div>
                         <div class="section-content curriculum-content">
                             <?php echo wpautop($course_content); ?>
@@ -307,7 +329,7 @@ while (have_posts()) : the_post();
                             <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 3H3C1.89 3 1 3.89 1 5V17C1 18.1 1.89 19 3 19H8V21H16V19H21C22.1 19 23 18.1 23 17V5C23 3.89 22.1 3 21 3ZM21 17H3V5H21V17ZM16 11L9 15V7L16 11Z" fill="currentColor"/></svg>
                             </div>
-                            <h2 class="section-title"><?php _e('Видео о курсе', 'course-plugin'); ?></h2>
+                            <h2 class="section-title"><?php echo esc_html($section_video_title); ?></h2>
                         </div>
                         <div class="video-wrapper">
                             <?php
@@ -367,7 +389,7 @@ while (have_posts()) : the_post();
                             <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
                             </div>
-                            <h2 class="section-title"><?php _e('Другие курсы по теме', 'course-plugin'); ?></h2>
+                            <h2 class="section-title"><?php echo esc_html($section_related_title); ?></h2>
                         </div>
                         <div class="related-courses-grid">
                             <?php 
@@ -415,7 +437,7 @@ while (have_posts()) : the_post();
                 <!-- Course Overview Card -->
                 <div class="sidebar-card overview-card">
                     <div class="card-header" style="background: <?php echo $scheme['gradient']; ?>">
-                        <h3><?php _e('Краткий обзор курса', 'course-plugin'); ?></h3>
+                        <h3><?php echo esc_html($sidebar_overview_title); ?></h3>
                     </div>
                     <div class="card-body">
                         <ul class="overview-list">
@@ -475,21 +497,21 @@ while (have_posts()) : the_post();
                             <?php if ($course_seminary_new_url) : ?>
                                 <a href="<?php echo esc_url($course_seminary_new_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-primary">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                                    <?php _e('Записаться на курс', 'course-plugin'); ?>
+                                    <?php echo esc_html($btn_enroll_text); ?>
                                 </a>
                             <?php endif; ?>
                             
                             <?php if ($course_seminary_student_url) : ?>
                                 <a href="<?php echo esc_url($course_seminary_student_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-secondary">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 18C3 14.134 6.134 11 10 11C13.866 11 17 14.134 17 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                                    <?php _e('Для студентов семинарии', 'course-plugin'); ?>
+                                    <?php echo esc_html($btn_student_text); ?>
                                 </a>
                             <?php endif; ?>
                             
                             <?php if ($course_lite_course_url) : ?>
                                 <a href="<?php echo esc_url($course_lite_course_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-outline">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10L10 3L17 10M5 8V16H15V8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    <?php _e('Лайт курс', 'course-plugin'); ?>
+                                    <?php echo esc_html($btn_lite_text); ?>
                                 </a>
                             <?php endif; ?>
                         </div>

@@ -287,49 +287,191 @@ class Course_Meta_Boxes {
      * @param WP_Post $post Объект текущего курса
      */
     public function render_course_page_texts_meta_box($post) {
-        // Получаем сохраненные значения
+        // Получаем сохраненные значения заголовков секций
+        $section_description_title = get_post_meta($post->ID, '_course_section_description_title', true);
+        $section_goals_title = get_post_meta($post->ID, '_course_section_goals_title', true);
+        $section_goals_intro = get_post_meta($post->ID, '_course_section_goals_intro', true);
+        $section_content_title = get_post_meta($post->ID, '_course_section_content_title', true);
+        $section_video_title = get_post_meta($post->ID, '_course_section_video_title', true);
+        $section_related_title = get_post_meta($post->ID, '_course_section_related_title', true);
+        $sidebar_overview_title = get_post_meta($post->ID, '_course_sidebar_overview_title', true);
+        
+        // Тексты для целей
+        $goal_cognitive_title = get_post_meta($post->ID, '_course_goal_cognitive_title', true);
+        $goal_cognitive_subtitle = get_post_meta($post->ID, '_course_goal_cognitive_subtitle', true);
+        $goal_emotional_title = get_post_meta($post->ID, '_course_goal_emotional_title', true);
+        $goal_emotional_subtitle = get_post_meta($post->ID, '_course_goal_emotional_subtitle', true);
+        $goal_psychomotor_title = get_post_meta($post->ID, '_course_goal_psychomotor_title', true);
+        $goal_psychomotor_subtitle = get_post_meta($post->ID, '_course_goal_psychomotor_subtitle', true);
+        
+        // Тексты кнопок
+        $btn_enroll_text = get_post_meta($post->ID, '_course_btn_enroll_text', true);
+        $btn_student_text = get_post_meta($post->ID, '_course_btn_student_text', true);
+        $btn_lite_text = get_post_meta($post->ID, '_course_btn_lite_text', true);
+        
+        // Получаем сохраненные значения CTA
         $cta_title = get_post_meta($post->ID, '_course_cta_title', true);
         $cta_text = get_post_meta($post->ID, '_course_cta_text', true);
         $cta_button_text = get_post_meta($post->ID, '_course_cta_button_text', true);
         
-        // Значения по умолчанию
-        $default_cta_title = __('Готовы начать обучение?', 'course-plugin');
-        $default_cta_text = __('Запишитесь на курс и начните свой путь к новым знаниям!', 'course-plugin');
-        $default_cta_button_text = __('Записаться на курс', 'course-plugin');
+        // Значения по умолчанию для заголовков
+        $defaults = array(
+            'section_description' => __('Описание курса:', 'course-plugin'),
+            'section_goals' => __('Цели и задачи курса:', 'course-plugin'),
+            'section_goals_intro' => __('Изучив этот курс, студенты смогут:', 'course-plugin'),
+            'section_content' => __('Содержание курса', 'course-plugin'),
+            'section_video' => __('Видео о курсе', 'course-plugin'),
+            'section_related' => __('Другие курсы по теме', 'course-plugin'),
+            'sidebar_overview' => __('Краткий обзор курса', 'course-plugin'),
+            'goal_cognitive' => __('Когнитивные цели', 'course-plugin'),
+            'goal_cognitive_sub' => __('Знать', 'course-plugin'),
+            'goal_emotional' => __('Эмоциональные цели', 'course-plugin'),
+            'goal_emotional_sub' => __('Чувствовать', 'course-plugin'),
+            'goal_psychomotor' => __('Психомоторные цели', 'course-plugin'),
+            'goal_psychomotor_sub' => __('Уметь', 'course-plugin'),
+            'btn_enroll' => __('Записаться на курс', 'course-plugin'),
+            'btn_student' => __('Для студентов семинарии', 'course-plugin'),
+            'btn_lite' => __('Лайт курс', 'course-plugin'),
+            'cta_title' => __('Готовы начать обучение?', 'course-plugin'),
+            'cta_text' => __('Запишитесь на курс и начните свой путь к новым знаниям!', 'course-plugin'),
+            'cta_button' => __('Записаться на курс', 'course-plugin'),
+        );
         ?>
         
+        <!-- Заголовки секций -->
         <h4 style="margin-top: 0; padding-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <?php _e('Заголовки секций страницы', 'course-plugin'); ?>
+        </h4>
+        
+        <table class="form-table">
+            <tr>
+                <th><label><?php _e('Заголовок "Описание"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_section_description_title" value="<?php echo esc_attr($section_description_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['section_description']); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Заголовок "Цели и задачи"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_section_goals_title" value="<?php echo esc_attr($section_goals_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['section_goals']); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Подзаголовок целей', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_section_goals_intro" value="<?php echo esc_attr($section_goals_intro); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['section_goals_intro']); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Заголовок "Содержание"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_section_content_title" value="<?php echo esc_attr($section_content_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['section_content']); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Заголовок "Видео"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_section_video_title" value="<?php echo esc_attr($section_video_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['section_video']); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Заголовок "Другие курсы"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_section_related_title" value="<?php echo esc_attr($section_related_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['section_related']); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Заголовок сайдбара', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_sidebar_overview_title" value="<?php echo esc_attr($sidebar_overview_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['sidebar_overview']); ?>" />
+                </td>
+            </tr>
+        </table>
+        
+        <hr style="margin: 30px 0;" />
+        
+        <!-- Названия целей -->
+        <h4 style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <?php _e('Названия блоков целей', 'course-plugin'); ?>
+        </h4>
+        
+        <table class="form-table">
+            <tr>
+                <th><label><?php _e('Когнитивные цели', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_goal_cognitive_title" value="<?php echo esc_attr($goal_cognitive_title); ?>" class="regular-text" placeholder="<?php echo esc_attr($defaults['goal_cognitive']); ?>" />
+                    <input type="text" name="course_goal_cognitive_subtitle" value="<?php echo esc_attr($goal_cognitive_subtitle); ?>" class="small-text" placeholder="<?php echo esc_attr($defaults['goal_cognitive_sub']); ?>" />
+                    <span class="description"><?php _e('Заголовок и подзаголовок', 'course-plugin'); ?></span>
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Эмоциональные цели', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_goal_emotional_title" value="<?php echo esc_attr($goal_emotional_title); ?>" class="regular-text" placeholder="<?php echo esc_attr($defaults['goal_emotional']); ?>" />
+                    <input type="text" name="course_goal_emotional_subtitle" value="<?php echo esc_attr($goal_emotional_subtitle); ?>" class="small-text" placeholder="<?php echo esc_attr($defaults['goal_emotional_sub']); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Психомоторные цели', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_goal_psychomotor_title" value="<?php echo esc_attr($goal_psychomotor_title); ?>" class="regular-text" placeholder="<?php echo esc_attr($defaults['goal_psychomotor']); ?>" />
+                    <input type="text" name="course_goal_psychomotor_subtitle" value="<?php echo esc_attr($goal_psychomotor_subtitle); ?>" class="small-text" placeholder="<?php echo esc_attr($defaults['goal_psychomotor_sub']); ?>" />
+                </td>
+            </tr>
+        </table>
+        
+        <hr style="margin: 30px 0;" />
+        
+        <!-- Тексты кнопок -->
+        <h4 style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <?php _e('Тексты кнопок действий', 'course-plugin'); ?>
+        </h4>
+        
+        <table class="form-table">
+            <tr>
+                <th><label><?php _e('Кнопка "Записаться"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_btn_enroll_text" value="<?php echo esc_attr($btn_enroll_text); ?>" class="regular-text" placeholder="<?php echo esc_attr($defaults['btn_enroll']); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Кнопка "Для студентов"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_btn_student_text" value="<?php echo esc_attr($btn_student_text); ?>" class="regular-text" placeholder="<?php echo esc_attr($defaults['btn_student']); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Кнопка "Лайт курс"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="course_btn_lite_text" value="<?php echo esc_attr($btn_lite_text); ?>" class="regular-text" placeholder="<?php echo esc_attr($defaults['btn_lite']); ?>" />
+                </td>
+            </tr>
+        </table>
+        
+        <hr style="margin: 30px 0;" />
+        
+        <!-- Блок CTA -->
+        <h4 style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
             <?php _e('Блок призыва к действию (CTA) внизу страницы', 'course-plugin'); ?>
         </h4>
         
         <table class="form-table">
             <tr>
-                <th>
-                    <label for="course_cta_title"><?php _e('Заголовок CTA блока', 'course-plugin'); ?></label>
-                </th>
+                <th><label for="course_cta_title"><?php _e('Заголовок CTA', 'course-plugin'); ?></label></th>
                 <td>
-                    <input type="text" id="course_cta_title" name="course_cta_title" value="<?php echo esc_attr($cta_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_cta_title); ?>" />
-                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_title); ?></p>
+                    <input type="text" id="course_cta_title" name="course_cta_title" value="<?php echo esc_attr($cta_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['cta_title']); ?>" />
                 </td>
             </tr>
-            
             <tr>
-                <th>
-                    <label for="course_cta_text"><?php _e('Текст CTA блока', 'course-plugin'); ?></label>
-                </th>
+                <th><label for="course_cta_text"><?php _e('Текст CTA', 'course-plugin'); ?></label></th>
                 <td>
-                    <textarea id="course_cta_text" name="course_cta_text" rows="3" class="large-text" placeholder="<?php echo esc_attr($default_cta_text); ?>"><?php echo esc_textarea($cta_text); ?></textarea>
-                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_text); ?></p>
+                    <textarea id="course_cta_text" name="course_cta_text" rows="2" class="large-text" placeholder="<?php echo esc_attr($defaults['cta_text']); ?>"><?php echo esc_textarea($cta_text); ?></textarea>
                 </td>
             </tr>
-            
             <tr>
-                <th>
-                    <label for="course_cta_button_text"><?php _e('Текст кнопки CTA', 'course-plugin'); ?></label>
-                </th>
+                <th><label for="course_cta_button_text"><?php _e('Кнопка CTA', 'course-plugin'); ?></label></th>
                 <td>
-                    <input type="text" id="course_cta_button_text" name="course_cta_button_text" value="<?php echo esc_attr($cta_button_text); ?>" class="regular-text" placeholder="<?php echo esc_attr($default_cta_button_text); ?>" />
-                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_button_text); ?></p>
+                    <input type="text" id="course_cta_button_text" name="course_cta_button_text" value="<?php echo esc_attr($cta_button_text); ?>" class="regular-text" placeholder="<?php echo esc_attr($defaults['cta_button']); ?>" />
                 </td>
             </tr>
         </table>
@@ -386,9 +528,29 @@ class Course_Meta_Boxes {
             'course_seminary_new_url',    // Ссылка на кнопку "Курс на семинарском уровне (не студент)"
             'course_seminary_student_url', // Ссылка на кнопку "Курс на семинарском уровне (студент)"
             'course_lite_course_url',      // Ссылка на кнопку "Лайт курс"
+            // Тексты страницы
             'course_cta_title',           // Заголовок CTA блока
             'course_cta_text',            // Текст CTA блока
             'course_cta_button_text',     // Текст кнопки CTA
+            // Заголовки секций
+            'course_section_description_title',
+            'course_section_goals_title',
+            'course_section_goals_intro',
+            'course_section_content_title',
+            'course_section_video_title',
+            'course_section_related_title',
+            'course_sidebar_overview_title',
+            // Названия целей
+            'course_goal_cognitive_title',
+            'course_goal_cognitive_subtitle',
+            'course_goal_emotional_title',
+            'course_goal_emotional_subtitle',
+            'course_goal_psychomotor_title',
+            'course_goal_psychomotor_subtitle',
+            // Тексты кнопок
+            'course_btn_enroll_text',
+            'course_btn_student_text',
+            'course_btn_lite_text',
         );
         
         // Обрабатываем URL поля отдельно (нужна специальная очистка)

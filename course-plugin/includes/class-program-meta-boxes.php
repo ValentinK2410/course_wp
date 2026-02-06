@@ -280,23 +280,31 @@ class Program_Meta_Boxes {
      * Рендеринг метабокса "Настройка текстов страницы"
      */
     public function render_program_page_texts_meta_box($post) {
+        // Получаем сохраненные значения заголовков секций
+        $section_description_title = get_post_meta($post->ID, '_program_section_description_title', true);
+        $section_highlights_title = get_post_meta($post->ID, '_program_section_highlights_title', true);
+        $section_courses_title = get_post_meta($post->ID, '_program_section_courses_title', true);
+        $section_teachers_title = get_post_meta($post->ID, '_program_section_teachers_title', true);
+        $sidebar_info_title = get_post_meta($post->ID, '_program_sidebar_info_title', true);
+        $enroll_button_text = get_post_meta($post->ID, '_program_enroll_button_text', true);
+        
         // Получаем сохраненные значения CTA
         $cta_title = get_post_meta($post->ID, '_program_cta_title', true);
         $cta_text = get_post_meta($post->ID, '_program_cta_text', true);
         $cta_button_text = get_post_meta($post->ID, '_program_cta_button_text', true);
         
-        // Получаем сохраненные преимущества
-        $highlight_1_title = get_post_meta($post->ID, '_program_highlight_1_title', true);
-        $highlight_1_text = get_post_meta($post->ID, '_program_highlight_1_text', true);
-        $highlight_2_title = get_post_meta($post->ID, '_program_highlight_2_title', true);
-        $highlight_2_text = get_post_meta($post->ID, '_program_highlight_2_text', true);
-        $highlight_3_title = get_post_meta($post->ID, '_program_highlight_3_title', true);
-        $highlight_3_text = get_post_meta($post->ID, '_program_highlight_3_text', true);
-        $highlight_4_title = get_post_meta($post->ID, '_program_highlight_4_title', true);
-        $highlight_4_text = get_post_meta($post->ID, '_program_highlight_4_text', true);
+        // Получаем настройку показа преимуществ
         $show_highlights = get_post_meta($post->ID, '_program_show_highlights', true);
         
-        // Значения по умолчанию
+        // Значения по умолчанию для заголовков
+        $default_section_description = __('Описание программы:', 'course-plugin');
+        $default_section_highlights = __('Преимущества программы', 'course-plugin');
+        $default_section_courses = __('Курсы в программе:', 'course-plugin');
+        $default_section_teachers = __('Преподаватели программы', 'course-plugin');
+        $default_sidebar_info = __('Информация о программе', 'course-plugin');
+        $default_enroll_button = __('Записаться на программу', 'course-plugin');
+        
+        // Значения по умолчанию для CTA
         $default_cta_title = __('Готовы начать обучение?', 'course-plugin');
         $default_cta_text = __('Присоединяйтесь к программе и откройте новые возможности для профессионального роста!', 'course-plugin');
         $default_cta_button_text = __('Записаться сейчас', 'course-plugin');
@@ -310,8 +318,54 @@ class Program_Meta_Boxes {
         );
         ?>
         
-        <!-- Блок преимуществ программы -->
+        <!-- Заголовки секций -->
         <h4 style="margin-top: 0; padding-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <?php _e('Заголовки секций страницы', 'course-plugin'); ?>
+        </h4>
+        
+        <table class="form-table">
+            <tr>
+                <th><label><?php _e('Заголовок "Описание"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="program_section_description_title" value="<?php echo esc_attr($section_description_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_section_description); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Заголовок "Преимущества"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="program_section_highlights_title" value="<?php echo esc_attr($section_highlights_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_section_highlights); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Заголовок "Курсы"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="program_section_courses_title" value="<?php echo esc_attr($section_courses_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_section_courses); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Заголовок "Преподаватели"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="program_section_teachers_title" value="<?php echo esc_attr($section_teachers_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_section_teachers); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Заголовок сайдбара "Информация"', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="program_sidebar_info_title" value="<?php echo esc_attr($sidebar_info_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_sidebar_info); ?>" />
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e('Текст кнопки записи', 'course-plugin'); ?></label></th>
+                <td>
+                    <input type="text" name="program_enroll_button_text" value="<?php echo esc_attr($enroll_button_text); ?>" class="large-text" placeholder="<?php echo esc_attr($default_enroll_button); ?>" />
+                </td>
+            </tr>
+        </table>
+        
+        <hr style="margin: 30px 0;" />
+        
+        <!-- Блок преимуществ программы -->
+        <h4 style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
             <?php _e('Блок "Преимущества программы"', 'course-plugin'); ?>
         </h4>
         
@@ -324,8 +378,6 @@ class Program_Meta_Boxes {
         
         <table class="form-table">
             <?php for ($i = 1; $i <= 4; $i++) : 
-                $title_var = "highlight_{$i}_title";
-                $text_var = "highlight_{$i}_text";
                 $title_value = get_post_meta($post->ID, "_program_highlight_{$i}_title", true);
                 $text_value = get_post_meta($post->ID, "_program_highlight_{$i}_text", true);
             ?>
@@ -361,27 +413,22 @@ class Program_Meta_Boxes {
                 </th>
                 <td>
                     <input type="text" id="program_cta_title" name="program_cta_title" value="<?php echo esc_attr($cta_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_cta_title); ?>" />
-                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_title); ?></p>
                 </td>
             </tr>
-            
             <tr>
                 <th>
                     <label for="program_cta_text"><?php _e('Текст CTA блока', 'course-plugin'); ?></label>
                 </th>
                 <td>
                     <textarea id="program_cta_text" name="program_cta_text" rows="3" class="large-text" placeholder="<?php echo esc_attr($default_cta_text); ?>"><?php echo esc_textarea($cta_text); ?></textarea>
-                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_text); ?></p>
                 </td>
             </tr>
-            
             <tr>
                 <th>
                     <label for="program_cta_button_text"><?php _e('Текст кнопки CTA', 'course-plugin'); ?></label>
                 </th>
                 <td>
                     <input type="text" id="program_cta_button_text" name="program_cta_button_text" value="<?php echo esc_attr($cta_button_text); ?>" class="regular-text" placeholder="<?php echo esc_attr($default_cta_button_text); ?>" />
-                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_button_text); ?></p>
                 </td>
             </tr>
         </table>
@@ -498,6 +545,22 @@ class Program_Meta_Boxes {
         // Сохранение ссылки для записи
         if (isset($_POST['program_enroll_url'])) {
             update_post_meta($post_id, '_program_enroll_url', esc_url_raw($_POST['program_enroll_url']));
+        }
+        
+        // Сохранение заголовков секций
+        $section_fields = array(
+            'program_section_description_title',
+            'program_section_highlights_title',
+            'program_section_courses_title',
+            'program_section_teachers_title',
+            'program_sidebar_info_title',
+            'program_enroll_button_text',
+        );
+        
+        foreach ($section_fields as $field) {
+            if (isset($_POST[$field])) {
+                update_post_meta($post_id, '_' . $field, sanitize_text_field($_POST[$field]));
+            }
         }
         
         // Сохранение текстов CTA блока

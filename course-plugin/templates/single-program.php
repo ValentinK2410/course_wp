@@ -30,6 +30,14 @@ while (have_posts()) : the_post();
     $levels = get_the_terms(get_the_ID(), 'course_level');
     $topics = get_the_terms(get_the_ID(), 'course_topic');
     
+    // Получаем настраиваемые заголовки секций
+    $section_description_title = get_post_meta(get_the_ID(), '_program_section_description_title', true) ?: __('Описание программы:', 'course-plugin');
+    $section_highlights_title = get_post_meta(get_the_ID(), '_program_section_highlights_title', true) ?: __('Преимущества программы', 'course-plugin');
+    $section_courses_title = get_post_meta(get_the_ID(), '_program_section_courses_title', true) ?: __('Курсы в программе:', 'course-plugin');
+    $section_teachers_title = get_post_meta(get_the_ID(), '_program_section_teachers_title', true) ?: __('Преподаватели программы', 'course-plugin');
+    $sidebar_info_title = get_post_meta(get_the_ID(), '_program_sidebar_info_title', true) ?: __('Информация о программе', 'course-plugin');
+    $enroll_button_text = get_post_meta(get_the_ID(), '_program_enroll_button_text', true) ?: __('Записаться на программу', 'course-plugin');
+    
     // Получаем данные преподавателей
     $teacher_name = '';
     $teacher_photo = '';
@@ -219,12 +227,12 @@ while (have_posts()) : the_post();
                         </div>
                         <?php if ($program_enroll_url) : ?>
                             <a href="<?php echo esc_url($program_enroll_url); ?>" class="hero-enroll-btn" target="_blank" rel="noopener">
-                                <?php _e('Записаться на программу', 'course-plugin'); ?>
+                                <?php echo esc_html($enroll_button_text); ?>
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </a>
                         <?php else : ?>
                             <button class="hero-enroll-btn">
-                                <?php _e('Записаться на программу', 'course-plugin'); ?>
+                                <?php echo esc_html($enroll_button_text); ?>
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
                         <?php endif; ?>
@@ -245,7 +253,7 @@ while (have_posts()) : the_post();
                         <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 6H20M4 10H20M4 14H14M4 18H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                         </div>
-                        <h2 class="section-title"><?php _e('Описание программы:', 'course-plugin'); ?></h2>
+                        <h2 class="section-title"><?php echo esc_html($section_description_title); ?></h2>
                     </div>
                     <div class="section-content program-description">
                         <?php the_content(); ?>
@@ -293,7 +301,7 @@ while (have_posts()) : the_post();
                         <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
                         </div>
-                        <h2 class="section-title"><?php _e('Преимущества программы', 'course-plugin'); ?></h2>
+                        <h2 class="section-title"><?php echo esc_html($section_highlights_title); ?></h2>
                     </div>
                     <div class="highlights-grid">
                         <?php foreach ($highlights as $highlight) : ?>
@@ -316,7 +324,7 @@ while (have_posts()) : the_post();
                             <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
                             </div>
-                            <h2 class="section-title"><?php _e('Курсы в программе:', 'course-plugin'); ?></h2>
+                            <h2 class="section-title"><?php echo esc_html($section_courses_title); ?></h2>
                         </div>
                         <div class="courses-list">
                             <?php 
@@ -371,7 +379,7 @@ while (have_posts()) : the_post();
                             <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             </div>
-                            <h2 class="section-title"><?php _e('Преподаватели программы', 'course-plugin'); ?></h2>
+                            <h2 class="section-title"><?php echo esc_html($section_teachers_title); ?></h2>
                         </div>
                         <div class="teachers-grid">
                             <?php foreach ($teachers as $t) : 
@@ -409,7 +417,7 @@ while (have_posts()) : the_post();
                 <!-- Program Info Card -->
                 <div class="sidebar-card info-card">
                     <div class="card-header" style="background: <?php echo $scheme['gradient']; ?>">
-                        <h3><?php _e('Информация о программе', 'course-plugin'); ?></h3>
+                        <h3><?php echo esc_html($sidebar_info_title); ?></h3>
                     </div>
                     <div class="card-body">
                         <ul class="info-list">
@@ -476,12 +484,12 @@ while (have_posts()) : the_post();
                     <?php if ($program_enroll_url) : ?>
                         <a href="<?php echo esc_url($program_enroll_url); ?>" class="enroll-btn" target="_blank" rel="noopener">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                            <?php _e('Записаться на программу', 'course-plugin'); ?>
+                            <?php echo esc_html($enroll_button_text); ?>
                         </a>
                     <?php else : ?>
                         <button class="enroll-btn">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                            <?php _e('Записаться на программу', 'course-plugin'); ?>
+                            <?php echo esc_html($enroll_button_text); ?>
                         </button>
                     <?php endif; ?>
                 </div>
