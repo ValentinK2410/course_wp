@@ -250,11 +250,8 @@
         .code-block code.hljs .hljs-literal,
         .code-block pre code.hljs .hljs-literal { color: #56b6c2 !important; }
         
-        /* Убеждаемся, что базовый текст в hljs имеет цвет */
-        .code-block code.hljs,
-        .code-block pre code.hljs {
-            color: #abb2bf !important; /* Базовый цвет текста */
-        }
+        /* Базовый цвет для текста в hljs применяется только если нет специальных классов */
+        /* Не устанавливаем базовый цвет здесь, чтобы цвета элементов применялись */
 
         .highlight {
             background: #fff3cd;
