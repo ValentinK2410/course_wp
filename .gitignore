@@ -2,6 +2,7 @@
 .idea/
 *.iml
 .vscode/
+.cursor/
 *.swp
 *.swo
 *~
@@ -52,3 +53,7 @@ composer.lock
 
 
 .config/
+
+# Документация (кроме README.md для установки плагина)
+*.md
+!course-plugin/README.md
