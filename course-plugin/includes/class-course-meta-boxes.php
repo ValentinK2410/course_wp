@@ -95,6 +95,16 @@ class Course_Meta_Boxes {
             'default'                                             // Приоритет
         );
         
+        // Добавляем метабокс "Контент курса" (содержание и видео)
+        add_meta_box(
+            'course_content',                                      // ID метабокса
+            __('Контент курса', 'course-plugin'),               // Заголовок
+            array($this, 'render_course_content_meta_box'),       // Функция для отображения
+            'course',                                             // Тип поста
+            'normal',                                             // Контекст: 'normal' - основная область
+            'default'                                             // Приоритет
+        );
+        
         // Добавляем метабокс "Настройка текстов страницы"
         add_meta_box(
             'course_page_texts',                                  // ID метабокса
@@ -444,6 +454,58 @@ class Course_Meta_Boxes {
             ?>
             <span class="description">
                 <?php _e('Опишите, какие практические навыки и умения должны приобрести студенты. Можно использовать списки и форматирование.', 'course-plugin'); ?>
+            </span>
+        </p>
+        <?php
+    }
+    
+    /**
+     * Рендеринг метабокса "Контент курса"
+     * Отображает поля для содержания курса и видео
+     * 
+     * @param WP_Post $post Объект текущего курса
+     */
+    public function render_course_content_meta_box($post) {
+        // Получаем значения метаполей контента из базы данных
+        $course_content = get_post_meta($post->ID, '_course_content', true);
+        $course_video_url = get_post_meta($post->ID, '_course_video_url', true);
+        
+        ?>
+        <p class="description">
+            <?php _e('Заполните содержание курса и ссылку на видео. Эти данные будут отображаться на странице курса в соответствующих секциях.', 'course-plugin'); ?>
+        </p>
+        
+        <!-- Поле "Содержание курса" (программа обучения) -->
+        <p>
+            <label for="course_content">
+                <strong><?php _e('Содержание курса (программа обучения)', 'course-plugin'); ?></strong>
+            </label>
+            <?php
+            // Используем wp_editor для удобного редактирования текста с форматированием
+            wp_editor(
+                $course_content,                                   // Содержимое редактора
+                'course_content',                                  // ID поля
+                array(
+                    'textarea_name' => 'course_content',           // Имя поля для POST
+                    'textarea_rows' => 12,                         // Высота редактора (строки)
+                    'media_buttons' => false,                      // Отключить кнопку добавления медиа
+                    'teeny' => true,                               // Упрощенный режим редактора
+                )
+            );
+            ?>
+            <span class="description">
+                <?php _e('Опишите программу обучения, темы и модули курса. Можно использовать списки, форматирование и структурированный текст.', 'course-plugin'); ?>
+            </span>
+        </p>
+        
+        <!-- Поле "Видео о курсе" (URL) -->
+        <p>
+            <label for="course_video_url">
+                <strong><?php _e('Видео о курсе (URL)', 'course-plugin'); ?></strong>
+            </label>
+            <input type="url" id="course_video_url" name="course_video_url" value="<?php echo esc_url($course_video_url); ?>" class="large-text" placeholder="<?php _e('https://youtube.com/watch?v=... или https://vimeo.com/...', 'course-plugin'); ?>" />
+            <span class="description">
+                <?php _e('Вставьте ссылку на видео с YouTube, Vimeo или прямую ссылку на видеофайл. Видео будет отображаться в секции "Видео о курсе" на странице курса.', 'course-plugin'); ?>
             </span>
         </p>
         <?php
@@ -1181,6 +1243,22 @@ class Course_Meta_Boxes {
                 // Если поле не заполнено, удаляем метаполе
                 delete_post_meta($post_id, '_' . $field);
             }
+        }
+        
+        // Сохраняем поле "Содержание курса" (содержит HTML)
+        if (isset($_POST['course_content'])) {
+            $value = wp_kses_post($_POST['course_content']);
+            update_post_meta($post_id, '_course_content', $value);
+        } else {
+            delete_post_meta($post_id, '_course_content');
+        }
+        
+        // Сохраняем поле "Видео о курсе" (URL)
+        if (isset($_POST['course_video_url'])) {
+            $value = esc_url_raw($_POST['course_video_url']);
+            update_post_meta($post_id, '_course_video_url', $value);
+        } else {
+            delete_post_meta($post_id, '_course_video_url');
         }
         
         // Сохраняем поле "Сертификат" (чекбокс) отдельно
