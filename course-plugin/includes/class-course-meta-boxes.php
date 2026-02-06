@@ -117,6 +117,13 @@ class Course_Meta_Boxes {
         $course_capacity = get_post_meta($post->ID, '_course_capacity', true);
         $course_enrolled = get_post_meta($post->ID, '_course_enrolled', true);
         
+        // Дополнительные поля для сайдбара
+        $course_weeks = get_post_meta($post->ID, '_course_weeks', true);
+        $course_credits = get_post_meta($post->ID, '_course_credits', true);
+        $course_hours_per_week = get_post_meta($post->ID, '_course_hours_per_week', true);
+        $course_language = get_post_meta($post->ID, '_course_language', true);
+        $course_certificate = get_post_meta($post->ID, '_course_certificate', true);
+        
         // Начинаем вывод HTML-формы
         ?>
         <table class="form-table">
@@ -164,6 +171,64 @@ class Course_Meta_Boxes {
                     <input type="number" id="course_enrolled" name="course_enrolled" value="<?php echo esc_attr($course_enrolled); ?>" class="small-text" min="0" />
                 </td>
             </tr>
+            
+            <!-- Поле "Количество недель" -->
+            <tr>
+                <th>
+                    <label for="course_weeks"><?php _e('Количество недель', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <input type="number" id="course_weeks" name="course_weeks" value="<?php echo esc_attr($course_weeks); ?>" class="small-text" min="1" />
+                    <span class="description"><?php _e('Отображается в сайдбаре "Краткий обзор курса"', 'course-plugin'); ?></span>
+                </td>
+            </tr>
+            
+            <!-- Поле "Кредиты" -->
+            <tr>
+                <th>
+                    <label for="course_credits"><?php _e('Кредиты', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <input type="number" id="course_credits" name="course_credits" value="<?php echo esc_attr($course_credits); ?>" class="small-text" min="0" step="0.5" />
+                    <span class="description"><?php _e('Отображается в сайдбаре "Краткий обзор курса"', 'course-plugin'); ?></span>
+                </td>
+            </tr>
+            
+            <!-- Поле "Часов в неделю" -->
+            <tr>
+                <th>
+                    <label for="course_hours_per_week"><?php _e('Часов в неделю', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <input type="number" id="course_hours_per_week" name="course_hours_per_week" value="<?php echo esc_attr($course_hours_per_week); ?>" class="small-text" min="0" step="0.5" />
+                    <span class="description"><?php _e('Отображается в сайдбаре "Краткий обзор курса"', 'course-plugin'); ?></span>
+                </td>
+            </tr>
+            
+            <!-- Поле "Язык курса" -->
+            <tr>
+                <th>
+                    <label for="course_language"><?php _e('Язык курса', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="course_language" name="course_language" value="<?php echo esc_attr($course_language); ?>" class="regular-text" placeholder="<?php _e('Например: Русский, English', 'course-plugin'); ?>" />
+                    <span class="description"><?php _e('Отображается в сайдбаре "Краткий обзор курса" и в шапке страницы', 'course-plugin'); ?></span>
+                </td>
+            </tr>
+            
+            <!-- Поле "Сертификат" -->
+            <tr>
+                <th>
+                    <label for="course_certificate"><?php _e('Сертификат', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox" id="course_certificate" name="course_certificate" value="1" <?php checked($course_certificate, '1'); ?> />
+                        <?php _e('Выдается сертификат по окончании курса', 'course-plugin'); ?>
+                    </label>
+                    <span class="description"><?php _e('Отображается в сайдбаре "Краткий обзор курса" и в шапке страницы', 'course-plugin'); ?></span>
+                </td>
+            </tr>
         </table>
         <?php
         // Заканчиваем вывод HTML
@@ -177,6 +242,7 @@ class Course_Meta_Boxes {
      */
     public function render_course_duration_meta_box($post) {
         // Получаем значения метаполей из базы данных
+        $course_code = get_post_meta($post->ID, '_course_code', true);
         $course_duration = get_post_meta($post->ID, '_course_duration', true);
         $course_price = get_post_meta($post->ID, '_course_price', true);
         $course_old_price = get_post_meta($post->ID, '_course_old_price', true);
@@ -184,6 +250,13 @@ class Course_Meta_Boxes {
         $course_reviews_count = get_post_meta($post->ID, '_course_reviews_count', true);
         
         ?>
+        <!-- Поле "Код курса" -->
+        <p>
+            <label for="course_code"><?php _e('Код курса', 'course-plugin'); ?></label>
+            <input type="text" id="course_code" name="course_code" value="<?php echo esc_attr($course_code); ?>" class="regular-text" placeholder="<?php _e('Например: CS-101, MATH-202', 'course-plugin'); ?>" />
+            <span class="description"><?php _e('Отображается в шапке страницы курса', 'course-plugin'); ?></span>
+        </p>
+        
         <!-- Поле "Продолжительность курса в часах" -->
         <p>
             <label for="course_duration"><?php _e('Продолжительность (часов)', 'course-plugin'); ?></label>
@@ -855,6 +928,7 @@ class Course_Meta_Boxes {
         
         // Массив названий полей, которые нужно сохранить
         $fields = array(
+            'course_code',                // Код курса (отображается в шапке)
             'course_duration',            // Продолжительность курса
             'course_price',               // Стоимость курса
             'course_old_price',           // Старая цена (для скидки)
@@ -869,6 +943,11 @@ class Course_Meta_Boxes {
             'course_seminary_new_url',    // Ссылка на кнопку "Курс на семинарском уровне (не студент)"
             'course_seminary_student_url', // Ссылка на кнопку "Курс на семинарском уровне (студент)"
             'course_lite_course_url',      // Ссылка на кнопку "Лайт курс"
+            // Поля для сайдбара "Краткий обзор курса"
+            'course_weeks',               // Количество недель
+            'course_credits',             // Кредиты
+            'course_hours_per_week',      // Часов в неделю
+            'course_language',            // Язык курса
             // Тексты страницы
             'course_cta_title',           // Заголовок CTA блока
             'course_cta_text',            // Текст CTA блока
@@ -989,7 +1068,12 @@ class Course_Meta_Boxes {
         // Удаляем URL поля из основного массива, чтобы не обрабатывать их дважды
         $fields = array_diff($fields, $url_fields);
         
-        // Проходим по каждому полю
+        // Сохраняем поле "Сертификат" (чекбокс) отдельно
+        // Если чекбокс отмечен, сохраняем '1', если нет - '0'
+        $course_certificate = isset($_POST['course_certificate']) && $_POST['course_certificate'] === '1' ? '1' : '0';
+        update_post_meta($post_id, '_course_certificate', $course_certificate);
+        
+        // Проходим по каждому полю из массива $fields
         foreach ($fields as $field) {
             // Проверяем, было ли поле заполнено в форме
             if (isset($_POST[$field])) {
