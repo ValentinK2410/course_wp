@@ -1026,7 +1026,7 @@ $user_input = $_POST['course_title'];
 update_post_meta($post_id, '_course_title', $user_input);
 
 // Если пользователь введет:
-// "Курс PHP<script>alert('XSS атака!')</script>"
+// "Курс PHP<script>alert('XSS')</script>"
 // Это может выполнить JavaScript на странице!
 
 // ✅ БЕЗОПАСНО - с санитизацией
