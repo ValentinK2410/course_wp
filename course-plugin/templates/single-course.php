@@ -6,12 +6,16 @@
  * @author Кузьменко Валентин (Valentink2410)
  */
 
+// Подключаем шапку сайта
 get_header();
 
-// Получаем данные текущего курса
+// Цикл WordPress для получения данных текущего курса
 while (have_posts()) : the_post();
     
-    // Получаем метаполя курса
+    // ============================================
+    // ПОЛУЧЕНИЕ МЕТАПОЛЕЙ КУРСА
+    // ============================================
+    // Основные метаполя курса из базы данных
     $course_code = get_post_meta(get_the_ID(), '_course_code', true);
     $course_duration = get_post_meta(get_the_ID(), '_course_duration', true);
     $course_price = get_post_meta(get_the_ID(), '_course_price', true);
@@ -20,10 +24,13 @@ while (have_posts()) : the_post();
     $course_end_date = get_post_meta(get_the_ID(), '_course_end_date', true);
     $course_capacity = get_post_meta(get_the_ID(), '_course_capacity', true);
     $course_enrolled = get_post_meta(get_the_ID(), '_course_enrolled', true);
-    $course_rating = get_post_meta(get_the_ID(), '_course_rating', true) ?: 0;
-    $course_reviews_count = get_post_meta(get_the_ID(), '_course_reviews_count', true) ?: 0;
+    $course_rating = get_post_meta(get_the_ID(), '_course_rating', true) ?: 0; // Рейтинг курса (по умолчанию 0)
+    $course_reviews_count = get_post_meta(get_the_ID(), '_course_reviews_count', true) ?: 0; // Количество отзывов (по умолчанию 0)
     
-    // Дополнительные поля
+    // ============================================
+    // ДОПОЛНИТЕЛЬНЫЕ ПОЛЯ КУРСА
+    // ============================================
+    // Поля для отображения в сайдбаре и других секциях
     $course_weeks = get_post_meta(get_the_ID(), '_course_weeks', true);
     $course_credits = get_post_meta(get_the_ID(), '_course_credits', true);
     $course_hours_per_week = get_post_meta(get_the_ID(), '_course_hours_per_week', true);
@@ -35,15 +42,21 @@ while (have_posts()) : the_post();
     $course_cognitive_goals = get_post_meta(get_the_ID(), '_course_cognitive_goals', true);
     $course_emotional_goals = get_post_meta(get_the_ID(), '_course_emotional_goals', true);
     $course_psychomotor_goals = get_post_meta(get_the_ID(), '_course_psychomotor_goals', true);
-    $course_content = get_post_meta(get_the_ID(), '_course_content', true);
+    $course_content = get_post_meta(get_the_ID(), '_course_content', true); // Содержание курса (программа обучения)
     
-    // Получаем таксономии
+    // ============================================
+    // ПОЛУЧЕНИЕ ТАКСОНОМИЙ
+    // ============================================
+    // Получаем связанные термины таксономий для курса
     $teachers = get_the_terms(get_the_ID(), 'course_teacher');
     $specializations = get_the_terms(get_the_ID(), 'course_specialization');
     $levels = get_the_terms(get_the_ID(), 'course_level');
-    $topics = get_the_terms(get_the_ID(), 'course_topic');
+    $topics = get_the_terms(get_the_ID(), 'course_topic'); // Темы курса
     
-    // Получаем настраиваемые заголовки секций
+    // ============================================
+    // НАСТРАИВАЕМЫЕ ЗАГОЛОВКИ СЕКЦИЙ
+    // ============================================
+    // Получаем кастомные заголовки секций страницы (если не заданы - используются значения по умолчанию)
     $section_description_title = get_post_meta(get_the_ID(), '_course_section_description_title', true) ?: __('Описание курса:', 'course-plugin');
     $section_goals_title = get_post_meta(get_the_ID(), '_course_section_goals_title', true) ?: __('Цели и задачи курса:', 'course-plugin');
     $section_goals_intro = get_post_meta(get_the_ID(), '_course_section_goals_intro', true) ?: __('Изучив этот курс, студенты смогут:', 'course-plugin');
@@ -65,7 +78,11 @@ while (have_posts()) : the_post();
     $btn_student_text = get_post_meta(get_the_ID(), '_course_btn_student_text', true) ?: __('Для студентов семинарии', 'course-plugin');
     $btn_lite_text = get_post_meta(get_the_ID(), '_course_btn_lite_text', true) ?: __('Лайт курс', 'course-plugin');
     
-    // Настройки видимости секций (по умолчанию все включены)
+    // ============================================
+    // НАСТРОЙКИ ВИДИМОСТИ СЕКЦИЙ
+    // ============================================
+    // Управление отображением секций на странице курса
+    // По умолчанию все секции включены (если мета-поле не установлено или равно '1')
     $show_description = get_post_meta(get_the_ID(), '_course_show_description', true) !== '0';
     $show_goals = get_post_meta(get_the_ID(), '_course_show_goals', true) !== '0';
     $show_content = get_post_meta(get_the_ID(), '_course_show_content', true) !== '0';
@@ -96,19 +113,28 @@ while (have_posts()) : the_post();
     $field_certificate_meta = get_post_meta(get_the_ID(), '_course_show_field_certificate', true);
     $show_field_certificate = ($field_certificate_meta === '' || $field_certificate_meta === '1');
     
-    // Дополнительные блоки контента
+    // ============================================
+    // ДОПОЛНИТЕЛЬНЫЕ БЛОКИ КОНТЕНТА
+    // ============================================
+    // Блоки, которые можно добавить в основной контент страницы
     $extra_blocks = get_post_meta(get_the_ID(), '_course_extra_blocks', true);
     if (!is_array($extra_blocks)) {
         $extra_blocks = array();
     }
     
-    // Кастомные блоки сайдбара
+    // ============================================
+    // КАСТОМНЫЕ БЛОКИ САЙДБАРА
+    // ============================================
+    // Блоки, которые можно добавить в сайдбар страницы курса
     $sidebar_blocks = get_post_meta(get_the_ID(), '_course_sidebar_blocks', true);
     if (!is_array($sidebar_blocks)) {
-        $sidebar_blocks = array();
+        $sidebar_blocks = array(); // Инициализируем пустым массивом, если данных нет
     }
     
-    // Получаем данные преподавателя
+    // ============================================
+    // ДАННЫЕ ПРЕПОДАВАТЕЛЯ
+    // ============================================
+    // Получаем информацию о преподавателе курса из таксономии
     $teacher_name = '';
     $teacher_photo = '';
     $teacher_position = '';
@@ -120,30 +146,42 @@ while (have_posts()) : the_post();
         $teacher_position = get_term_meta($teacher->term_id, 'teacher_position', true);
     }
     
-    // Получаем ссылки для кнопок курса
-    $course_seminary_new_url = get_post_meta(get_the_ID(), '_course_seminary_new_url', true);
-    $course_seminary_student_url = get_post_meta(get_the_ID(), '_course_seminary_student_url', true);
-    $course_lite_course_url = get_post_meta(get_the_ID(), '_course_lite_course_url', true);
+    // ============================================
+    // ССЫЛКИ ДЛЯ КНОПОК КУРСА
+    // ============================================
+    // URL для различных вариантов записи на курс
+    $course_seminary_new_url = get_post_meta(get_the_ID(), '_course_seminary_new_url', true); // Для новых студентов
+    $course_seminary_student_url = get_post_meta(get_the_ID(), '_course_seminary_student_url', true); // Для студентов семинарии
+    $course_lite_course_url = get_post_meta(get_the_ID(), '_course_lite_course_url', true); // Лайт версия курса
     
-    // Вычисляем скидку
+    // ============================================
+    // ВЫЧИСЛЕНИЕ СКИДКИ
+    // ============================================
+    // Рассчитываем процент скидки, если есть старая и новая цена
     $discount = 0;
     if ($course_old_price && $course_price && $course_price < $course_old_price) {
         $discount = round((($course_old_price - $course_price) / $course_old_price) * 100);
     }
     
-    // Форматируем даты
+    // ============================================
+    // ФОРМАТИРОВАНИЕ ДАТ
+    // ============================================
+    // Преобразуем даты начала и окончания курса в читаемый формат
     $formatted_dates = '';
     if ($course_start_date) {
-        $start = date_i18n('j F', strtotime($course_start_date));
+        $start = date_i18n('j F', strtotime($course_start_date)); // Форматируем дату начала
         if ($course_end_date) {
-            $end = date_i18n('j F Y', strtotime($course_end_date));
-            $formatted_dates = $start . ' — ' . $end;
+            $end = date_i18n('j F Y', strtotime($course_end_date)); // Форматируем дату окончания
+            $formatted_dates = $start . ' — ' . $end; // Диапазон дат
         } else {
-            $formatted_dates = __('Начало:', 'course-plugin') . ' ' . $start;
+            $formatted_dates = __('Начало:', 'course-plugin') . ' ' . $start; // Только дата начала
         }
     }
     
-    // Определяем цветовую схему - бордовый с переливом
+    // ============================================
+    // ЦВЕТОВАЯ СХЕМА
+    // ============================================
+    // Определяем цветовую схему страницы - бордовый с градиентным переливом
     $scheme = array(
         'gradient' => 'linear-gradient(135deg, #68202d 0%, #8b2d3a 35%, #a13d4c 65%, #68202d 100%)',
         'accent' => '#68202d',
@@ -151,8 +189,15 @@ while (have_posts()) : the_post();
     );
 ?>
 
+<!-- ============================================
+     ОСНОВНАЯ ОБЕРТКА СТРАНИЦЫ КУРСА
+     ============================================ -->
 <div class="premium-single-course">
-    <!-- Hero Section -->
+    <!-- ============================================
+         HERO СЕКЦИЯ (ШАПКА СТРАНИЦЫ)
+         ============================================
+         Верхняя часть страницы с заголовком, тегами и основной информацией
+         -->
     <header class="premium-course-hero" style="background: <?php echo $scheme['gradient']; ?>">
         <div class="hero-decoration">
             <div class="hero-circle hero-circle-1"></div>
@@ -278,12 +323,24 @@ while (have_posts()) : the_post();
         </div>
     </header>
     
-    <!-- Main Content -->
+    <!-- ============================================
+         ОСНОВНОЙ КОНТЕНТ СТРАНИЦЫ
+         ============================================
+         Секции с описанием, целями, содержанием и другой информацией о курсе
+         -->
     <div class="premium-course-content">
         <div class="content-container">
-            <!-- Main Column -->
+            <!-- ============================================
+                 ОСНОВНАЯ КОЛОНКА КОНТЕНТА
+                 ============================================
+                 Левая часть страницы с основным контентом
+                 -->
             <main class="content-main">
-                <!-- Description Section -->
+                <!-- ============================================
+                     СЕКЦИЯ "ОПИСАНИЕ КУРСА"
+                     ============================================
+                     Основное описание курса из контента поста
+                     -->
                 <?php if ($show_description) : ?>
                 <section class="content-section section-description">
                     <div class="section-header">
@@ -298,7 +355,11 @@ while (have_posts()) : the_post();
                 </section>
                 <?php endif; ?>
                 
-                <!-- Goals Section -->
+                <!-- ============================================
+                     СЕКЦИЯ "ЦЕЛИ И ЗАДАЧИ КУРСА"
+                     ============================================
+                     Отображение когнитивных, эмоциональных и психомоторных целей курса
+                     -->
                 <?php if ($show_goals && ($course_cognitive_goals || $course_emotional_goals || $course_psychomotor_goals)) : ?>
                     <section class="content-section section-goals">
                         <div class="section-header">
@@ -352,7 +413,11 @@ while (have_posts()) : the_post();
                     </section>
                 <?php endif; ?>
                 
-                <!-- Course Content Section -->
+                <!-- ============================================
+                     СЕКЦИЯ "СОДЕРЖАНИЕ КУРСА"
+                     ============================================
+                     Программа обучения, темы и модули курса
+                     -->
                 <?php if ($show_content && $course_content) : ?>
                     <section class="content-section section-curriculum">
                         <div class="section-header">
@@ -367,7 +432,11 @@ while (have_posts()) : the_post();
                     </section>
                 <?php endif; ?>
                 
-                <!-- Video Section -->
+                <!-- ============================================
+                     СЕКЦИЯ "ВИДЕО О КУРСЕ"
+                     ============================================
+                     Встроенное видео с YouTube, Vimeo или прямой ссылкой
+                     -->
                 <?php if ($show_video && $course_video_url) : ?>
                     <section class="content-section section-video">
                         <div class="section-header">
@@ -406,7 +475,11 @@ while (have_posts()) : the_post();
                     </section>
                 <?php endif; ?>
                 
-                <!-- Extra Content Blocks -->
+                <!-- ============================================
+                     ДОПОЛНИТЕЛЬНЫЕ БЛОКИ КОНТЕНТА
+                     ============================================
+                     Кастомные блоки, добавленные через админку
+                     -->
                 <?php if (!empty($extra_blocks)) : ?>
                     <?php foreach ($extra_blocks as $block) : ?>
                         <?php if (!empty($block['title']) || !empty($block['content'])) : ?>
@@ -429,7 +502,11 @@ while (have_posts()) : the_post();
                     <?php endforeach; ?>
                 <?php endif; ?>
                 
-                <!-- Related Courses -->
+                <!-- ============================================
+                     СЕКЦИЯ "ДРУГИЕ КУРСЫ ПО ТЕМЕ"
+                     ============================================
+                     Похожие курсы из той же специализации
+                     -->
                 <?php if ($show_related) :
                 $related_args = array(
                     'post_type' => 'course',
@@ -501,9 +578,17 @@ while (have_posts()) : the_post();
                 <?php endif; ?>
             </main>
             
-            <!-- Sidebar -->
+            <!-- ============================================
+                 САЙДБАР (БОКОВАЯ ПАНЕЛЬ)
+                 ============================================
+                 Правая колонка с краткой информацией, кнопками и дополнительными блоками
+                 -->
             <aside class="content-sidebar">
-                <!-- Course Overview Card -->
+                <!-- ============================================
+                     КАРТОЧКА "КРАТКИЙ ОБЗОР КУРСА"
+                     ============================================
+                     Основная информация о курсе: язык, недели, кредиты, часы, сертификат
+                     -->
                 <?php if ($show_sidebar) : ?>
                 <div class="sidebar-card overview-card">
                     <div class="card-header" style="background: <?php echo $scheme['gradient']; ?>">
@@ -574,7 +659,11 @@ while (have_posts()) : the_post();
                 </div>
                 <?php endif; ?>
                 
-                <!-- Action Buttons -->
+                <!-- ============================================
+                     БЛОК КНОПОК ДЕЙСТВИЙ
+                     ============================================
+                     Кнопки для записи на курс (разные варианты)
+                     -->
                 <?php if ($course_seminary_new_url || $course_seminary_student_url || $course_lite_course_url) : ?>
                     <div class="sidebar-card action-card">
                         <div class="action-buttons">
@@ -602,7 +691,11 @@ while (have_posts()) : the_post();
                     </div>
                 <?php endif; ?>
                 
-                <!-- Price Card -->
+                <!-- ============================================
+                     КАРТОЧКА С ЦЕНОЙ
+                     ============================================
+                     Отображение стоимости курса и скидки (если есть)
+                     -->
                 <?php if ($show_price && $course_price) : ?>
                     <div class="sidebar-card price-card">
                         <?php if ($discount > 0) : ?>
@@ -617,7 +710,11 @@ while (have_posts()) : the_post();
                     </div>
                 <?php endif; ?>
                 
-                <!-- Instructor Card -->
+                <!-- ============================================
+                     КАРТОЧКА ПРЕПОДАВАТЕЛЯ
+                     ============================================
+                     Информация о преподавателе курса с аватаром и ссылкой на профиль
+                     -->
                 <?php if ($show_teacher && $teacher_name) : ?>
                     <div class="sidebar-card instructor-card">
                         <h4 class="card-title"><?php _e('Преподаватель', 'course-plugin'); ?></h4>
@@ -642,7 +739,12 @@ while (have_posts()) : the_post();
                     </div>
                 <?php endif; ?>
                 
-                <!-- Кастомные блоки сайдбара -->
+                <!-- ============================================
+                     КАСТОМНЫЕ БЛОКИ САЙДБАРА
+                     ============================================
+                     Дополнительные блоки, созданные через админку
+                     Поддерживаются типы: card (карточка), simple (простой), info (информационный)
+                     -->
                 <?php if (!empty($sidebar_blocks)) : ?>
                     <?php foreach ($sidebar_blocks as $block) : ?>
                         <?php 
@@ -692,7 +794,10 @@ while (have_posts()) : the_post();
     </div>
     
     <?php
-    // Получаем настраиваемые тексты CTA блока
+    // ============================================
+    // CTA БЛОК (ПРИЗЫВ К ДЕЙСТВИЮ)
+    // ============================================
+    // Получаем настраиваемые тексты CTA блока внизу страницы
     $cta_title = get_post_meta(get_the_ID(), '_course_cta_title', true);
     $cta_text = get_post_meta(get_the_ID(), '_course_cta_text', true);
     $cta_button_text = get_post_meta(get_the_ID(), '_course_cta_button_text', true);
@@ -708,7 +813,11 @@ while (have_posts()) : the_post();
         $cta_button_text = __('Записаться на курс', 'course-plugin');
     }
     ?>
-    <!-- CTA Section -->
+    <!-- ============================================
+         CTA СЕКЦИЯ (ПРИЗЫВ К ДЕЙСТВИЮ)
+         ============================================
+         Финальный блок внизу страницы с призывом записаться на курс
+         -->
     <?php if ($show_cta) : ?>
     <section class="premium-course-cta" style="background: <?php echo $scheme['gradient']; ?>">
         <div class="cta-container">
@@ -731,6 +840,9 @@ while (have_posts()) : the_post();
 </div>
 
 <?php
+// Завершаем цикл WordPress
 endwhile;
+
+// Подключаем подвал сайта
 get_footer();
 ?>

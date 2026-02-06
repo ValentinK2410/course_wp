@@ -6,12 +6,16 @@
  * @author Кузьменко Валентин (Valentink2410)
  */
 
+// Подключаем шапку сайта
 get_header();
 
-// Получаем данные текущей программы
+// Цикл WordPress для получения данных текущей программы
 while (have_posts()) : the_post();
     
-    // Получаем метаполя программы
+    // ============================================
+    // ПОЛУЧЕНИЕ МЕТАПОЛЕЙ ПРОГРАММЫ
+    // ============================================
+    // Основные метаполя программы из базы данных
     $program_price = get_post_meta(get_the_ID(), '_program_price', true);
     $program_old_price = get_post_meta(get_the_ID(), '_program_old_price', true);
     $program_duration = get_post_meta(get_the_ID(), '_program_duration', true);
@@ -22,15 +26,21 @@ while (have_posts()) : the_post();
     $program_related_courses = get_post_meta(get_the_ID(), '_program_related_courses', true);
     $program_tag = get_post_meta(get_the_ID(), '_program_tag', true);
     $program_additional_text = get_post_meta(get_the_ID(), '_program_additional_text', true);
-    $program_enroll_url = get_post_meta(get_the_ID(), '_program_enroll_url', true);
+    $program_enroll_url = get_post_meta(get_the_ID(), '_program_enroll_url', true); // Ссылка для записи на программу
     
-    // Получаем таксономии
+    // ============================================
+    // ПОЛУЧЕНИЕ ТАКСОНОМИЙ
+    // ============================================
+    // Получаем связанные термины таксономий для программы
     $teachers = get_the_terms(get_the_ID(), 'course_teacher');
     $specializations = get_the_terms(get_the_ID(), 'course_specialization');
     $levels = get_the_terms(get_the_ID(), 'course_level');
-    $topics = get_the_terms(get_the_ID(), 'course_topic');
+    $topics = get_the_terms(get_the_ID(), 'course_topic'); // Темы программы
     
-    // Получаем настраиваемые заголовки секций
+    // ============================================
+    // НАСТРАИВАЕМЫЕ ЗАГОЛОВКИ СЕКЦИЙ
+    // ============================================
+    // Получаем кастомные заголовки секций страницы (если не заданы - используются значения по умолчанию)
     $section_description_title = get_post_meta(get_the_ID(), '_program_section_description_title', true) ?: __('Описание программы:', 'course-plugin');
     $section_highlights_title = get_post_meta(get_the_ID(), '_program_section_highlights_title', true) ?: __('Преимущества программы', 'course-plugin');
     $section_courses_title = get_post_meta(get_the_ID(), '_program_section_courses_title', true) ?: __('Курсы в программе:', 'course-plugin');
@@ -38,7 +48,11 @@ while (have_posts()) : the_post();
     $sidebar_info_title = get_post_meta(get_the_ID(), '_program_sidebar_info_title', true) ?: __('Информация о программе', 'course-plugin');
     $enroll_button_text = get_post_meta(get_the_ID(), '_program_enroll_button_text', true) ?: __('Записаться на программу', 'course-plugin');
     
-    // Настройки видимости секций (по умолчанию все включены)
+    // ============================================
+    // НАСТРОЙКИ ВИДИМОСТИ СЕКЦИЙ
+    // ============================================
+    // Управление отображением секций на странице программы
+    // По умолчанию все секции включены (если мета-поле не установлено или равно '1')
     $show_description = get_post_meta(get_the_ID(), '_program_show_description', true) !== '0';
     $show_highlights = get_post_meta(get_the_ID(), '_program_show_highlights', true) !== '0';
     $show_courses = get_post_meta(get_the_ID(), '_program_show_courses', true) !== '0';
@@ -118,8 +132,15 @@ while (have_posts()) : the_post();
     );
 ?>
 
+<!-- ============================================
+     ОСНОВНАЯ ОБЕРТКА СТРАНИЦЫ ПРОГРАММЫ
+     ============================================ -->
 <div class="premium-single-program">
-    <!-- Hero Section -->
+    <!-- ============================================
+         HERO СЕКЦИЯ (ШАПКА СТРАНИЦЫ)
+         ============================================
+         Верхняя часть страницы с заголовком, тегами и основной информацией
+         -->
     <header class="premium-program-hero" style="background: <?php echo $scheme['gradient']; ?>">
         <div class="hero-decoration">
             <div class="hero-circle hero-circle-1"></div>
@@ -278,9 +299,17 @@ while (have_posts()) : the_post();
     <!-- Main Content -->
     <div class="premium-program-content">
         <div class="content-container">
-            <!-- Main Column -->
+            <!-- ============================================
+                 ОСНОВНАЯ КОЛОНКА КОНТЕНТА
+                 ============================================
+                 Левая часть страницы с основным контентом
+                 -->
             <main class="content-main">
-                <!-- Description Section -->
+                <!-- ============================================
+                     СЕКЦИЯ "ОПИСАНИЕ ПРОГРАММЫ"
+                     ============================================
+                     Основное описание программы из контента поста
+                     -->
                 <?php if ($show_description) : ?>
                 <section class="content-section section-description">
                     <div class="section-header">
@@ -470,9 +499,17 @@ while (have_posts()) : the_post();
                 <?php endif; ?>
             </main>
             
-            <!-- Sidebar -->
+            <!-- ============================================
+                 САЙДБАР (БОКОВАЯ ПАНЕЛЬ)
+                 ============================================
+                 Правая колонка с краткой информацией, кнопками и дополнительными блоками
+                 -->
             <aside class="content-sidebar">
-                <!-- Program Info Card -->
+                <!-- ============================================
+                     КАРТОЧКА "ИНФОРМАЦИЯ О ПРОГРАММЕ"
+                     ============================================
+                     Основная информация о программе: длительность, количество курсов, даты, сертификат
+                     -->
                 <?php if ($show_sidebar) : ?>
                 <div class="sidebar-card info-card">
                     <div class="card-header" style="background: <?php echo $scheme['gradient']; ?>">
@@ -609,7 +646,11 @@ while (have_posts()) : the_post();
         $cta_button_text = __('Записаться сейчас', 'course-plugin');
     }
     ?>
-    <!-- CTA Section -->
+    <!-- ============================================
+         CTA СЕКЦИЯ (ПРИЗЫВ К ДЕЙСТВИЮ)
+         ============================================
+         Финальный блок внизу страницы с призывом записаться на программу
+         -->
     <?php if ($show_cta) : ?>
     <section class="premium-program-cta" style="background: <?php echo $scheme['gradient']; ?>">
         <div class="cta-decoration">
@@ -636,6 +677,9 @@ while (have_posts()) : the_post();
 </div>
 
 <?php
+// Завершаем цикл WordPress
 endwhile;
+
+// Подключаем подвал сайта
 get_footer();
 ?>
