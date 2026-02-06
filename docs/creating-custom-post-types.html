@@ -932,6 +932,31 @@ Course_Post_Type::get_instance();</code></pre>
                 Теперь посмотрим на полный код класса для создания типа поста "Курсы":
             </p>
 
+            <div class="info">
+                <strong>📁 Название файла и расположение:</strong>
+                <ul>
+                    <li><strong>Название файла:</strong> <code>class-course-post-type.php</code></li>
+                    <li><strong>Расположение:</strong> <code>includes/class-course-post-type.php</code> (относительно корня плагина)</li>
+                    <li><strong>Полный путь:</strong> <code>course-plugin/includes/class-course-post-type.php</code></li>
+                </ul>
+                <p style="margin-top: 10px;">
+                    <strong>Структура директорий плагина:</strong>
+                </p>
+                <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px; overflow-x: auto;">
+course-plugin/
+├── course-plugin.php          # Главный файл плагина
+├── includes/                 # Папка с классами плагина
+│   ├── class-course-post-type.php      # ← Наш файл здесь
+│   ├── class-course-taxonomies.php     # Класс для таксономий
+│   ├── class-course-meta-boxes.php     # Класс для метабоксов
+│   └── ...                    # Другие классы
+└── README.md                  # Документация</pre>
+                <p style="margin-top: 10px;">
+                    <strong>💡 Важно:</strong> Файл должен находиться в папке <code>includes/</code> внутри директории вашего плагина. 
+                    Это стандартная практика организации кода WordPress плагинов — все классы хранятся в отдельной папке.
+                </p>
+            </div>
+
             <div class="code-block">
 <pre><code class="language-php">// Проверка безопасности
 if (!defined('ABSPATH')) {
