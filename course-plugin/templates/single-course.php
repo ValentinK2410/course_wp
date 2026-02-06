@@ -539,16 +539,33 @@ while (have_posts()) : the_post();
         </div>
     </div>
     
+    <?php
+    // Получаем настраиваемые тексты CTA блока
+    $cta_title = get_post_meta(get_the_ID(), '_course_cta_title', true);
+    $cta_text = get_post_meta(get_the_ID(), '_course_cta_text', true);
+    $cta_button_text = get_post_meta(get_the_ID(), '_course_cta_button_text', true);
+    
+    // Используем значения по умолчанию, если поля пустые
+    if (empty($cta_title)) {
+        $cta_title = __('Готовы начать обучение?', 'course-plugin');
+    }
+    if (empty($cta_text)) {
+        $cta_text = __('Запишитесь на курс и начните свой путь к новым знаниям!', 'course-plugin');
+    }
+    if (empty($cta_button_text)) {
+        $cta_button_text = __('Записаться на курс', 'course-plugin');
+    }
+    ?>
     <!-- CTA Section -->
     <section class="premium-course-cta" style="background: <?php echo $scheme['gradient']; ?>">
         <div class="cta-container">
             <div class="cta-content">
-                <h2 class="cta-title"><?php _e('Готовы начать обучение?', 'course-plugin'); ?></h2>
-                <p class="cta-text"><?php _e('Запишитесь на курс и начните свой путь к новым знаниям!', 'course-plugin'); ?></p>
+                <h2 class="cta-title"><?php echo esc_html($cta_title); ?></h2>
+                <p class="cta-text"><?php echo esc_html($cta_text); ?></p>
             </div>
             <?php if ($course_seminary_new_url) : ?>
                 <a href="<?php echo esc_url($course_seminary_new_url); ?>" target="_blank" rel="noopener" class="cta-btn">
-                    <?php _e('Записаться на курс', 'course-plugin'); ?>
+                    <?php echo esc_html($cta_button_text); ?>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>
             <?php endif; ?>

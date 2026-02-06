@@ -95,6 +95,26 @@ class Program_Meta_Boxes {
             'side',
             'default'
         );
+        
+        // Метабокс "Настройка текстов страницы"
+        add_meta_box(
+            'program_page_texts',
+            __('Настройка текстов страницы', 'course-plugin'),
+            array($this, 'render_program_page_texts_meta_box'),
+            'program',
+            'normal',
+            'default'
+        );
+        
+        // Метабокс "Ссылка для записи"
+        add_meta_box(
+            'program_enroll_url',
+            __('Ссылка для записи на программу', 'course-plugin'),
+            array($this, 'render_program_enroll_url_meta_box'),
+            'program',
+            'side',
+            'default'
+        );
     }
     
     /**
@@ -257,6 +277,82 @@ class Program_Meta_Boxes {
     }
     
     /**
+     * Рендеринг метабокса "Настройка текстов страницы"
+     */
+    public function render_program_page_texts_meta_box($post) {
+        // Получаем сохраненные значения
+        $cta_title = get_post_meta($post->ID, '_program_cta_title', true);
+        $cta_text = get_post_meta($post->ID, '_program_cta_text', true);
+        $cta_button_text = get_post_meta($post->ID, '_program_cta_button_text', true);
+        
+        // Значения по умолчанию
+        $default_cta_title = __('Готовы начать обучение?', 'course-plugin');
+        $default_cta_text = __('Присоединяйтесь к программе и откройте новые возможности для профессионального роста!', 'course-plugin');
+        $default_cta_button_text = __('Записаться сейчас', 'course-plugin');
+        ?>
+        
+        <h4 style="margin-top: 0; padding-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <?php _e('Блок призыва к действию (CTA) внизу страницы', 'course-plugin'); ?>
+        </h4>
+        
+        <table class="form-table">
+            <tr>
+                <th>
+                    <label for="program_cta_title"><?php _e('Заголовок CTA блока', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="program_cta_title" name="program_cta_title" value="<?php echo esc_attr($cta_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_cta_title); ?>" />
+                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_title); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th>
+                    <label for="program_cta_text"><?php _e('Текст CTA блока', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <textarea id="program_cta_text" name="program_cta_text" rows="3" class="large-text" placeholder="<?php echo esc_attr($default_cta_text); ?>"><?php echo esc_textarea($cta_text); ?></textarea>
+                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_text); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th>
+                    <label for="program_cta_button_text"><?php _e('Текст кнопки CTA', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="program_cta_button_text" name="program_cta_button_text" value="<?php echo esc_attr($cta_button_text); ?>" class="regular-text" placeholder="<?php echo esc_attr($default_cta_button_text); ?>" />
+                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_button_text); ?></p>
+                </td>
+            </tr>
+        </table>
+        
+        <p class="description" style="margin-top: 15px; padding: 10px; background: #f0f0f1; border-radius: 4px;">
+            <strong><?php _e('Подсказка:', 'course-plugin'); ?></strong> 
+            <?php _e('Оставьте поля пустыми, чтобы использовать тексты по умолчанию.', 'course-plugin'); ?>
+        </p>
+        <?php
+    }
+    
+    /**
+     * Рендеринг метабокса "Ссылка для записи"
+     */
+    public function render_program_enroll_url_meta_box($post) {
+        $enroll_url = get_post_meta($post->ID, '_program_enroll_url', true);
+        ?>
+        <p>
+            <label for="program_enroll_url">
+                <strong><?php _e('Ссылка для записи на программу', 'course-plugin'); ?></strong>
+            </label>
+        </p>
+        <input type="url" id="program_enroll_url" name="program_enroll_url" value="<?php echo esc_url($enroll_url); ?>" class="large-text" placeholder="https://..." />
+        <p class="description">
+            <?php _e('Укажите URL, куда будет вести кнопка "Записаться на программу"', 'course-plugin'); ?>
+        </p>
+        <?php
+    }
+    
+    /**
      * Сохранение данных метабоксов
      */
     public function save_meta_boxes($post_id) {
@@ -338,6 +434,24 @@ class Program_Meta_Boxes {
         // Сохранение информации о сертификате
         if (isset($_POST['program_certificate'])) {
             update_post_meta($post_id, '_program_certificate', sanitize_textarea_field($_POST['program_certificate']));
+        }
+        
+        // Сохранение ссылки для записи
+        if (isset($_POST['program_enroll_url'])) {
+            update_post_meta($post_id, '_program_enroll_url', esc_url_raw($_POST['program_enroll_url']));
+        }
+        
+        // Сохранение текстов CTA блока
+        if (isset($_POST['program_cta_title'])) {
+            update_post_meta($post_id, '_program_cta_title', sanitize_text_field($_POST['program_cta_title']));
+        }
+        
+        if (isset($_POST['program_cta_text'])) {
+            update_post_meta($post_id, '_program_cta_text', sanitize_textarea_field($_POST['program_cta_text']));
+        }
+        
+        if (isset($_POST['program_cta_button_text'])) {
+            update_post_meta($post_id, '_program_cta_button_text', sanitize_text_field($_POST['program_cta_button_text']));
         }
         
         // Автоматически создаем или обновляем термин в таксономии course_specialization на основе программы

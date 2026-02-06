@@ -84,6 +84,16 @@ class Course_Meta_Boxes {
             'side',                                               // Контекст: 'side' - боковая панель (справа)
             'default'                                             // Приоритет: 'default' - стандартный
         );
+        
+        // Добавляем метабокс "Настройка текстов страницы"
+        add_meta_box(
+            'course_page_texts',                                  // ID метабокса
+            __('Настройка текстов страницы', 'course-plugin'),  // Заголовок
+            array($this, 'render_course_page_texts_meta_box'),   // Функция для отображения
+            'course',                                             // Тип поста
+            'normal',                                             // Контекст: 'normal' - основная область
+            'default'                                             // Приоритет
+        );
     }
     
     /**
@@ -271,6 +281,67 @@ class Course_Meta_Boxes {
     }
     
     /**
+     * Рендеринг метабокса "Настройка текстов страницы"
+     * Позволяет редактировать тексты шапки и подвала страницы курса
+     * 
+     * @param WP_Post $post Объект текущего курса
+     */
+    public function render_course_page_texts_meta_box($post) {
+        // Получаем сохраненные значения
+        $cta_title = get_post_meta($post->ID, '_course_cta_title', true);
+        $cta_text = get_post_meta($post->ID, '_course_cta_text', true);
+        $cta_button_text = get_post_meta($post->ID, '_course_cta_button_text', true);
+        
+        // Значения по умолчанию
+        $default_cta_title = __('Готовы начать обучение?', 'course-plugin');
+        $default_cta_text = __('Запишитесь на курс и начните свой путь к новым знаниям!', 'course-plugin');
+        $default_cta_button_text = __('Записаться на курс', 'course-plugin');
+        ?>
+        
+        <h4 style="margin-top: 0; padding-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <?php _e('Блок призыва к действию (CTA) внизу страницы', 'course-plugin'); ?>
+        </h4>
+        
+        <table class="form-table">
+            <tr>
+                <th>
+                    <label for="course_cta_title"><?php _e('Заголовок CTA блока', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="course_cta_title" name="course_cta_title" value="<?php echo esc_attr($cta_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_cta_title); ?>" />
+                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_title); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th>
+                    <label for="course_cta_text"><?php _e('Текст CTA блока', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <textarea id="course_cta_text" name="course_cta_text" rows="3" class="large-text" placeholder="<?php echo esc_attr($default_cta_text); ?>"><?php echo esc_textarea($cta_text); ?></textarea>
+                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_text); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th>
+                    <label for="course_cta_button_text"><?php _e('Текст кнопки CTA', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="course_cta_button_text" name="course_cta_button_text" value="<?php echo esc_attr($cta_button_text); ?>" class="regular-text" placeholder="<?php echo esc_attr($default_cta_button_text); ?>" />
+                    <p class="description"><?php printf(__('По умолчанию: %s', 'course-plugin'), $default_cta_button_text); ?></p>
+                </td>
+            </tr>
+        </table>
+        
+        <p class="description" style="margin-top: 15px; padding: 10px; background: #f0f0f1; border-radius: 4px;">
+            <strong><?php _e('Подсказка:', 'course-plugin'); ?></strong> 
+            <?php _e('Оставьте поля пустыми, чтобы использовать тексты по умолчанию.', 'course-plugin'); ?>
+        </p>
+        <?php
+    }
+    
+    /**
      * Сохранение данных метабоксов при сохранении курса
      * Вызывается автоматически при нажатии кнопки "Сохранить" или "Опубликовать"
      * 
@@ -315,6 +386,9 @@ class Course_Meta_Boxes {
             'course_seminary_new_url',    // Ссылка на кнопку "Курс на семинарском уровне (не студент)"
             'course_seminary_student_url', // Ссылка на кнопку "Курс на семинарском уровне (студент)"
             'course_lite_course_url',      // Ссылка на кнопку "Лайт курс"
+            'course_cta_title',           // Заголовок CTA блока
+            'course_cta_text',            // Текст CTA блока
+            'course_cta_button_text',     // Текст кнопки CTA
         );
         
         // Обрабатываем URL поля отдельно (нужна специальная очистка)
