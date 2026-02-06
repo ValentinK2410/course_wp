@@ -1127,13 +1127,14 @@ $course_description = sanitize_textarea_field($_POST['course_description']);
 
 // HTML контент - удаляет опасные теги, оставляет безопасные
 $course_goals = wp_kses_post($_POST['course_goals']);
-// Разрешает: <p>, <strong>, <em>, <ul>, <li>
-// Удаляет: <script>, <iframe>, <object>
+// Разрешает: &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;ul&gt;, &lt;li&gt;
+// Удаляет: &lt;script&gt;, &lt;iframe&gt;, &lt;object&gt;
 
 // URL - очищает и валидирует ссылку
 $video_url = esc_url_raw($_POST['course_video_url']);
 // "javascript:alert('XSS')" → "" (пустая строка, т.к. невалидный URL)
 // Примечание: пример показан для демонстрации, в реальности такой код не выполнится
+// В примере выше используется строка, а не выполняемый код
 
 // Число - преобразует в целое положительное число
 $capacity = absint($_POST['course_capacity']);
