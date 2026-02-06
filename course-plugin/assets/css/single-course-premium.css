@@ -1139,10 +1139,36 @@
     animation: fadeInUp 0.5s ease backwards;
 }
 
+/* ================================================
+   КАСТОМНЫЙ БЛОК ТИПА "CARD" (КАК OVERVIEW-CARD)
+   ================================================ */
 .custom-sidebar-block.sidebar-block-card {
-    /* Карточка с рамкой и фоном - использует стандартные стили .sidebar-card */
+    /* Использует базовые стили .sidebar-card */
 }
 
+/* Заголовок карточки - такой же как у overview-card */
+.custom-sidebar-block.sidebar-block-card .card-header {
+    padding: 20px 24px;
+    color: var(--sc-white);
+}
+
+.custom-sidebar-block.sidebar-block-card .card-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--sc-white);
+}
+
+/* Тело карточки - такой же отступ как у overview-card */
+.custom-sidebar-block.sidebar-block-card .card-body {
+    padding: 24px; /* Такой же отступ как у overview-card */
+    color: var(--sc-gray-700);
+    line-height: 1.6;
+}
+
+/* ================================================
+   КАСТОМНЫЙ БЛОК ТИПА "SIMPLE" (ПРОСТОЙ БЕЗ РАМКИ)
+   ================================================ */
 .custom-sidebar-block.sidebar-block-simple {
     background: transparent;
     box-shadow: none;
@@ -1185,6 +1211,9 @@
     text-decoration: underline;
 }
 
+/* ================================================
+   КАСТОМНЫЙ БЛОК ТИПА "INFO" (С ИКОНКОЙ)
+   ================================================ */
 .custom-sidebar-block.sidebar-block-info .card-header {
     display: flex;
     align-items: center;
@@ -1222,6 +1251,10 @@
     color: var(--sc-white);
 }
 
+/* ================================================
+   ОБЩИЕ СТИЛИ ДЛЯ КАСТОМНЫХ БЛОКОВ САЙДБАРА
+   ================================================ */
+/* Базовые стили для тела карточки (переопределяются специфичными стилями для типов) */
 .custom-sidebar-block .card-body {
     padding: 20px 24px;
     color: var(--sc-gray-700);
