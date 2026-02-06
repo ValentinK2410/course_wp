@@ -65,6 +65,38 @@ while (have_posts()) : the_post();
     $btn_student_text = get_post_meta(get_the_ID(), '_course_btn_student_text', true) ?: __('Для студентов семинарии', 'course-plugin');
     $btn_lite_text = get_post_meta(get_the_ID(), '_course_btn_lite_text', true) ?: __('Лайт курс', 'course-plugin');
     
+    // Настройки видимости секций (по умолчанию все включены)
+    $show_description = get_post_meta(get_the_ID(), '_course_show_description', true) !== '0';
+    $show_goals = get_post_meta(get_the_ID(), '_course_show_goals', true) !== '0';
+    $show_content = get_post_meta(get_the_ID(), '_course_show_content', true) !== '0';
+    $show_video = get_post_meta(get_the_ID(), '_course_show_video', true) !== '0';
+    $show_related = get_post_meta(get_the_ID(), '_course_show_related', true) !== '0';
+    $show_sidebar = get_post_meta(get_the_ID(), '_course_show_sidebar', true) !== '0';
+    $show_cta = get_post_meta(get_the_ID(), '_course_show_cta', true) !== '0';
+    $show_price = get_post_meta(get_the_ID(), '_course_show_price', true) !== '0';
+    $show_teacher = get_post_meta(get_the_ID(), '_course_show_teacher', true) !== '0';
+    
+    // Настройки видимости полей в hero
+    $show_hero_code = get_post_meta(get_the_ID(), '_course_show_hero_code', true) !== '0';
+    $show_hero_level = get_post_meta(get_the_ID(), '_course_show_hero_level', true) !== '0';
+    $show_hero_dates = get_post_meta(get_the_ID(), '_course_show_hero_dates', true) !== '0';
+    $show_hero_duration = get_post_meta(get_the_ID(), '_course_show_hero_duration', true) !== '0';
+    $show_hero_language = get_post_meta(get_the_ID(), '_course_show_hero_language', true) !== '0';
+    $show_hero_certificate = get_post_meta(get_the_ID(), '_course_show_hero_certificate', true) !== '0';
+    
+    // Настройки видимости полей в сайдбаре
+    $show_field_language = get_post_meta(get_the_ID(), '_course_show_field_language', true) !== '0';
+    $show_field_weeks = get_post_meta(get_the_ID(), '_course_show_field_weeks', true) !== '0';
+    $show_field_credits = get_post_meta(get_the_ID(), '_course_show_field_credits', true) !== '0';
+    $show_field_hours = get_post_meta(get_the_ID(), '_course_show_field_hours', true) !== '0';
+    $show_field_certificate = get_post_meta(get_the_ID(), '_course_show_field_certificate', true) !== '0';
+    
+    // Дополнительные блоки контента
+    $extra_blocks = get_post_meta(get_the_ID(), '_course_extra_blocks', true);
+    if (!is_array($extra_blocks)) {
+        $extra_blocks = array();
+    }
+    
     // Получаем данные преподавателя
     $teacher_name = '';
     $teacher_photo = '';
@@ -137,19 +169,19 @@ while (have_posts()) : the_post();
                 
                 <!-- Tags -->
                 <div class="hero-tags">
-                    <?php if ($course_code) : ?>
+                    <?php if ($show_hero_code && $course_code) : ?>
                         <span class="hero-tag hero-tag-code">
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4.5 4L1.5 7L4.5 10M9.5 4L12.5 7L9.5 10M8 2L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             <?php echo esc_html($course_code); ?>
                         </span>
                     <?php endif; ?>
-                    <?php if ($levels && !is_wp_error($levels)) : ?>
+                    <?php if ($show_hero_level && $levels && !is_wp_error($levels)) : ?>
                         <span class="hero-tag hero-tag-level">
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="8" width="3" height="4" rx="0.5" stroke="currentColor" stroke-width="1.5"/><rect x="5.5" y="5" width="3" height="7" rx="0.5" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="2" width="3" height="10" rx="0.5" stroke="currentColor" stroke-width="1.5"/></svg>
                             <?php echo esc_html($levels[0]->name); ?>
                         </span>
                     <?php endif; ?>
-                    <?php if ($formatted_dates) : ?>
+                    <?php if ($show_hero_dates && $formatted_dates) : ?>
                         <span class="hero-tag hero-tag-date">
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 5H13M4 1V3M10 1V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                             <?php echo esc_html($formatted_dates); ?>
@@ -179,19 +211,19 @@ while (have_posts()) : the_post();
                 
                 <!-- Quick Stats -->
                 <div class="hero-stats">
-                    <?php if ($course_duration) : ?>
+                    <?php if ($show_hero_duration && $course_duration) : ?>
                         <div class="hero-stat">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 5V10L13 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             <span><?php echo esc_html($course_duration); ?></span>
                         </div>
                     <?php endif; ?>
-                    <?php if ($course_language) : ?>
+                    <?php if ($show_hero_language && $course_language) : ?>
                         <div class="hero-stat">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M2 10H18M10 2C12.5 4.5 14 7 14 10C14 13 12.5 15.5 10 18M10 2C7.5 4.5 6 7 6 10C6 13 7.5 15.5 10 18" stroke="currentColor" stroke-width="2"/></svg>
                             <span><?php echo esc_html($course_language); ?></span>
                         </div>
                     <?php endif; ?>
-                    <?php if ($course_certificate) : ?>
+                    <?php if ($show_hero_certificate && $course_certificate) : ?>
                         <div class="hero-stat">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="12" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2" stroke="currentColor" stroke-width="2"/><path d="M8 15V17M12 15V17" stroke="currentColor" stroke-width="2"/></svg>
                             <span><?php _e('Сертификат', 'course-plugin'); ?></span>
@@ -241,6 +273,7 @@ while (have_posts()) : the_post();
             <!-- Main Column -->
             <main class="content-main">
                 <!-- Description Section -->
+                <?php if ($show_description) : ?>
                 <section class="content-section section-description">
                     <div class="section-header">
                         <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
@@ -252,9 +285,10 @@ while (have_posts()) : the_post();
                         <?php the_content(); ?>
                     </div>
                 </section>
+                <?php endif; ?>
                 
                 <!-- Goals Section -->
-                <?php if ($course_cognitive_goals || $course_emotional_goals || $course_psychomotor_goals) : ?>
+                <?php if ($show_goals && ($course_cognitive_goals || $course_emotional_goals || $course_psychomotor_goals)) : ?>
                     <section class="content-section section-goals">
                         <div class="section-header">
                             <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
@@ -308,7 +342,7 @@ while (have_posts()) : the_post();
                 <?php endif; ?>
                 
                 <!-- Course Content Section -->
-                <?php if ($course_content) : ?>
+                <?php if ($show_content && $course_content) : ?>
                     <section class="content-section section-curriculum">
                         <div class="section-header">
                             <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
@@ -323,7 +357,7 @@ while (have_posts()) : the_post();
                 <?php endif; ?>
                 
                 <!-- Video Section -->
-                <?php if ($course_video_url) : ?>
+                <?php if ($show_video && $course_video_url) : ?>
                     <section class="content-section section-video">
                         <div class="section-header">
                             <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
@@ -361,8 +395,31 @@ while (have_posts()) : the_post();
                     </section>
                 <?php endif; ?>
                 
+                <!-- Extra Content Blocks -->
+                <?php if (!empty($extra_blocks)) : ?>
+                    <?php foreach ($extra_blocks as $block) : ?>
+                        <?php if (!empty($block['title']) || !empty($block['content'])) : ?>
+                        <section class="content-section section-extra">
+                            <?php if (!empty($block['title'])) : ?>
+                            <div class="section-header">
+                                <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                                </div>
+                                <h2 class="section-title"><?php echo esc_html($block['title']); ?></h2>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($block['content'])) : ?>
+                            <div class="section-content">
+                                <?php echo wp_kses_post($block['content']); ?>
+                            </div>
+                            <?php endif; ?>
+                        </section>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                
                 <!-- Related Courses -->
-                <?php
+                <?php if ($show_related) :
                 $related_args = array(
                     'post_type' => 'course',
                     'posts_per_page' => 3,
@@ -430,18 +487,20 @@ while (have_posts()) : the_post();
                     </section>
                     <?php wp_reset_postdata(); ?>
                 <?php endif; ?>
+                <?php endif; ?>
             </main>
             
             <!-- Sidebar -->
             <aside class="content-sidebar">
                 <!-- Course Overview Card -->
+                <?php if ($show_sidebar) : ?>
                 <div class="sidebar-card overview-card">
                     <div class="card-header" style="background: <?php echo $scheme['gradient']; ?>">
                         <h3><?php echo esc_html($sidebar_overview_title); ?></h3>
                     </div>
                     <div class="card-body">
                         <ul class="overview-list">
-                            <?php if ($course_language) : ?>
+                            <?php if ($show_field_language && $course_language) : ?>
                                 <li class="overview-item">
                                     <span class="overview-icon">
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M2 10H18M10 2C12 4 13 7 13 10C13 13 12 16 10 18M10 2C8 4 7 7 7 10C7 13 8 16 10 18" stroke="currentColor" stroke-width="1.5"/></svg>
@@ -450,7 +509,7 @@ while (have_posts()) : the_post();
                                     <span class="overview-value"><?php echo esc_html($course_language); ?></span>
                                 </li>
                             <?php endif; ?>
-                            <?php if ($course_weeks) : ?>
+                            <?php if ($show_field_weeks && $course_weeks) : ?>
                                 <li class="overview-item">
                                     <span class="overview-icon">
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 7H18M6 1V4M14 1V4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -459,7 +518,7 @@ while (have_posts()) : the_post();
                                     <span class="overview-value"><?php echo esc_html($course_weeks); ?></span>
                                 </li>
                             <?php endif; ?>
-                            <?php if ($course_credits) : ?>
+                            <?php if ($show_field_credits && $course_credits) : ?>
                                 <li class="overview-item">
                                     <span class="overview-icon">
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L12.5 7H17.5L13.5 11L15 17L10 14L5 17L6.5 11L2.5 7H7.5L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
@@ -468,7 +527,7 @@ while (have_posts()) : the_post();
                                     <span class="overview-value"><?php echo esc_html($course_credits); ?></span>
                                 </li>
                             <?php endif; ?>
-                            <?php if ($course_hours_per_week) : ?>
+                            <?php if ($show_field_hours && $course_hours_per_week) : ?>
                                 <li class="overview-item">
                                     <span class="overview-icon">
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M10 5V10L13 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -477,7 +536,7 @@ while (have_posts()) : the_post();
                                     <span class="overview-value"><?php echo esc_html($course_hours_per_week); ?></span>
                                 </li>
                             <?php endif; ?>
-                            <?php if ($course_certificate) : ?>
+                            <?php if ($show_field_certificate && $course_certificate) : ?>
                                 <li class="overview-item">
                                     <span class="overview-icon">
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="16" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 14V16M12 14V16" stroke="currentColor" stroke-width="1.5"/></svg>
@@ -489,6 +548,7 @@ while (have_posts()) : the_post();
                         </ul>
                     </div>
                 </div>
+                <?php endif; ?>
                 
                 <!-- Action Buttons -->
                 <?php if ($course_seminary_new_url || $course_seminary_student_url || $course_lite_course_url) : ?>
@@ -519,7 +579,7 @@ while (have_posts()) : the_post();
                 <?php endif; ?>
                 
                 <!-- Price Card -->
-                <?php if ($course_price) : ?>
+                <?php if ($show_price && $course_price) : ?>
                     <div class="sidebar-card price-card">
                         <?php if ($discount > 0) : ?>
                             <div class="price-discount-badge">-<?php echo $discount; ?>%</div>
@@ -534,7 +594,7 @@ while (have_posts()) : the_post();
                 <?php endif; ?>
                 
                 <!-- Instructor Card -->
-                <?php if ($teacher_name) : ?>
+                <?php if ($show_teacher && $teacher_name) : ?>
                     <div class="sidebar-card instructor-card">
                         <h4 class="card-title"><?php _e('Преподаватель', 'course-plugin'); ?></h4>
                         <a href="<?php echo $teacher ? esc_url(get_term_link($teacher->term_id, 'course_teacher')) : '#'; ?>" class="instructor-link">
@@ -579,6 +639,7 @@ while (have_posts()) : the_post();
     }
     ?>
     <!-- CTA Section -->
+    <?php if ($show_cta) : ?>
     <section class="premium-course-cta" style="background: <?php echo $scheme['gradient']; ?>">
         <div class="cta-container">
             <div class="cta-content">
@@ -596,6 +657,7 @@ while (have_posts()) : the_post();
             <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="80" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="100" cy="100" r="60" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="100" cy="100" r="40" stroke="rgba(255,255,255,0.1)" stroke-width="2"/></svg>
         </div>
     </section>
+    <?php endif; ?>
 </div>
 
 <?php

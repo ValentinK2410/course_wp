@@ -280,6 +280,33 @@ class Program_Meta_Boxes {
      * Рендеринг метабокса "Настройка текстов страницы"
      */
     public function render_program_page_texts_meta_box($post) {
+        // Настройки видимости секций
+        $show_description = get_post_meta($post->ID, '_program_show_description', true);
+        $show_highlights = get_post_meta($post->ID, '_program_show_highlights', true);
+        $show_courses = get_post_meta($post->ID, '_program_show_courses', true);
+        $show_teachers = get_post_meta($post->ID, '_program_show_teachers', true);
+        $show_sidebar = get_post_meta($post->ID, '_program_show_sidebar', true);
+        $show_price = get_post_meta($post->ID, '_program_show_price', true);
+        $show_cta = get_post_meta($post->ID, '_program_show_cta', true);
+        $show_share = get_post_meta($post->ID, '_program_show_share', true);
+        $show_specialization = get_post_meta($post->ID, '_program_show_specialization', true);
+        
+        // Настройки видимости полей в hero
+        $show_hero_tag = get_post_meta($post->ID, '_program_show_hero_tag', true);
+        $show_hero_spec = get_post_meta($post->ID, '_program_show_hero_spec', true);
+        $show_hero_discount = get_post_meta($post->ID, '_program_show_hero_discount', true);
+        $show_hero_duration = get_post_meta($post->ID, '_program_show_hero_duration', true);
+        $show_hero_courses_count = get_post_meta($post->ID, '_program_show_hero_courses_count', true);
+        $show_hero_start_date = get_post_meta($post->ID, '_program_show_hero_start_date', true);
+        $show_hero_certificate = get_post_meta($post->ID, '_program_show_hero_certificate', true);
+        
+        // Настройки видимости полей в сайдбаре
+        $show_field_duration = get_post_meta($post->ID, '_program_show_field_duration', true);
+        $show_field_courses = get_post_meta($post->ID, '_program_show_field_courses', true);
+        $show_field_start = get_post_meta($post->ID, '_program_show_field_start', true);
+        $show_field_end = get_post_meta($post->ID, '_program_show_field_end', true);
+        $show_field_certificate = get_post_meta($post->ID, '_program_show_field_certificate', true);
+        
         // Получаем сохраненные значения заголовков секций
         $section_description_title = get_post_meta($post->ID, '_program_section_description_title', true);
         $section_highlights_title = get_post_meta($post->ID, '_program_section_highlights_title', true);
@@ -293,24 +320,27 @@ class Program_Meta_Boxes {
         $cta_text = get_post_meta($post->ID, '_program_cta_text', true);
         $cta_button_text = get_post_meta($post->ID, '_program_cta_button_text', true);
         
-        // Получаем настройку показа преимуществ
-        $show_highlights = get_post_meta($post->ID, '_program_show_highlights', true);
+        // Дополнительные блоки контента
+        $extra_blocks = get_post_meta($post->ID, '_program_extra_blocks', true);
+        if (!is_array($extra_blocks)) {
+            $extra_blocks = array();
+        }
         
-        // Значения по умолчанию для заголовков
-        $default_section_description = __('Описание программы:', 'course-plugin');
-        $default_section_highlights = __('Преимущества программы', 'course-plugin');
-        $default_section_courses = __('Курсы в программе:', 'course-plugin');
-        $default_section_teachers = __('Преподаватели программы', 'course-plugin');
-        $default_sidebar_info = __('Информация о программе', 'course-plugin');
-        $default_enroll_button = __('Записаться на программу', 'course-plugin');
-        
-        // Значения по умолчанию для CTA
-        $default_cta_title = __('Готовы начать обучение?', 'course-plugin');
-        $default_cta_text = __('Присоединяйтесь к программе и откройте новые возможности для профессионального роста!', 'course-plugin');
-        $default_cta_button_text = __('Записаться сейчас', 'course-plugin');
+        // Значения по умолчанию
+        $defaults = array(
+            'section_description' => __('Описание программы:', 'course-plugin'),
+            'section_highlights' => __('Преимущества программы', 'course-plugin'),
+            'section_courses' => __('Курсы в программе:', 'course-plugin'),
+            'section_teachers' => __('Преподаватели программы', 'course-plugin'),
+            'sidebar_info' => __('Информация о программе', 'course-plugin'),
+            'enroll_button' => __('Записаться на программу', 'course-plugin'),
+            'cta_title' => __('Готовы начать обучение?', 'course-plugin'),
+            'cta_text' => __('Присоединяйтесь к программе и откройте новые возможности для профессионального роста!', 'course-plugin'),
+            'cta_button' => __('Записаться сейчас', 'course-plugin'),
+        );
         
         // Значения по умолчанию для преимуществ
-        $defaults = array(
+        $highlight_defaults = array(
             1 => array('title' => __('Качественное образование', 'course-plugin'), 'text' => __('Программа разработана экспертами с многолетним опытом', 'course-plugin')),
             2 => array('title' => __('Гибкий график', 'course-plugin'), 'text' => __('Учитесь в удобное время и в своём темпе', 'course-plugin')),
             3 => array('title' => __('Официальный сертификат', 'course-plugin'), 'text' => __('Получите документ о повышении квалификации', 'course-plugin')),
@@ -318,124 +348,340 @@ class Program_Meta_Boxes {
         );
         ?>
         
-        <!-- Заголовки секций -->
-        <h4 style="margin-top: 0; padding-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
-            <?php _e('Заголовки секций страницы', 'course-plugin'); ?>
-        </h4>
+        <style>
+            .program-section-toggle { 
+                background: #f9f9f9; 
+                border: 1px solid #ddd; 
+                border-radius: 8px; 
+                margin-bottom: 15px; 
+                overflow: hidden;
+            }
+            .program-section-toggle .section-header { 
+                padding: 12px 15px; 
+                background: #fff; 
+                border-bottom: 1px solid #eee;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .program-section-toggle .section-header label {
+                font-weight: 600;
+                flex: 1;
+                cursor: pointer;
+            }
+            .program-section-toggle .section-content { 
+                padding: 15px; 
+                display: none;
+            }
+            .program-section-toggle.active .section-content { 
+                display: block; 
+            }
+            .program-section-toggle .toggle-arrow {
+                transition: transform 0.2s;
+                cursor: pointer;
+            }
+            .program-section-toggle.active .toggle-arrow {
+                transform: rotate(90deg);
+            }
+            .field-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+                padding: 8px;
+                background: #fff;
+                border-radius: 4px;
+            }
+            .field-row input[type="text"],
+            .field-row textarea {
+                flex: 1;
+            }
+            .extra-block {
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+            .extra-block .block-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+            .extra-block .remove-block {
+                color: #dc3545;
+                cursor: pointer;
+                padding: 5px;
+            }
+            .highlight-item {
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+            .highlight-item .highlight-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+            .highlight-item .remove-highlight {
+                color: #dc3545;
+                cursor: pointer;
+                padding: 5px;
+            }
+        </style>
         
-        <table class="form-table">
-            <tr>
-                <th><label><?php _e('Заголовок "Описание"', 'course-plugin'); ?></label></th>
-                <td>
-                    <input type="text" name="program_section_description_title" value="<?php echo esc_attr($section_description_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_section_description); ?>" />
-                </td>
-            </tr>
-            <tr>
-                <th><label><?php _e('Заголовок "Преимущества"', 'course-plugin'); ?></label></th>
-                <td>
-                    <input type="text" name="program_section_highlights_title" value="<?php echo esc_attr($section_highlights_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_section_highlights); ?>" />
-                </td>
-            </tr>
-            <tr>
-                <th><label><?php _e('Заголовок "Курсы"', 'course-plugin'); ?></label></th>
-                <td>
-                    <input type="text" name="program_section_courses_title" value="<?php echo esc_attr($section_courses_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_section_courses); ?>" />
-                </td>
-            </tr>
-            <tr>
-                <th><label><?php _e('Заголовок "Преподаватели"', 'course-plugin'); ?></label></th>
-                <td>
-                    <input type="text" name="program_section_teachers_title" value="<?php echo esc_attr($section_teachers_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_section_teachers); ?>" />
-                </td>
-            </tr>
-            <tr>
-                <th><label><?php _e('Заголовок сайдбара "Информация"', 'course-plugin'); ?></label></th>
-                <td>
-                    <input type="text" name="program_sidebar_info_title" value="<?php echo esc_attr($sidebar_info_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_sidebar_info); ?>" />
-                </td>
-            </tr>
-            <tr>
-                <th><label><?php _e('Текст кнопки записи', 'course-plugin'); ?></label></th>
-                <td>
-                    <input type="text" name="program_enroll_button_text" value="<?php echo esc_attr($enroll_button_text); ?>" class="large-text" placeholder="<?php echo esc_attr($default_enroll_button); ?>" />
-                </td>
-            </tr>
-        </table>
+        <script>
+        jQuery(document).ready(function($) {
+            // Переключение секций
+            $('.program-section-toggle .section-header').on('click', function(e) {
+                if ($(e.target).is('input[type="checkbox"]')) return;
+                $(this).closest('.program-section-toggle').toggleClass('active');
+            });
+            
+            // Добавление дополнительного блока
+            var blockIndex = <?php echo count($extra_blocks); ?>;
+            $('#add-program-extra-block').on('click', function() {
+                var html = '<div class="extra-block">' +
+                    '<div class="block-header">' +
+                        '<span class="dashicons dashicons-menu" style="cursor: move;"></span>' +
+                        '<input type="text" name="program_extra_blocks[' + blockIndex + '][title]" placeholder="<?php esc_attr_e('Заголовок блока', 'course-plugin'); ?>" class="regular-text" />' +
+                        '<span class="remove-block dashicons dashicons-trash"></span>' +
+                    '</div>' +
+                    '<textarea name="program_extra_blocks[' + blockIndex + '][content]" rows="4" class="large-text" placeholder="<?php esc_attr_e('Содержимое блока (поддерживается HTML)', 'course-plugin'); ?>"></textarea>' +
+                '</div>';
+                $('#program-extra-blocks-container').append(html);
+                blockIndex++;
+            });
+            
+            // Удаление блока
+            $(document).on('click', '.remove-block', function() {
+                $(this).closest('.extra-block').remove();
+            });
+            
+            // Добавление преимущества
+            var highlightIndex = <?php echo 4; ?>;
+            $('#add-highlight').on('click', function() {
+                highlightIndex++;
+                var html = '<div class="highlight-item">' +
+                    '<div class="highlight-header">' +
+                        '<span class="dashicons dashicons-menu" style="cursor: move;"></span>' +
+                        '<strong><?php _e('Преимущество', 'course-plugin'); ?> ' + highlightIndex + '</strong>' +
+                        '<span class="remove-highlight dashicons dashicons-trash"></span>' +
+                    '</div>' +
+                    '<p><input type="text" name="program_highlight_' + highlightIndex + '_title" class="large-text" placeholder="<?php esc_attr_e('Заголовок', 'course-plugin'); ?>" /></p>' +
+                    '<p><input type="text" name="program_highlight_' + highlightIndex + '_text" class="large-text" placeholder="<?php esc_attr_e('Описание', 'course-plugin'); ?>" /></p>' +
+                '</div>';
+                $('#highlights-container').append(html);
+            });
+            
+            // Удаление преимущества
+            $(document).on('click', '.remove-highlight', function() {
+                $(this).closest('.highlight-item').remove();
+            });
+        });
+        </script>
         
-        <hr style="margin: 30px 0;" />
+        <!-- Управление видимостью секций -->
+        <div class="program-section-toggle active">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('Управление видимостью секций', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p class="description"><?php _e('Отметьте секции, которые должны отображаться на странице программы:', 'course-plugin'); ?></p>
+                <table class="form-table">
+                    <tr>
+                        <td style="width: 50%;">
+                            <label><input type="checkbox" name="program_show_description" value="1" <?php checked($show_description !== '0'); ?> /> <?php _e('Секция "Описание программы"', 'course-plugin'); ?></label><br>
+                            <label><input type="checkbox" name="program_show_highlights" value="1" <?php checked($show_highlights !== '0'); ?> /> <?php _e('Секция "Преимущества"', 'course-plugin'); ?></label><br>
+                            <label><input type="checkbox" name="program_show_courses" value="1" <?php checked($show_courses !== '0'); ?> /> <?php _e('Секция "Курсы в программе"', 'course-plugin'); ?></label><br>
+                            <label><input type="checkbox" name="program_show_teachers" value="1" <?php checked($show_teachers !== '0'); ?> /> <?php _e('Секция "Преподаватели"', 'course-plugin'); ?></label>
+                        </td>
+                        <td>
+                            <label><input type="checkbox" name="program_show_sidebar" value="1" <?php checked($show_sidebar !== '0'); ?> /> <?php _e('Сайдбар с информацией', 'course-plugin'); ?></label><br>
+                            <label><input type="checkbox" name="program_show_price" value="1" <?php checked($show_price !== '0'); ?> /> <?php _e('Блок с ценой', 'course-plugin'); ?></label><br>
+                            <label><input type="checkbox" name="program_show_cta" value="1" <?php checked($show_cta !== '0'); ?> /> <?php _e('CTA блок внизу страницы', 'course-plugin'); ?></label><br>
+                            <label><input type="checkbox" name="program_show_share" value="1" <?php checked($show_share !== '0'); ?> /> <?php _e('Блок "Поделиться"', 'course-plugin'); ?></label><br>
+                            <label><input type="checkbox" name="program_show_specialization" value="1" <?php checked($show_specialization !== '0'); ?> /> <?php _e('Блок "Специализация"', 'course-plugin'); ?></label>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
         
-        <!-- Блок преимуществ программы -->
-        <h4 style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
-            <?php _e('Блок "Преимущества программы"', 'course-plugin'); ?>
-        </h4>
+        <!-- Поля в шапке (Hero) -->
+        <div class="program-section-toggle">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('Поля в шапке страницы (Hero)', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p class="description"><?php _e('Выберите, какие теги и статистика показываются в шапке:', 'course-plugin'); ?></p>
+                <label><input type="checkbox" name="program_show_hero_tag" value="1" <?php checked($show_hero_tag !== '0'); ?> /> <?php _e('Тег программы', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="program_show_hero_spec" value="1" <?php checked($show_hero_spec !== '0'); ?> /> <?php _e('Специализация', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="program_show_hero_discount" value="1" <?php checked($show_hero_discount !== '0'); ?> /> <?php _e('Скидка', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="program_show_hero_duration" value="1" <?php checked($show_hero_duration !== '0'); ?> /> <?php _e('Длительность', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="program_show_hero_courses_count" value="1" <?php checked($show_hero_courses_count !== '0'); ?> /> <?php _e('Количество курсов', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="program_show_hero_start_date" value="1" <?php checked($show_hero_start_date !== '0'); ?> /> <?php _e('Дата начала', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="program_show_hero_certificate" value="1" <?php checked($show_hero_certificate !== '0'); ?> /> <?php _e('Наличие сертификата', 'course-plugin'); ?></label>
+            </div>
+        </div>
         
-        <p>
-            <label>
-                <input type="checkbox" name="program_show_highlights" value="1" <?php checked($show_highlights !== '0'); ?> />
-                <?php _e('Показывать блок преимуществ на странице программы', 'course-plugin'); ?>
-            </label>
-        </p>
+        <!-- Поля в сайдбаре -->
+        <div class="program-section-toggle">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('Поля в сайдбаре "Информация о программе"', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p class="description"><?php _e('Выберите, какие поля показывать в карточке информации:', 'course-plugin'); ?></p>
+                <label><input type="checkbox" name="program_show_field_duration" value="1" <?php checked($show_field_duration !== '0'); ?> /> <?php _e('Длительность', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="program_show_field_courses" value="1" <?php checked($show_field_courses !== '0'); ?> /> <?php _e('Количество курсов', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="program_show_field_start" value="1" <?php checked($show_field_start !== '0'); ?> /> <?php _e('Дата начала', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="program_show_field_end" value="1" <?php checked($show_field_end !== '0'); ?> /> <?php _e('Дата окончания', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="program_show_field_certificate" value="1" <?php checked($show_field_certificate !== '0'); ?> /> <?php _e('Сертификат', 'course-plugin'); ?></label>
+                
+                <hr style="margin: 15px 0;">
+                <p><strong><?php _e('Заголовок сайдбара:', 'course-plugin'); ?></strong></p>
+                <input type="text" name="program_sidebar_info_title" value="<?php echo esc_attr($sidebar_info_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['sidebar_info']); ?>" />
+            </div>
+        </div>
         
-        <table class="form-table">
-            <?php for ($i = 1; $i <= 4; $i++) : 
-                $title_value = get_post_meta($post->ID, "_program_highlight_{$i}_title", true);
-                $text_value = get_post_meta($post->ID, "_program_highlight_{$i}_text", true);
-            ?>
-            <tr>
-                <th>
-                    <label><?php printf(__('Преимущество %d', 'course-plugin'), $i); ?></label>
-                </th>
-                <td>
-                    <p>
-                        <input type="text" name="program_highlight_<?php echo $i; ?>_title" value="<?php echo esc_attr($title_value); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults[$i]['title']); ?>" />
-                        <span class="description"><?php _e('Заголовок', 'course-plugin'); ?></span>
-                    </p>
-                    <p>
-                        <input type="text" name="program_highlight_<?php echo $i; ?>_text" value="<?php echo esc_attr($text_value); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults[$i]['text']); ?>" />
-                        <span class="description"><?php _e('Описание', 'course-plugin'); ?></span>
-                    </p>
-                </td>
-            </tr>
-            <?php endfor; ?>
-        </table>
+        <!-- Секция описания -->
+        <div class="program-section-toggle">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('Секция "Описание программы"', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p><strong><?php _e('Заголовок секции:', 'course-plugin'); ?></strong></p>
+                <input type="text" name="program_section_description_title" value="<?php echo esc_attr($section_description_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['section_description']); ?>" />
+            </div>
+        </div>
         
-        <hr style="margin: 30px 0;" />
+        <!-- Секция преимуществ -->
+        <div class="program-section-toggle">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('Секция "Преимущества программы"', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p><strong><?php _e('Заголовок секции:', 'course-plugin'); ?></strong></p>
+                <input type="text" name="program_section_highlights_title" value="<?php echo esc_attr($section_highlights_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['section_highlights']); ?>" />
+                
+                <hr style="margin: 15px 0;">
+                <p><strong><?php _e('Преимущества:', 'course-plugin'); ?></strong></p>
+                
+                <div id="highlights-container">
+                    <?php for ($i = 1; $i <= 4; $i++) : 
+                        $title_value = get_post_meta($post->ID, "_program_highlight_{$i}_title", true);
+                        $text_value = get_post_meta($post->ID, "_program_highlight_{$i}_text", true);
+                    ?>
+                    <div class="highlight-item">
+                        <div class="highlight-header">
+                            <span class="dashicons dashicons-menu" style="cursor: move;"></span>
+                            <strong><?php printf(__('Преимущество %d', 'course-plugin'), $i); ?></strong>
+                            <?php if ($i > 2) : ?>
+                                <span class="remove-highlight dashicons dashicons-trash"></span>
+                            <?php endif; ?>
+                        </div>
+                        <p><input type="text" name="program_highlight_<?php echo $i; ?>_title" value="<?php echo esc_attr($title_value); ?>" class="large-text" placeholder="<?php echo esc_attr($highlight_defaults[$i]['title']); ?>" /></p>
+                        <p><input type="text" name="program_highlight_<?php echo $i; ?>_text" value="<?php echo esc_attr($text_value); ?>" class="large-text" placeholder="<?php echo esc_attr($highlight_defaults[$i]['text']); ?>" /></p>
+                    </div>
+                    <?php endfor; ?>
+                </div>
+                
+                <button type="button" id="add-highlight" class="button"><?php _e('+ Добавить преимущество', 'course-plugin'); ?></button>
+            </div>
+        </div>
         
-        <!-- Блок CTA -->
-        <h4 style="border-bottom: 1px solid #ddd; padding-bottom: 10px;">
-            <?php _e('Блок призыва к действию (CTA) внизу страницы', 'course-plugin'); ?>
-        </h4>
+        <!-- Секция курсов -->
+        <div class="program-section-toggle">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('Секция "Курсы в программе"', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p><strong><?php _e('Заголовок секции:', 'course-plugin'); ?></strong></p>
+                <input type="text" name="program_section_courses_title" value="<?php echo esc_attr($section_courses_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['section_courses']); ?>" />
+            </div>
+        </div>
         
-        <table class="form-table">
-            <tr>
-                <th>
-                    <label for="program_cta_title"><?php _e('Заголовок CTA блока', 'course-plugin'); ?></label>
-                </th>
-                <td>
-                    <input type="text" id="program_cta_title" name="program_cta_title" value="<?php echo esc_attr($cta_title); ?>" class="large-text" placeholder="<?php echo esc_attr($default_cta_title); ?>" />
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    <label for="program_cta_text"><?php _e('Текст CTA блока', 'course-plugin'); ?></label>
-                </th>
-                <td>
-                    <textarea id="program_cta_text" name="program_cta_text" rows="3" class="large-text" placeholder="<?php echo esc_attr($default_cta_text); ?>"><?php echo esc_textarea($cta_text); ?></textarea>
-                </td>
-            </tr>
-            <tr>
-                <th>
-                    <label for="program_cta_button_text"><?php _e('Текст кнопки CTA', 'course-plugin'); ?></label>
-                </th>
-                <td>
-                    <input type="text" id="program_cta_button_text" name="program_cta_button_text" value="<?php echo esc_attr($cta_button_text); ?>" class="regular-text" placeholder="<?php echo esc_attr($default_cta_button_text); ?>" />
-                </td>
-            </tr>
-        </table>
+        <!-- Секция преподавателей -->
+        <div class="program-section-toggle">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('Секция "Преподаватели"', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p><strong><?php _e('Заголовок секции:', 'course-plugin'); ?></strong></p>
+                <input type="text" name="program_section_teachers_title" value="<?php echo esc_attr($section_teachers_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['section_teachers']); ?>" />
+            </div>
+        </div>
+        
+        <!-- Кнопка записи -->
+        <div class="program-section-toggle">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('Кнопка записи на программу', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p><strong><?php _e('Текст кнопки:', 'course-plugin'); ?></strong></p>
+                <input type="text" name="program_enroll_button_text" value="<?php echo esc_attr($enroll_button_text); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['enroll_button']); ?>" />
+            </div>
+        </div>
+        
+        <!-- CTA блок -->
+        <div class="program-section-toggle">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('CTA блок (призыв к действию)', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p><strong><?php _e('Заголовок:', 'course-plugin'); ?></strong></p>
+                <input type="text" name="program_cta_title" value="<?php echo esc_attr($cta_title); ?>" class="large-text" placeholder="<?php echo esc_attr($defaults['cta_title']); ?>" />
+                
+                <p><strong><?php _e('Текст:', 'course-plugin'); ?></strong></p>
+                <textarea name="program_cta_text" rows="2" class="large-text" placeholder="<?php echo esc_attr($defaults['cta_text']); ?>"><?php echo esc_textarea($cta_text); ?></textarea>
+                
+                <p><strong><?php _e('Текст кнопки:', 'course-plugin'); ?></strong></p>
+                <input type="text" name="program_cta_button_text" value="<?php echo esc_attr($cta_button_text); ?>" class="regular-text" placeholder="<?php echo esc_attr($defaults['cta_button']); ?>" />
+            </div>
+        </div>
+        
+        <!-- Дополнительные блоки контента -->
+        <div class="program-section-toggle">
+            <div class="section-header">
+                <span class="toggle-arrow dashicons dashicons-arrow-right-alt2"></span>
+                <label><?php _e('Дополнительные блоки контента', 'course-plugin'); ?></label>
+            </div>
+            <div class="section-content">
+                <p class="description"><?php _e('Добавьте дополнительные секции с произвольным контентом:', 'course-plugin'); ?></p>
+                
+                <div id="program-extra-blocks-container">
+                    <?php foreach ($extra_blocks as $index => $block) : ?>
+                        <div class="extra-block">
+                            <div class="block-header">
+                                <span class="dashicons dashicons-menu" style="cursor: move;"></span>
+                                <input type="text" name="program_extra_blocks[<?php echo $index; ?>][title]" value="<?php echo esc_attr($block['title']); ?>" placeholder="<?php esc_attr_e('Заголовок блока', 'course-plugin'); ?>" class="regular-text" />
+                                <span class="remove-block dashicons dashicons-trash"></span>
+                            </div>
+                            <textarea name="program_extra_blocks[<?php echo $index; ?>][content]" rows="4" class="large-text" placeholder="<?php esc_attr_e('Содержимое блока (поддерживается HTML)', 'course-plugin'); ?>"><?php echo esc_textarea($block['content']); ?></textarea>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                
+                <button type="button" id="add-program-extra-block" class="button"><?php _e('+ Добавить блок', 'course-plugin'); ?></button>
+            </div>
+        </div>
         
         <p class="description" style="margin-top: 15px; padding: 10px; background: #f0f0f1; border-radius: 4px;">
             <strong><?php _e('Подсказка:', 'course-plugin'); ?></strong> 
-            <?php _e('Оставьте поля пустыми, чтобы использовать тексты по умолчанию.', 'course-plugin'); ?>
+            <?php _e('Оставьте текстовые поля пустыми, чтобы использовать значения по умолчанию. Снимите галочки, чтобы скрыть соответствующие элементы.', 'course-plugin'); ?>
         </p>
         <?php
     }
@@ -576,18 +822,63 @@ class Program_Meta_Boxes {
             update_post_meta($post_id, '_program_cta_button_text', sanitize_text_field($_POST['program_cta_button_text']));
         }
         
-        // Сохранение настройки показа блока преимуществ
-        $show_highlights = isset($_POST['program_show_highlights']) ? '1' : '0';
-        update_post_meta($post_id, '_program_show_highlights', $show_highlights);
+        // Чекбоксы видимости секций
+        $visibility_fields = array(
+            'program_show_description',
+            'program_show_highlights',
+            'program_show_courses',
+            'program_show_teachers',
+            'program_show_sidebar',
+            'program_show_price',
+            'program_show_cta',
+            'program_show_share',
+            'program_show_specialization',
+            // Поля в hero
+            'program_show_hero_tag',
+            'program_show_hero_spec',
+            'program_show_hero_discount',
+            'program_show_hero_duration',
+            'program_show_hero_courses_count',
+            'program_show_hero_start_date',
+            'program_show_hero_certificate',
+            // Поля в сайдбаре
+            'program_show_field_duration',
+            'program_show_field_courses',
+            'program_show_field_start',
+            'program_show_field_end',
+            'program_show_field_certificate',
+        );
         
-        // Сохранение преимуществ программы
-        for ($i = 1; $i <= 4; $i++) {
+        // Сохраняем чекбоксы видимости
+        foreach ($visibility_fields as $field) {
+            $value = isset($_POST[$field]) ? '1' : '0';
+            update_post_meta($post_id, '_' . $field, $value);
+        }
+        
+        // Сохранение преимуществ программы (до 10 штук)
+        for ($i = 1; $i <= 10; $i++) {
             if (isset($_POST["program_highlight_{$i}_title"])) {
                 update_post_meta($post_id, "_program_highlight_{$i}_title", sanitize_text_field($_POST["program_highlight_{$i}_title"]));
             }
             if (isset($_POST["program_highlight_{$i}_text"])) {
                 update_post_meta($post_id, "_program_highlight_{$i}_text", sanitize_text_field($_POST["program_highlight_{$i}_text"]));
             }
+        }
+        
+        // Сохраняем дополнительные блоки контента
+        if (isset($_POST['program_extra_blocks']) && is_array($_POST['program_extra_blocks'])) {
+            $extra_blocks = array();
+            foreach ($_POST['program_extra_blocks'] as $block) {
+                if (!empty($block['title']) || !empty($block['content'])) {
+                    $extra_blocks[] = array(
+                        'title' => sanitize_text_field($block['title']),
+                        'content' => wp_kses_post($block['content']),
+                    );
+                }
+            }
+            update_post_meta($post_id, '_program_extra_blocks', $extra_blocks);
+        } else {
+            delete_post_meta($post_id, '_program_extra_blocks');
         }
         
         // Автоматически создаем или обновляем термин в таксономии course_specialization на основе программы
