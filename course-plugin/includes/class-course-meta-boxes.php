@@ -1099,6 +1099,57 @@ class Course_Meta_Boxes {
     }
     
     /**
+     * Рендеринг метабокса "Настройка карточки курса"
+     * Отображает форму с настройками отображения карточки курса в архиве
+     * 
+     * @param WP_Post $post Объект текущего курса
+     */
+    public function render_course_card_settings_meta_box($post) {
+        // Получаем значения метаполей из базы данных
+        $show_card_icon = get_post_meta($post->ID, '_course_show_card_icon', true);
+        $card_icon_type = get_post_meta($post->ID, '_course_card_icon_type', true);
+        
+        // Инициализация по умолчанию
+        if ($show_card_icon === '') {
+            $show_card_icon = '1'; // По умолчанию показывать иконку
+        }
+        if ($card_icon_type === '') {
+            $card_icon_type = 'default'; // По умолчанию стандартная иконка
+        }
+        
+        ?>
+        <table class="form-table">
+            <tr>
+                <th>
+                    <label for="course_show_card_icon"><?php _e('Показывать иконку на карточке', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox" id="course_show_card_icon" name="course_show_card_icon" value="1" <?php checked($show_card_icon, '1'); ?> />
+                        <?php _e('Отображать иконку на карточке курса в архиве', 'course-plugin'); ?>
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label for="course_card_icon_type"><?php _e('Тип иконки', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <select id="course_card_icon_type" name="course_card_icon_type" class="regular-text">
+                        <option value="default" <?php selected($card_icon_type, 'default'); ?>><?php _e('По умолчанию (автоматически)', 'course-plugin'); ?></option>
+                        <option value="book" <?php selected($card_icon_type, 'book'); ?>><?php _e('Книга', 'course-plugin'); ?></option>
+                        <option value="layers" <?php selected($card_icon_type, 'layers'); ?>><?php _e('Слои', 'course-plugin'); ?></option>
+                        <option value="clock" <?php selected($card_icon_type, 'clock'); ?>><?php _e('Часы', 'course-plugin'); ?></option>
+                        <option value="home" <?php selected($card_icon_type, 'home'); ?>><?php _e('Дом', 'course-plugin'); ?></option>
+                    </select>
+                    <p class="description"><?php _e('Выберите тип иконки для отображения на карточке курса', 'course-plugin'); ?></p>
+                </td>
+            </tr>
+        </table>
+        <?php
+    }
+    
+    /**
      * Сохранение данных метабоксов при сохранении курса
      * Вызывается автоматически при нажатии кнопки "Сохранить" или "Опубликовать"
      * 
