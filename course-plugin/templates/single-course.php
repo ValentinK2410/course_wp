@@ -26,6 +26,7 @@ while (have_posts()) : the_post();
     $course_enrolled = get_post_meta(get_the_ID(), '_course_enrolled', true);
     $course_rating = get_post_meta(get_the_ID(), '_course_rating', true) ?: 0; // Рейтинг курса (по умолчанию 0)
     $course_reviews_count = get_post_meta(get_the_ID(), '_course_reviews_count', true) ?: 0; // Количество отзывов (по умолчанию 0)
+    $course_location = get_post_meta(get_the_ID(), '_course_location', true); // Место проведения курса
     
     // ============================================
     // ДОПОЛНИТЕЛЬНЫЕ ПОЛЯ КУРСА
@@ -100,6 +101,7 @@ while (have_posts()) : the_post();
     $show_hero_duration = get_post_meta(get_the_ID(), '_course_show_hero_duration', true) !== '0';
     $show_hero_language = get_post_meta(get_the_ID(), '_course_show_hero_language', true) !== '0';
     $show_hero_certificate = get_post_meta(get_the_ID(), '_course_show_hero_certificate', true) !== '0';
+    $show_hero_location = get_post_meta(get_the_ID(), '_course_show_hero_location', true) !== '0';
     
     // Настройки видимости полей в сайдбаре (по умолчанию все видимы, если мета-поле не установлено)
     $field_language_meta = get_post_meta(get_the_ID(), '_course_show_field_language', true);
@@ -179,6 +181,29 @@ while (have_posts()) : the_post();
     }
     
     // ============================================
+    // ФОРМАТИРОВАНИЕ МЕСТА ПРОВЕДЕНИЯ
+    // ============================================
+    // Получаем локализованное название места проведения курса
+    $location_names = array(
+        'online' => __('Онлайн-курсы', 'course-plugin'),
+        'zoom' => __('Зум', 'course-plugin'),
+        'moscow' => __('Москва (центральный кампус)', 'course-plugin'),
+        'prokhladny' => __('Прохладный', 'course-plugin'),
+        'nizhny-novgorod' => __('Нижний Новгород', 'course-plugin'),
+        'chelyabinsk' => __('Челябинск', 'course-plugin'),
+        'norilsk' => __('Норильск', 'course-plugin'),
+        'izhevsk' => __('Ижевск', 'course-plugin'),
+        'yug' => __('Юг', 'course-plugin'),
+        'novokuznetsk' => __('Новокузнецк', 'course-plugin'),
+    );
+    $location_name = '';
+    if ($course_location && isset($location_names[$course_location])) {
+        $location_name = $location_names[$course_location];
+    } elseif ($course_location) {
+        $location_name = $course_location; // Если значение не найдено в массиве, используем как есть
+    }
+    
+    // ============================================
     // ЦВЕТОВАЯ СХЕМА
     // ============================================
     // Определяем цветовую схему страницы - бордовый с градиентным переливом
@@ -241,6 +266,15 @@ while (have_posts()) : the_post();
                         <span class="hero-tag hero-tag-date">
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 5H13M4 1V3M10 1V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                             <?php echo esc_html($formatted_dates); ?>
+                        </span>
+                    <?php endif; ?>
+                    <?php if ($show_hero_location && $location_name) : ?>
+                        <span class="hero-tag hero-tag-location">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7 1.5C4.92893 1.5 3.25 3.17893 3.25 5.25C3.25 8.1875 7 12.5 7 12.5C7 12.5 10.75 8.1875 10.75 5.25C10.75 3.17893 9.07107 1.5 7 1.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="7" cy="5.25" r="1.5" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                            <?php echo esc_html($location_name); ?>
                         </span>
                     <?php endif; ?>
                 </div>
