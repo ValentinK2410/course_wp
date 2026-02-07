@@ -1292,6 +1292,29 @@
         justify-content: space-between;
     }
     
+    .no-results {
+        padding: 40px 20px;
+    }
+    
+    .no-results-icon svg {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .no-results-title {
+        font-size: 1.5rem;
+    }
+    
+    .no-results-text {
+        font-size: 0.9rem;
+        max-width: 100%;
+    }
+    
+    .no-results-btn {
+        padding: 12px 24px;
+        font-size: 0.9rem;
+    }
+    
     .card-header {
         height: 140px;
     }
