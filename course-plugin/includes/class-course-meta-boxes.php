@@ -114,6 +114,16 @@ class Course_Meta_Boxes {
             'normal',                                             // Контекст: 'normal' - основная область
             'default'                                             // Приоритет
         );
+        
+        // Добавляем метабокс "Настройка карточки курса"
+        add_meta_box(
+            'course_card_settings',                                // ID метабокса
+            __('Настройка карточки курса', 'course-plugin'),    // Заголовок
+            array($this, 'render_course_card_settings_meta_box'), // Функция для отображения
+            'course',                                             // Тип поста
+            'side',                                               // Контекст: 'side' - боковая панель
+            'default'                                             // Приоритет
+        );
     }
     
     /**
@@ -1194,6 +1204,17 @@ class Course_Meta_Boxes {
             }
         }
         // Если секция не была обработана, не трогаем мета-поля (оставляем пустыми = видимо по умолчанию)
+        
+        // Сохраняем настройки карточки
+        // Показывать иконку на карточке
+        $show_card_icon = isset($_POST['course_show_card_icon']) && $_POST['course_show_card_icon'] === '1' ? '1' : '0';
+        update_post_meta($post_id, '_course_show_card_icon', $show_card_icon);
+        
+        // Тип иконки
+        if (isset($_POST['course_card_icon_type'])) {
+            $card_icon_type = sanitize_text_field($_POST['course_card_icon_type']);
+            update_post_meta($post_id, '_course_card_icon_type', $card_icon_type);
+        }
         
         // Сохраняем дополнительные блоки контента
         if (isset($_POST['course_extra_blocks']) && is_array($_POST['course_extra_blocks'])) {

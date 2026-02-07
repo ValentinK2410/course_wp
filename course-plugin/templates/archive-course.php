@@ -562,6 +562,16 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                         $duration = get_post_meta(get_the_ID(), '_course_duration', true);
                         $course_tag = get_post_meta(get_the_ID(), '_course_tag', true);
                         $course_additional_text = get_post_meta(get_the_ID(), '_course_additional_text', true);
+                        $course_start_date = get_post_meta(get_the_ID(), '_course_start_date', true);
+                        $course_end_date = get_post_meta(get_the_ID(), '_course_end_date', true);
+                        $course_location = get_post_meta(get_the_ID(), '_course_location', true);
+                        $show_card_icon = get_post_meta(get_the_ID(), '_course_show_card_icon', true);
+                        $card_icon_type = get_post_meta(get_the_ID(), '_course_card_icon_type', true);
+                        
+                        // По умолчанию показываем иконку
+                        if ($show_card_icon === '') {
+                            $show_card_icon = '1';
+                        }
                         
                         // Получаем уровень
                         $levels = get_the_terms(get_the_ID(), 'course_level');
@@ -575,22 +585,65 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                         $teachers = get_the_terms(get_the_ID(), 'course_teacher');
                         $teacher_name = ($teachers && !is_wp_error($teachers)) ? $teachers[0]->name : '';
                         
-                        // Определяем цветовую схему карточки
-                        $color_schemes = array(
-                            array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea'),
-                            array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c'),
-                            array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe'),
-                            array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b'),
-                            array('gradient' => 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', 'accent' => '#fa709a'),
-                            array('gradient' => 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', 'accent' => '#a8edea'),
+                        // Определяем цветовую схему карточки в зависимости от региона
+                        $location_colors = array(
+                            'online' => array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea', 'name' => __('Онлайн', 'course-plugin')),
+                            'zoom' => array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe', 'name' => __('Зум', 'course-plugin')),
+                            'moscow' => array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c', 'name' => __('Москва', 'course-plugin')),
+                            'prokhladny' => array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b', 'name' => __('Прохладный', 'course-plugin')),
+                            'nizhny-novgorod' => array('gradient' => 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', 'accent' => '#fa709a', 'name' => __('Нижний Новгород', 'course-plugin')),
+                            'chelyabinsk' => array('gradient' => 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', 'accent' => '#a8edea', 'name' => __('Челябинск', 'course-plugin')),
+                            'norilsk' => array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea', 'name' => __('Норильск', 'course-plugin')),
+                            'izhevsk' => array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe', 'name' => __('Ижевск', 'course-plugin')),
+                            'yug' => array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c', 'name' => __('Юг', 'course-plugin')),
+                            'novokuznetsk' => array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b', 'name' => __('Новокузнецк', 'course-plugin')),
                         );
-                        $scheme_index = get_the_ID() % count($color_schemes);
-                        $scheme = $color_schemes[$scheme_index];
+                        
+                        // Если есть регион, используем его цвет, иначе используем дефолтную схему
+                        if ($course_location && isset($location_colors[$course_location])) {
+                            $scheme = $location_colors[$course_location];
+                            $location_name = $location_colors[$course_location]['name'];
+                        } else {
+                            // Дефолтная цветовая схема
+                            $color_schemes = array(
+                                array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea'),
+                                array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c'),
+                                array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe'),
+                                array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b'),
+                                array('gradient' => 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', 'accent' => '#fa709a'),
+                                array('gradient' => 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', 'accent' => '#a8edea'),
+                            );
+                            $scheme_index = get_the_ID() % count($color_schemes);
+                            $scheme = $color_schemes[$scheme_index];
+                            $scheme['name'] = '';
+                            $location_name = '';
+                        }
+                        
+                        // Форматируем дату
+                        $date_text = '';
+                        if ($course_start_date) {
+                            $start_timestamp = strtotime($course_start_date);
+                            if ($course_end_date) {
+                                $end_timestamp = strtotime($course_end_date);
+                                // Формат: "Дата: 10-13 мая 2026"
+                                $start_day = date('j', $start_timestamp);
+                                $end_day = date('j', $end_timestamp);
+                                $month = date_i18n('F', $start_timestamp);
+                                $year = date('Y', $start_timestamp);
+                                $date_text = sprintf(__('Дата: %s-%s %s %s', 'course-plugin'), $start_day, $end_day, $month, $year);
+                            } else {
+                                // Только дата начала
+                                $day = date('j', $start_timestamp);
+                                $month = date_i18n('F', $start_timestamp);
+                                $year = date('Y', $start_timestamp);
+                                $date_text = sprintf(__('Дата: %s %s %s', 'course-plugin'), $day, $month, $year);
+                            }
+                        }
                     ?>
                         <article class="premium-course-card" data-id="<?php the_ID(); ?>">
                             <a href="<?php the_permalink(); ?>" class="card-link">
                                 <!-- Верхняя часть карточки с градиентом -->
-                                <div class="card-header" style="background: <?php echo $scheme['gradient']; ?>">
+                                <div class="card-header" style="background: <?php echo esc_attr($scheme['gradient']); ?>">
                                     <?php if ($course_tag) : ?>
                                         <span class="card-badge"><?php echo esc_html($course_tag); ?></span>
                                     <?php endif; ?>
@@ -599,6 +652,11 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                         $discount = round((($old_price - $price) / $old_price) * 100);
                                     ?>
                                         <span class="card-discount">-<?php echo $discount; ?>%</span>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Название региона в правом нижнем углу -->
+                                    <?php if ($location_name) : ?>
+                                        <span class="card-location-label"><?php echo esc_html($location_name); ?></span>
                                     <?php endif; ?>
                                     
                                     <!-- Декоративный элемент -->
@@ -611,17 +669,34 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                     </div>
                                     
                                     <!-- Иконка категории -->
-                                    <div class="card-icon">
-                                        <?php
-                                        $icons = array(
-                                            '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 22H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 18V22" stroke="currentColor" stroke-width="2"/></svg>',
-                                            '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
-                                            '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-                                            '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 19V13C9 11.8954 9.89543 11 11 11H13C14.1046 11 15 11.8954 15 13V19" stroke="currentColor" stroke-width="2"/><path d="M3 11L12 3L21 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-                                        );
-                                        echo $icons[$scheme_index % count($icons)];
-                                        ?>
-                                    </div>
+                                    <?php if ($show_card_icon === '1') : ?>
+                                        <div class="card-icon">
+                                            <?php
+                                            // Определяем тип иконки
+                                            $icon_index = 0;
+                                            if ($card_icon_type && $card_icon_type !== 'default') {
+                                                $icon_map = array(
+                                                    'book' => 0,
+                                                    'layers' => 1,
+                                                    'clock' => 2,
+                                                    'home' => 3,
+                                                );
+                                                $icon_index = isset($icon_map[$card_icon_type]) ? $icon_map[$card_icon_type] : 0;
+                                            } else {
+                                                // Автоматический выбор по ID курса
+                                                $icon_index = get_the_ID() % 4;
+                                            }
+                                            
+                                            $icons = array(
+                                                '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 22H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 18V22" stroke="currentColor" stroke-width="2"/></svg>',
+                                                '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+                                                '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+                                                '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 19V13C9 11.8954 9.89543 11 11 11H13C14.1046 11 15 11.8954 15 13V19" stroke="currentColor" stroke-width="2"/><path d="M3 11L12 3L21 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                                            );
+                                            echo $icons[$icon_index];
+                                            ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <!-- Контент карточки -->
@@ -661,7 +736,9 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                         <?php endif; ?>
                                     </div>
                                     
-                                    <?php if ($course_additional_text) : ?>
+                                    <?php if ($date_text) : ?>
+                                        <p class="card-date"><?php echo esc_html($date_text); ?></p>
+                                    <?php elseif ($course_additional_text) : ?>
                                         <p class="card-additional"><?php echo esc_html($course_additional_text); ?></p>
                                     <?php endif; ?>
                                     
