@@ -921,16 +921,90 @@
     line-height: 1.5;
 }
 
+.card-date-wrapper {
+    margin: 0 0 20px;
+}
+
 .card-date {
     font-size: 0.9375rem;
     font-weight: 600;
     color: var(--premium-gray-700);
-    margin: 0 0 20px;
+    margin: 0 0 8px;
     line-height: 1.5;
-    padding: 8px 12px;
+    padding: 10px 14px;
     background: var(--premium-gray-50);
-    border-left: 3px solid var(--premium-primary);
+    border-left: 4px solid var(--premium-primary);
     border-radius: var(--premium-radius-sm);
+}
+
+/* Стили для даты в зависимости от времени до начала */
+.card-date-wrapper.date-today .card-date {
+    background: #fff3cd;
+    border-left-color: #ffc107;
+    color: #856404;
+    font-weight: 700;
+}
+
+.card-date-wrapper.date-soon .card-date {
+    background: #f8d7da;
+    border-left-color: #dc3545;
+    color: #721c24;
+    font-weight: 700;
+}
+
+.card-date-wrapper.date-coming .card-date {
+    background: #d1ecf1;
+    border-left-color: #17a2b8;
+    color: #0c5460;
+    font-weight: 600;
+}
+
+.card-date-wrapper.date-future .card-date {
+    background: var(--premium-gray-50);
+    border-left-color: var(--premium-gray-400);
+    color: var(--premium-gray-700);
+}
+
+.card-date-wrapper.date-past .card-date {
+    background: var(--premium-gray-100);
+    border-left-color: var(--premium-gray-300);
+    color: var(--premium-gray-500);
+    opacity: 0.7;
+}
+
+/* Бейдж с количеством дней */
+.days-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: var(--premium-radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.days-badge.days-today {
+    background: #ffc107;
+    color: #856404;
+}
+
+.days-badge.days-soon {
+    background: #dc3545;
+    color: #fff;
+}
+
+.days-badge.days-coming {
+    background: #17a2b8;
+    color: #fff;
+}
+
+.days-badge.days-future {
+    background: var(--premium-gray-200);
+    color: var(--premium-gray-700);
+}
+
+.days-badge.days-past {
+    background: var(--premium-gray-300);
+    color: var(--premium-gray-600);
 }
 
 .card-footer {

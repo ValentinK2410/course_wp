@@ -619,10 +619,39 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                             $location_name = '';
                         }
                         
-                        // Форматируем дату
+                        // Форматируем дату и считаем дни до начала
                         $date_text = '';
+                        $days_until_start = null;
+                        $date_class = '';
+                        
                         if ($course_start_date) {
                             $start_timestamp = strtotime($course_start_date);
+                            $current_timestamp = current_time('timestamp');
+                            $days_diff = floor(($start_timestamp - $current_timestamp) / (60 * 60 * 24));
+                            
+                            // Определяем класс в зависимости от количества дней
+                            if ($days_diff < 0) {
+                                // Курс уже начался или прошел
+                                $date_class = 'date-past';
+                                $days_until_start = abs($days_diff);
+                            } elseif ($days_diff == 0) {
+                                // Курс начинается сегодня
+                                $date_class = 'date-today';
+                                $days_until_start = 0;
+                            } elseif ($days_diff <= 7) {
+                                // Курс начинается в течение недели
+                                $date_class = 'date-soon';
+                                $days_until_start = $days_diff;
+                            } elseif ($days_diff <= 30) {
+                                // Курс начинается в течение месяца
+                                $date_class = 'date-coming';
+                                $days_until_start = $days_diff;
+                            } else {
+                                // Курс начинается более чем через месяц
+                                $date_class = 'date-future';
+                                $days_until_start = $days_diff;
+                            }
+                            
                             if ($course_end_date) {
                                 $end_timestamp = strtotime($course_end_date);
                                 // Формат: "Дата: 10-13 мая 2026"
@@ -746,7 +775,22 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                     </div>
                                     
                                     <?php if ($date_text) : ?>
-                                        <p class="card-date"><?php echo esc_html($date_text); ?></p>
+                                        <div class="card-date-wrapper <?php echo esc_attr($date_class); ?>">
+                                            <p class="card-date"><?php echo esc_html($date_text); ?></p>
+                                            <?php if ($days_until_start !== null) : ?>
+                                                <?php if ($days_until_start == 0) : ?>
+                                                    <span class="days-badge days-today"><?php _e('Начинается сегодня', 'course-plugin'); ?></span>
+                                                <?php elseif ($days_until_start < 0) : ?>
+                                                    <span class="days-badge days-past"><?php printf(__('Начался %d дн. назад', 'course-plugin'), abs($days_until_start)); ?></span>
+                                                <?php elseif ($days_until_start <= 7) : ?>
+                                                    <span class="days-badge days-soon"><?php printf(_n('Начинается через %d день', 'Начинается через %d дня', $days_until_start, 'course-plugin'), $days_until_start); ?></span>
+                                                <?php elseif ($days_until_start <= 30) : ?>
+                                                    <span class="days-badge days-coming"><?php printf(_n('Начинается через %d день', 'Начинается через %d дней', $days_until_start, 'course-plugin'), $days_until_start); ?></span>
+                                                <?php else : ?>
+                                                    <span class="days-badge days-future"><?php printf(_n('Начинается через %d день', 'Начинается через %d дней', $days_until_start, 'course-plugin'), $days_until_start); ?></span>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </div>
                                     <?php elseif ($course_additional_text) : ?>
                                         <p class="card-additional"><?php echo esc_html($course_additional_text); ?></p>
                                     <?php endif; ?>
