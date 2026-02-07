@@ -82,7 +82,6 @@ class Program_Admin {
         $new_columns['course_specialization'] = __('Программы', 'course-plugin');
         $new_columns['course_level'] = __('Уровень', 'course-plugin');
         $new_columns['course_topic'] = __('Тема', 'course-plugin');
-        $new_columns['course_teacher'] = __('Преподаватель', 'course-plugin');
         $new_columns['program_price'] = __('Стоимость', 'course-plugin');
         $new_columns['program_courses_count'] = __('Курсов', 'course-plugin');
         $new_columns['date'] = $columns['date'];
@@ -142,19 +141,6 @@ class Program_Admin {
                 }
                 break;
                 
-            case 'course_teacher':
-                $terms = get_the_terms($post_id, 'course_teacher');
-                if ($terms && !is_wp_error($terms)) {
-                    $term_names = array();
-                    foreach ($terms as $term) {
-                        $term_names[] = $term->name;
-                    }
-                    echo esc_html(implode(', ', $term_names));
-                } else {
-                    echo '—';
-                }
-                break;
-                
             case 'program_price':
                 $price = get_post_meta($post_id, '_program_price', true);
                 if ($price) {
@@ -178,7 +164,6 @@ class Program_Admin {
         $columns['course_specialization'] = 'course_specialization';
         $columns['course_level'] = 'course_level';
         $columns['course_topic'] = 'course_topic';
-        $columns['course_teacher'] = 'course_teacher';
         $columns['program_price'] = 'program_price';
         $columns['program_courses_count'] = 'program_courses_count';
         
@@ -221,16 +206,6 @@ class Program_Admin {
                 'selected' => $selected_topic,
                 'value_field' => 'slug',
             ));
-            
-            // Фильтр по преподавателю
-            $selected_teacher = isset($_GET['course_teacher']) ? $_GET['course_teacher'] : '';
-            wp_dropdown_categories(array(
-                'show_option_all' => __('Все преподаватели', 'course-plugin'),
-                'taxonomy' => 'course_teacher',
-                'name' => 'course_teacher',
-                'selected' => $selected_teacher,
-                'value_field' => 'slug',
-            ));
         }
     }
     
@@ -264,14 +239,6 @@ class Program_Admin {
                     'taxonomy' => 'course_topic',
                     'field' => 'slug',
                     'terms' => sanitize_text_field($_GET['course_topic']),
-                );
-            }
-            
-            if (isset($_GET['course_teacher']) && $_GET['course_teacher'] !== '') {
-                $tax_query[] = array(
-                    'taxonomy' => 'course_teacher',
-                    'field' => 'slug',
-                    'terms' => sanitize_text_field($_GET['course_teacher']),
                 );
             }
             
@@ -358,7 +325,7 @@ class Program_Admin {
         }
         
         // Копируем таксономии
-        $taxonomies = array('course_specialization', 'course_level', 'course_topic', 'course_teacher');
+        $taxonomies = array('course_specialization', 'course_level', 'course_topic');
         foreach ($taxonomies as $taxonomy) {
             $terms = wp_get_post_terms($post_id, $taxonomy, array('fields' => 'ids'));
             if (!empty($terms) && !is_wp_error($terms)) {
