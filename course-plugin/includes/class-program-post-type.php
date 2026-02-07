@@ -47,6 +47,9 @@ class Program_Post_Type {
         // Приоритет 20 означает, что тип поста будет зарегистрирован после стандартных типов WordPress
         // Это важно для правильной работы плагина
         add_action('init', array($this, 'register_post_type'), 20);
+        
+        // Добавляем поддержку Elementor для типа поста "program"
+        add_filter('elementor_pro/utils/get_public_post_types', array($this, 'add_elementor_support'));
     }
     
     /**
@@ -142,5 +145,18 @@ class Program_Post_Type {
         if (taxonomy_exists('course_teacher')) {
             register_taxonomy_for_object_type('course_teacher', 'program');
         }
+    }
+    
+    /**
+     * Добавление поддержки Elementor для типа поста "program"
+     * 
+     * @param array $post_types Массив типов постов, поддерживаемых Elementor
+     * @return array Обновленный массив типов постов
+     */
+    public function add_elementor_support($post_types) {
+        if (!in_array('program', $post_types)) {
+            $post_types[] = 'program';
+        }
+        return $post_types;
     }
 }

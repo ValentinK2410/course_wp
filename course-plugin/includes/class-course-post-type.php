@@ -47,6 +47,9 @@ class Course_Post_Type {
         // Приоритет 20 означает, что тип поста будет зарегистрирован после стандартных типов WordPress
         // Это важно для правильной работы плагина
         add_action('init', array($this, 'register_post_type'), 20);
+        
+        // Добавляем поддержку Elementor для типа поста "course"
+        add_filter('elementor_pro/utils/get_public_post_types', array($this, 'add_elementor_support'));
     }
     
     /**
@@ -127,5 +130,18 @@ class Course_Post_Type {
         // Регистрируем тип поста с названием 'course' и указанными параметрами
         // После этого в WordPress появится новый тип записей "Курсы Про"
         register_post_type('course', $args);
+    }
+    
+    /**
+     * Добавление поддержки Elementor для типа поста "course"
+     * 
+     * @param array $post_types Массив типов постов, поддерживаемых Elementor
+     * @return array Обновленный массив типов постов
+     */
+    public function add_elementor_support($post_types) {
+        if (!in_array('course', $post_types)) {
+            $post_types[] = 'course';
+        }
+        return $post_types;
     }
 }
