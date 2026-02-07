@@ -270,6 +270,35 @@ public function save_archive_texts() {
 2. Измените названия опций (например, `'program_archive_title_main'`)
 3. Обновите шаблон архива вашего типа поста
 
+### Пример: Добавление для типа поста "Программы"
+
+В файле `class-program-admin.php` добавьте в конструктор:
+
+```php
+// Добавляем метабокс для редактирования текстов архива программ
+add_action('admin_notices', array($this, 'add_archive_texts_meta_box'));
+
+// Сохраняем настройки архива
+add_action('admin_init', array($this, 'save_archive_texts'));
+```
+
+Затем добавьте методы `add_archive_texts_meta_box()` и `save_archive_texts()`, заменив:
+- `'course'` на `'program'`
+- `'course_archive_title_main'` на `'program_archive_title_main'`
+- `'course_archive_title_sub'` на `'program_archive_title_sub'`
+- `'course_archive_subtitle'` на `'program_archive_subtitle'`
+- `'course_archive_texts'` на `'program_archive_texts'`
+
+В шаблоне `archive-program.php` замените статические тексты на:
+
+```php
+<h1 class="premium-archive-title">
+    <span class="title-accent"><?php echo esc_html(get_option('program_archive_title_main', __('Программы', 'course-plugin'))); ?></span>
+    <span class="title-sub"><?php echo esc_html(get_option('program_archive_title_sub', __('обучения и развития', 'course-plugin'))); ?></span>
+</h1>
+<p class="premium-archive-subtitle"><?php echo esc_html(get_option('program_archive_subtitle', __('Комплексные программы для достижения профессиональных целей', 'course-plugin'))); ?></p>
+```
+
 ## Заключение
 
 Теперь вы можете редактировать тексты архива курсов прямо из админ-панели WordPress, не редактируя код шаблона. Это делает управление сайтом более удобным и безопасным.
