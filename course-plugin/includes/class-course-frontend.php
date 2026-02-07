@@ -320,10 +320,8 @@ class Course_Frontend {
                         break;
                     case 'level_asc':
                         // Уровень: сначала проще (по названию термина таксономии)
-                        // Используем сортировку по термину таксономии
-                        $query->set('orderby', 'term_order');
-                        $query->set('order', 'ASC');
-                        // Добавляем сортировку по таксономии course_level
+                        // Используем кастомную сортировку через фильтр
+                        $query->set('orderby', 'none'); // Отключаем стандартную сортировку
                         add_filter('posts_orderby', array($this, 'orderby_level_term'), 10, 2);
                         break;
                     case 'title_asc':
@@ -353,6 +351,7 @@ class Course_Frontend {
     /**
      * Сортировка по термину таксономии уровня
      * Используется для сортировки курсов по уровню сложности
+     * Сортирует по названию термина таксономии (алфавитно)
      */
     public function orderby_level_term($orderby, $query) {
         global $wpdb;
@@ -371,10 +370,11 @@ class Course_Frontend {
         ));
         
         if (empty($terms) || is_wp_error($terms)) {
-            return $orderby;
+            // Если терминов нет, сортируем по названию курса
+            return "{$wpdb->posts}.post_title ASC";
         }
         
-        // Создаем маппинг терминов к порядку
+        // Создаем маппинг терминов к порядку (по алфавиту)
         $term_order = array();
         $order = 1;
         foreach ($terms as $term) {
@@ -384,6 +384,7 @@ class Course_Frontend {
         // Формируем CASE для сортировки
         $case = "CASE ";
         foreach ($term_order as $term_id => $order) {
+            $term_id = absint($term_id);
             $case .= "WHEN EXISTS (
                 SELECT 1 FROM {$wpdb->term_relationships} tr
                 INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
@@ -396,6 +397,9 @@ class Course_Frontend {
         
         // Добавляем сортировку по термину, затем по названию
         $orderby = $case . ", {$wpdb->posts}.post_title ASC";
+        
+        // Удаляем фильтр после использования, чтобы не применялся к другим запросам
+        remove_filter('posts_orderby', array($this, 'orderby_level_term'), 10);
         
         return $orderby;
     }
