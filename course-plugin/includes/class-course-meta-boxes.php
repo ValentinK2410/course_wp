@@ -47,6 +47,23 @@ class Course_Meta_Boxes {
         // Регистрируем метод для сохранения данных метабоксов
         // Хук 'save_post' срабатывает при сохранении поста (любого типа)
         add_action('save_post', array($this, 'save_meta_boxes'));
+        
+        // Подключаем скрипты и стили для визуального редактора
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_editor_scripts'));
+    }
+    
+    /**
+     * Подключение скриптов для визуального редактора
+     */
+    public function enqueue_editor_scripts($hook) {
+        global $post_type;
+        
+        // Подключаем только на странице редактирования курса
+        if (($hook === 'post.php' || $hook === 'post-new.php') && $post_type === 'course') {
+            // Подключаем скрипты для визуального редактора
+            wp_enqueue_editor();
+            wp_enqueue_media();
+        }
     }
     
     /**
@@ -754,21 +771,47 @@ class Course_Meta_Boxes {
             // Добавление дополнительного блока
             var blockIndex = <?php echo count($extra_blocks); ?>;
             $('#add-extra-block').on('click', function() {
+                var blockId = 'course_extra_blocks_' + blockIndex + '_content';
                 var html = '<div class="extra-block">' +
                     '<div class="block-header">' +
                         '<span class="dashicons dashicons-menu" style="cursor: move;"></span>' +
                         '<input type="text" name="course_extra_blocks[' + blockIndex + '][title]" placeholder="<?php esc_attr_e('Заголовок блока', 'course-plugin'); ?>" class="regular-text" />' +
                         '<span class="remove-block dashicons dashicons-trash"></span>' +
                     '</div>' +
-                    '<textarea name="course_extra_blocks[' + blockIndex + '][content]" rows="4" class="large-text" placeholder="<?php esc_attr_e('Содержимое блока (поддерживается HTML)', 'course-plugin'); ?>"></textarea>' +
+                    '<textarea id="' + blockId + '" name="course_extra_blocks[' + blockIndex + '][content]" rows="10" class="large-text"></textarea>' +
                 '</div>';
                 $('#extra-blocks-container').append(html);
+                
+                // Инициализируем визуальный редактор для нового блока
+                if (typeof tinyMCE !== 'undefined' && typeof QTags !== 'undefined') {
+                    var editorSettings = {
+                        tinymce: {
+                            wpautop: true,
+                            toolbar1: 'bold,italic,underline,bullist,numlist,blockquote,alignleft,aligncenter,alignright,link,unlink,wp_adv',
+                            toolbar2: 'formatselect,strikethrough,forecolor,pastetext,removeformat,charmap,outdent,indent,undo,redo,wp_help'
+                        },
+                        quicktags: true,
+                        media_buttons: true
+                    };
+                    wp.editor.initialize(blockId, editorSettings);
+                }
+                
                 blockIndex++;
             });
             
             // Удаление блока
             $(document).on('click', '.remove-block', function() {
-                $(this).closest('.extra-block').remove();
+                var $block = $(this).closest('.extra-block');
+                var editorId = $block.find('textarea').attr('id');
+                
+                // Удаляем редактор перед удалением блока
+                if (editorId && typeof tinyMCE !== 'undefined') {
+                    if (tinyMCE.get(editorId)) {
+                        tinyMCE.get(editorId).remove();
+                    }
+                }
+                
+                $block.remove();
             });
             
             // Добавление блока сайдбара
@@ -1082,7 +1125,18 @@ class Course_Meta_Boxes {
                                 <input type="text" name="course_extra_blocks[<?php echo $index; ?>][title]" value="<?php echo esc_attr($block['title']); ?>" placeholder="<?php esc_attr_e('Заголовок блока', 'course-plugin'); ?>" class="regular-text" />
                                 <span class="remove-block dashicons dashicons-trash"></span>
                             </div>
-                            <textarea name="course_extra_blocks[<?php echo $index; ?>][content]" rows="4" class="large-text" placeholder="<?php esc_attr_e('Содержимое блока (поддерживается HTML)', 'course-plugin'); ?>"><?php echo esc_textarea($block['content']); ?></textarea>
+                            <?php
+                            $editor_id = 'course_extra_blocks_' . $index . '_content';
+                            $editor_settings = array(
+                                'textarea_name' => 'course_extra_blocks[' . $index . '][content]',
+                                'textarea_rows' => 10,
+                                'media_buttons' => true,
+                                'teeny' => false,
+                                'quicktags' => true,
+                                'tinymce' => true,
+                            );
+                            wp_editor($block['content'], $editor_id, $editor_settings);
+                            ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
