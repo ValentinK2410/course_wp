@@ -628,9 +628,18 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                 // Формат: "Дата: 10-13 мая 2026"
                                 $start_day = date('j', $start_timestamp);
                                 $end_day = date('j', $end_timestamp);
-                                $month = date_i18n('F', $start_timestamp);
-                                $year = date('Y', $start_timestamp);
-                                $date_text = sprintf(__('Дата: %s-%s %s %s', 'course-plugin'), $start_day, $end_day, $month, $year);
+                                // Проверяем, в одном ли месяце даты
+                                if (date('m', $start_timestamp) === date('m', $end_timestamp)) {
+                                    $month = date_i18n('F', $start_timestamp);
+                                    $year = date('Y', $start_timestamp);
+                                    $date_text = sprintf(__('Дата: %s-%s %s %s', 'course-plugin'), $start_day, $end_day, $month, $year);
+                                } else {
+                                    // Разные месяцы
+                                    $start_month = date_i18n('F', $start_timestamp);
+                                    $end_month = date_i18n('F', $end_timestamp);
+                                    $year = date('Y', $start_timestamp);
+                                    $date_text = sprintf(__('Дата: %s %s - %s %s %s', 'course-plugin'), $start_day, $start_month, $end_day, $end_month, $year);
+                                }
                             } else {
                                 // Только дата начала
                                 $day = date('j', $start_timestamp);
