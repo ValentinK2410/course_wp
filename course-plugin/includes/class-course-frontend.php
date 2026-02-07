@@ -211,18 +211,19 @@ class Course_Frontend {
                 $query->set('tax_query', $tax_query);
             }
             
+            // Собираем все meta_query в один массив
+            $meta_query = array();
+            
             // Фильтр по месту прохождения (мета-поле)
             if (isset($_GET['location']) && !empty($_GET['location'])) {
                 $locations = is_array($_GET['location']) ? $_GET['location'] : array($_GET['location']);
                 $locations = array_map('sanitize_text_field', $locations);
                 
-                $meta_query = array();
                 $meta_query[] = array(
                     'key'     => '_course_location',
                     'value'   => $locations,
                     'compare' => 'IN',
                 );
-                $query->set('meta_query', $meta_query);
             }
             
             // Фильтр по дате начала курса
@@ -230,43 +231,30 @@ class Course_Frontend {
             $date_to = isset($_GET['date_to']) ? sanitize_text_field($_GET['date_to']) : '';
             
             if (!empty($date_from) || !empty($date_to)) {
-                $date_meta_query = array();
-                
-                if (!empty($date_from)) {
-                    $date_meta_query[] = array(
+                if (!empty($date_from) && !empty($date_to)) {
+                    // Диапазон дат
+                    $meta_query[] = array(
+                        'key'     => '_course_start_date',
+                        'value'   => array($date_from, $date_to),
+                        'compare' => 'BETWEEN',
+                        'type'    => 'DATE',
+                    );
+                } elseif (!empty($date_from)) {
+                    // От даты
+                    $meta_query[] = array(
                         'key'     => '_course_start_date',
                         'value'   => $date_from,
                         'compare' => '>=',
                         'type'    => 'DATE',
                     );
-                }
-                
-                if (!empty($date_to)) {
-                    $date_meta_query[] = array(
+                } elseif (!empty($date_to)) {
+                    // До даты
+                    $meta_query[] = array(
                         'key'     => '_course_start_date',
                         'value'   => $date_to,
                         'compare' => '<=',
                         'type'    => 'DATE',
                     );
-                }
-                
-                if (!empty($date_meta_query)) {
-                    if (count($date_meta_query) > 1) {
-                        $date_meta_query['relation'] = 'AND';
-                    }
-                    
-                    // Объединяем с существующими meta_query
-                    $existing_meta_query = $query->get('meta_query');
-                    if (!empty($existing_meta_query)) {
-                        $combined_meta_query = array(
-                            'relation' => 'AND',
-                            $existing_meta_query,
-                            $date_meta_query,
-                        );
-                        $query->set('meta_query', $combined_meta_query);
-                    } else {
-                        $query->set('meta_query', $date_meta_query);
-                    }
                 }
             }
             
@@ -274,11 +262,9 @@ class Course_Frontend {
             if (isset($_GET['price']) && !empty($_GET['price'])) {
                 $price_filter = sanitize_text_field($_GET['price']);
                 
-                $price_meta_query = array();
-                
                 if ($price_filter === 'free') {
-                    // Бесплатные: цена = 0 или пусто
-                    $price_meta_query[] = array(
+                    // Бесплатные: цена = 0 или пусто или не существует
+                    $meta_query[] = array(
                         'relation' => 'OR',
                         array(
                             'key'     => '_course_price',
@@ -297,28 +283,21 @@ class Course_Frontend {
                     );
                 } elseif ($price_filter === 'paid') {
                     // Платные: цена > 0
-                    $price_meta_query[] = array(
+                    $meta_query[] = array(
                         'key'     => '_course_price',
                         'value'   => '0',
                         'compare' => '>',
                         'type'    => 'NUMERIC',
                     );
                 }
-                
-                if (!empty($price_meta_query)) {
-                    // Объединяем с существующими meta_query
-                    $existing_meta_query = $query->get('meta_query');
-                    if (!empty($existing_meta_query)) {
-                        $combined_meta_query = array(
-                            'relation' => 'AND',
-                            $existing_meta_query,
-                            $price_meta_query,
-                        );
-                        $query->set('meta_query', $combined_meta_query);
-                    } else {
-                        $query->set('meta_query', $price_meta_query);
-                    }
+            }
+            
+            // Устанавливаем meta_query если есть фильтры
+            if (!empty($meta_query)) {
+                if (count($meta_query) > 1) {
+                    $meta_query['relation'] = 'AND';
                 }
+                $query->set('meta_query', $meta_query);
             }
             
             // Сортировка
