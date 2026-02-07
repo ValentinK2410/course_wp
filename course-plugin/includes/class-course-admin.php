@@ -77,6 +77,12 @@ class Course_Admin {
         // Подключаем стили и скрипты для админ-панели
         // Хук 'admin_enqueue_scripts' позволяет добавить CSS и JS только на нужных страницах
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
+        
+        // Добавляем метабокс для редактирования текстов архива курсов
+        add_action('admin_notices', array($this, 'add_archive_texts_meta_box'));
+        
+        // Сохраняем настройки архива
+        add_action('admin_init', array($this, 'save_archive_texts'));
     }
     
     /**
@@ -489,5 +495,102 @@ class Course_Admin {
         // Примеры закомментированы, так как файлы еще не созданы:
         // wp_enqueue_style('course-admin-style', COURSE_PLUGIN_URL . 'assets/css/admin.css', array(), COURSE_PLUGIN_VERSION);
         // wp_enqueue_script('course-admin-script', COURSE_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), COURSE_PLUGIN_VERSION, true);
+    }
+    
+    /**
+     * Добавление метабокса для редактирования текстов архива курсов
+     * Отображается на странице списка курсов
+     */
+    public function add_archive_texts_meta_box() {
+        global $pagenow, $post_type;
+        
+        // Показываем только на странице списка курсов
+        if ('edit.php' !== $pagenow || 'course' !== $post_type) {
+            return;
+        }
+        
+        // Получаем сохраненные значения
+        $archive_title_main = get_option('course_archive_title_main', __('Курсы', 'course-plugin'));
+        $archive_title_sub = get_option('course_archive_title_sub', __('для вашего развития', 'course-plugin'));
+        $archive_subtitle = get_option('course_archive_subtitle', __('Выберите курс, который поможет вам достичь новых вершин в карьере', 'course-plugin'));
+        
+        ?>
+        <div class="notice notice-info" style="margin: 20px 0; padding: 15px;">
+            <h2 style="margin-top: 0;"><?php _e('Настройки страницы архива курсов', 'course-plugin'); ?></h2>
+            <form method="post" action="">
+                <?php wp_nonce_field('course_archive_texts', 'course_archive_texts_nonce'); ?>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="archive_title_main"><?php _e('Заголовок (основная часть)', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="archive_title_main" name="archive_title_main" value="<?php echo esc_attr($archive_title_main); ?>" class="regular-text" />
+                            <p class="description"><?php _e('Основная часть заголовка (например: "Курсы")', 'course-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="archive_title_sub"><?php _e('Заголовок (дополнительная часть)', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="archive_title_sub" name="archive_title_sub" value="<?php echo esc_attr($archive_title_sub); ?>" class="regular-text" />
+                            <p class="description"><?php _e('Дополнительная часть заголовка (например: "для вашего развития")', 'course-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="archive_subtitle"><?php _e('Подзаголовок', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="archive_subtitle" name="archive_subtitle" rows="3" class="large-text"><?php echo esc_textarea($archive_subtitle); ?></textarea>
+                            <p class="description"><?php _e('Текст подзаголовка под основным заголовком', 'course-plugin'); ?></p>
+                        </td>
+                    </tr>
+                </table>
+                <p class="submit">
+                    <input type="submit" name="save_archive_texts" class="button button-primary" value="<?php esc_attr_e('Сохранить настройки', 'course-plugin'); ?>" />
+                </p>
+            </form>
+        </div>
+        <?php
+    }
+    
+    /**
+     * Сохранение настроек архива курсов
+     */
+    public function save_archive_texts() {
+        // Проверяем, что форма была отправлена
+        if (!isset($_POST['save_archive_texts'])) {
+            return;
+        }
+        
+        // Проверяем nonce для безопасности
+        if (!isset($_POST['course_archive_texts_nonce']) || !wp_verify_nonce($_POST['course_archive_texts_nonce'], 'course_archive_texts')) {
+            return;
+        }
+        
+        // Проверяем права доступа
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        
+        // Сохраняем значения
+        if (isset($_POST['archive_title_main'])) {
+            update_option('course_archive_title_main', sanitize_text_field($_POST['archive_title_main']));
+        }
+        
+        if (isset($_POST['archive_title_sub'])) {
+            update_option('course_archive_title_sub', sanitize_text_field($_POST['archive_title_sub']));
+        }
+        
+        if (isset($_POST['archive_subtitle'])) {
+            update_option('course_archive_subtitle', sanitize_textarea_field($_POST['archive_subtitle']));
+        }
+        
+        // Перенаправляем с сообщением об успехе
+        add_action('admin_notices', function() {
+            echo '<div class="notice notice-success is-dismissible"><p>' . __('Настройки архива курсов успешно сохранены!', 'course-plugin') . '</p></div>';
+        });
     }
 }

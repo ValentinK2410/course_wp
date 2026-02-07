@@ -40,10 +40,10 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
     <header class="premium-archive-header">
         <div class="premium-header-content">
             <h1 class="premium-archive-title">
-                <span class="title-accent"><?php _e('Курсы', 'course-plugin'); ?></span>
-                <span class="title-sub"><?php _e('для вашего развития', 'course-plugin'); ?></span>
+                <span class="title-accent"><?php echo esc_html(get_option('course_archive_title_main', __('Курсы', 'course-plugin'))); ?></span>
+                <span class="title-sub"><?php echo esc_html(get_option('course_archive_title_sub', __('для вашего развития', 'course-plugin'))); ?></span>
             </h1>
-            <p class="premium-archive-subtitle"><?php _e('Выберите курс, который поможет вам достичь новых вершин в карьере', 'course-plugin'); ?></p>
+            <p class="premium-archive-subtitle"><?php echo esc_html(get_option('course_archive_subtitle', __('Выберите курс, который поможет вам достичь новых вершин в карьере', 'course-plugin'))); ?></p>
             
             <!-- Статистика -->
             <div class="premium-stats">
