@@ -1126,27 +1126,31 @@ class Course_Meta_Boxes {
                 <p class="description"><?php _e('Добавьте дополнительные секции с произвольным контентом:', 'course-plugin'); ?></p>
                 
                 <div id="extra-blocks-container">
-                    <?php foreach ($extra_blocks as $index => $block) : ?>
-                        <div class="extra-block">
-                            <div class="block-header">
-                                <span class="dashicons dashicons-menu" style="cursor: move;"></span>
-                                <input type="text" name="course_extra_blocks[<?php echo $index; ?>][title]" value="<?php echo esc_attr($block['title']); ?>" placeholder="<?php esc_attr_e('Заголовок блока', 'course-plugin'); ?>" class="regular-text" />
-                                <span class="remove-block dashicons dashicons-trash"></span>
+                    <?php if (!empty($extra_blocks) && is_array($extra_blocks)) : ?>
+                        <?php foreach ($extra_blocks as $index => $block) : ?>
+                            <?php if (!is_array($block)) continue; ?>
+                            <div class="extra-block">
+                                <div class="block-header">
+                                    <span class="dashicons dashicons-menu" style="cursor: move;"></span>
+                                    <input type="text" name="course_extra_blocks[<?php echo esc_attr($index); ?>][title]" value="<?php echo esc_attr(isset($block['title']) ? $block['title'] : ''); ?>" placeholder="<?php esc_attr_e('Заголовок блока', 'course-plugin'); ?>" class="regular-text" />
+                                    <span class="remove-block dashicons dashicons-trash"></span>
+                                </div>
+                                <?php
+                                $editor_id = 'course_extra_blocks_' . $index . '_content';
+                                $block_content = isset($block['content']) ? $block['content'] : '';
+                                $editor_settings = array(
+                                    'textarea_name' => 'course_extra_blocks[' . $index . '][content]',
+                                    'textarea_rows' => 10,
+                                    'media_buttons' => true,
+                                    'teeny' => false,
+                                    'quicktags' => true,
+                                    'tinymce' => true,
+                                );
+                                wp_editor($block_content, $editor_id, $editor_settings);
+                                ?>
                             </div>
-                            <?php
-                            $editor_id = 'course_extra_blocks_' . $index . '_content';
-                            $editor_settings = array(
-                                'textarea_name' => 'course_extra_blocks[' . $index . '][content]',
-                                'textarea_rows' => 10,
-                                'media_buttons' => true,
-                                'teeny' => false,
-                                'quicktags' => true,
-                                'tinymce' => true,
-                            );
-                            wp_editor($block['content'], $editor_id, $editor_settings);
-                            ?>
-                        </div>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
                 
                 <button type="button" id="add-extra-block" class="button"><?php _e('+ Добавить блок', 'course-plugin'); ?></button>
