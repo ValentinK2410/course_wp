@@ -437,9 +437,9 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                     <div class="sort-dropdown">
                         <select id="course-sort-select" name="sort" class="premium-sort-select">
                             <option value="default" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'default'); ?>><?php _e('По умолчанию', 'course-plugin'); ?></option>
+                            <option value="date_start_asc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'date_start_asc'); ?>><?php _e('Дата: сначала ближайшие', 'course-plugin'); ?></option>
                             <option value="price_asc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'price_asc'); ?>><?php _e('Цена: по возрастанию', 'course-plugin'); ?></option>
-                            <option value="price_desc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'price_desc'); ?>><?php _e('Цена: по убыванию', 'course-plugin'); ?></option>
-                            <option value="date_desc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'date_desc'); ?>><?php _e('Сначала новые', 'course-plugin'); ?></option>
+                            <option value="level_asc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'level_asc'); ?>><?php _e('Уровень: сначала проще', 'course-plugin'); ?></option>
                             <option value="title_asc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'title_asc'); ?>><?php _e('По названию А-Я', 'course-plugin'); ?></option>
                         </select>
                     </div>

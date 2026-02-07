@@ -305,27 +305,41 @@ class Course_Frontend {
                 $sort = sanitize_text_field($_GET['sort']);
                 
                 switch ($sort) {
+                    case 'date_start_asc':
+                        // Дата начала: сначала ближайшие (по возрастанию даты начала)
+                        $query->set('meta_key', '_course_start_date');
+                        $query->set('orderby', 'meta_value');
+                        $query->set('order', 'ASC');
+                        $query->set('meta_type', 'DATE');
+                        break;
                     case 'price_asc':
+                        // Цена: по возрастанию
                         $query->set('meta_key', '_course_price');
                         $query->set('orderby', 'meta_value_num');
                         $query->set('order', 'ASC');
                         break;
+                    case 'level_asc':
+                        // Уровень: сначала проще (по названию термина таксономии)
+                        // Используем сортировку по термину таксономии
+                        $query->set('orderby', 'term_order');
+                        $query->set('order', 'ASC');
+                        // Добавляем сортировку по таксономии course_level
+                        add_filter('posts_orderby', array($this, 'orderby_level_term'), 10, 2);
+                        break;
+                    case 'title_asc':
+                        // По названию А-Я
+                        $query->set('orderby', 'title');
+                        $query->set('order', 'ASC');
+                        break;
+                    // Старые варианты для обратной совместимости
                     case 'price_desc':
                         $query->set('meta_key', '_course_price');
                         $query->set('orderby', 'meta_value_num');
                         $query->set('order', 'DESC');
                         break;
-                    case 'date_asc':
-                        $query->set('orderby', 'date');
-                        $query->set('order', 'ASC');
-                        break;
                     case 'date_desc':
                         $query->set('orderby', 'date');
                         $query->set('order', 'DESC');
-                        break;
-                    case 'title_asc':
-                        $query->set('orderby', 'title');
-                        $query->set('order', 'ASC');
                         break;
                     case 'title_desc':
                         $query->set('orderby', 'title');
@@ -334,6 +348,56 @@ class Course_Frontend {
                 }
             }
         }
+    }
+    
+    /**
+     * Сортировка по термину таксономии уровня
+     * Используется для сортировки курсов по уровню сложности
+     */
+    public function orderby_level_term($orderby, $query) {
+        global $wpdb;
+        
+        // Проверяем, что это запрос курсов
+        if ($query->get('post_type') !== 'course') {
+            return $orderby;
+        }
+        
+        // Получаем все термины таксономии course_level отсортированные по названию
+        $terms = get_terms(array(
+            'taxonomy' => 'course_level',
+            'hide_empty' => false,
+            'orderby' => 'name',
+            'order' => 'ASC',
+        ));
+        
+        if (empty($terms) || is_wp_error($terms)) {
+            return $orderby;
+        }
+        
+        // Создаем маппинг терминов к порядку
+        $term_order = array();
+        $order = 1;
+        foreach ($terms as $term) {
+            $term_order[$term->term_id] = $order++;
+        }
+        
+        // Формируем CASE для сортировки
+        $case = "CASE ";
+        foreach ($term_order as $term_id => $order) {
+            $case .= "WHEN EXISTS (
+                SELECT 1 FROM {$wpdb->term_relationships} tr
+                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                WHERE tr.object_id = {$wpdb->posts}.ID 
+                AND tt.term_id = {$term_id}
+                AND tt.taxonomy = 'course_level'
+            ) THEN {$order} ";
+        }
+        $case .= "ELSE 999 END";
+        
+        // Добавляем сортировку по термину, затем по названию
+        $orderby = $case . ", {$wpdb->posts}.post_title ASC";
+        
+        return $orderby;
     }
     
     /**
