@@ -576,6 +576,7 @@ class Course_Meta_Boxes {
         $show_hero_duration = get_post_meta($post->ID, '_course_show_hero_duration', true);
         $show_hero_language = get_post_meta($post->ID, '_course_show_hero_language', true);
         $show_hero_certificate = get_post_meta($post->ID, '_course_show_hero_certificate', true);
+        $show_hero_location = get_post_meta($post->ID, '_course_show_hero_location', true);
         
         // Получаем сохраненные значения заголовков секций
         $section_description_title = get_post_meta($post->ID, '_course_section_description_title', true);
@@ -850,7 +851,8 @@ class Course_Meta_Boxes {
                 <label><input type="checkbox" name="course_show_hero_dates" value="1" <?php checked($show_hero_dates !== '0'); ?> /> <?php _e('Даты проведения', 'course-plugin'); ?></label><br>
                 <label><input type="checkbox" name="course_show_hero_duration" value="1" <?php checked($show_hero_duration !== '0'); ?> /> <?php _e('Длительность', 'course-plugin'); ?></label><br>
                 <label><input type="checkbox" name="course_show_hero_language" value="1" <?php checked($show_hero_language !== '0'); ?> /> <?php _e('Язык курса', 'course-plugin'); ?></label><br>
-                <label><input type="checkbox" name="course_show_hero_certificate" value="1" <?php checked($show_hero_certificate !== '0'); ?> /> <?php _e('Наличие сертификата', 'course-plugin'); ?></label>
+                <label><input type="checkbox" name="course_show_hero_certificate" value="1" <?php checked($show_hero_certificate !== '0'); ?> /> <?php _e('Наличие сертификата', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="course_show_hero_location" value="1" <?php checked($show_hero_location !== '0'); ?> /> <?php _e('Место проведения', 'course-plugin'); ?></label>
             </div>
         </div>
         
@@ -1183,6 +1185,7 @@ class Course_Meta_Boxes {
             'course_show_hero_duration',
             'course_show_hero_language',
             'course_show_hero_certificate',
+            'course_show_hero_location',
             // Поля в сайдбаре
             'course_show_field_language',
             'course_show_field_weeks',
