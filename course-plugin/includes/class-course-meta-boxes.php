@@ -772,18 +772,19 @@ class Course_Meta_Boxes {
             var blockIndex = <?php echo count($extra_blocks); ?>;
             $('#add-extra-block').on('click', function() {
                 var blockId = 'course_extra_blocks_' + blockIndex + '_content';
-                var html = '<div class="extra-block">' +
+                var $newBlock = $('<div class="extra-block">' +
                     '<div class="block-header">' +
                         '<span class="dashicons dashicons-menu" style="cursor: move;"></span>' +
                         '<input type="text" name="course_extra_blocks[' + blockIndex + '][title]" placeholder="<?php esc_attr_e('Заголовок блока', 'course-plugin'); ?>" class="regular-text" />' +
                         '<span class="remove-block dashicons dashicons-trash"></span>' +
                     '</div>' +
                     '<textarea id="' + blockId + '" name="course_extra_blocks[' + blockIndex + '][content]" rows="10" class="large-text"></textarea>' +
-                '</div>';
-                $('#extra-blocks-container').append(html);
+                '</div>');
+                
+                $('#extra-blocks-container').append($newBlock);
                 
                 // Инициализируем визуальный редактор для нового блока
-                if (typeof tinyMCE !== 'undefined' && typeof QTags !== 'undefined') {
+                if (typeof wp !== 'undefined' && wp.editor && typeof wp.editor.initialize !== 'undefined') {
                     var editorSettings = {
                         tinymce: {
                             wpautop: true,
@@ -794,6 +795,13 @@ class Course_Meta_Boxes {
                         media_buttons: true
                     };
                     wp.editor.initialize(blockId, editorSettings);
+                } else {
+                    // Если wp.editor недоступен, используем альтернативный метод
+                    setTimeout(function() {
+                        if (typeof tinyMCE !== 'undefined') {
+                            tinyMCE.execCommand('mceAddEditor', false, blockId);
+                        }
+                    }, 100);
                 }
                 
                 blockIndex++;
