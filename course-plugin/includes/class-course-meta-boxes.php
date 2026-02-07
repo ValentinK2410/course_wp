@@ -61,8 +61,12 @@ class Course_Meta_Boxes {
         // Подключаем только на странице редактирования курса
         if (($hook === 'post.php' || $hook === 'post-new.php') && $post_type === 'course') {
             // Подключаем скрипты для визуального редактора
-            wp_enqueue_editor();
-            wp_enqueue_media();
+            if (function_exists('wp_enqueue_editor')) {
+                wp_enqueue_editor();
+            }
+            if (function_exists('wp_enqueue_media')) {
+                wp_enqueue_media();
+            }
         }
     }
     
