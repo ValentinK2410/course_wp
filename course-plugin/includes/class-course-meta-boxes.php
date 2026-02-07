@@ -143,10 +143,33 @@ class Course_Meta_Boxes {
         $course_hours_per_week = get_post_meta($post->ID, '_course_hours_per_week', true);
         $course_language = get_post_meta($post->ID, '_course_language', true);
         $course_certificate = get_post_meta($post->ID, '_course_certificate', true);
+        $course_location = get_post_meta($post->ID, '_course_location', true);
         
         // Начинаем вывод HTML-формы
         ?>
         <table class="form-table">
+            <!-- Поле "Место прохождения" -->
+            <tr>
+                <th>
+                    <label for="course_location"><?php _e('Место прохождения', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <select id="course_location" name="course_location" class="regular-text">
+                        <option value=""><?php _e('-- Выберите место --', 'course-plugin'); ?></option>
+                        <option value="online" <?php selected($course_location, 'online'); ?>><?php _e('Онлайн-курсы', 'course-plugin'); ?></option>
+                        <option value="zoom" <?php selected($course_location, 'zoom'); ?>><?php _e('Зум', 'course-plugin'); ?></option>
+                        <option value="moscow" <?php selected($course_location, 'moscow'); ?>><?php _e('Москва (центральный кампус)', 'course-plugin'); ?></option>
+                        <option value="prokhladny" <?php selected($course_location, 'prokhladny'); ?>><?php _e('Прохладный', 'course-plugin'); ?></option>
+                        <option value="nizhny-novgorod" <?php selected($course_location, 'nizhny-novgorod'); ?>><?php _e('Нижний Новгород', 'course-plugin'); ?></option>
+                        <option value="chelyabinsk" <?php selected($course_location, 'chelyabinsk'); ?>><?php _e('Челябинск', 'course-plugin'); ?></option>
+                        <option value="norilsk" <?php selected($course_location, 'norilsk'); ?>><?php _e('Норильск', 'course-plugin'); ?></option>
+                        <option value="izhevsk" <?php selected($course_location, 'izhevsk'); ?>><?php _e('Ижевск', 'course-plugin'); ?></option>
+                        <option value="yug" <?php selected($course_location, 'yug'); ?>><?php _e('Юг', 'course-plugin'); ?></option>
+                        <option value="novokuznetsk" <?php selected($course_location, 'novokuznetsk'); ?>><?php _e('Новокузнецк', 'course-plugin'); ?></option>
+                    </select>
+                </td>
+            </tr>
+            
             <!-- Поле "Дата начала курса" -->
             <tr>
                 <th>
@@ -1092,6 +1115,7 @@ class Course_Meta_Boxes {
             'course_old_price',           // Старая цена (для скидки)
             'course_start_date',          // Дата начала курса
             'course_end_date',            // Дата окончания курса
+            'course_location',            // Место прохождения курса
             'course_capacity',            // Вместимость (количество мест)
             'course_enrolled',            // Количество записанных студентов
             'course_rating',              // Рейтинг курса (1-5)

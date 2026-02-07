@@ -268,6 +268,115 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                     </div>
                 </div>
                 
+                <!-- Место прохождения -->
+                <div class="filter-group">
+                    <button type="button" class="filter-group-toggle active" data-target="location-options">
+                        <span class="filter-group-title">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 2C5.79086 2 4 3.79086 4 6C4 8.5 8 12 8 12C8 12 12 8.5 12 6C12 3.79086 10.2091 2 8 2Z" stroke="currentColor" stroke-width="1.5"/>
+                                <circle cx="8" cy="6" r="1.5" fill="currentColor"/>
+                            </svg>
+                            <?php _e('Место прохождения', 'course-plugin'); ?>
+                        </span>
+                        <svg class="toggle-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="filter-options" id="location-options">
+                        <?php
+                        $locations = array(
+                            'online' => __('Онлайн-курсы', 'course-plugin'),
+                            'zoom' => __('Зум', 'course-plugin'),
+                            'moscow' => __('Москва (центральный кампус)', 'course-plugin'),
+                            'prokhladny' => __('Прохладный', 'course-plugin'),
+                            'nizhny-novgorod' => __('Нижний Новгород', 'course-plugin'),
+                            'chelyabinsk' => __('Челябинск', 'course-plugin'),
+                            'norilsk' => __('Норильск', 'course-plugin'),
+                            'izhevsk' => __('Ижевск', 'course-plugin'),
+                            'yug' => __('Юг', 'course-plugin'),
+                            'novokuznetsk' => __('Новокузнецк', 'course-plugin'),
+                        );
+                        
+                        $selected_locations = isset($_GET['location']) ? (array)$_GET['location'] : array();
+                        foreach ($locations as $location_slug => $location_name) {
+                            $checked = in_array($location_slug, $selected_locations) ? 'checked' : '';
+                            ?>
+                            <label class="filter-option">
+                                <input type="checkbox" name="location[]" value="<?php echo esc_attr($location_slug); ?>" <?php echo $checked; ?>>
+                                <span class="option-checkbox"></span>
+                                <span class="option-text"><?php echo esc_html($location_name); ?></span>
+                            </label>
+                            <?php
+                        }
+                        ?>
+                    </div>
+                </div>
+                
+                <!-- Дата начала курса -->
+                <div class="filter-group">
+                    <button type="button" class="filter-group-toggle active" data-target="date-options">
+                        <span class="filter-group-title">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M5 1V4M11 1V4M2 7H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            <?php _e('Дата начала курса', 'course-plugin'); ?>
+                        </span>
+                        <svg class="toggle-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="filter-options" id="date-options">
+                        <div style="padding: 12px 16px;">
+                            <label for="date_from" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--premium-gray-700);">
+                                <?php _e('С', 'course-plugin'); ?>
+                            </label>
+                            <input type="date" id="date_from" name="date_from" value="<?php echo isset($_GET['date_from']) ? esc_attr($_GET['date_from']) : ''; ?>" class="regular-text" style="width: 100%; padding: 8px; border: 1px solid var(--premium-gray-300); border-radius: 6px; margin-bottom: 12px;" />
+                            
+                            <label for="date_to" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--premium-gray-700);">
+                                <?php _e('По', 'course-plugin'); ?>
+                            </label>
+                            <input type="date" id="date_to" name="date_to" value="<?php echo isset($_GET['date_to']) ? esc_attr($_GET['date_to']) : ''; ?>" class="regular-text" style="width: 100%; padding: 8px; border: 1px solid var(--premium-gray-300); border-radius: 6px;" />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Стоимость -->
+                <div class="filter-group">
+                    <button type="button" class="filter-group-toggle active" data-target="price-options">
+                        <span class="filter-group-title">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M8 4V8L10 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            <?php _e('Стоимость', 'course-plugin'); ?>
+                        </span>
+                        <svg class="toggle-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="filter-options" id="price-options">
+                        <?php
+                        $selected_price = isset($_GET['price']) ? $_GET['price'] : '';
+                        ?>
+                        <label class="filter-option">
+                            <input type="radio" name="price" value="free" <?php checked($selected_price, 'free'); ?>>
+                            <span class="option-checkbox"></span>
+                            <span class="option-text"><?php _e('Бесплатные', 'course-plugin'); ?></span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="radio" name="price" value="paid" <?php checked($selected_price, 'paid'); ?>>
+                            <span class="option-checkbox"></span>
+                            <span class="option-text"><?php _e('Платные', 'course-plugin'); ?></span>
+                        </label>
+                        <label class="filter-option">
+                            <input type="radio" name="price" value="" <?php checked($selected_price, ''); ?>>
+                            <span class="option-checkbox"></span>
+                            <span class="option-text"><?php _e('Все', 'course-plugin'); ?></span>
+                        </label>
+                    </div>
+                </div>
+                
                 <!-- Кнопки -->
                 <div class="filter-actions">
                     <button type="submit" class="filter-apply-btn">
@@ -339,7 +448,7 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
             
             <!-- Активные фильтры -->
             <?php
-            $has_active_filters = !empty($_GET['teacher']) || !empty($_GET['level']) || !empty($_GET['specialization']) || !empty($_GET['topic']) || !empty($_GET['search']);
+            $has_active_filters = !empty($_GET['teacher']) || !empty($_GET['level']) || !empty($_GET['specialization']) || !empty($_GET['topic']) || !empty($_GET['search']) || !empty($_GET['location']) || !empty($_GET['date_from']) || !empty($_GET['date_to']) || !empty($_GET['price']);
             if ($has_active_filters) :
             ?>
             <div class="active-filters">
@@ -372,6 +481,73 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                             <button type="button" class="remove-filter" data-filter="level" data-value="<?php echo esc_attr($level_slug); ?>">&times;</button>
                         </span>
                     <?php endif; endforeach; endif; ?>
+                    
+                    <?php
+                    // Активные фильтры по месту прохождения
+                    if (!empty($_GET['location'])) {
+                        $locations = is_array($_GET['location']) ? $_GET['location'] : array($_GET['location']);
+                        $location_names = array(
+                            'online' => __('Онлайн-курсы', 'course-plugin'),
+                            'zoom' => __('Зум', 'course-plugin'),
+                            'moscow' => __('Москва (центральный кампус)', 'course-plugin'),
+                            'prokhladny' => __('Прохладный', 'course-plugin'),
+                            'nizhny-novgorod' => __('Нижний Новгород', 'course-plugin'),
+                            'chelyabinsk' => __('Челябинск', 'course-plugin'),
+                            'norilsk' => __('Норильск', 'course-plugin'),
+                            'izhevsk' => __('Ижевск', 'course-plugin'),
+                            'yug' => __('Юг', 'course-plugin'),
+                            'novokuznetsk' => __('Новокузнецк', 'course-plugin'),
+                        );
+                        foreach ($locations as $location_slug) {
+                            if (isset($location_names[$location_slug])) {
+                                ?>
+                                <span class="active-filter-tag">
+                                    <?php echo esc_html($location_names[$location_slug]); ?>
+                                    <button type="button" class="remove-filter" data-filter="location" data-value="<?php echo esc_attr($location_slug); ?>">&times;</button>
+                                </span>
+                                <?php
+                            }
+                        }
+                    }
+                    
+                    // Активные фильтры по дате
+                    if (!empty($_GET['date_from']) || !empty($_GET['date_to'])) {
+                        $date_text = '';
+                        if (!empty($_GET['date_from']) && !empty($_GET['date_to'])) {
+                            $date_text = sprintf(__('С %s по %s', 'course-plugin'), esc_html($_GET['date_from']), esc_html($_GET['date_to']));
+                        } elseif (!empty($_GET['date_from'])) {
+                            $date_text = sprintf(__('С %s', 'course-plugin'), esc_html($_GET['date_from']));
+                        } elseif (!empty($_GET['date_to'])) {
+                            $date_text = sprintf(__('По %s', 'course-plugin'), esc_html($_GET['date_to']));
+                        }
+                        if ($date_text) {
+                            ?>
+                            <span class="active-filter-tag">
+                                <?php echo $date_text; ?>
+                                <button type="button" class="remove-filter" data-filter="date">&times;</button>
+                            </span>
+                            <?php
+                        }
+                    }
+                    
+                    // Активный фильтр по стоимости
+                    if (!empty($_GET['price'])) {
+                        $price_text = '';
+                        if ($_GET['price'] === 'free') {
+                            $price_text = __('Бесплатные', 'course-plugin');
+                        } elseif ($_GET['price'] === 'paid') {
+                            $price_text = __('Платные', 'course-plugin');
+                        }
+                        if ($price_text) {
+                            ?>
+                            <span class="active-filter-tag">
+                                <?php echo esc_html($price_text); ?>
+                                <button type="button" class="remove-filter" data-filter="price">&times;</button>
+                            </span>
+                            <?php
+                        }
+                    }
+                    ?>
                 </div>
                 <a href="<?php echo get_post_type_archive_link('course'); ?>" class="clear-all-filters"><?php _e('Очистить все', 'course-plugin'); ?></a>
             </div>
@@ -621,13 +797,19 @@ document.addEventListener('DOMContentLoaded', function() {
             var value = this.getAttribute('data-value');
             var url = new URL(window.location.href);
             
-            if (value) {
+            if (filter === 'date') {
+                // Удаляем оба параметра даты
+                url.searchParams.delete('date_from');
+                url.searchParams.delete('date_to');
+            } else if (value) {
+                // Для фильтров с массивом значений (location[], level[] и т.д.)
                 var params = url.searchParams.getAll(filter + '[]');
                 url.searchParams.delete(filter + '[]');
                 params.filter(function(p) { return p !== value; }).forEach(function(p) {
                     url.searchParams.append(filter + '[]', p);
                 });
             } else {
+                // Для одиночных фильтров (price, teacher, search)
                 url.searchParams.delete(filter);
             }
             

@@ -211,6 +211,116 @@ class Course_Frontend {
                 $query->set('tax_query', $tax_query);
             }
             
+            // Фильтр по месту прохождения (мета-поле)
+            if (isset($_GET['location']) && !empty($_GET['location'])) {
+                $locations = is_array($_GET['location']) ? $_GET['location'] : array($_GET['location']);
+                $locations = array_map('sanitize_text_field', $locations);
+                
+                $meta_query = array();
+                $meta_query[] = array(
+                    'key'     => '_course_location',
+                    'value'   => $locations,
+                    'compare' => 'IN',
+                );
+                $query->set('meta_query', $meta_query);
+            }
+            
+            // Фильтр по дате начала курса
+            $date_from = isset($_GET['date_from']) ? sanitize_text_field($_GET['date_from']) : '';
+            $date_to = isset($_GET['date_to']) ? sanitize_text_field($_GET['date_to']) : '';
+            
+            if (!empty($date_from) || !empty($date_to)) {
+                $date_meta_query = array();
+                
+                if (!empty($date_from)) {
+                    $date_meta_query[] = array(
+                        'key'     => '_course_start_date',
+                        'value'   => $date_from,
+                        'compare' => '>=',
+                        'type'    => 'DATE',
+                    );
+                }
+                
+                if (!empty($date_to)) {
+                    $date_meta_query[] = array(
+                        'key'     => '_course_start_date',
+                        'value'   => $date_to,
+                        'compare' => '<=',
+                        'type'    => 'DATE',
+                    );
+                }
+                
+                if (!empty($date_meta_query)) {
+                    if (count($date_meta_query) > 1) {
+                        $date_meta_query['relation'] = 'AND';
+                    }
+                    
+                    // Объединяем с существующими meta_query
+                    $existing_meta_query = $query->get('meta_query');
+                    if (!empty($existing_meta_query)) {
+                        $combined_meta_query = array(
+                            'relation' => 'AND',
+                            $existing_meta_query,
+                            $date_meta_query,
+                        );
+                        $query->set('meta_query', $combined_meta_query);
+                    } else {
+                        $query->set('meta_query', $date_meta_query);
+                    }
+                }
+            }
+            
+            // Фильтр по стоимости (бесплатные/платные)
+            if (isset($_GET['price']) && !empty($_GET['price'])) {
+                $price_filter = sanitize_text_field($_GET['price']);
+                
+                $price_meta_query = array();
+                
+                if ($price_filter === 'free') {
+                    // Бесплатные: цена = 0 или пусто
+                    $price_meta_query[] = array(
+                        'relation' => 'OR',
+                        array(
+                            'key'     => '_course_price',
+                            'value'   => '0',
+                            'compare' => '=',
+                        ),
+                        array(
+                            'key'     => '_course_price',
+                            'value'   => '',
+                            'compare' => '=',
+                        ),
+                        array(
+                            'key'     => '_course_price',
+                            'compare' => 'NOT EXISTS',
+                        ),
+                    );
+                } elseif ($price_filter === 'paid') {
+                    // Платные: цена > 0
+                    $price_meta_query[] = array(
+                        'key'     => '_course_price',
+                        'value'   => '0',
+                        'compare' => '>',
+                        'type'    => 'NUMERIC',
+                    );
+                }
+                
+                if (!empty($price_meta_query)) {
+                    // Объединяем с существующими meta_query
+                    $existing_meta_query = $query->get('meta_query');
+                    if (!empty($existing_meta_query)) {
+                        $combined_meta_query = array(
+                            'relation' => 'AND',
+                            $existing_meta_query,
+                            $price_meta_query,
+                        );
+                        $query->set('meta_query', $combined_meta_query);
+                    } else {
+                        $query->set('meta_query', $price_meta_query);
+                    }
+                }
+            }
+            
             // Сортировка
             if (isset($_GET['sort']) && !empty($_GET['sort'])) {
                 $sort = sanitize_text_field($_GET['sort']);
