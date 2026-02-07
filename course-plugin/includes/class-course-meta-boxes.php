@@ -577,6 +577,14 @@ class Course_Meta_Boxes {
         $show_hero_language = get_post_meta($post->ID, '_course_show_hero_language', true);
         $show_hero_certificate = get_post_meta($post->ID, '_course_show_hero_certificate', true);
         $show_hero_location = get_post_meta($post->ID, '_course_show_hero_location', true);
+        // Инициализация по умолчанию для всех hero полей, если значение не установлено
+        if ($show_hero_code === '') $show_hero_code = '1';
+        if ($show_hero_level === '') $show_hero_level = '1';
+        if ($show_hero_dates === '') $show_hero_dates = '1';
+        if ($show_hero_duration === '') $show_hero_duration = '1';
+        if ($show_hero_language === '') $show_hero_language = '1';
+        if ($show_hero_certificate === '') $show_hero_certificate = '1';
+        if ($show_hero_location === '') $show_hero_location = '1';
         
         // Получаем сохраненные значения заголовков секций
         $section_description_title = get_post_meta($post->ID, '_course_section_description_title', true);
