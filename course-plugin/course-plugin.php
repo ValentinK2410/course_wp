@@ -96,6 +96,41 @@ class Course_Plugin {
         // Хук 'plugins_loaded' срабатывает после загрузки всех плагинов
         // Это нужно для правильной загрузки переводов
         add_action('plugins_loaded', array($this, 'load_textdomain'));
+        
+        // Добавляем поддержку Elementor для типов постов курсов и программ
+        add_action('elementor/init', array($this, 'add_elementor_support'));
+    }
+    
+    /**
+     * Добавление поддержки Elementor для типов постов курсов и программ
+     */
+    public function add_elementor_support() {
+        // Добавляем поддержку для типа поста "course"
+        add_filter('elementor_pro/utils/get_public_post_types', function($post_types) {
+            if (!in_array('course', $post_types)) {
+                $post_types[] = 'course';
+            }
+            return $post_types;
+        });
+        
+        // Добавляем поддержку для типа поста "program"
+        add_filter('elementor_pro/utils/get_public_post_types', function($post_types) {
+            if (!in_array('program', $post_types)) {
+                $post_types[] = 'program';
+            }
+            return $post_types;
+        });
+        
+        // Для бесплатной версии Elementor используем другой фильтр
+        add_filter('elementor/utils/get_public_post_types', function($post_types) {
+            if (!in_array('course', $post_types)) {
+                $post_types[] = 'course';
+            }
+            if (!in_array('program', $post_types)) {
+                $post_types[] = 'program';
+            }
+            return $post_types;
+        });
     }
     
     /**
