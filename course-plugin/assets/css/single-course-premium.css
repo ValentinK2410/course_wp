@@ -181,6 +181,21 @@
     height: 14px;
 }
 
+.hero-tag-countdown.countdown-soon {
+    background: rgba(67, 233, 123, 0.25);
+    border-color: rgba(67, 233, 123, 0.4);
+}
+
+.hero-tag-countdown.countdown-past {
+    background: rgba(255, 255, 255, 0.08);
+    opacity: 0.9;
+}
+
+.hero-tag-date {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
 /* Hero Title */
 .hero-title {
     font-size: 3rem;

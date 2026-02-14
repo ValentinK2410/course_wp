@@ -170,15 +170,33 @@ while (have_posts()) : the_post();
     // ============================================
     // ФОРМАТИРОВАНИЕ ДАТ
     // ============================================
-    // Преобразуем даты начала и окончания курса в читаемый формат
     $formatted_dates = '';
+    $days_until_start = null;
     if ($course_start_date) {
-        $start = date_i18n('j F', strtotime($course_start_date)); // Форматируем дату начала
+        $start_timestamp = strtotime($course_start_date);
+        $current_timestamp = current_time('timestamp');
+        $days_diff = floor(($start_timestamp - $current_timestamp) / (60 * 60 * 24));
+        $days_until_start = $days_diff;
+        
         if ($course_end_date) {
-            $end = date_i18n('j F Y', strtotime($course_end_date)); // Форматируем дату окончания
-            $formatted_dates = $start . ' — ' . $end; // Диапазон дат
+            $end_timestamp = strtotime($course_end_date);
+            $start_day = date('j', $start_timestamp);
+            $end_day = date('j', $end_timestamp);
+            if (date('m', $start_timestamp) === date('m', $end_timestamp)) {
+                $month = date_i18n('F', $start_timestamp);
+                $year = date('Y', $start_timestamp);
+                $formatted_dates = sprintf(__('%s–%s %s %s', 'course-plugin'), $start_day, $end_day, $month, $year);
+            } else {
+                $start_month = date_i18n('F', $start_timestamp);
+                $end_month = date_i18n('F', $end_timestamp);
+                $year = date('Y', $start_timestamp);
+                $formatted_dates = sprintf(__('%s %s — %s %s %s', 'course-plugin'), $start_day, $start_month, $end_day, $end_month, $year);
+            }
         } else {
-            $formatted_dates = __('Начало:', 'course-plugin') . ' ' . $start; // Только дата начала
+            $day = date('j', $start_timestamp);
+            $month = date_i18n('F', $start_timestamp);
+            $year = date('Y', $start_timestamp);
+            $formatted_dates = sprintf(__('%s %s %s', 'course-plugin'), $day, $month, $year);
         }
     }
     
@@ -269,6 +287,18 @@ while (have_posts()) : the_post();
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 5H13M4 1V3M10 1V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                             <?php echo esc_html($formatted_dates); ?>
                         </span>
+                        <?php if ($days_until_start !== null) : ?>
+                            <span class="hero-tag hero-tag-countdown <?php echo $days_until_start < 0 ? 'countdown-past' : ($days_until_start <= 7 ? 'countdown-soon' : 'countdown-future'); ?>">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M7 4V7L9 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                <?php if ($days_until_start < 0) : ?>
+                                    <?php printf(__('Начался %d дн. назад', 'course-plugin'), abs($days_until_start)); ?>
+                                <?php elseif ($days_until_start == 0) : ?>
+                                    <?php _e('Начинается сегодня', 'course-plugin'); ?>
+                                <?php else : ?>
+                                    <?php printf(_n('Начинается через %d день', 'Начинается через %d дней', $days_until_start, 'course-plugin'), $days_until_start); ?>
+                                <?php endif; ?>
+                            </span>
+                        <?php endif; ?>
                     <?php endif; ?>
                     <?php if ($show_hero_location && $location_name) : ?>
                         <span class="hero-tag hero-tag-location">
