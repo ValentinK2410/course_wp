@@ -1291,17 +1291,15 @@ class Course_Meta_Boxes {
         
         ?>
         <style>
-            .course-icon-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-            .course-icon-picker label { display: flex; flex-direction: column; align-items: center; padding: 10px 12px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s; min-width: 70px; }
+            .course-icon-picker { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; max-width: 450px; }
+            .course-icon-picker label { display: flex; flex-direction: column; align-items: center; padding: 6px 8px; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; transition: all 0.2s; min-width: 52px; }
             .course-icon-picker label:hover { border-color: #667eea; background: #f8f9ff; }
-            .course-icon-picker input:checked + label,
             .course-icon-picker label.checked { border-color: #667eea; background: #f0f2ff; box-shadow: 0 0 0 2px rgba(102,126,234,0.2); }
-            .course-icon-picker .icon-preview { width: 36px; height: 36px; margin-bottom: 6px; color: #667eea; }
+            .course-icon-picker .icon-preview { width: 28px; height: 28px; margin-bottom: 4px; color: #667eea; }
             .course-icon-picker .icon-preview svg { width: 100%; height: 100%; }
-            .course-icon-picker .icon-label { font-size: 11px; text-align: center; color: #333; max-width: 60px; }
-            .course-icon-picker label { cursor: pointer; }
+            .course-icon-picker .icon-label { font-size: 10px; text-align: center; color: #333; max-width: 48px; line-height: 1.2; }
             .course-icon-picker input[type="radio"] { display: none; }
-            .course-icon-picker-default { padding: 10px 12px; border: 2px dashed #ccc; border-radius: 8px; min-width: 70px; text-align: center; font-size: 11px; color: #666; cursor: pointer; }
+            .course-icon-picker-default { padding: 6px 8px; border: 2px dashed #ccc; border-radius: 6px; min-width: 52px; text-align: center; font-size: 10px; color: #666; }
             .course-icon-picker-default.checked { border-color: #667eea; background: #f0f2ff; }
         </style>
         <table class="form-table">
