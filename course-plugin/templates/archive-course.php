@@ -212,13 +212,20 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                             'orderby' => 'name',
                         ));
                         
+                        $selected_specs = isset($_GET['specialization']) ? (array)$_GET['specialization'] : array();
+                        ?>
+                        <label class="filter-option">
+                            <input type="radio" name="specialization_all" value="" <?php echo empty($selected_specs) ? 'checked' : ''; ?> onchange="document.querySelectorAll('input[name=\'specialization[]\']').forEach(cb => cb.checked = false);">
+                            <span class="option-checkbox"></span>
+                            <span class="option-text"><?php _e('Все программы', 'course-plugin'); ?></span>
+                        </label>
+                        <?php
                         if ($specializations && !is_wp_error($specializations)) {
-                            $selected_specs = isset($_GET['specialization']) ? (array)$_GET['specialization'] : array();
                             foreach ($specializations as $spec) {
                                 $checked = in_array($spec->slug, $selected_specs) ? 'checked' : '';
                                 ?>
                                 <label class="filter-option">
-                                    <input type="checkbox" name="specialization[]" value="<?php echo esc_attr($spec->slug); ?>" <?php echo $checked; ?>>
+                                    <input type="checkbox" name="specialization[]" value="<?php echo esc_attr($spec->slug); ?>" <?php echo $checked; ?> onchange="document.querySelector('input[name=\'specialization_all\']').checked = false;">
                                     <span class="option-checkbox"></span>
                                     <span class="option-text"><?php echo esc_html($spec->name); ?></span>
                                     <span class="option-count"><?php echo $spec->count; ?></span>
