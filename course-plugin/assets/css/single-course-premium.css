@@ -289,6 +289,18 @@
 .hero-media {
     width: 480px;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.hero-enroll-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px 20px;
 }
 
 .hero-video-wrapper,

@@ -385,6 +385,15 @@ while (have_posts()) : the_post();
                         </svg>
                     </div>
                 <?php endif; ?>
+                <?php
+                $hero_enroll_url = $course_seminary_new_url ?: $course_seminary_student_url ?: $course_lite_course_url;
+                if ($hero_enroll_url) :
+                ?>
+                    <a href="<?php echo esc_url($hero_enroll_url); ?>" target="_blank" rel="noopener" class="hero-enroll-btn action-btn action-btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <?php echo esc_html($btn_enroll_text); ?>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </header>
