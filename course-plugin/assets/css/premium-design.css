@@ -326,6 +326,53 @@
     border-color: var(--premium-gray-300);
 }
 
+/* Группа фильтров с выпадающим списком */
+.filter-group-select {
+    padding: 16px;
+    background: var(--premium-white);
+}
+
+.filter-select-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--premium-gray-800);
+    margin-bottom: 10px;
+}
+
+.filter-select-label svg {
+    color: var(--premium-primary);
+}
+
+.filter-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--premium-gray-200);
+    border-radius: var(--premium-radius);
+    font-size: 0.9375rem;
+    color: var(--premium-gray-900);
+    background: var(--premium-white);
+    cursor: pointer;
+    transition: var(--premium-transition);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%239ca3af' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+}
+
+.filter-select:hover {
+    border-color: var(--premium-gray-300);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--premium-primary);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
 .filter-group-toggle {
     display: flex;
     align-items: center;

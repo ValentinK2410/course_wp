@@ -38,6 +38,8 @@ while (have_posts()) : the_post();
     $course_language = get_post_meta(get_the_ID(), '_course_language', true) ?: 'Русский';
     $course_certificate = get_post_meta(get_the_ID(), '_course_certificate', true);
     $course_video_url = get_post_meta(get_the_ID(), '_course_video_url', true);
+    $course_accommodation = get_post_meta(get_the_ID(), '_course_accommodation', true); // Проживание и питание
+    $course_lifetime_access = get_post_meta(get_the_ID(), '_course_lifetime_access', true); // Пожизненный доступ
     
     // Цели курса
     $course_cognitive_goals = get_post_meta(get_the_ID(), '_course_cognitive_goals', true);
@@ -672,6 +674,33 @@ while (have_posts()) : the_post();
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="16" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 14V16M12 14V16" stroke="currentColor" stroke-width="1.5"/></svg>
                                     </span>
                                     <span class="overview-label"><?php _e('Сертификат:', 'course-plugin'); ?></span>
+                                    <span class="overview-value overview-value-yes"><?php _e('Да', 'course-plugin'); ?></span>
+                                </li>
+                            <?php endif; ?>
+                            <?php if ($course_accommodation) : ?>
+                                <li class="overview-item">
+                                    <span class="overview-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L12.5 7H17.5L13.5 11L15 17L10 14L5 17L6.5 11L2.5 7H7.5L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                                    </span>
+                                    <span class="overview-label"><?php _e('Проживание и питание:', 'course-plugin'); ?></span>
+                                    <span class="overview-value">
+                                        <?php
+                                        $accommodation_names = array(
+                                            'included' => __('Включено', 'course-plugin'),
+                                            'not_included' => __('Не включено', 'course-plugin'),
+                                            'online' => __('Онлайн', 'course-plugin'),
+                                        );
+                                        echo esc_html(isset($accommodation_names[$course_accommodation]) ? $accommodation_names[$course_accommodation] : $course_accommodation);
+                                        ?>
+                                    </span>
+                                </li>
+                            <?php endif; ?>
+                            <?php if ($course_lifetime_access === '1') : ?>
+                                <li class="overview-item">
+                                    <span class="overview-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L12.5 7H17.5L13.5 11L15 17L10 14L5 17L6.5 11L2.5 7H7.5L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                                    </span>
+                                    <span class="overview-label"><?php _e('Пожизненный доступ к материалам курса:', 'course-plugin'); ?></span>
                                     <span class="overview-value overview-value-yes"><?php _e('Да', 'course-plugin'); ?></span>
                                 </li>
                             <?php endif; ?>

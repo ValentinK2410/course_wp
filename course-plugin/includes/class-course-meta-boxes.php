@@ -175,6 +175,8 @@ class Course_Meta_Boxes {
         $course_language = get_post_meta($post->ID, '_course_language', true);
         $course_certificate = get_post_meta($post->ID, '_course_certificate', true);
         $course_location = get_post_meta($post->ID, '_course_location', true);
+        $course_accommodation = get_post_meta($post->ID, '_course_accommodation', true); // Проживание и питание
+        $course_lifetime_access = get_post_meta($post->ID, '_course_lifetime_access', true); // Пожизненный доступ
         
         // Начинаем вывод HTML-формы
         ?>
@@ -301,6 +303,34 @@ class Course_Meta_Boxes {
                         <?php _e('Выдается сертификат по окончании курса', 'course-plugin'); ?>
                     </label>
                     <span class="description"><?php _e('Отображается в сайдбаре "Краткий обзор курса" и в шапке страницы', 'course-plugin'); ?></span>
+                </td>
+            </tr>
+            <!-- Поле "Проживание и питание" -->
+            <tr>
+                <th>
+                    <label for="course_accommodation"><?php _e('Проживание и питание на время обучения', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <select id="course_accommodation" name="course_accommodation" class="regular-text">
+                        <option value=""><?php _e('-- Не указано --', 'course-plugin'); ?></option>
+                        <option value="included" <?php selected($course_accommodation, 'included'); ?>><?php _e('Включено', 'course-plugin'); ?></option>
+                        <option value="not_included" <?php selected($course_accommodation, 'not_included'); ?>><?php _e('Не включено', 'course-plugin'); ?></option>
+                        <option value="online" <?php selected($course_accommodation, 'online'); ?>><?php _e('Онлайн', 'course-plugin'); ?></option>
+                    </select>
+                    <span class="description"><?php _e('Отображается в блоке "Информация о курсе"', 'course-plugin'); ?></span>
+                </td>
+            </tr>
+            <!-- Поле "Пожизненный доступ" -->
+            <tr>
+                <th>
+                    <label for="course_lifetime_access"><?php _e('Пожизненный доступ к материалам курса', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <label>
+                        <input type="checkbox" id="course_lifetime_access" name="course_lifetime_access" value="1" <?php checked($course_lifetime_access, '1'); ?> />
+                        <?php _e('Да', 'course-plugin'); ?>
+                    </label>
+                    <span class="description"><?php _e('Отображается в блоке "Информация о курсе"', 'course-plugin'); ?></span>
                 </td>
             </tr>
         </table>
@@ -1271,6 +1301,8 @@ class Course_Meta_Boxes {
             'course_credits',             // Кредиты
             'course_hours_per_week',      // Часов в неделю
             'course_language',            // Язык курса
+            'course_accommodation',       // Проживание и питание
+            'course_lifetime_access',     // Пожизненный доступ
             // Тексты страницы
             'course_cta_title',           // Заголовок CTA блока
             'course_cta_text',            // Текст CTA блока

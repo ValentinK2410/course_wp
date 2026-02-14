@@ -106,48 +106,35 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                 </div>
                 
                 <!-- Преподаватель -->
-                <div class="filter-group">
-                    <button type="button" class="filter-group-toggle active" data-target="teacher-options">
-                        <span class="filter-group-title">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/>
-                                <path d="M3 14C3 11.2386 5.23858 9 8 9C10.7614 9 13 11.2386 13 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                            </svg>
-                            <?php _e('Преподаватель', 'course-plugin'); ?>
-                        </span>
-                        <svg class="toggle-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <div class="filter-group filter-group-select">
+                    <label class="filter-select-label">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M3 14C3 11.2386 5.23858 9 8 9C10.7614 9 13 11.2386 13 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
-                    </button>
-                    <div class="filter-options" id="teacher-options">
+                        <?php _e('Преподаватель', 'course-plugin'); ?>
+                    </label>
+                    <select name="teacher" class="filter-select">
                         <?php
                         $teachers = get_terms(array(
                             'taxonomy' => 'course_teacher',
                             'hide_empty' => false,
                         ));
-                        
+                        $selected_teacher = isset($_GET['teacher']) ? $_GET['teacher'] : '';
+                        ?>
+                        <option value="" <?php selected($selected_teacher, ''); ?>><?php _e('Все преподаватели', 'course-plugin'); ?></option>
+                        <?php
                         if ($teachers && !is_wp_error($teachers)) {
-                            $selected_teacher = isset($_GET['teacher']) ? $_GET['teacher'] : '';
                             foreach ($teachers as $teacher) {
-                                $checked = ($teacher->slug === $selected_teacher) ? 'checked' : '';
-                                $count = $teacher->count;
                                 ?>
-                                <label class="filter-option">
-                                    <input type="radio" name="teacher" value="<?php echo esc_attr($teacher->slug); ?>" <?php echo $checked; ?>>
-                                    <span class="option-checkbox"></span>
-                                    <span class="option-text"><?php echo esc_html($teacher->name); ?></span>
-                                    <span class="option-count"><?php echo $count; ?></span>
-                                </label>
+                                <option value="<?php echo esc_attr($teacher->slug); ?>" <?php selected($selected_teacher, $teacher->slug); ?>>
+                                    <?php echo esc_html($teacher->name); ?> (<?php echo $teacher->count; ?>)
+                                </option>
                                 <?php
                             }
                         }
                         ?>
-                        <label class="filter-option">
-                            <input type="radio" name="teacher" value="" <?php echo empty($selected_teacher) ? 'checked' : ''; ?>>
-                            <span class="option-checkbox"></span>
-                            <span class="option-text"><?php _e('Все преподаватели', 'course-plugin'); ?></span>
-                        </label>
-                    </div>
+                    </select>
                 </div>
                 
                 <!-- Уровень -->
@@ -191,50 +178,36 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                 </div>
                 
                 <!-- Программа -->
-                <div class="filter-group">
-                    <button type="button" class="filter-group-toggle active" data-target="program-options">
-                        <span class="filter-group-title">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
-                                <path d="M5 6H11M5 8H11M5 10H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                            </svg>
-                            <?php _e('Программа', 'course-plugin'); ?>
-                        </span>
-                        <svg class="toggle-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <div class="filter-group filter-group-select">
+                    <label class="filter-select-label">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M5 6H11M5 8H11M5 10H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
-                    </button>
-                    <div class="filter-options" id="program-options">
+                        <?php _e('Программа', 'course-plugin'); ?>
+                    </label>
+                    <select name="specialization" class="filter-select">
                         <?php
                         $specializations = get_terms(array(
                             'taxonomy' => 'course_specialization',
                             'hide_empty' => false,
                             'orderby' => 'name',
                         ));
-                        
-                        $selected_specs = isset($_GET['specialization']) ? (array)$_GET['specialization'] : array();
+                        $selected_spec = isset($_GET['specialization']) ? $_GET['specialization'] : '';
                         ?>
-                        <label class="filter-option">
-                            <input type="radio" name="specialization_all" value="" <?php echo empty($selected_specs) ? 'checked' : ''; ?> onchange="document.querySelectorAll('input[name=\'specialization[]\']').forEach(cb => cb.checked = false);">
-                            <span class="option-checkbox"></span>
-                            <span class="option-text"><?php _e('Все программы', 'course-plugin'); ?></span>
-                        </label>
+                        <option value="" <?php selected($selected_spec, ''); ?>><?php _e('Все программы', 'course-plugin'); ?></option>
                         <?php
                         if ($specializations && !is_wp_error($specializations)) {
                             foreach ($specializations as $spec) {
-                                $checked = in_array($spec->slug, $selected_specs) ? 'checked' : '';
                                 ?>
-                                <label class="filter-option">
-                                    <input type="checkbox" name="specialization[]" value="<?php echo esc_attr($spec->slug); ?>" <?php echo $checked; ?> onchange="document.querySelector('input[name=\'specialization_all\']').checked = false;">
-                                    <span class="option-checkbox"></span>
-                                    <span class="option-text"><?php echo esc_html($spec->name); ?></span>
-                                    <span class="option-count"><?php echo $spec->count; ?></span>
-                                </label>
+                                <option value="<?php echo esc_attr($spec->slug); ?>" <?php selected($selected_spec, $spec->slug); ?>>
+                                    <?php echo esc_html($spec->name); ?> (<?php echo $spec->count; ?>)
+                                </option>
                                 <?php
                             }
                         }
                         ?>
-                    </div>
+                    </select>
                 </div>
                 
                 <!-- Тема -->
