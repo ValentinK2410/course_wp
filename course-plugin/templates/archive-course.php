@@ -414,13 +414,14 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                     </div>
                     
                     <!-- Сортировка -->
+                    <?php $current_sort = !empty($_GET['sort']) ? sanitize_text_field($_GET['sort']) : 'date_start_asc'; ?>
                     <div class="sort-dropdown">
                         <select id="course-sort-select" name="sort" class="premium-sort-select">
-                            <option value="default" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'default'); ?>><?php _e('По умолчанию', 'course-plugin'); ?></option>
-                            <option value="date_start_asc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'date_start_asc'); ?>><?php _e('Дата: сначала ближайшие', 'course-plugin'); ?></option>
-                            <option value="price_asc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'price_asc'); ?>><?php _e('Цена: по возрастанию', 'course-plugin'); ?></option>
-                            <option value="level_asc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'level_asc'); ?>><?php _e('Уровень: сначала проще', 'course-plugin'); ?></option>
-                            <option value="title_asc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'title_asc'); ?>><?php _e('По названию А-Я', 'course-plugin'); ?></option>
+                            <option value="default" <?php selected($current_sort, 'default'); ?>><?php _e('По умолчанию', 'course-plugin'); ?></option>
+                            <option value="date_start_asc" <?php selected($current_sort, 'date_start_asc'); ?>><?php _e('Дата: сначала ближайшие', 'course-plugin'); ?></option>
+                            <option value="price_asc" <?php selected($current_sort, 'price_asc'); ?>><?php _e('Цена: по возрастанию', 'course-plugin'); ?></option>
+                            <option value="level_asc" <?php selected($current_sort, 'level_asc'); ?>><?php _e('Уровень: сначала проще', 'course-plugin'); ?></option>
+                            <option value="title_asc" <?php selected($current_sort, 'title_asc'); ?>><?php _e('По названию А-Я', 'course-plugin'); ?></option>
                         </select>
                     </div>
                 </div>

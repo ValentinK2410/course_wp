@@ -300,10 +300,9 @@ class Course_Frontend {
                 $query->set('meta_query', $meta_query);
             }
             
-            // Сортировка
-            if (isset($_GET['sort']) && !empty($_GET['sort'])) {
-                $sort = sanitize_text_field($_GET['sort']);
-                
+            // Сортировка (по умолчанию: дата начала — сначала ближайшие)
+            $sort = !empty($_GET['sort']) ? sanitize_text_field($_GET['sort']) : 'date_start_asc';
+            if ($sort !== 'default') {
                 switch ($sort) {
                     case 'date_start_asc':
                         // Дата начала: сначала ближайшие (по возрастанию даты начала)
@@ -342,6 +341,13 @@ class Course_Frontend {
                     case 'title_desc':
                         $query->set('orderby', 'title');
                         $query->set('order', 'DESC');
+                        break;
+                    default:
+                        // Для date_start_asc и неизвестных значений — дата начала по возрастанию
+                        $query->set('meta_key', '_course_start_date');
+                        $query->set('orderby', 'meta_value');
+                        $query->set('order', 'ASC');
+                        $query->set('meta_type', 'DATE');
                         break;
                 }
             }
