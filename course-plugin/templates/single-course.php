@@ -719,7 +719,7 @@ while (have_posts()) : the_post();
                             <?php if ($course_accommodation) : ?>
                                 <li class="overview-item">
                                     <span class="overview-icon">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L12.5 7H17.5L13.5 11L15 17L10 14L5 17L6.5 11L2.5 7H7.5L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 11L10 4L17 11V18H12V14H8V18H3V11Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     </span>
                                     <span class="overview-label"><?php _e('Проживание и питание:', 'course-plugin'); ?></span>
                                     <span class="overview-value">
@@ -737,7 +737,7 @@ while (have_posts()) : the_post();
                             <?php if ($course_lifetime_access === '1') : ?>
                                 <li class="overview-item">
                                     <span class="overview-icon">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L12.5 7H17.5L13.5 11L15 17L10 14L5 17L6.5 11L2.5 7H7.5L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L11.5 7.5H17L13 11L14.5 16.5L10 13.5L5.5 16.5L7 11L3 7.5H8.5L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
                                     </span>
                                     <span class="overview-label"><?php _e('Пожизненный доступ к материалам курса:', 'course-plugin'); ?></span>
                                     <span class="overview-value overview-value-yes"><?php _e('Да', 'course-plugin'); ?></span>
@@ -750,7 +750,9 @@ while (have_posts()) : the_post();
                                              ($show_field_weeks && $course_weeks) || 
                                              ($show_field_credits && $course_credits) || 
                                              ($show_field_hours && $course_hours_per_week) || 
-                                             ($show_field_certificate && $course_certificate);
+                                             ($show_field_certificate && $course_certificate) ||
+                                             $course_accommodation ||
+                                             ($course_lifetime_access === '1');
                         if (!$has_visible_fields) : 
                         ?>
                             <p class="description" style="padding: 15px; text-align: center; color: #666;">
