@@ -1199,6 +1199,76 @@ class Course_Meta_Boxes {
     }
     
     /**
+     * Возвращает массив доступных иконок для карточек курсов
+     * 
+     * @return array [slug => ['label' => string, 'svg' => string], ...]
+     */
+    public static function get_card_icon_options() {
+        return array(
+            'book' => array(
+                'label' => __('Книга', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 22H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 18V22" stroke="currentColor" stroke-width="2"/></svg>',
+            ),
+            'layers' => array(
+                'label' => __('Слои', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+            ),
+            'clock' => array(
+                'label' => __('Часы', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+            ),
+            'home' => array(
+                'label' => __('Дом', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 19V13C9 11.8954 9.89543 11 11 11H13C14.1046 11 15 11.8954 15 13V19" stroke="currentColor" stroke-width="2"/><path d="M3 11L12 3L21 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            ),
+            'users' => array(
+                'label' => __('Люди', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            ),
+            'graduation' => array(
+                'label' => __('Образование', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 10V15C22 15.5523 21.5523 16 21 16H3C2.44772 16 2 15.5523 2 15V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 5L2 10L12 15L22 10L12 5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 10V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M22 10V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+            ),
+            'award' => array(
+                'label' => __('Награда', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="6" stroke="currentColor" stroke-width="2"/><path d="M8 21L12 17L16 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 14V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7.5 12L5 22L12 18L19 22L16.5 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            ),
+            'map-pin' => array(
+                'label' => __('Место', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/></svg>',
+            ),
+            'calendar' => array(
+                'label' => __('Календарь', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M3 10H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+            ),
+            'star' => array(
+                'label' => __('Звезда', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            ),
+            'lightbulb' => array(
+                'label' => __('Идея', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10 22H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 2C8.69 2 6 4.69 6 8C6 10.22 7.21 12.16 9 13.19V15C9 15.5523 9.44772 16 10 16H14C14.5523 16 15 15.5523 15 15V13.19C16.79 12.16 18 10.22 18 8C18 4.69 15.31 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            ),
+            'target' => array(
+                'label' => __('Цель', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" stroke="currentColor" stroke-width="2"/></svg>',
+            ),
+            'video' => array(
+                'label' => __('Видео', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M22 7L16 10.5V13.5L22 17V7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+            ),
+            'file-text' => array(
+                'label' => __('Документ', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+            ),
+            'heart' => array(
+                'label' => __('Сердце', 'course-plugin'),
+                'svg' => '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20.84 4.61C20.3292 4.099 19.7228 3.69364 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69364 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.57831 8.50903 2.99871 7.05 2.99871C5.59096 2.99871 4.19169 3.57831 3.16 4.61C2.1283 5.64169 1.54871 7.04097 1.54871 8.5C1.54871 9.95903 2.1283 11.3583 3.16 12.39L4.22 13.45L12 21.23L19.78 13.45L20.84 12.39C21.351 11.8792 21.7564 11.2728 22.0339 10.6053C22.3115 9.93789 22.4538 9.22249 22.4538 8.5C22.4538 7.77751 22.3115 7.0621 22.0339 6.39464C21.7564 5.72718 21.351 5.12075 20.84 4.61Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            ),
+        );
+    }
+    
+    /**
      * Рендеринг метабокса "Настройка карточки курса"
      * Отображает форму с настройками отображения карточки курса в архиве
      * 
@@ -1217,7 +1287,23 @@ class Course_Meta_Boxes {
             $card_icon_type = 'default'; // По умолчанию стандартная иконка
         }
         
+        $icon_options = self::get_card_icon_options();
+        
         ?>
+        <style>
+            .course-icon-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+            .course-icon-picker label { display: flex; flex-direction: column; align-items: center; padding: 10px 12px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.2s; min-width: 70px; }
+            .course-icon-picker label:hover { border-color: #667eea; background: #f8f9ff; }
+            .course-icon-picker input:checked + label,
+            .course-icon-picker label.checked { border-color: #667eea; background: #f0f2ff; box-shadow: 0 0 0 2px rgba(102,126,234,0.2); }
+            .course-icon-picker .icon-preview { width: 36px; height: 36px; margin-bottom: 6px; color: #667eea; }
+            .course-icon-picker .icon-preview svg { width: 100%; height: 100%; }
+            .course-icon-picker .icon-label { font-size: 11px; text-align: center; color: #333; max-width: 60px; }
+            .course-icon-picker label { cursor: pointer; }
+            .course-icon-picker input[type="radio"] { display: none; }
+            .course-icon-picker-default { padding: 10px 12px; border: 2px dashed #ccc; border-radius: 8px; min-width: 70px; text-align: center; font-size: 11px; color: #666; cursor: pointer; }
+            .course-icon-picker-default.checked { border-color: #667eea; background: #f0f2ff; }
+        </style>
         <table class="form-table">
             <tr>
                 <th>
@@ -1232,17 +1318,26 @@ class Course_Meta_Boxes {
             </tr>
             <tr>
                 <th>
-                    <label for="course_card_icon_type"><?php _e('Тип иконки', 'course-plugin'); ?></label>
+                    <label><?php _e('Тип иконки', 'course-plugin'); ?></label>
                 </th>
                 <td>
-                    <select id="course_card_icon_type" name="course_card_icon_type" class="regular-text">
-                        <option value="default" <?php selected($card_icon_type, 'default'); ?>><?php _e('По умолчанию (автоматически)', 'course-plugin'); ?></option>
-                        <option value="book" <?php selected($card_icon_type, 'book'); ?>><?php _e('Книга', 'course-plugin'); ?></option>
-                        <option value="layers" <?php selected($card_icon_type, 'layers'); ?>><?php _e('Слои', 'course-plugin'); ?></option>
-                        <option value="clock" <?php selected($card_icon_type, 'clock'); ?>><?php _e('Часы', 'course-plugin'); ?></option>
-                        <option value="home" <?php selected($card_icon_type, 'home'); ?>><?php _e('Дом', 'course-plugin'); ?></option>
-                    </select>
-                    <p class="description"><?php _e('Выберите тип иконки для отображения на карточке курса', 'course-plugin'); ?></p>
+                    <div class="course-icon-picker" id="course-icon-picker">
+                        <label class="course-icon-picker-default <?php echo $card_icon_type === 'default' ? 'checked' : ''; ?>" data-value="default">
+                            <input type="radio" name="course_card_icon_type" value="default" <?php checked($card_icon_type, 'default'); ?> />
+                            <span><?php _e('Авто', 'course-plugin'); ?></span>
+                        </label>
+                        <?php foreach ($icon_options as $slug => $opt) : ?>
+                            <label class="course-icon-option <?php echo $card_icon_type === $slug ? 'checked' : ''; ?>" data-value="<?php echo esc_attr($slug); ?>">
+                                <input type="radio" name="course_card_icon_type" value="<?php echo esc_attr($slug); ?>" <?php checked($card_icon_type, $slug); ?> />
+                                <span class="icon-preview"><?php echo $opt['svg']; ?></span>
+                                <span class="icon-label"><?php echo esc_html($opt['label']); ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <script>
+                    (function(){var p=document.getElementById('course-icon-picker');if(!p)return;p.querySelectorAll('label').forEach(function(l){l.addEventListener('click',function(){p.querySelectorAll('label').forEach(function(x){x.classList.remove('checked')});this.classList.add('checked')})})})();
+                    </script>
+                    <p class="description" style="margin-top:10px;"><?php _e('Выберите иконку для карточки курса', 'course-plugin'); ?></p>
                 </td>
             </tr>
         </table>
@@ -1377,7 +1472,10 @@ class Course_Meta_Boxes {
         // Тип иконки
         if (isset($_POST['course_card_icon_type'])) {
             $card_icon_type = sanitize_text_field($_POST['course_card_icon_type']);
-            update_post_meta($post_id, '_course_card_icon_type', $card_icon_type);
+            $valid_types = array_merge(array('default'), array_keys(self::get_card_icon_options()));
+            if (in_array($card_icon_type, $valid_types)) {
+                update_post_meta($post_id, '_course_card_icon_type', $card_icon_type);
+            }
         }
         
         // Сохраняем дополнительные блоки контента

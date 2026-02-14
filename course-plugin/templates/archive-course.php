@@ -690,28 +690,15 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                     <?php if ($show_card_icon === '1') : ?>
                                         <div class="card-icon">
                                             <?php
-                                            // Определяем тип иконки
-                                            $icon_index = 0;
-                                            if ($card_icon_type && $card_icon_type !== 'default') {
-                                                $icon_map = array(
-                                                    'book' => 0,
-                                                    'layers' => 1,
-                                                    'clock' => 2,
-                                                    'home' => 3,
-                                                );
-                                                $icon_index = isset($icon_map[$card_icon_type]) ? $icon_map[$card_icon_type] : 0;
+                                            $icon_options = Course_Meta_Boxes::get_card_icon_options();
+                                            $icon_keys = array_keys($icon_options);
+                                            $icon_count = count($icon_keys);
+                                            if ($card_icon_type && $card_icon_type !== 'default' && isset($icon_options[$card_icon_type])) {
+                                                echo $icon_options[$card_icon_type]['svg'];
                                             } else {
-                                                // Автоматический выбор по ID курса
-                                                $icon_index = get_the_ID() % 4;
+                                                $icon_index = get_the_ID() % $icon_count;
+                                                echo $icon_options[$icon_keys[$icon_index]]['svg'];
                                             }
-                                            
-                                            $icons = array(
-                                                '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 22H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 18V22" stroke="currentColor" stroke-width="2"/></svg>',
-                                                '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
-                                                '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-                                                '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 19V13C9 11.8954 9.89543 11 11 11H13C14.1046 11 15 11.8954 15 13V19" stroke="currentColor" stroke-width="2"/><path d="M3 11L12 3L21 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-                                            );
-                                            echo $icons[$icon_index];
                                             ?>
                                         </div>
                                     <?php endif; ?>
