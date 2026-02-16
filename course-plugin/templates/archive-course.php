@@ -616,11 +616,13 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                         }
                         
                         // Форматируем дату и считаем дни до начала
+                        // Для онлайн-курсов дату не показываем
                         $date_text = '';
                         $days_until_start = null;
                         $date_class = '';
+                        $show_date_for_course = $course_start_date && $course_location !== 'online';
                         
-                        if ($course_start_date) {
+                        if ($show_date_for_course) {
                             $start_timestamp = strtotime($course_start_date);
                             $current_timestamp = current_time('timestamp');
                             $days_diff = floor(($start_timestamp - $current_timestamp) / (60 * 60 * 24));
@@ -774,6 +776,8 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                                 <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
+                                    <?php elseif (!$show_date_for_course) : ?>
+                                        <p class="card-date card-date-now"><?php _e('Можно приступать к изучению прямо сейчас!', 'course-plugin'); ?></p>
                                     <?php elseif ($course_additional_text) : ?>
                                         <p class="card-additional"><?php echo esc_html($course_additional_text); ?></p>
                                     <?php endif; ?>
