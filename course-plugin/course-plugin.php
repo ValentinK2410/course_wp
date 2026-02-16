@@ -321,9 +321,14 @@ class Course_Plugin {
         // Отмечаем, что нужно создать термины при следующем init (таксономии регистрируются на init)
         update_option('course_plugin_ensure_level_terms', 1);
         
+        // Регистрируем правило для /teachers/ до flush
+        if (class_exists('Course_Frontend')) {
+            Course_Frontend::get_instance()->add_teachers_rewrite_rule();
+        }
+        
         // Сбрасываем правила перезаписи URL (rewrite rules)
         // Это необходимо для правильной работы постоянных ссылок (permalink) для курсов
-        // После активации плагина URL /courses/ будет работать корректно
+        // После активации плагина URL /courses/ и /teachers/ будут работать корректно
         flush_rewrite_rules();
     }
     

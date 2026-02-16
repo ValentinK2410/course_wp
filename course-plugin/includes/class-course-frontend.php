@@ -31,6 +31,10 @@ class Course_Frontend {
      * Конструктор
      */
     private function __construct() {
+        // Rewrite rule для страницы всех преподавателей /teachers/
+        add_action('init', array($this, 'add_teachers_rewrite_rule'));
+        add_filter('query_vars', array($this, 'add_teachers_query_var'));
+        
         // Подключаем шаблоны
         add_filter('template_include', array($this, 'course_template_loader'));
         
@@ -42,6 +46,21 @@ class Course_Frontend {
         
         // Добавляем шорткод для отображения курсов
         add_shortcode('courses', array($this, 'courses_shortcode'));
+    }
+    
+    /**
+     * Добавляет правило перезаписи URL для страницы преподавателей
+     */
+    public function add_teachers_rewrite_rule() {
+        add_rewrite_rule('^teachers/?$', 'index.php?teachers_archive=1', 'top');
+    }
+    
+    /**
+     * Регистрирует query var для страницы преподавателей
+     */
+    public function add_teachers_query_var($vars) {
+        $vars[] = 'teachers_archive';
+        return $vars;
     }
     
     /**
@@ -102,6 +121,14 @@ class Course_Frontend {
         // Шаблон страницы преподавателя
         if (is_tax('course_teacher')) {
             $template_path = COURSE_PLUGIN_DIR . 'templates/taxonomy-course_teacher.php';
+            if (file_exists($template_path)) {
+                return $template_path;
+            }
+        }
+        
+        // Шаблон архива всех преподавателей /teachers/
+        if ((int) get_query_var('teachers_archive') === 1) {
+            $template_path = COURSE_PLUGIN_DIR . 'templates/archive-teachers.php';
             if (file_exists($template_path)) {
                 return $template_path;
             }
@@ -415,7 +442,8 @@ class Course_Frontend {
      */
     public function enqueue_assets() {
         // Подключаем стили и скрипты на страницах курсов и преподавателей
-        if (is_post_type_archive('course') || is_singular('course') || is_tax('course_teacher')) {
+        $is_teachers_archive = (int) get_query_var('teachers_archive') === 1;
+        if (is_post_type_archive('course') || is_singular('course') || is_tax('course_teacher') || $is_teachers_archive) {
             wp_enqueue_style(
                 'course-frontend-style',
                 COURSE_PLUGIN_URL . 'assets/css/frontend.css',
@@ -423,8 +451,8 @@ class Course_Frontend {
                 COURSE_PLUGIN_VERSION
             );
             
-            // Премиальный дизайн для архивов
-            if (is_post_type_archive('course')) {
+            // Премиальный дизайн для архивов (курсы и преподаватели)
+            if (is_post_type_archive('course') || $is_teachers_archive) {
                 wp_enqueue_style(
                     'course-premium-style',
                     COURSE_PLUGIN_URL . 'assets/css/premium-design.css',
