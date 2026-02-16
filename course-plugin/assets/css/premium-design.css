@@ -1510,33 +1510,59 @@
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
-.teachers-archive-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 40px 24px 60px;
+.teachers-archive-container,
+.premium-archive-wrapper.teachers-archive .teachers-archive-container {
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    padding: 40px 24px 60px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
-.teachers-archive-container .teachers-main-content {
+.teachers-archive-container .teachers-main-content,
+.premium-archive-wrapper.teachers-archive .teachers-main-content,
+.teachers-archive .premium-main-content {
     width: 100% !important;
     max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-.premium-archive-wrapper.teachers-archive .teachers-grid {
+.premium-archive-wrapper.teachers-archive .teachers-grid,
+.teachers-archive .teachers-grid,
+#teachers-container {
     display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
     gap: 24px !important;
     list-style: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
 }
 
-.teacher-card {
-    background: var(--premium-white);
-    border-radius: var(--premium-radius-xl);
-    overflow: hidden;
-    box-shadow: var(--premium-shadow);
-    transition: var(--premium-transition);
-    animation: fadeInUp 0.4s ease backwards;
+/* Более специфичный селектор для карточек */
+.premium-archive-wrapper.teachers-archive .teachers-grid .teacher-card,
+.teachers-archive .teachers-grid article.teacher-card,
+#teachers-container .teacher-card {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+}
+
+.teacher-card,
+.premium-archive-wrapper.teachers-archive .teacher-card,
+article.teacher-card {
+    background: var(--premium-white) !important;
+    border-radius: var(--premium-radius-xl) !important;
+    overflow: hidden !important;
+    box-shadow: var(--premium-shadow) !important;
+    transition: var(--premium-transition) !important;
+    animation: fadeInUp 0.4s ease backwards !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    float: none !important;
+    display: block !important;
 }
 
 .teacher-card:nth-child(1) { animation-delay: 0.05s; }

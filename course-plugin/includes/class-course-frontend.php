@@ -489,6 +489,17 @@ class Course_Frontend {
                     array('course-frontend-style'),
                     COURSE_PLUGIN_VERSION
                 );
+                
+                // Дополнительные критические стили для сетки преподавателей
+                if ($is_teachers_archive) {
+                    wp_enqueue_style(
+                        'teachers-grid-fix',
+                        COURSE_PLUGIN_URL . 'assets/css/teachers-grid-fix.css',
+                        array('course-premium-style'),
+                        COURSE_PLUGIN_VERSION,
+                        'all'
+                    );
+                }
             }
             
             // Премиальный дизайн для страницы курса

@@ -1,0 +1,81 @@
+/**
+ * Критические стили для сетки преподавателей
+ * Загружается с максимальным приоритетом
+ */
+
+/* Сброс всех возможных конфликтов */
+.premium-archive-wrapper.teachers-archive * {
+    box-sizing: border-box !important;
+}
+
+/* Контейнер */
+.premium-archive-wrapper.teachers-archive .premium-archive-container,
+.premium-archive-wrapper.teachers-archive .teachers-archive-container {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+}
+
+/* Основной контент */
+.premium-archive-wrapper.teachers-archive .teachers-main-content,
+.premium-archive-wrapper.teachers-archive .premium-main-content {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+    display: block !important;
+}
+
+/* Сетка */
+.premium-archive-wrapper.teachers-archive .teachers-grid,
+.premium-archive-wrapper.teachers-archive #teachers-container {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 24px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    float: none !important;
+}
+
+/* Карточки */
+.premium-archive-wrapper.teachers-archive .teacher-card,
+.premium-archive-wrapper.teachers-archive article.teacher-card {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+    display: block !important;
+    grid-column: auto !important;
+}
+
+/* Адаптивность */
+@media (min-width: 1200px) {
+    .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
