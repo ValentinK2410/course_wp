@@ -92,6 +92,9 @@ class Course_Plugin {
         // Это правильное место для регистрации типов постов и таксономий
         add_action('init', array($this, 'load_components'));
         
+        // Создание терминов "Уровень сложности" после регистрации таксономий (приоритет 999)
+        add_action('init', array($this, 'maybe_ensure_default_level_terms'), 999);
+        
         // Регистрируем загрузку текстового домена для переводов
         // Хук 'plugins_loaded' срабатывает после загрузки всех плагинов
         // Это нужно для правильной загрузки переводов
@@ -315,8 +318,8 @@ class Course_Plugin {
         // Вызываем метод load_components() для инициализации всех компонентов
         $this->load_components();
         
-        // Создаём термины "Уровень сложности" по умолчанию (для курсов и программ)
-        $this->ensure_default_level_terms();
+        // Отмечаем, что нужно создать термины при следующем init (таксономии регистрируются на init)
+        update_option('course_plugin_ensure_level_terms', 1);
         
         // Сбрасываем правила перезаписи URL (rewrite rules)
         // Это необходимо для правильной работы постоянных ссылок (permalink) для курсов
@@ -326,9 +329,16 @@ class Course_Plugin {
     
     /**
      * Создаёт термины таксономии "Уровень сложности" (course_level), если их ещё нет.
-     * Бакалаврский, Дипломный, Магистерский, Начальный.
+     * Вызывается на init с приоритетом 999 после регистрации таксономий.
      */
-    private function ensure_default_level_terms() {
+    public function maybe_ensure_default_level_terms() {
+        if (!get_option('course_plugin_ensure_level_terms')) {
+            return;
+        }
+        delete_option('course_plugin_ensure_level_terms');
+        if (!taxonomy_exists('course_level')) {
+            return;
+        }
         $default_terms = array(
             'bakalavrskiy'   => __('Бакалаврский', 'course-plugin'),
             'diplomnyy'      => __('Дипломный', 'course-plugin'),
@@ -336,6 +346,9 @@ class Course_Plugin {
             'nachalnyy'      => __('Начальный', 'course-plugin'),
         );
         $existing = get_terms(array('taxonomy' => 'course_level', 'hide_empty' => false, 'fields' => 'names'));
+        if (is_wp_error($existing) || !is_array($existing)) {
+            $existing = array();
+        }
         foreach ($default_terms as $slug => $name) {
             if (!term_exists($slug, 'course_level') && !in_array($name, $existing)) {
                 wp_insert_term($name, 'course_level', array('slug' => $slug));
