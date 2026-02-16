@@ -136,28 +136,109 @@ $all_specializations = get_terms(array(
 ?>
 
 <style>
-/* Inline критические стили для предотвращения конфликтов с темой */
-body .premium-archive-wrapper.teachers-archive {
+/* КРИТИЧЕСКИЕ inline стили - максимальный приоритет */
+html body .premium-archive-wrapper.teachers-archive {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     float: none !important;
     clear: both !important;
+    display: block !important;
 }
-body .premium-archive-wrapper.teachers-archive .premium-archive-container {
+
+html body .premium-archive-wrapper.teachers-archive .premium-archive-header {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+
+html body .premium-archive-wrapper.teachers-archive .premium-archive-container,
+html body .premium-archive-wrapper.teachers-archive .teachers-archive-container {
     width: 100% !important;
     max-width: 1400px !important;
     margin-left: auto !important;
     margin-right: auto !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+    float: none !important;
+    clear: both !important;
+    display: block !important;
 }
-body .premium-archive-wrapper.teachers-archive .teachers-main-content {
+
+html body .premium-archive-wrapper.teachers-archive .teachers-main-content,
+html body .premium-archive-wrapper.teachers-archive .premium-main-content {
     width: 100% !important;
     max-width: none !important;
     float: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    clear: both !important;
+    display: block !important;
+}
+
+html body .premium-archive-wrapper.teachers-archive .teachers-toolbar {
+    width: 100% !important;
+    max-width: none !important;
+    float: none !important;
+    clear: both !important;
+}
+
+html body .premium-archive-wrapper.teachers-archive .teachers-grid,
+html body .premium-archive-wrapper.teachers-archive #teachers-container {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 24px !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+    clear: both !important;
+    list-style: none !important;
+}
+
+html body .premium-archive-wrapper.teachers-archive .teacher-card,
+html body .premium-archive-wrapper.teachers-archive article.teacher-card {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    float: none !important;
+    display: block !important;
+}
+
+/* Адаптивность для широких экранов */
+@media (min-width: 1200px) {
+    html body .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+@media (min-width: 1025px) and (max-width: 1199px) {
+    html body .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    html body .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (max-width: 767px) {
+    html body .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    html body .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: 1fr !important;
+    }
 }
 </style>
-<div class="premium-archive-wrapper teachers-archive">
+<div class="premium-archive-wrapper teachers-archive" style="width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; float: none !important; clear: both !important;">
     <!-- Заголовок страницы -->
     <header class="premium-archive-header teachers-archive-header">
         <div class="premium-header-content">
@@ -192,7 +273,7 @@ body .premium-archive-wrapper.teachers-archive .teachers-main-content {
         </div>
     </header>
 
-    <div class="premium-archive-container teachers-archive-container">
+    <div class="premium-archive-container teachers-archive-container" style="width: 100% !important; max-width: 1400px !important; margin: 0 auto !important; float: none !important; clear: both !important;">
         <!-- Панель фильтров и поиска -->
         <div class="teachers-toolbar">
             <div class="toolbar-left">
@@ -247,7 +328,7 @@ body .premium-archive-wrapper.teachers-archive .teachers-main-content {
             </div>
         </div>
         
-        <main class="premium-main-content teachers-main-content">
+        <main class="premium-main-content teachers-main-content" style="width: 100% !important; max-width: none !important; float: none !important; margin: 0 !important; padding: 0 !important; clear: both !important;">
             <?php if (!empty($teachers_with_data)) : ?>
                 <div class="teachers-grid" id="teachers-container">
                     <?php 
