@@ -34,9 +34,11 @@ class Course_Frontend {
         // Rewrite rule для страницы всех преподавателей /teachers/
         add_action('init', array($this, 'add_teachers_rewrite_rule'));
         add_filter('query_vars', array($this, 'add_teachers_query_var'));
+        add_filter('request', array($this, 'teachers_archive_request'), 1);
         
         // Подключаем шаблоны
         add_filter('template_include', array($this, 'course_template_loader'));
+        add_action('template_redirect', array($this, 'teachers_archive_redirect'), 1);
         
         // Добавляем фильтры в запрос
         add_action('pre_get_posts', array($this, 'filter_courses_query'));
@@ -61,6 +63,34 @@ class Course_Frontend {
     public function add_teachers_query_var($vars) {
         $vars[] = 'teachers_archive';
         return $vars;
+    }
+    
+    /**
+     * Fallback: устанавливает teachers_archive=1 при запросе /teachers/,
+     * если rewrite rules ещё не применены (404)
+     */
+    public function teachers_archive_request($query_vars) {
+        if (isset($query_vars['teachers_archive'])) {
+            return $query_vars;
+        }
+        $uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
+        $path = parse_url($uri, PHP_URL_PATH);
+        $path = $path ? trim($path, '/') : '';
+        if (preg_match('#^teachers(/page/\d+)?/?$#', $path)) {
+            $query_vars['teachers_archive'] = '1';
+        }
+        return $query_vars;
+    }
+    
+    /**
+     * Снимает флаг 404 для страницы /teachers/, чтобы отображался наш шаблон
+     */
+    public function teachers_archive_redirect() {
+        if ((int) get_query_var('teachers_archive') === 1) {
+            global $wp_query;
+            $wp_query->is_404 = false;
+            status_header(200);
+        }
     }
     
     /**
