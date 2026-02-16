@@ -1483,7 +1483,7 @@
 /* Дата начала программы на карточке в каталоге */
 .card-program-date {
     position: absolute;
-    bottom: 16px;
+    bottom: 20px;
     right: 20px;
     z-index: 2;
     display: inline-flex;
@@ -1495,7 +1495,7 @@
     color: #fff;
     font-size: 0.8125rem;
     font-weight: 600;
-    border-radius: 6px;
+    border-radius: var(--premium-radius);
 }
 
 .card-program-date svg {
