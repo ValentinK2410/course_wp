@@ -4,8 +4,19 @@
  */
 
 /* Сброс всех возможных конфликтов */
+.premium-archive-wrapper.teachers-archive,
 .premium-archive-wrapper.teachers-archive * {
     box-sizing: border-box !important;
+}
+
+/* Полная ширина для обертки */
+.premium-archive-wrapper.teachers-archive {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+    clear: both !important;
 }
 
 /* Контейнер */
@@ -17,6 +28,8 @@
     margin-right: auto !important;
     padding-left: 24px !important;
     padding-right: 24px !important;
+    float: none !important;
+    clear: both !important;
 }
 
 /* Основной контент */
@@ -28,6 +41,15 @@
     padding: 0 !important;
     float: none !important;
     display: block !important;
+    clear: both !important;
+}
+
+/* Панель инструментов */
+.premium-archive-wrapper.teachers-archive .teachers-toolbar {
+    width: 100% !important;
+    max-width: none !important;
+    float: none !important;
+    clear: both !important;
 }
 
 /* Сетка */
@@ -60,9 +82,45 @@
     .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: repeat(4, 1fr) !important;
     }
+    
+    /* Сброс возможных sidebar стилей темы */
+    .premium-archive-wrapper.teachers-archive .premium-archive-container,
+    .premium-archive-wrapper.teachers-archive .teachers-archive-container {
+        width: 100% !important;
+        max-width: 1400px !important;
+    }
+    
+    .premium-archive-wrapper.teachers-archive .teachers-main-content {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
 }
 
-@media (min-width: 992px) and (max-width: 1199px) {
+@media (min-width: 1025px) and (max-width: 1199px) {
+    .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    /* Критично для 1024+ */
+    .premium-archive-wrapper.teachers-archive {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .premium-archive-wrapper.teachers-archive .premium-archive-container {
+        width: 100% !important;
+        max-width: 1400px !important;
+    }
+    
+    .premium-archive-wrapper.teachers-archive .teachers-main-content {
+        width: 100% !important;
+        max-width: none !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1024px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: repeat(3, 1fr) !important;
     }
@@ -77,5 +135,34 @@
 @media (max-width: 767px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: 1fr !important;
+    }
+}
+
+/* Дополнительный сброс для широких экранов */
+@media (min-width: 1024px) {
+    /* Убираем все возможные ограничения ширины от темы */
+    body .premium-archive-wrapper.teachers-archive,
+    body .premium-archive-wrapper.teachers-archive .premium-archive-container,
+    body .premium-archive-wrapper.teachers-archive .teachers-archive-container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    body .premium-archive-wrapper.teachers-archive .premium-archive-container,
+    body .premium-archive-wrapper.teachers-archive .teachers-archive-container {
+        max-width: 1400px !important;
+    }
+    
+    body .premium-archive-wrapper.teachers-archive .teachers-main-content,
+    body .premium-archive-wrapper.teachers-archive .premium-main-content {
+        width: 100% !important;
+        max-width: none !important;
+        float: none !important;
+        margin: 0 !important;
+    }
+    
+    body .premium-archive-wrapper.teachers-archive .teachers-grid {
+        width: 100% !important;
+        max-width: none !important;
     }
 }

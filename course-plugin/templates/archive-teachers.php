@@ -135,6 +135,28 @@ $all_specializations = get_terms(array(
 ));
 ?>
 
+<style>
+/* Inline критические стили для предотвращения конфликтов с темой */
+body .premium-archive-wrapper.teachers-archive {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+    clear: both !important;
+}
+body .premium-archive-wrapper.teachers-archive .premium-archive-container {
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+body .premium-archive-wrapper.teachers-archive .teachers-main-content {
+    width: 100% !important;
+    max-width: none !important;
+    float: none !important;
+}
+</style>
 <div class="premium-archive-wrapper teachers-archive">
     <!-- Заголовок страницы -->
     <header class="premium-archive-header teachers-archive-header">
