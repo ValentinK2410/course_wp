@@ -52,14 +52,15 @@
     clear: both !important;
 }
 
-/* Сетка */
+/* Сетка - всегда 3 колонки на десктопе */
 .premium-archive-wrapper.teachers-archive .teachers-grid,
 .premium-archive-wrapper.teachers-archive #teachers-container {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     gap: 24px !important;
     width: 100% !important;
-    margin: 0 !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
     padding: 0 !important;
     list-style: none !important;
     float: none !important;
