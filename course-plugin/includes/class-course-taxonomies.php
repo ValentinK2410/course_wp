@@ -114,8 +114,8 @@ class Course_Taxonomies {
             'rewrite'                    => array('slug' => 'programs'),                                    // Slug для URL (например: /programs/programming/)
         );
         
-        // Регистрируем таксономию 'course_specialization' для типа поста 'course'
-        register_taxonomy('course_specialization', array('course'), $args);
+        // Регистрируем таксономию 'course_specialization' для курсов и программ
+        register_taxonomy('course_specialization', array('course', 'program'), $args);
     }
     
     /**
@@ -161,8 +161,8 @@ class Course_Taxonomies {
             'rewrite'                    => array('slug' => 'education-level'),                             // Slug для URL
         );
         
-        // Регистрируем таксономию 'course_level' для типа поста 'course'
-        register_taxonomy('course_level', array('course'), $args);
+        // Регистрируем таксономию 'course_level' для курсов и программ
+        register_taxonomy('course_level', array('course', 'program'), $args);
     }
     
     /**
@@ -208,8 +208,8 @@ class Course_Taxonomies {
             'rewrite'                    => array('slug' => 'topic'),                                       // Slug для URL
         );
         
-        // Регистрируем таксономию 'course_topic' для типа поста 'course'
-        register_taxonomy('course_topic', array('course'), $args);
+        // Регистрируем таксономию 'course_topic' для курсов и программ
+        register_taxonomy('course_topic', array('course', 'program'), $args);
     }
     
     /**
@@ -255,7 +255,7 @@ class Course_Taxonomies {
             'rewrite'                    => array('slug' => 'teacher'),                                     // Slug для URL
         );
         
-        // Регистрируем таксономию 'course_teacher' для типа поста 'course'
-        register_taxonomy('course_teacher', array('course'), $args);
+        // Регистрируем таксономию 'course_teacher' для курсов и программ
+        register_taxonomy('course_teacher', array('course', 'program'), $args);
     }
 }

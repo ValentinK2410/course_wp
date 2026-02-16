@@ -129,22 +129,8 @@ class Program_Post_Type {
         
         // Регистрируем тип поста с названием 'program' и указанными параметрами
         // После этого в WordPress появится новый тип записей "Программы"
+        // Таксономии (уровень, направление, тема, преподаватель) привязываются в class-course-taxonomies.php
         register_post_type('program', $args);
-        
-        // Регистрируем таксономии для программ (используем те же, что и для курсов)
-        // Это делается после регистрации типа поста, чтобы таксономии были связаны с ним
-        if (taxonomy_exists('course_specialization')) {
-            register_taxonomy_for_object_type('course_specialization', 'program');
-        }
-        if (taxonomy_exists('course_level')) {
-            register_taxonomy_for_object_type('course_level', 'program');
-        }
-        if (taxonomy_exists('course_topic')) {
-            register_taxonomy_for_object_type('course_topic', 'program');
-        }
-        if (taxonomy_exists('course_teacher')) {
-            register_taxonomy_for_object_type('course_teacher', 'program');
-        }
     }
     
     /**
