@@ -10,6 +10,21 @@ get_header();
 
 global $wp_query;
 
+// Редирект на страницу 1, если результатов 0 и открыта страница > 1
+$paged_check = get_query_var('paged') ? get_query_var('paged') : 1;
+if ($paged_check > 1 && $wp_query->found_posts == 0) {
+    $base = get_post_type_archive_link('course');
+    $args = $_GET;
+    unset($args['paged']);
+    if (!empty($args)) {
+        $redirect_url = add_query_arg($args, $base);
+    } else {
+        $redirect_url = $base;
+    }
+    wp_safe_redirect(esc_url_raw($redirect_url), 302);
+    exit;
+}
+
 // Проверяем, что это действительно архив курсов
 $is_course_archive = false;
 
