@@ -95,6 +95,29 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                 </button>
             </div>
             
+            <?php
+            // Подсчёт программ по каждому термину (без учёта курсов)
+            global $wpdb;
+            $program_counts_by_tax = array();
+            foreach (array('course_level', 'course_specialization', 'course_topic') as $tax) {
+                $program_counts_by_tax[$tax] = array();
+                $rows = $wpdb->get_results($wpdb->prepare("
+                    SELECT tt.term_id, COUNT(DISTINCT tr.object_id) AS cnt
+                    FROM {$wpdb->term_taxonomy} tt
+                    INNER JOIN {$wpdb->term_relationships} tr ON tt.term_taxonomy_id = tr.term_taxonomy_id
+                    INNER JOIN {$wpdb->posts} p ON tr.object_id = p.ID
+                    WHERE tt.taxonomy = %s
+                    AND p.post_type = 'program'
+                    AND p.post_status = 'publish'
+                    GROUP BY tt.term_id
+                ", $tax), OBJECT_K);
+                if ($rows) {
+                    foreach ($rows as $term_id => $row) {
+                        $program_counts_by_tax[$tax][$term_id] = (int) $row->cnt;
+                    }
+                }
+            }
+            ?>
             <form method="get" class="premium-filters-form" id="program-filters-form">
                 <!-- Поиск -->
                 <div class="filter-search-box">
@@ -136,7 +159,7 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                     <input type="checkbox" name="level[]" value="<?php echo esc_attr($level->slug); ?>" <?php echo $checked; ?>>
                                     <span class="option-checkbox"></span>
                                     <span class="option-text"><?php echo esc_html($level->name); ?></span>
-                                    <span class="option-count"><?php echo $level->count; ?></span>
+                                    <span class="option-count"><?php echo isset($program_counts_by_tax['course_level'][$level->term_id]) ? $program_counts_by_tax['course_level'][$level->term_id] : 0; ?></span>
                                 </label>
                                 <?php
                             }
@@ -176,7 +199,7 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                     <input type="checkbox" name="specialization[]" value="<?php echo esc_attr($spec->slug); ?>" <?php echo $checked; ?>>
                                     <span class="option-checkbox"></span>
                                     <span class="option-text"><?php echo esc_html($spec->name); ?></span>
-                                    <span class="option-count"><?php echo $spec->count; ?></span>
+                                    <span class="option-count"><?php echo isset($program_counts_by_tax['course_specialization'][$spec->term_id]) ? $program_counts_by_tax['course_specialization'][$spec->term_id] : 0; ?></span>
                                 </label>
                                 <?php
                             }
@@ -214,7 +237,7 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                     <input type="checkbox" name="topic[]" value="<?php echo esc_attr($topic->slug); ?>" <?php echo $checked; ?>>
                                     <span class="option-checkbox"></span>
                                     <span class="option-text"><?php echo esc_html($topic->name); ?></span>
-                                    <span class="option-count"><?php echo $topic->count; ?></span>
+                                    <span class="option-count"><?php echo isset($program_counts_by_tax['course_topic'][$topic->term_id]) ? $program_counts_by_tax['course_topic'][$topic->term_id] : 0; ?></span>
                                 </label>
                                 <?php
                             }
