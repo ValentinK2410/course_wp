@@ -929,8 +929,11 @@ while (have_posts()) : the_post();
                 <h2 class="cta-title"><?php echo esc_html($cta_title); ?></h2>
                 <p class="cta-text"><?php echo esc_html($cta_text); ?></p>
             </div>
-            <?php if ($course_seminary_new_url) : ?>
-                <a href="<?php echo esc_url($course_seminary_new_url); ?>" target="_blank" rel="noopener" class="cta-btn">
+            <?php
+            $cta_btn_url = $course_seminary_new_url ?: $course_seminary_student_url ?: $course_lite_course_url;
+            if ($cta_btn_url) :
+            ?>
+                <a href="<?php echo esc_url($cta_btn_url); ?>" target="_blank" rel="noopener" class="cta-btn">
                     <?php echo esc_html($cta_button_text); ?>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>
