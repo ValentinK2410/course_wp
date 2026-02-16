@@ -1701,14 +1701,17 @@ article.teacher-card {
     display: flex;
     align-items: center;
     gap: 8px;
+    margin-top: auto;
+    padding-top: 12px;
 }
 
 .teacher-courses-count {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     color: var(--premium-gray-500);
+    font-weight: 500;
 }
 
 .teacher-courses-count svg {
@@ -1716,8 +1719,17 @@ article.teacher-card {
     opacity: 0.8;
 }
 
-/* Адаптивность для планшетов */
-@media (max-width: 1024px) {
+/* Адаптивность для широких экранов */
+@media (min-width: 1200px) {
+    .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        max-width: 1200px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1199px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: repeat(3, 1fr) !important;
         gap: 20px !important;
@@ -2013,7 +2025,8 @@ article.teacher-card {
     position: relative;
     aspect-ratio: 1 !important;
     overflow: hidden;
-    min-height: 280px;
+    min-height: 250px;
+    max-height: 350px;
 }
 
 .teacher-card-placeholder {
@@ -2217,10 +2230,12 @@ article.teacher-card {
     align-items: center;
     gap: 6px;
     margin-top: 16px;
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 600;
     text-decoration: none;
     transition: var(--premium-transition-fast);
+    padding-top: 12px;
+    border-top: 1px solid var(--premium-gray-200);
 }
 
 .teacher-view-profile:hover {

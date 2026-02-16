@@ -210,7 +210,10 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
 /* Адаптивность для широких экранов */
 @media (min-width: 1200px) {
     html body .premium-archive-wrapper.teachers-archive .teachers-grid {
-        grid-template-columns: repeat(4, 1fr) !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        max-width: 1200px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
 }
 
