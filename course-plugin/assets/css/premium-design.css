@@ -1484,7 +1484,7 @@
 .card-program-date {
     position: absolute;
     bottom: 16px;
-    left: 20px;
+    right: 20px;
     z-index: 2;
     display: inline-flex;
     align-items: center;
