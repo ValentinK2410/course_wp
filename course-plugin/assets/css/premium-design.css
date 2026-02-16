@@ -1467,3 +1467,9 @@
 .premium-archive-wrapper.programs-archive .filter-apply-btn:hover {
     box-shadow: 0 6px 20px rgba(240, 147, 251, 0.5);
 }
+
+/* Карточки программ: 3 строки заголовка за счёт уменьшенного шрифта */
+.premium-archive-wrapper.programs-archive .card-title {
+    font-size: 1rem;
+    -webkit-line-clamp: 3;
+}
