@@ -79,18 +79,21 @@
 
 /* Адаптивность */
 @media (min-width: 1200px) {
-    .premium-archive-wrapper.teachers-archive .teachers-grid {
-        grid-template-columns: repeat(4, 1fr) !important;
+    html body .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        max-width: 1200px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
     
     /* Сброс возможных sidebar стилей темы */
-    .premium-archive-wrapper.teachers-archive .premium-archive-container,
-    .premium-archive-wrapper.teachers-archive .teachers-archive-container {
+    html body .premium-archive-wrapper.teachers-archive .premium-archive-container,
+    html body .premium-archive-wrapper.teachers-archive .teachers-archive-container {
         width: 100% !important;
         max-width: 1400px !important;
     }
     
-    .premium-archive-wrapper.teachers-archive .teachers-main-content {
+    html body .premium-archive-wrapper.teachers-archive .teachers-main-content {
         width: 100% !important;
         max-width: none !important;
         margin-left: 0 !important;
