@@ -334,8 +334,8 @@ class Course_SSO {
         $moodle_url = get_option('moodle_sync_url', '');
         $laravel_url = get_option('laravel_api_url', '');
         
-        // Если не настроены URL, не добавляем кнопки
-        if (empty($moodle_url) && empty($laravel_url)) {
+        // Если не настроен Moodle URL, не добавляем кнопки
+        if (empty($moodle_url)) {
             return;
         }
         
@@ -344,7 +344,7 @@ class Course_SSO {
             'id'    => 'course-sso',
             'title' => __('Быстрый переход', 'course-plugin'),
             'meta'  => array(
-                'title' => __('Перейти в Виртуальный класс или Деканат', 'course-plugin'),
+                'title' => __('Перейти в Виртуальный класс', 'course-plugin'),
             ),
         ));
         
@@ -363,20 +363,6 @@ class Course_SSO {
             ));
         }
         
-        // Добавляем кнопку Laravel
-        if (!empty($laravel_url)) {
-            $wp_admin_bar->add_node(array(
-                'parent' => 'course-sso',
-                'id'     => 'course-sso-laravel',
-                'title'  => __('Деканат', 'course-plugin'),
-                'href'   => 'javascript:void(0);',
-                'meta'   => array(
-                    'onclick' => 'goToLaravel(); return false;',
-                    'class'  => 'course-sso-laravel',
-                    'title'  => __('Перейти в Деканат без ввода пароля', 'course-plugin'),
-                ),
-            ));
-        }
     }
     
     /**
@@ -391,8 +377,8 @@ class Course_SSO {
         $moodle_url = get_option('moodle_sync_url', '');
         $laravel_url = get_option('laravel_api_url', '');
         
-        // Если не настроены URL, не добавляем стили
-        if (empty($moodle_url) && empty($laravel_url)) {
+        // Если не настроен Moodle URL, не добавляем стили
+        if (empty($moodle_url)) {
             return;
         }
         ?>
@@ -405,12 +391,6 @@ class Course_SSO {
         }
         #wpadminbar #wp-admin-bar-course-sso-moodle:hover .ab-item {
             color: #ff9a3c !important;
-        }
-        #wpadminbar #wp-admin-bar-course-sso-laravel .ab-item {
-            color: #f9322c !important;
-        }
-        #wpadminbar #wp-admin-bar-course-sso-laravel:hover .ab-item {
-            color: #ff4d4d !important;
         }
         </style>
         <?php
@@ -428,8 +408,8 @@ class Course_SSO {
         $moodle_url = get_option('moodle_sync_url', '');
         $laravel_url = get_option('laravel_api_url', '');
         
-        // Если не настроены URL, не добавляем кнопки
-        if (empty($moodle_url) && empty($laravel_url)) {
+        // Если не настроен Moodle URL, не добавляем кнопки
+        if (empty($moodle_url)) {
             return;
         }
         
@@ -462,14 +442,6 @@ class Course_SSO {
         }
         .course-sso-header-buttons .sso-header-btn-moodle:hover {
             background: #e0700f;
-            color: white;
-        }
-        .course-sso-header-buttons .sso-header-btn-laravel {
-            background: #f9322c;
-            color: white;
-        }
-        .course-sso-header-buttons .sso-header-btn-laravel:hover {
-            background: #e02823;
             color: white;
         }
         </style>
@@ -552,18 +524,6 @@ class Course_SSO {
                     goToMoodle();
                 };
                 buttonsContainer.appendChild(moodleBtn);
-                <?php endif; ?>
-                
-                <?php if (!empty($laravel_url)): ?>
-                var laravelBtn = document.createElement('a');
-                laravelBtn.href = 'javascript:void(0);';
-                laravelBtn.className = 'sso-header-btn sso-header-btn-laravel';
-                laravelBtn.textContent = 'Деканат';
-                laravelBtn.onclick = function(e) {
-                    e.preventDefault();
-                    goToLaravel();
-                };
-                buttonsContainer.appendChild(laravelBtn);
                 <?php endif; ?>
                 
                 // Добавляем кнопки в контейнер
