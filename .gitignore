@@ -13,6 +13,7 @@ Thumbs.db
 
 # WordPress
 wp-config.php
+reset-password.php
 wp-content/uploads/
 wp-content/upgrade/
 wp-content/backup-db/
