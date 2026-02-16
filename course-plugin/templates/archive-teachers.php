@@ -392,16 +392,6 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                                         <span class="teacher-badge <?php echo $badge_class; ?>"><?php echo esc_html($teacher_position); ?></span>
                                     <?php endif; ?>
                                     
-                                    <div class="teacher-card-overlay">
-                                        <button type="button" class="teacher-quick-view-btn" data-teacher-id="<?php echo $term->term_id; ?>">
-                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M10 3C5 3 1.73 7.11 1 10c.73 2.89 4 7 9 7s8.27-4.11 9-7c-.73-2.89-4-7-9-7z" stroke="currentColor" stroke-width="1.5"/>
-                                                <circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/>
-                                            </svg>
-                                            <?php _e('Быстрый просмотр', 'course-plugin'); ?>
-                                        </button>
-                                    </div>
-                                    
                                     <!-- Список курсов при hover -->
                                     <?php if (!empty($courses_list)) : ?>
                                         <div class="teacher-courses-hover">
@@ -523,21 +513,6 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
     </div>
 </div>
 
-<!-- Quick View Modal -->
-<div class="teacher-quick-view-modal" id="teacher-quick-view-modal">
-    <div class="modal-overlay"></div>
-    <div class="modal-content">
-        <button type="button" class="modal-close" id="modal-close-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-        </button>
-        <div class="modal-body" id="modal-body">
-            <!-- Контент загружается динамически -->
-        </div>
-    </div>
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Поиск
@@ -612,101 +587,6 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = url.toString();
     }
     
-    // Quick View Modal
-    var modal = document.getElementById('teacher-quick-view-modal');
-    var modalBody = document.getElementById('modal-body');
-    var closeBtn = document.getElementById('modal-close-btn');
-    
-    document.querySelectorAll('.teacher-quick-view-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var teacherId = this.getAttribute('data-teacher-id');
-            openQuickView(teacherId);
-        });
-    });
-    
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function() {
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
-        });
-    }
-    
-    if (modal) {
-        modal.querySelector('.modal-overlay').addEventListener('click', function() {
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
-        });
-    }
-    
-    function openQuickView(teacherId) {
-        // Находим данные преподавателя
-        var teacherCard = document.querySelector('.teacher-card[data-teacher-id="' + teacherId + '"]');
-        if (!teacherCard) return;
-        
-        var name = teacherCard.querySelector('.teacher-card-name a').textContent;
-        var position = teacherCard.querySelector('.teacher-badge') ? teacherCard.querySelector('.teacher-badge').textContent : '';
-        var description = teacherCard.querySelector('.teacher-card-description') ? teacherCard.querySelector('.teacher-card-description').textContent : '';
-        var photo = teacherCard.querySelector('.teacher-card-image img');
-        var photoSrc = photo ? photo.src : '';
-        var coursesCount = teacherCard.querySelector('.teacher-courses-count').textContent;
-        var profileLink = teacherCard.querySelector('.teacher-view-profile').href;
-        var specializations = teacherCard.querySelectorAll('.specialization-tag');
-        var contacts = teacherCard.querySelector('.teacher-contacts');
-        var coursesHover = teacherCard.querySelector('.teacher-courses-hover');
-        
-        var html = '<div class="quick-view-content">';
-        html += '<div class="quick-view-header">';
-        if (photoSrc) {
-            html += '<img src="' + photoSrc + '" alt="' + name + '" class="quick-view-photo" />';
-        }
-        html += '<div class="quick-view-info">';
-        html += '<h2>' + name + '</h2>';
-        if (position) {
-            html += '<p class="quick-view-position">' + position + '</p>';
-        }
-        if (specializations.length > 0) {
-            html += '<div class="quick-view-specializations">';
-            specializations.forEach(function(tag) {
-                html += '<span class="specialization-tag">' + tag.textContent + '</span>';
-            });
-            html += '</div>';
-        }
-        html += '</div>';
-        html += '</div>';
-        
-        if (description) {
-            html += '<div class="quick-view-description">' + description + '</div>';
-        }
-        
-        html += '<div class="quick-view-meta">';
-        html += '<span class="meta-item">' + coursesCount + '</span>';
-        html += '</div>';
-        
-        if (coursesHover) {
-            var coursesList = coursesHover.querySelector('ul');
-            if (coursesList) {
-                html += '<div class="quick-view-courses">';
-                html += '<h4><?php _e('Курсы преподавателя:', 'course-plugin'); ?></h4>';
-                html += coursesList.outerHTML;
-                html += '</div>';
-            }
-        }
-        
-        if (contacts) {
-            html += '<div class="quick-view-contacts">';
-            html += contacts.innerHTML;
-            html += '</div>';
-        }
-        
-        html += '<a href="' + profileLink + '" class="quick-view-profile-btn"><?php _e('Перейти в профиль', 'course-plugin'); ?></a>';
-        html += '</div>';
-        
-        modalBody.innerHTML = html;
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
 });
 </script>
 
