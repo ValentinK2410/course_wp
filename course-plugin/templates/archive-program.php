@@ -168,7 +168,7 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                     </div>
                 </div>
                 
-                <!-- Специализация -->
+                <!-- Направление: таксономия course_specialization (общая для курсов и программ) -->
                 <div class="filter-group">
                     <button type="button" class="filter-group-toggle active" data-target="spec-options">
                         <span class="filter-group-title">

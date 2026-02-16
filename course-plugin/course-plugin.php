@@ -315,10 +315,32 @@ class Course_Plugin {
         // Вызываем метод load_components() для инициализации всех компонентов
         $this->load_components();
         
+        // Создаём термины "Уровень сложности" по умолчанию (для курсов и программ)
+        $this->ensure_default_level_terms();
+        
         // Сбрасываем правила перезаписи URL (rewrite rules)
         // Это необходимо для правильной работы постоянных ссылок (permalink) для курсов
         // После активации плагина URL /courses/ будет работать корректно
         flush_rewrite_rules();
+    }
+    
+    /**
+     * Создаёт термины таксономии "Уровень сложности" (course_level), если их ещё нет.
+     * Бакалаврский, Дипломный, Магистерский, Начальный.
+     */
+    private function ensure_default_level_terms() {
+        $default_terms = array(
+            'bakalavrskiy'   => __('Бакалаврский', 'course-plugin'),
+            'diplomnyy'      => __('Дипломный', 'course-plugin'),
+            'magistrskiy'    => __('Магистерский', 'course-plugin'),
+            'nachalnyy'      => __('Начальный', 'course-plugin'),
+        );
+        $existing = get_terms(array('taxonomy' => 'course_level', 'hide_empty' => false, 'fields' => 'names'));
+        foreach ($default_terms as $slug => $name) {
+            if (!term_exists($slug, 'course_level') && !in_array($name, $existing)) {
+                wp_insert_term($name, 'course_level', array('slug' => $slug));
+            }
+        }
     }
     
     /**
