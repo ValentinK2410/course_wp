@@ -355,6 +355,29 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                         $courses_count = get_post_meta(get_the_ID(), '_program_courses_count', true);
                         $program_tag = get_post_meta(get_the_ID(), '_program_tag', true);
                         $program_additional_text = get_post_meta(get_the_ID(), '_program_additional_text', true);
+                        $program_start_date = get_post_meta(get_the_ID(), '_program_start_date', true);
+                        $program_end_date = get_post_meta(get_the_ID(), '_program_end_date', true);
+                        
+                        // Форматируем дату начала программы
+                        $program_date_text = '';
+                        if ($program_start_date) {
+                            $start_ts = strtotime($program_start_date);
+                            $day = date('j', $start_ts);
+                            $month = date_i18n('F', $start_ts);
+                            $year = date('Y', $start_ts);
+                            if ($program_end_date) {
+                                $end_ts = strtotime($program_end_date);
+                                $end_day = date('j', $end_ts);
+                                if (date('m', $start_ts) === date('m', $end_ts)) {
+                                    $program_date_text = sprintf(__('%s–%s %s %s', 'course-plugin'), $day, $end_day, $month, $year);
+                                } else {
+                                    $end_month = date_i18n('F', $end_ts);
+                                    $program_date_text = sprintf(__('%s %s – %s %s %s', 'course-plugin'), $day, $month, $end_day, $end_month, $year);
+                                }
+                            } else {
+                                $program_date_text = sprintf(__('%s %s %s', 'course-plugin'), $day, $month, $year);
+                            }
+                        }
                         
                         // Получаем уровень
                         $levels = get_the_terms(get_the_ID(), 'course_level');
@@ -388,6 +411,16 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                         $discount = round((($old_price - $price) / $old_price) * 100);
                                     ?>
                                         <span class="card-discount">-<?php echo $discount; ?>%</span>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($program_date_text) : ?>
+                                        <span class="card-program-date">
+                                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/>
+                                                <path d="M7 4V7L9 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                            </svg>
+                                            <?php echo esc_html($program_date_text); ?>
+                                        </span>
                                     <?php endif; ?>
                                     
                                     <!-- Декоративный элемент -->
