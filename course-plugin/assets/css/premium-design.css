@@ -1517,14 +1517,17 @@
 }
 
 .teachers-archive-container .teachers-main-content {
-    width: 100%;
-    max-width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
-.teachers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
+.premium-archive-wrapper.teachers-archive .teachers-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 24px !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .teacher-card {
@@ -1673,9 +1676,9 @@
 }
 
 @media (max-width: 768px) {
-    .teachers-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+    .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px !important;
     }
 
     .teacher-card-content {
@@ -1706,17 +1709,18 @@
    ================================================ */
 
 /* Панель инструментов (поиск, фильтры, сортировка) */
-.teachers-toolbar {
-    display: flex;
+.premium-archive-wrapper.teachers-archive .teachers-toolbar {
+    display: flex !important;
     justify-content: space-between;
     align-items: center;
     gap: 20px;
-    margin-bottom: 32px;
-    padding: 20px;
-    background: var(--premium-white);
+    margin-bottom: 32px !important;
+    padding: 20px !important;
+    background: var(--premium-white) !important;
     border-radius: var(--premium-radius-lg);
     box-shadow: var(--premium-shadow);
     flex-wrap: wrap;
+    width: 100%;
 }
 
 .toolbar-left {
@@ -1885,16 +1889,17 @@
 }
 
 /* Улучшенная карточка преподавателя */
-.teacher-card-inner {
+.premium-archive-wrapper.teachers-archive .teacher-card-inner {
     height: 100%;
-    display: flex;
+    display: flex !important;
     flex-direction: column;
 }
 
-.teacher-card-image {
+.premium-archive-wrapper.teachers-archive .teacher-card-image {
     position: relative;
-    aspect-ratio: 1;
+    aspect-ratio: 1 !important;
     overflow: hidden;
+    min-height: 280px;
 }
 
 .teacher-card-placeholder {
