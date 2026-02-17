@@ -15,6 +15,44 @@
     min-height: 100vh;
 }
 
+/* Кнопка возврата ко всем преподавателям */
+.back-to-teachers {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+}
+
+.back-to-teachers-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.back-to-teachers-btn:hover {
+    transform: translateX(-5px);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.back-to-teachers-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.back-to-teachers-btn:hover svg {
+    transform: translateX(-3px);
+}
+
 /* Hero секция с фото и основной информацией */
 .teacher-hero-section {
     position: relative;
@@ -483,6 +521,15 @@
 }
 
 @media (max-width: 768px) {
+    .back-to-teachers {
+        padding: 15px;
+    }
+    
+    .back-to-teachers-btn {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+    
     .teacher-hero-section {
         padding: 50px 20px;
     }
@@ -550,6 +597,21 @@
 }
 
 @media (max-width: 480px) {
+    .back-to-teachers {
+        padding: 12px;
+    }
+    
+    .back-to-teachers-btn {
+        font-size: 13px;
+        padding: 8px 16px;
+        gap: 6px;
+    }
+    
+    .back-to-teachers-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    
     .teacher-hero-section {
         padding: 40px 15px;
     }

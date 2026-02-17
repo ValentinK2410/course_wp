@@ -44,6 +44,16 @@ $teacher_courses = new WP_Query($courses_args);
 ?>
 
 <div class="teacher-page-wrapper">
+    <!-- Кнопка возврата ко всем преподавателям -->
+    <div class="back-to-teachers">
+        <a href="<?php echo home_url('/teachers/'); ?>" class="back-to-teachers-btn">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span><?php _e('Все преподаватели', 'course-plugin'); ?></span>
+        </a>
+    </div>
+    
     <!-- Верхний баннер с фото и основной информацией -->
     <div class="teacher-hero-section">
         <div class="teacher-hero-container">
