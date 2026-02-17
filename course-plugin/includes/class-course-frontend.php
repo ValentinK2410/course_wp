@@ -502,6 +502,16 @@ class Course_Frontend {
                 }
             }
             
+            // Премиальный дизайн для страницы преподавателя
+            if (is_tax('course_teacher')) {
+                wp_enqueue_style(
+                    'teacher-single-style',
+                    COURSE_PLUGIN_URL . 'assets/css/teacher-single.css',
+                    array('course-frontend-style'),
+                    COURSE_PLUGIN_VERSION
+                );
+            }
+            
             // Премиальный дизайн для страницы курса
             if (is_singular('course')) {
                 wp_enqueue_style(
