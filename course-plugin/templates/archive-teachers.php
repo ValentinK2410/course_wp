@@ -379,19 +379,6 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                                         </div>
                                     <?php endif; ?>
                                     
-                                    <?php if ($teacher_position) : 
-                                        $badge_class = '';
-                                        if (stripos($teacher_position, 'проректор') !== false) {
-                                            $badge_class = 'badge-primary';
-                                        } elseif (stripos($teacher_position, 'старший') !== false) {
-                                            $badge_class = 'badge-senior';
-                                        } else {
-                                            $badge_class = 'badge-default';
-                                        }
-                                    ?>
-                                        <span class="teacher-badge <?php echo $badge_class; ?>"><?php echo esc_html($teacher_position); ?></span>
-                                    <?php endif; ?>
-                                    
                                     <!-- Список курсов при hover -->
                                     <?php if (!empty($courses_list)) : ?>
                                         <div class="teacher-courses-hover">
@@ -409,6 +396,19 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                                 </div>
 
                                 <div class="teacher-card-content">
+                                    <?php if ($teacher_position) : 
+                                        $badge_class = '';
+                                        if (stripos($teacher_position, 'проректор') !== false) {
+                                            $badge_class = 'badge-primary';
+                                        } elseif (stripos($teacher_position, 'старший') !== false) {
+                                            $badge_class = 'badge-senior';
+                                        } else {
+                                            $badge_class = 'badge-default';
+                                        }
+                                    ?>
+                                        <span class="teacher-badge <?php echo $badge_class; ?>"><?php echo esc_html($teacher_position); ?></span>
+                                    <?php endif; ?>
+                                    
                                     <h2 class="teacher-card-name">
                                         <a href="<?php echo esc_url($teacher_link); ?>"><?php echo esc_html($term->name); ?></a>
                                     </h2>
