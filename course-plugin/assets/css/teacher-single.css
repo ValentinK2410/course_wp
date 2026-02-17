@@ -229,9 +229,76 @@
 .teacher-courses-title {
     font-size: 36px;
     font-weight: 700;
-    margin: 0 0 40px 0;
+    margin: 0 0 50px 0;
     color: #2d3748;
     text-align: center;
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.teacher-courses-title::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+}
+
+.teacher-courses-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 2px;
+}
+
+.teacher-courses-title .courses-label {
+    display: block;
+    font-size: 36px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.teacher-courses-title .courses-count {
+    display: inline-block;
+    font-size: 48px;
+    font-weight: 800;
+    color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding: 0 15px;
+    position: relative;
+}
+
+.teacher-courses-title .courses-count::before,
+.teacher-courses-title .courses-count::after {
+    content: '•';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #f093fb;
+    font-size: 24px;
+}
+
+.teacher-courses-title .courses-count::before {
+    left: -10px;
+}
+
+.teacher-courses-title .courses-count::after {
+    right: -10px;
 }
 
 .teacher-courses-grid {
@@ -468,6 +535,14 @@
         font-size: 28px;
     }
     
+    .teacher-courses-title .courses-label {
+        font-size: 28px;
+    }
+    
+    .teacher-courses-title .courses-count {
+        font-size: 40px;
+    }
+    
     .teacher-courses-grid {
         grid-template-columns: 1fr;
         gap: 20px;
@@ -528,6 +603,14 @@
     .teacher-courses-title {
         font-size: 24px;
         margin-bottom: 30px;
+    }
+    
+    .teacher-courses-title .courses-label {
+        font-size: 22px;
+    }
+    
+    .teacher-courses-title .courses-count {
+        font-size: 32px;
     }
     
     .course-card-thumbnail {

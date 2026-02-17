@@ -153,15 +153,13 @@ $teacher_courses = new WP_Query($courses_args);
             <div class="teacher-courses-container">
                 <h2 class="teacher-courses-title">
                     <?php 
-                    printf(
-                        _n(
-                            'Курс преподавателя (%d)',
-                            'Курсы преподавателя (%d)',
-                            $teacher_courses->found_posts,
-                            'course-plugin'
-                        ),
-                        $teacher_courses->found_posts
-                    );
+                    if ($teacher_courses->found_posts == 1) {
+                        echo '<span class="courses-label">Курс преподавателя</span>';
+                        echo '<span class="courses-count">' . $teacher_courses->found_posts . '</span>';
+                    } else {
+                        echo '<span class="courses-label">Курсы преподавателя</span>';
+                        echo '<span class="courses-count">' . $teacher_courses->found_posts . '</span>';
+                    }
                     ?>
                 </h2>
                 
