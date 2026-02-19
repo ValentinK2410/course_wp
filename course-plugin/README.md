@@ -57,6 +57,41 @@
 
 Таксономии можно управлять через боковую панель при редактировании курса или через отдельные разделы в меню "Курсы Про".
 
+### Шорткоды для главной страницы и других страниц
+
+Плагин поддерживает шорткоды для вывода курсов, программ и преподавателей с указанием количества:
+
+**Курсы** — `[courses]`
+```
+[courses per_page="6"]
+[courses per_page="12" specialization="bogoslovie"]
+[courses per_page="8" level="bachelor" view="grid"]
+```
+Параметры: `per_page` (по умолчанию 12), `specialization`, `level`, `topic`, `teacher`, `view` (grid/list)
+
+**Программы** — `[programs]`
+```
+[programs per_page="4"]
+[programs per_page="8" specialization="bogoslovie"]
+```
+Параметры: `per_page` (по умолчанию 12), `specialization`, `level`, `topic`, `teacher`, `view`
+
+**Преподаватели** — `[teachers]`
+```
+[teachers per_page="6"]
+[teachers per_page="8" columns="4"]
+```
+Параметры: `per_page` (по умолчанию 6), `columns` (2–4, по умолчанию 3)
+
+**Пример для главной страницы:**
+```
+[courses per_page="3"]
+
+[teachers per_page="4"]
+
+[programs per_page="2"]
+```
+
 ## Структура плагина
 
 ```

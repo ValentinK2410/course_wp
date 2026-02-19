@@ -1703,9 +1703,11 @@ article.teacher-card {
 .teacher-card-meta {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     margin-top: auto;
     padding-top: 12px;
+    flex-wrap: wrap;
 }
 
 .teacher-courses-count {
@@ -1720,6 +1722,51 @@ article.teacher-card {
 .teacher-courses-count svg {
     flex-shrink: 0;
     opacity: 0.8;
+}
+
+/* Шорткод преподавателей */
+.teachers-shortcode-wrapper {
+    padding: 24px 0 40px;
+}
+
+.teachers-shortcode-wrapper .teachers-shortcode-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .teachers-shortcode-wrapper .teachers-shortcode-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .teachers-shortcode-wrapper .teachers-shortcode-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.teachers-shortcode-more {
+    text-align: center;
+    margin-top: 32px;
+}
+
+.teachers-more-link {
+    display: inline-block;
+    padding: 14px 32px;
+    background: var(--premium-gradient-1);
+    color: var(--premium-white);
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    border-radius: var(--premium-radius-lg);
+    transition: var(--premium-transition);
+    box-shadow: var(--premium-shadow);
+}
+
+.teachers-more-link:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--premium-shadow-md);
 }
 
 /* Адаптивность для широких экранов */

@@ -330,9 +330,9 @@ class Program_Frontend {
         }
         
         $programs = new WP_Query($args);
+        $courses = $programs; // шаблон ожидает переменную $courses
         
         ob_start();
-        // Используем тот же шаблон, что и для курсов, но с данными программ
         include COURSE_PLUGIN_DIR . 'templates/courses-shortcode.php';
         return ob_get_clean();
     }

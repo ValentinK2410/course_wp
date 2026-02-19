@@ -46,8 +46,9 @@ class Course_Frontend {
         // Подключаем стили и скрипты
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
         
-        // Добавляем шорткод для отображения курсов
+        // Добавляем шорткоды для отображения курсов и преподавателей
         add_shortcode('courses', array($this, 'courses_shortcode'));
+        add_shortcode('teachers', array($this, 'teachers_shortcode'));
     }
     
     /**
@@ -471,9 +472,23 @@ class Course_Frontend {
      * Подключение стилей и скриптов
      */
     public function enqueue_assets() {
+        // Проверяем, какие шорткоды используются на странице
+        $is_teachers_shortcode = false;
+        $is_courses_shortcode = false;
+        $is_programs_shortcode = false;
+        if (is_singular() || is_front_page()) {
+            $post_id = is_front_page() && get_option('page_on_front') ? get_option('page_on_front') : get_queried_object_id();
+            $post = $post_id ? get_post($post_id) : null;
+            if ($post) {
+                $is_teachers_shortcode = has_shortcode($post->post_content, 'teachers');
+                $is_courses_shortcode = has_shortcode($post->post_content, 'courses');
+                $is_programs_shortcode = has_shortcode($post->post_content, 'programs');
+            }
+        }
+        
         // Подключаем стили и скрипты на страницах курсов и преподавателей
         $is_teachers_archive = (int) get_query_var('teachers_archive') === 1;
-        if (is_post_type_archive('course') || is_singular('course') || is_tax('course_teacher') || $is_teachers_archive) {
+        if (is_post_type_archive('course') || is_singular('course') || is_tax('course_teacher') || $is_teachers_archive || $is_teachers_shortcode || $is_courses_shortcode || $is_programs_shortcode) {
             wp_enqueue_style(
                 'course-frontend-style',
                 COURSE_PLUGIN_URL . 'assets/css/frontend.css',
@@ -482,7 +497,7 @@ class Course_Frontend {
             );
             
             // Премиальный дизайн для архивов (курсы и преподаватели)
-            if (is_post_type_archive('course') || $is_teachers_archive) {
+            if (is_post_type_archive('course') || $is_teachers_archive || $is_teachers_shortcode) {
                 wp_enqueue_style(
                     'course-premium-style',
                     COURSE_PLUGIN_URL . 'assets/css/premium-design.css',
@@ -491,7 +506,7 @@ class Course_Frontend {
                 );
                 
                 // Дополнительные критические стили для сетки преподавателей
-                if ($is_teachers_archive) {
+                if ($is_teachers_archive || $is_teachers_shortcode) {
                     wp_enqueue_style(
                         'teachers-grid-fix',
                         COURSE_PLUGIN_URL . 'assets/css/teachers-grid-fix.css',
@@ -601,6 +616,79 @@ class Course_Frontend {
         
         ob_start();
         include COURSE_PLUGIN_DIR . 'templates/courses-shortcode.php';
+        return ob_get_clean();
+    }
+    
+    /**
+     * Шорткод для отображения преподавателей
+     * 
+     * Параметры:
+     * - per_page (число) — количество преподавателей (по умолчанию 6)
+     * - columns (число) — колонок в сетке на десктопе (2, 3, 4)
+     * 
+     * Пример: [teachers per_page="8"]
+     */
+    public function teachers_shortcode($atts) {
+        $atts = shortcode_atts(array(
+            'per_page' => 6,
+            'columns' => 3,
+        ), $atts);
+        
+        $teachers_args = array(
+            'taxonomy' => 'course_teacher',
+            'hide_empty' => false,
+            'orderby' => 'name',
+            'order' => 'ASC',
+            'number' => intval($atts['per_page']),
+        );
+        
+        $teachers = get_terms($teachers_args);
+        
+        if (is_wp_error($teachers) || empty($teachers)) {
+            return '<p>' . __('Преподаватели не найдены.', 'course-plugin') . '</p>';
+        }
+        
+        $teachers_with_data = array();
+        foreach ($teachers as $term) {
+            $teacher_photo = get_term_meta($term->term_id, 'teacher_photo', true);
+            $teacher_position = get_term_meta($term->term_id, 'teacher_position', true);
+            $teacher_description = get_term_meta($term->term_id, 'teacher_description', true);
+            
+            $courses_query = new WP_Query(array(
+                'post_type' => 'course',
+                'posts_per_page' => -1,
+                'post_status' => 'publish',
+                'tax_query' => array(
+                    array(
+                        'taxonomy' => 'course_teacher',
+                        'field' => 'term_id',
+                        'terms' => $term->term_id,
+                    ),
+                ),
+            ));
+            
+            $courses_count = $courses_query->found_posts;
+            $specializations = get_terms(array(
+                'taxonomy' => 'course_specialization',
+                'object_ids' => wp_list_pluck($courses_query->posts, 'ID'),
+                'hide_empty' => true,
+            ));
+            
+            wp_reset_postdata();
+            
+            $teachers_with_data[] = array(
+                'term' => $term,
+                'photo' => $teacher_photo,
+                'position' => $teacher_position,
+                'description' => $teacher_description,
+                'courses_count' => $courses_count,
+                'specializations' => is_wp_error($specializations) ? array() : $specializations,
+            );
+        }
+        
+        ob_start();
+        $shortcode_atts = $atts;
+        include COURSE_PLUGIN_DIR . 'templates/teachers-shortcode.php';
         return ob_get_clean();
     }
 }
