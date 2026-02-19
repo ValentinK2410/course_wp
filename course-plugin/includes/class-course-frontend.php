@@ -517,6 +517,16 @@ class Course_Frontend {
                 }
             }
             
+            // Премиальный дизайн для шорткода курсов/программ
+            if ($is_courses_shortcode || $is_programs_shortcode) {
+                wp_enqueue_style(
+                    'courses-shortcode-style',
+                    COURSE_PLUGIN_URL . 'assets/css/courses-shortcode.css',
+                    array('course-frontend-style'),
+                    COURSE_PLUGIN_VERSION
+                );
+            }
+            
             // Премиальный дизайн для страницы преподавателя
             if (is_tax('course_teacher')) {
                 wp_enqueue_style(
