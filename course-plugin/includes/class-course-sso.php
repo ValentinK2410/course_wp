@@ -264,24 +264,8 @@ class Course_SSO {
             return $items;
         }
         
-        $moodle_url = get_option('moodle_sync_url', '');
-        $laravel_url = get_option('laravel_api_url', '');
-        
-        if (empty($moodle_url) && empty($laravel_url)) {
-            return $items;
-        }
-        
-        $sso_items = '';
-        
-        if (!empty($moodle_url)) {
-            $sso_items .= '<li class="menu-item"><a href="javascript:void(0);" onclick="goToMoodle();" class="sso-moodle-link">Moodle</a></li>';
-        }
-        
-        if (!empty($laravel_url)) {
-            $sso_items .= '<li class="menu-item"><a href="javascript:void(0);" onclick="goToLaravel();" class="sso-laravel-link">Система управления</a></li>';
-        }
-        
-        return $items . $sso_items;
+        // Кнопки Moodle и Система управления отключены
+        return $items;
     }
     
     /**
@@ -289,35 +273,8 @@ class Course_SSO {
      * Использование: [sso_buttons]
      */
     public function sso_buttons_shortcode($atts) {
-        // Показываем только для авторизованных пользователей
-        if (!is_user_logged_in()) {
-            return '';
-        }
-        
-        $moodle_url = get_option('moodle_sync_url', '');
-        $laravel_url = get_option('laravel_api_url', '');
-        
-        if (empty($moodle_url) && empty($laravel_url)) {
-            return '';
-        }
-        
-        ob_start();
-        ?>
-        <div class="sso-buttons-wrapper" style="margin: 20px 0;">
-            <?php if (!empty($moodle_url)): ?>
-            <a href="javascript:void(0);" onclick="goToMoodle();" class="sso-button sso-moodle" style="display: inline-block; padding: 10px 20px; margin: 5px; background: #f98012; color: white; text-decoration: none; border-radius: 5px;">
-                Перейти в Moodle
-            </a>
-            <?php endif; ?>
-            
-            <?php if (!empty($laravel_url)): ?>
-            <a href="javascript:void(0);" onclick="goToLaravel();" class="sso-button sso-laravel" style="display: inline-block; padding: 10px 20px; margin: 5px; background: #f9322c; color: white; text-decoration: none; border-radius: 5px;">
-                Перейти в Систему управления
-            </a>
-            <?php endif; ?>
-        </div>
-        <?php
-        return ob_get_clean();
+        // Кнопки Moodle и Система управления отключены
+        return '';
     }
     
     /**
@@ -326,216 +283,24 @@ class Course_SSO {
      * @param WP_Admin_Bar $wp_admin_bar Объект admin bar
      */
     public function add_admin_bar_items($wp_admin_bar) {
-        // Показываем только для авторизованных пользователей
-        if (!is_user_logged_in()) {
-            return;
-        }
-        
-        $moodle_url = get_option('moodle_sync_url', '');
-        $laravel_url = get_option('laravel_api_url', '');
-        
-        // Если не настроен Moodle URL, не добавляем кнопки
-        if (empty($moodle_url)) {
-            return;
-        }
-        
-        // Добавляем родительский элемент меню
-        $wp_admin_bar->add_node(array(
-            'id'    => 'course-sso',
-            'title' => __('Быстрый переход', 'course-plugin'),
-            'meta'  => array(
-                'title' => __('Перейти в Виртуальный класс', 'course-plugin'),
-            ),
-        ));
-        
-        // Добавляем кнопку Moodle
-        if (!empty($moodle_url)) {
-            $wp_admin_bar->add_node(array(
-                'parent' => 'course-sso',
-                'id'     => 'course-sso-moodle',
-                'title'  => __('Виртуальный класс', 'course-plugin'),
-                'href'   => 'javascript:void(0);',
-                'meta'   => array(
-                    'onclick' => 'goToMoodle(); return false;',
-                    'class'  => 'course-sso-moodle',
-                    'title'  => __('Перейти в Виртуальный класс без ввода пароля', 'course-plugin'),
-                ),
-            ));
-        }
-        
+        // Кнопки Moodle и Система управления отключены
+        return;
     }
     
     /**
      * Добавление стилей для кнопок в admin bar
      */
     public function add_admin_bar_styles() {
-        // Показываем только для авторизованных пользователей
-        if (!is_user_logged_in()) {
-            return;
-        }
-        
-        $moodle_url = get_option('moodle_sync_url', '');
-        $laravel_url = get_option('laravel_api_url', '');
-        
-        // Если не настроен Moodle URL, не добавляем стили
-        if (empty($moodle_url)) {
-            return;
-        }
-        ?>
-        <style type="text/css">
-        #wpadminbar #wp-admin-bar-course-sso .ab-item {
-            cursor: pointer;
-        }
-        #wpadminbar #wp-admin-bar-course-sso-moodle .ab-item {
-            color: #f98012 !important;
-        }
-        #wpadminbar #wp-admin-bar-course-sso-moodle:hover .ab-item {
-            color: #ff9a3c !important;
-        }
-        </style>
-        <?php
+        // Кнопки Moodle и Система управления отключены
+        return;
     }
     
     /**
      * Добавление кнопок SSO в шапку сайта
      */
     public function add_header_sso_buttons() {
-        // Показываем только для авторизованных пользователей и только на фронтенде
-        if (!is_user_logged_in() || is_admin()) {
-            return;
-        }
-        
-        $moodle_url = get_option('moodle_sync_url', '');
-        $laravel_url = get_option('laravel_api_url', '');
-        
-        // Если не настроен Moodle URL, не добавляем кнопки
-        if (empty($moodle_url)) {
-            return;
-        }
-        
-        // Получаем URL для AJAX
-        $ajax_url = admin_url('admin-ajax.php');
-        $nonce = wp_create_nonce('sso_tokens');
-        ?>
-        <style type="text/css">
-        .course-sso-header-buttons {
-            display: inline-flex;
-            gap: 10px;
-            align-items: center;
-            margin-left: 15px;
-        }
-        .course-sso-header-buttons .sso-header-btn {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: none;
-            white-space: nowrap;
-        }
-        .course-sso-header-buttons .sso-header-btn-moodle {
-            background: #f98012;
-            color: white;
-        }
-        .course-sso-header-buttons .sso-header-btn-moodle:hover {
-            background: #e0700f;
-            color: white;
-        }
-        </style>
-        <script type="text/javascript">
-        (function() {
-            // Ждем загрузки DOM
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', addSSOButtons);
-            } else {
-                addSSOButtons();
-            }
-            
-            function addSSOButtons() {
-                // Ищем контейнер с кнопками "Войти" и "Регистрация"
-                // Пробуем разные селекторы, которые могут быть в разных темах
-                var selectors = [
-                    '.header-actions',
-                    '.site-header .header-right',
-                    '.site-header .header-actions',
-                    '.main-header .header-actions',
-                    '.header .header-actions',
-                    '.site-header .menu-right',
-                    '.header-right',
-                    '.header-actions-wrapper',
-                    'header .actions',
-                    '.header-buttons'
-                ];
-                
-                var container = null;
-                for (var i = 0; i < selectors.length; i++) {
-                    var elements = document.querySelectorAll(selectors[i]);
-                    if (elements.length > 0) {
-                        // Ищем контейнер, который содержит кнопки "Войти" или "Регистрация"
-                        for (var j = 0; j < elements.length; j++) {
-                            var text = elements[j].textContent || elements[j].innerText;
-                            if (text.indexOf('Войти') !== -1 || text.indexOf('Регистрация') !== -1 || 
-                                text.indexOf('Login') !== -1 || text.indexOf('Register') !== -1) {
-                                container = elements[j];
-                                break;
-                            }
-                        }
-                        if (container) break;
-                    }
-                }
-                
-                // Если не нашли контейнер, ищем кнопки напрямую
-                if (!container) {
-                    var loginButtons = document.querySelectorAll('a[href*="login"], a[href*="wp-login"], .login-button, .register-button');
-                    if (loginButtons.length > 0) {
-                        container = loginButtons[0].parentElement;
-                    }
-                }
-                
-                // Если все еще не нашли, добавляем в конец header
-                if (!container) {
-                    var header = document.querySelector('header, .site-header, .main-header, .header');
-                    if (header) {
-                        container = header;
-                    }
-                }
-                
-                if (!container) return;
-                
-                // Проверяем, не добавлены ли уже кнопки
-                if (container.querySelector('.course-sso-header-buttons')) {
-                    return;
-                }
-                
-                // Создаем контейнер для кнопок
-                var buttonsContainer = document.createElement('div');
-                buttonsContainer.className = 'course-sso-header-buttons';
-                
-                <?php if (!empty($moodle_url)): ?>
-                var moodleBtn = document.createElement('a');
-                moodleBtn.href = 'javascript:void(0);';
-                moodleBtn.className = 'sso-header-btn sso-header-btn-moodle';
-                moodleBtn.textContent = 'Виртуальный класс';
-                moodleBtn.onclick = function(e) {
-                    e.preventDefault();
-                    goToMoodle();
-                };
-                buttonsContainer.appendChild(moodleBtn);
-                <?php endif; ?>
-                
-                // Добавляем кнопки в контейнер
-                if (container.querySelector('.header-actions, .actions, .header-right')) {
-                    container.querySelector('.header-actions, .actions, .header-right').appendChild(buttonsContainer);
-                } else {
-                    container.appendChild(buttonsContainer);
-                }
-            }
-        })();
-        </script>
-        <?php
+        // Кнопки Moodle и Система управления отключены
+        return;
     }
     
     /**
