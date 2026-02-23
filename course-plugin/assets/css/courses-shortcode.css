@@ -26,8 +26,8 @@
     --csp-btn-border: #BF4359;
     --csp-btn-radius: 12px;
     --csp-more-radius: 14px;
-    --csp-btn-shadow: 0 4px 15px rgba(161, 55, 74, 0.65);
-    --csp-btn-shadow-hover: 0 8px 25px rgb(119, 38, 52);
+    --csp-btn-shadow: 0 4px 15px rgba(191, 67, 89, 0.65);
+    --csp-btn-shadow-hover: 0 8px 25px rgba(104, 32, 45, 0.4);
 }
 
 .courses-shortcode-premium {
