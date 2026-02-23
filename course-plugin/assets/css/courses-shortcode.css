@@ -7,7 +7,6 @@
  *   .courses-shortcode-premium {
  *     --csp-btn-gradient: linear-gradient(135deg, #ваш-цвет1, #ваш-цвет2);
  *     --csp-btn-color: #fff;
- *     --csp-btn-border: #ваш-цвет;  /* для outline */
  *     --csp-btn-radius: 8px;
  *     --csp-more-radius: 10px;
  *   }
@@ -21,13 +20,13 @@
 
 /* Переменные (тема может переопределить через :root или .courses-shortcode-premium) */
 .courses-shortcode-premium {
-    --csp-btn-gradient: linear-gradient(135deg, #BF4359 0%, #68202D 100%);
+    --csp-btn-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --csp-btn-color: #fff;
-    --csp-btn-border: #BF4359;
+    --csp-btn-border: #667eea;
     --csp-btn-radius: 12px;
     --csp-more-radius: 14px;
-    --csp-btn-shadow: 0 4px 15px rgba(191, 67, 89, 0.65);
-    --csp-btn-shadow-hover: 0 8px 25px rgba(104, 32, 45, 0.4);
+    --csp-btn-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    --csp-btn-shadow-hover: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
 .courses-shortcode-premium {
