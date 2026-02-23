@@ -1751,11 +1751,16 @@ article.teacher-card {
     margin-top: 32px;
 }
 
+.teachers-shortcode-wrapper {
+    --ts-btn-gradient: var(--premium-gradient-1);
+    --ts-btn-color: var(--premium-white);
+}
+
 .teachers-more-link {
     display: inline-block;
     padding: 14px 32px;
-    background: var(--premium-gradient-1);
-    color: var(--premium-white);
+    background: var(--ts-btn-gradient);
+    color: var(--ts-btn-color);
     font-weight: 600;
     font-size: 1rem;
     text-decoration: none;
@@ -1767,6 +1772,30 @@ article.teacher-card {
 .teachers-more-link:hover {
     transform: translateY(-2px);
     box-shadow: var(--premium-shadow-md);
+}
+
+/* Варианты кнопки для teachers шорткода */
+.teachers-shortcode-wrapper.ts-style-outline .teachers-more-link {
+    background: transparent;
+    border: 2px solid var(--premium-primary);
+    color: var(--premium-primary);
+    box-shadow: none;
+}
+
+.teachers-shortcode-wrapper.ts-style-outline .teachers-more-link:hover {
+    background: var(--ts-btn-gradient);
+    border-color: transparent;
+    color: var(--ts-btn-color);
+}
+
+.teachers-shortcode-wrapper.ts-style-minimal .teachers-more-link {
+    background: transparent;
+    color: var(--premium-primary);
+    box-shadow: none;
+}
+
+.teachers-shortcode-wrapper.ts-style-minimal .teachers-more-link:hover {
+    text-decoration: underline;
 }
 
 /* Адаптивность для широких экранов */

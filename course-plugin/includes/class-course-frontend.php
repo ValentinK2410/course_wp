@@ -573,6 +573,8 @@ class Course_Frontend {
             'topic' => '',
             'teacher' => '',
             'view' => 'grid',
+            'button_style' => 'default',
+            'theme_class' => '',
         ), $atts);
         
         $args = array(
@@ -624,6 +626,14 @@ class Course_Frontend {
         
         $courses = new WP_Query($args);
         
+        $shortcode_context = array(
+            'post_type' => 'course',
+            'more_text' => __('Все курсы', 'course-plugin'),
+            'more_url' => get_post_type_archive_link('course'),
+            'button_style' => isset($atts['button_style']) ? sanitize_key($atts['button_style']) : 'default',
+            'theme_class' => !empty($atts['theme_class']) ? sanitize_html_class($atts['theme_class']) : '',
+        );
+        
         ob_start();
         include COURSE_PLUGIN_DIR . 'templates/courses-shortcode.php';
         return ob_get_clean();
@@ -642,6 +652,8 @@ class Course_Frontend {
         $atts = shortcode_atts(array(
             'per_page' => 6,
             'columns' => 3,
+            'button_style' => 'default',
+            'theme_class' => '',
         ), $atts);
         
         $teachers_args = array(

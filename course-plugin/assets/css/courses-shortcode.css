@@ -1,9 +1,34 @@
 /**
- * Премиум стили для шорткода курсов [courses]
+ * Премиум стили для шорткода курсов [courses] и программ [programs]
+ * Поддержка CSS-переменных для кастомизации под тему
+ *
+ * Кастомизация в теме (style.css дочерней темы или Additional CSS):
+ *
+ *   .courses-shortcode-premium {
+ *     --csp-btn-gradient: linear-gradient(135deg, #ваш-цвет1, #ваш-цвет2);
+ *     --csp-btn-color: #fff;
+ *     --csp-btn-border: #ваш-цвет;  /* для outline */
+ *     --csp-btn-radius: 8px;
+ *     --csp-more-radius: 10px;
+ *   }
+ *
+ * Атрибуты шорткода: button_style="default|outline|minimal" theme_class="my-theme-buttons"
+ * Пример: [courses button_style="outline" theme_class="mbs-theme"]
  *
  * @copyright Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
  * @author Кузьменко Валентин (Valentink2410)
  */
+
+/* Переменные (тема может переопределить через :root или .courses-shortcode-premium) */
+.courses-shortcode-premium {
+    --csp-btn-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --csp-btn-color: #fff;
+    --csp-btn-border: #667eea;
+    --csp-btn-radius: 12px;
+    --csp-more-radius: 14px;
+    --csp-btn-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    --csp-btn-shadow-hover: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
 
 .courses-shortcode-premium {
     padding: 20px 0 40px;
@@ -294,19 +319,19 @@
     display: block;
     text-align: center;
     padding: 12px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
+    background: var(--csp-btn-gradient);
+    color: var(--csp-btn-color);
     font-weight: 600;
     font-size: 0.9375rem;
-    border-radius: 12px;
+    border-radius: var(--csp-btn-radius);
     transition: box-shadow 0.3s ease;
 }
 
 .csp-card:hover .csp-btn {
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+    box-shadow: var(--csp-btn-shadow-hover);
 }
 
-/* Ссылка «Все курсы» */
+/* Ссылка «Все курсы» / «Все программы» */
 .csp-more {
     text-align: center;
     margin-top: 36px;
@@ -315,19 +340,64 @@
 .csp-more-link {
     display: inline-block;
     padding: 14px 36px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
+    background: var(--csp-btn-gradient);
+    color: var(--csp-btn-color);
     font-weight: 600;
     font-size: 1rem;
     text-decoration: none;
-    border-radius: 14px;
+    border-radius: var(--csp-more-radius);
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    box-shadow: var(--csp-btn-shadow);
 }
 
 .csp-more-link:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: var(--csp-btn-shadow-hover);
+}
+
+/* Вариант outline — кнопки с обводкой */
+.courses-shortcode-premium.csp-style-outline .csp-btn,
+.courses-shortcode-premium.csp-style-outline .csp-more-link {
+    background: transparent;
+    border: 2px solid var(--csp-btn-border);
+    color: var(--csp-btn-border);
+    box-shadow: none;
+}
+
+.courses-shortcode-premium.csp-style-outline .csp-card:hover .csp-btn {
+    background: var(--csp-btn-gradient);
+    border-color: transparent;
+    color: var(--csp-btn-color);
+}
+
+.courses-shortcode-premium.csp-style-outline .csp-more-link:hover {
+    background: var(--csp-btn-gradient);
+    border-color: transparent;
+    color: var(--csp-btn-color);
+}
+
+/* Вариант minimal — простые ссылки без фона */
+.courses-shortcode-premium.csp-style-minimal .csp-btn {
+    background: transparent;
+    color: #667eea;
+    box-shadow: none;
+}
+
+.courses-shortcode-premium.csp-style-minimal .csp-more-link {
+    background: transparent;
+    color: #667eea;
+    box-shadow: none;
+}
+
+.courses-shortcode-premium.csp-style-minimal .csp-more-link:hover {
+    text-decoration: underline;
+}
+
+/* theme — передаёт оформление теме (базовые стили, тема переопределяет) */
+.courses-shortcode-premium.csp-style-theme .csp-btn,
+.courses-shortcode-premium.csp-style-theme .csp-more-link {
+    /* Минимум стилей — тема добавляет свои через .theme_class */
+    background: var(--csp-btn-gradient);
 }
 
 /* Пустое состояние */

@@ -1,6 +1,6 @@
 <?php
 /**
- * Шаблон для шорткода курсов — премиальный дизайн
+ * Шаблон для шорткода курсов и программ — премиальный дизайн
  *
  * @copyright Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
  * @author Кузьменко Валентин (Valentink2410)
@@ -10,8 +10,27 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+$shortcode_context = isset($shortcode_context) ? $shortcode_context : array(
+    'post_type' => 'course',
+    'more_text' => __('Все курсы', 'course-plugin'),
+    'more_url' => get_post_type_archive_link('course'),
+    'button_style' => 'default',
+    'theme_class' => '',
+);
+$ctx = wp_parse_args($shortcode_context, array(
+    'post_type' => 'course',
+    'more_text' => __('Все курсы', 'course-plugin'),
+    'more_url' => home_url('/courses/'),
+    'button_style' => 'default',
+    'theme_class' => '',
+));
+$wrapper_classes = array('courses-shortcode-premium', 'csp-style-' . esc_attr($ctx['button_style']));
+if (!empty($ctx['theme_class'])) {
+    $wrapper_classes[] = esc_attr($ctx['theme_class']);
+}
+
 if ($courses->have_posts()) : ?>
-    <div class="courses-shortcode-premium">
+    <div class="<?php echo implode(' ', $wrapper_classes); ?>">
         <div class="csp-grid">
             <?php while ($courses->have_posts()) : $courses->the_post();
                 $price = get_post_meta(get_the_ID(), '_course_price', true);
@@ -127,8 +146,8 @@ if ($courses->have_posts()) : ?>
         </div>
 
         <div class="csp-more">
-            <a href="<?php echo esc_url(get_post_type_archive_link('course')); ?>" class="csp-more-link">
-                <?php _e('Все курсы', 'course-plugin'); ?>
+            <a href="<?php echo esc_url($ctx['more_url']); ?>" class="csp-more-link">
+                <?php echo esc_html($ctx['more_text']); ?>
             </a>
         </div>
     </div>

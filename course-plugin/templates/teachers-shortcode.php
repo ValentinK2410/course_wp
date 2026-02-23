@@ -12,6 +12,13 @@ if (!defined('ABSPATH')) {
 
 $columns = isset($shortcode_atts['columns']) ? intval($shortcode_atts['columns']) : 3;
 $columns = max(2, min(4, $columns));
+$button_style = isset($shortcode_atts['button_style']) ? sanitize_key($shortcode_atts['button_style']) : 'default';
+$theme_class = !empty($shortcode_atts['theme_class']) ? sanitize_html_class($shortcode_atts['theme_class']) : '';
+
+$wrapper_classes = array('teachers-shortcode-wrapper', 'premium-archive-wrapper', 'teachers-archive', 'ts-style-' . $button_style);
+if ($theme_class) {
+    $wrapper_classes[] = $theme_class;
+}
 
 $color_schemes = array(
     array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea'),
@@ -22,7 +29,7 @@ $color_schemes = array(
 );
 ?>
 
-<div class="teachers-shortcode-wrapper premium-archive-wrapper teachers-archive" data-columns="<?php echo esc_attr($columns); ?>">
+<div class="<?php echo esc_attr(implode(' ', $wrapper_classes)); ?>" data-columns="<?php echo esc_attr($columns); ?>">
     <div class="teachers-shortcode-grid" style="display: grid; grid-template-columns: repeat(<?php echo $columns; ?>, 1fr); gap: 24px;">
         <?php foreach ($teachers_with_data as $index => $item) :
             $term = $item['term'];

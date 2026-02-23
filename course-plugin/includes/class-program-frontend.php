@@ -280,6 +280,8 @@ class Program_Frontend {
             'topic' => '',
             'teacher' => '',
             'view' => 'grid',
+            'button_style' => 'default',
+            'theme_class' => '',
         ), $atts);
         
         $args = array(
@@ -331,6 +333,14 @@ class Program_Frontend {
         
         $programs = new WP_Query($args);
         $courses = $programs; // шаблон ожидает переменную $courses
+        
+        $shortcode_context = array(
+            'post_type' => 'program',
+            'more_text' => __('Все программы', 'course-plugin'),
+            'more_url' => get_post_type_archive_link('program'),
+            'button_style' => isset($atts['button_style']) ? sanitize_key($atts['button_style']) : 'default',
+            'theme_class' => !empty($atts['theme_class']) ? sanitize_html_class($atts['theme_class']) : '',
+        );
         
         ob_start();
         include COURSE_PLUGIN_DIR . 'templates/courses-shortcode.php';
