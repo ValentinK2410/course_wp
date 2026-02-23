@@ -583,13 +583,13 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                         
                         // Определяем цветовую схему карточки в зависимости от региона
                         $location_colors = array(
-                            'online' => array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea', 'name' => __('Онлайн', 'course-plugin')),
+                            'online' => array('gradient' => 'linear-gradient(135deg, #8B2D3D 0%, #68202D 100%)', 'accent' => '#68202D', 'name' => __('Онлайн', 'course-plugin')),
                             'zoom' => array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe', 'name' => __('Зум', 'course-plugin')),
                             'moscow' => array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c', 'name' => __('Москва', 'course-plugin')),
                             'prokhladny' => array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b', 'name' => __('Прохладный', 'course-plugin')),
                             'nizhny-novgorod' => array('gradient' => 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', 'accent' => '#fa709a', 'name' => __('Нижний Новгород', 'course-plugin')),
                             'chelyabinsk' => array('gradient' => 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', 'accent' => '#a8edea', 'name' => __('Челябинск', 'course-plugin')),
-                            'norilsk' => array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea', 'name' => __('Норильск', 'course-plugin')),
+                            'norilsk' => array('gradient' => 'linear-gradient(135deg, #8B2D3D 0%, #68202D 100%)', 'accent' => '#68202D', 'name' => __('Норильск', 'course-plugin')),
                             'izhevsk' => array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe', 'name' => __('Ижевск', 'course-plugin')),
                             'yug' => array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c', 'name' => __('Юг', 'course-plugin')),
                             'novokuznetsk' => array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b', 'name' => __('Новокузнецк', 'course-plugin')),
@@ -602,7 +602,7 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                         } else {
                             // Дефолтная цветовая схема
                             $color_schemes = array(
-                                array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea'),
+                                array('gradient' => 'linear-gradient(135deg, #8B2D3D 0%, #68202D 100%)', 'accent' => '#68202D'),
                                 array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c'),
                                 array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe'),
                                 array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b'),

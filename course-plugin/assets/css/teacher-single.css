@@ -27,7 +27,7 @@
     align-items: center;
     gap: 8px;
     padding: 12px 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
     color: #fff;
     text-decoration: none;
     border-radius: 30px;
@@ -42,7 +42,7 @@
 .back-to-teachers-btn:hover {
     transform: translateX(-5px);
     box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    background: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
 }
 
 .back-to-teachers-btn svg {
@@ -56,7 +56,7 @@
 /* Hero секция с фото и основной информацией */
 .teacher-hero-section {
     position: relative;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
     padding: 80px 20px;
     color: #fff;
     overflow: hidden;
@@ -237,7 +237,7 @@
     left: 0;
     width: 60px;
     height: 4px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, #8B2D3D 0%, #68202D 100%);
     border-radius: 2px;
 }
 
@@ -282,7 +282,7 @@
     transform: translateX(-50%);
     width: 80px;
     height: 4px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, #8B2D3D 0%, #68202D 100%);
     border-radius: 2px;
 }
 
@@ -302,7 +302,7 @@
     display: block;
     font-size: 36px;
     margin-bottom: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -312,8 +312,8 @@
     display: inline-block;
     font-size: 48px;
     font-weight: 800;
-    color: #667eea;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #68202D;
+    background: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -370,7 +370,7 @@
     position: relative;
     height: 220px;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
 }
 
 .course-card-thumbnail img {
@@ -390,7 +390,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
 }
 
 .course-placeholder .dashicons {
@@ -448,7 +448,7 @@
 .course-current-price {
     font-size: 24px;
     font-weight: 700;
-    color: #667eea;
+    color: #68202D;
 }
 
 .course-card-rating {

@@ -7,9 +7,9 @@
    ПЕРЕМЕННЫЕ
    ================================================ */
 :root {
-    --premium-primary: #667eea;
-    --premium-primary-dark: #5a67d8;
-    --premium-secondary: #764ba2;
+    --premium-primary: #68202D;
+    --premium-primary-dark: #4a1620;
+    --premium-secondary: #8B2D3D;
     --premium-accent: #f5576c;
     --premium-success: #43e97b;
     --premium-warning: #fee140;
@@ -27,7 +27,7 @@
     --premium-gray-100: #f9fafb;
     --premium-white: #ffffff;
     
-    --premium-gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --premium-gradient-1: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
     --premium-gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     --premium-gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     --premium-gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
@@ -2152,7 +2152,7 @@ article.teacher-card {
 }
 
 .teacher-badge.badge-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
     color: var(--premium-white);
 }
 

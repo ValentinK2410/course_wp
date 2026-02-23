@@ -21,7 +21,7 @@ if ($theme_class) {
 }
 
 $color_schemes = array(
-    array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea'),
+    array('gradient' => 'linear-gradient(135deg, #8B2D3D 0%, #68202D 100%)', 'accent' => '#68202D'),
     array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c'),
     array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe'),
     array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b'),

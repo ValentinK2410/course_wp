@@ -50,7 +50,7 @@
     margin: 0 0 24px 0;
     padding-bottom: 16px;
     border-bottom: 3px solid;
-    border-image: linear-gradient(90deg, #667eea 0%, #764ba2 100%) 1;
+    border-image: linear-gradient(90deg, #8B2D3D 0%, #68202D 100%) 1;
     color: #2d3748;
     font-weight: 700;
     letter-spacing: -0.5px;
@@ -89,13 +89,13 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-size: 12px;
-    color: #667eea;
+    color: #68202D;
 }
 
 .filter-section-title::before {
     content: "▸";
     font-size: 14px;
-    color: #764ba2;
+    color: #8B2D3D;
 }
 
 /* Поиск по фильтрам */
@@ -113,7 +113,7 @@
 
 .filter-search:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #68202D;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -127,20 +127,20 @@
     cursor: pointer;
     transition: all 0.3s ease;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2368202D' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
     padding-right: 40px;
 }
 
 .filter-select:hover {
-    border-color: #667eea;
+    border-color: #68202D;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .filter-select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #68202D;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
 }
 
@@ -163,7 +163,7 @@
 }
 
 .filter-checkboxes::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(180deg, #68202D 0%, #8B2D3D 100%);
     border-radius: 10px;
 }
 
@@ -192,7 +192,7 @@
     width: 20px;
     height: 20px;
     cursor: pointer;
-    accent-color: #667eea;
+    accent-color: #68202D;
     border-radius: 4px;
     transition: all 0.2s ease;
 }
@@ -209,11 +209,11 @@
 }
 
 .filter-checkbox-label:hover span {
-    color: #667eea;
+    color: #68202D;
 }
 
 .filter-checkbox-label input[type="checkbox"]:checked + span {
-    color: #667eea;
+    color: #68202D;
     font-weight: 600;
 }
 
@@ -235,7 +235,7 @@
 }
 
 .filter-submit-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #68202D 0%, #8B2D3D 100%);
     color: #fff;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
@@ -388,7 +388,7 @@
 
 .course-filters-sidebar::-webkit-scrollbar-thumb,
 .program-filters-sidebar::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(180deg, #68202D 0%, #8B2D3D 100%);
     border-radius: 10px;
 }
 

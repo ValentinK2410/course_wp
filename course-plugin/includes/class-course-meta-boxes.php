@@ -1293,14 +1293,14 @@ class Course_Meta_Boxes {
         <style>
             .course-icon-picker { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; max-width: 450px; }
             .course-icon-picker label { display: flex; flex-direction: column; align-items: center; padding: 6px 8px; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; transition: all 0.2s; min-width: 52px; }
-            .course-icon-picker label:hover { border-color: #667eea; background: #f8f9ff; }
-            .course-icon-picker label.checked { border-color: #667eea; background: #f0f2ff; box-shadow: 0 0 0 2px rgba(102,126,234,0.2); }
-            .course-icon-picker .icon-preview { width: 28px; height: 28px; margin-bottom: 4px; color: #667eea; }
+            .course-icon-picker label:hover { border-color: #68202D; background: rgba(104,32,45,0.05); }
+            .course-icon-picker label.checked { border-color: #68202D; background: rgba(104,32,45,0.08); box-shadow: 0 0 0 2px rgba(104,32,45,0.2); }
+            .course-icon-picker .icon-preview { width: 28px; height: 28px; margin-bottom: 4px; color: #68202D; }
             .course-icon-picker .icon-preview svg { width: 100%; height: 100%; }
             .course-icon-picker .icon-label { font-size: 10px; text-align: center; color: #333; max-width: 48px; line-height: 1.2; }
             .course-icon-picker input[type="radio"] { display: none; }
             .course-icon-picker-default { padding: 6px 8px; border: 2px dashed #ccc; border-radius: 6px; min-width: 52px; text-align: center; font-size: 10px; color: #666; }
-            .course-icon-picker-default.checked { border-color: #667eea; background: #f0f2ff; }
+            .course-icon-picker-default.checked { border-color: #68202D; background: rgba(104,32,45,0.08); }
         </style>
         <table class="form-table">
             <tr>

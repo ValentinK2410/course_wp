@@ -20,13 +20,13 @@
 
 /* Переменные (тема может переопределить через :root или .courses-shortcode-premium) */
 .courses-shortcode-premium {
-    --csp-btn-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --csp-btn-gradient: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
     --csp-btn-color: #fff;
-    --csp-btn-border: #667eea;
+    --csp-btn-border: #68202D;
     --csp-btn-radius: 12px;
     --csp-more-radius: 14px;
-    --csp-btn-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    --csp-btn-shadow-hover: 0 8px 25px rgba(102, 126, 234, 0.4);
+    --csp-btn-shadow: 0 4px 15px rgba(104, 32, 45, 0.4);
+    --csp-btn-shadow-hover: 0 8px 25px rgba(104, 32, 45, 0.5);
 }
 
 .courses-shortcode-premium {
@@ -72,7 +72,7 @@
     position: relative;
     height: 200px;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
 }
 
 .csp-card-image img {
@@ -155,8 +155,8 @@
 }
 
 .csp-tag-level {
-    background: rgba(102, 126, 234, 0.1);
-    color: #667eea;
+    background: rgba(104, 32, 45, 0.1);
+    color: #68202D;
 }
 
 .csp-tag-date {
@@ -183,7 +183,7 @@
 }
 
 .csp-card:hover .csp-card-title {
-    color: #667eea;
+    color: #68202D;
 }
 
 /* Описание */
@@ -221,8 +221,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #e8eaf6;
-    color: #667eea;
+    background: rgba(104, 32, 45, 0.1);
+    color: #68202D;
 }
 
 .csp-teacher-name {
@@ -255,7 +255,7 @@
 .csp-price-current {
     font-size: 1.25rem;
     font-weight: 800;
-    color: #667eea;
+    color: #68202D;
 }
 
 .csp-price-free {
@@ -378,13 +378,13 @@
 /* Вариант minimal — простые ссылки без фона */
 .courses-shortcode-premium.csp-style-minimal .csp-btn {
     background: transparent;
-    color: #667eea;
+    color: #68202D;
     box-shadow: none;
 }
 
 .courses-shortcode-premium.csp-style-minimal .csp-more-link {
     background: transparent;
-    color: #667eea;
+    color: #68202D;
     box-shadow: none;
 }
 

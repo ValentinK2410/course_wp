@@ -336,7 +336,7 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                 <div class="teachers-grid" id="teachers-container" style="display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 24px !important; width: 100% !important; max-width: 1200px !important; margin: 0 auto !important; padding: 0 !important; float: none !important; list-style: none !important;">
                     <?php 
                     $color_schemes = array(
-                        array('gradient' => 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'accent' => '#667eea'),
+                        array('gradient' => 'linear-gradient(135deg, #8B2D3D 0%, #68202D 100%)', 'accent' => '#68202D'),
                         array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c'),
                         array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe'),
                         array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b'),
