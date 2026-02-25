@@ -145,6 +145,36 @@ class Course_Meta_Boxes {
             'side',                                               // Контекст: 'side' - боковая панель
             'default'                                             // Приоритет
         );
+        
+        // Добавляем метабокс "Синхронизация Moodle"
+        add_meta_box(
+            'course_moodle_sync',
+            __('Синхронизация Moodle', 'course-plugin'),
+            array($this, 'render_course_moodle_sync_meta_box'),
+            'course',
+            'side',
+            'default'
+        );
+    }
+    
+    /**
+     * Рендеринг метабокса "Синхронизация Moodle"
+     * Чекбокс для исключения курса из обновлений при синхронизации с Moodle
+     */
+    public function render_course_moodle_sync_meta_box($post) {
+        $exclude = get_post_meta($post->ID, '_exclude_from_moodle_sync', true);
+        ?>
+        <p>
+            <label>
+                <input type="hidden" name="exclude_from_moodle_sync" value="0" />
+                <input type="checkbox" name="exclude_from_moodle_sync" value="1" <?php checked('1', $exclude); ?> />
+                <?php _e('Не обновлять из Moodle', 'course-plugin'); ?>
+            </label>
+        </p>
+        <p class="description">
+            <?php _e('Если отмечено, курс не будет изменяться при синхронизации, даже при включённой опции «Обновлять существующие курсы».', 'course-plugin'); ?>
+        </p>
+        <?php
     }
     
     /**
@@ -1570,6 +1600,10 @@ class Course_Meta_Boxes {
         // Если чекбокс отмечен, сохраняем '1', если нет - '0'
         $course_certificate = isset($_POST['course_certificate']) && $_POST['course_certificate'] === '1' ? '1' : '0';
         update_post_meta($post_id, '_course_certificate', $course_certificate);
+        
+        // Сохраняем "Не обновлять из Moodle" (исключить курс из синхронизации)
+        $exclude_from_moodle = isset($_POST['exclude_from_moodle_sync']) && $_POST['exclude_from_moodle_sync'] === '1' ? '1' : '0';
+        update_post_meta($post_id, '_exclude_from_moodle_sync', $exclude_from_moodle);
         
         // Проходим по каждому полю из массива $fields
         foreach ($fields as $field) {

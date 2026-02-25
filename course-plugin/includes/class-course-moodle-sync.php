@@ -87,8 +87,7 @@ class Course_Moodle_Sync {
         add_action('admin_init', array($this, 'register_settings'));
         
         // Регистрируем обработчик для cron задачи синхронизации
-        // Хук 'moodle_sync_cron' будет вызываться по расписанию
-        add_action('moodle_sync_cron', array($this, 'sync_data'));
+        add_action('moodle_sync_cron', array($this, 'moodle_sync_cron_handler'));
         
         // Регистрируем cron задачу, если она еще не зарегистрирована
         // wp_next_scheduled() проверяет, запланирована ли уже задача
@@ -102,6 +101,17 @@ class Course_Moodle_Sync {
         
         // Фильтр для отключения SSL-проверки при запросах к Moodle и Laravel
         add_filter('http_request_args', array($this, 'filter_http_request_args'), 10, 2);
+    }
+    
+    /**
+     * Обработчик cron: не запускать sync при загрузке страницы настроек Moodle Sync,
+     * иначе 504 Gateway Timeout (nginx не дожидается длительного ответа)
+     */
+    public function moodle_sync_cron_handler() {
+        if (is_admin() && isset($_GET['page']) && $_GET['page'] === 'moodle-sync') {
+            return;
+        }
+        $this->sync_data(false);
     }
     
     /**
@@ -255,7 +265,8 @@ class Course_Moodle_Sync {
         
         // Обрабатываем ручную синхронизацию, если была нажата кнопка
         if (isset($_POST['moodle_sync_manual']) && check_admin_referer('moodle_sync_manual', 'moodle_sync_nonce')) {
-            // Выполняем синхронизацию (ручная синхронизация работает независимо от настройки автоматической)
+            @set_time_limit(600);
+            @ini_set('max_execution_time', 600);
             $result = $this->sync_data(true);
             
             // Выводим сообщение о результате
@@ -1023,11 +1034,17 @@ class Course_Moodle_Sync {
         $existing_posts = get_posts($args);
         
         // Проверяем настройку обновления существующих курсов
-        // Если курс существует и обновление отключено, пропускаем его
         $update_courses = get_option('moodle_sync_update_courses', true);
         if (!empty($existing_posts) && !$update_courses) {
-            // Курс существует, но обновление отключено - пропускаем
             return 'skipped';
+        }
+        
+        // Проверяем мета «Не обновлять из Moodle» — курс, отредактированный пользователем, не трогаем
+        if (!empty($existing_posts)) {
+            $post_id = $existing_posts[0]->ID;
+            if (get_post_meta($post_id, '_exclude_from_moodle_sync', true) === '1') {
+                return 'skipped';
+            }
         }
         
         // Очищаем HTML теги из описания курса для безопасности
