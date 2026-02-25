@@ -146,35 +146,6 @@ class Course_Meta_Boxes {
             'default'                                             // Приоритет
         );
         
-        // Добавляем метабокс "Синхронизация Moodle"
-        add_meta_box(
-            'course_moodle_sync',
-            __('Синхронизация Moodle', 'course-plugin'),
-            array($this, 'render_course_moodle_sync_meta_box'),
-            'course',
-            'side',
-            'default'
-        );
-    }
-    
-    /**
-     * Рендеринг метабокса "Синхронизация Moodle"
-     * Чекбокс для исключения курса из обновлений при синхронизации с Moodle
-     */
-    public function render_course_moodle_sync_meta_box($post) {
-        $exclude = get_post_meta($post->ID, '_exclude_from_moodle_sync', true);
-        ?>
-        <p>
-            <label>
-                <input type="hidden" name="exclude_from_moodle_sync" value="0" />
-                <input type="checkbox" name="exclude_from_moodle_sync" value="1" <?php checked('1', $exclude); ?> />
-                <?php _e('Не обновлять из Moodle', 'course-plugin'); ?>
-            </label>
-        </p>
-        <p class="description">
-            <?php _e('Если отмечено, курс не будет изменяться при синхронизации, даже при включённой опции «Обновлять существующие курсы».', 'course-plugin'); ?>
-        </p>
-        <?php
     }
     
     /**
@@ -333,6 +304,22 @@ class Course_Meta_Boxes {
                         <?php _e('Выдается сертификат по окончании курса', 'course-plugin'); ?>
                     </label>
                     <span class="description"><?php _e('Отображается в сайдбаре "Краткий обзор курса" и в шапке страницы', 'course-plugin'); ?></span>
+                </td>
+            </tr>
+            
+            <!-- Поле "Не обновлять из Moodle" -->
+            <?php $exclude_moodle = get_post_meta($post->ID, '_exclude_from_moodle_sync', true); ?>
+            <tr>
+                <th>
+                    <label for="exclude_from_moodle_sync"><?php _e('Синхронизация Moodle', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <label>
+                        <input type="hidden" name="exclude_from_moodle_sync" value="0" />
+                        <input type="checkbox" id="exclude_from_moodle_sync" name="exclude_from_moodle_sync" value="1" <?php checked('1', $exclude_moodle); ?> />
+                        <?php _e('Не обновлять из Moodle', 'course-plugin'); ?>
+                    </label>
+                    <p class="description"><?php _e('Если отмечено, курс не будет изменяться при синхронизации, даже при включённой опции «Обновлять существующие курсы».', 'course-plugin'); ?></p>
                 </td>
             </tr>
             <!-- Поле "Проживание и питание" -->
