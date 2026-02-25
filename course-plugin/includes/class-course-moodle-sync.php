@@ -99,6 +99,31 @@ class Course_Moodle_Sync {
             // 'moodle_sync_cron' - название хука для выполнения
             wp_schedule_event(time(), 'hourly', 'moodle_sync_cron');
         }
+        
+        // Фильтр для отключения SSL-проверки при запросах к Moodle и Laravel
+        add_filter('http_request_args', array($this, 'filter_http_request_args'), 10, 2);
+    }
+    
+    /**
+     * Отключает проверку SSL для запросов к Moodle и Laravel API при необходимости
+     */
+    public function filter_http_request_args($args, $url) {
+        $ssl_verify = defined('MOODLE_SYNC_SSL_VERIFY') ? MOODLE_SYNC_SSL_VERIFY : get_option('moodle_sync_ssl_verify', true);
+        if ($ssl_verify) {
+            return $args;
+        }
+        $moodle_url = get_option('moodle_sync_url', '');
+        $laravel_url = get_option('laravel_api_url', '');
+        $moodle_host = $moodle_url ? wp_parse_url($moodle_url, PHP_URL_HOST) : '';
+        $laravel_host = $laravel_url ? wp_parse_url($laravel_url, PHP_URL_HOST) : '';
+        $request_host = wp_parse_url($url, PHP_URL_HOST);
+        if ($moodle_host && $request_host && (stripos($request_host, $moodle_host) !== false || stripos($moodle_host, $request_host) !== false)) {
+            $args['sslverify'] = false;
+        }
+        if ($laravel_host && $request_host && (stripos($request_host, $laravel_host) !== false || stripos($laravel_host, $request_host) !== false)) {
+            $args['sslverify'] = false;
+        }
+        return $args;
     }
     
     /**
@@ -138,7 +163,8 @@ class Course_Moodle_Sync {
         // Регистрируем опцию для проверки SSL при подключении к Moodle
         register_setting('moodle_sync_settings', 'moodle_sync_ssl_verify', array(
             'type' => 'boolean',
-            'default' => true  // По умолчанию проверяем SSL
+            'default' => true,
+            'sanitize_callback' => function($v) { return filter_var($v, FILTER_VALIDATE_BOOLEAN); }
         ));
         
         // Регистрируем опцию для включения/выключения автоматической синхронизации
