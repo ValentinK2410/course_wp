@@ -108,7 +108,7 @@ class Course_Moodle_Sync {
      * Отключает проверку SSL для запросов к Moodle и Laravel API при необходимости
      */
     public function filter_http_request_args($args, $url) {
-        $ssl_verify = defined('MOODLE_SYNC_SSL_VERIFY') ? MOODLE_SYNC_SSL_VERIFY : get_option('moodle_sync_ssl_verify', true);
+        $ssl_verify = defined('MOODLE_SYNC_SSL_VERIFY') ? MOODLE_SYNC_SSL_VERIFY : get_option('moodle_sync_ssl_verify', false);
         if ($ssl_verify) {
             return $args;
         }
@@ -163,7 +163,7 @@ class Course_Moodle_Sync {
         // Регистрируем опцию для проверки SSL при подключении к Moodle
         register_setting('moodle_sync_settings', 'moodle_sync_ssl_verify', array(
             'type' => 'boolean',
-            'default' => true,
+            'default' => false,
             'sanitize_callback' => function($v) { return filter_var($v, FILTER_VALIDATE_BOOLEAN); }
         ));
         

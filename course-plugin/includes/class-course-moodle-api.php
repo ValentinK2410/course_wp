@@ -76,7 +76,7 @@ class Course_Moodle_API {
         
         // Параметры запроса: sslverify и timeout
         // MOODLE_SYNC_SSL_VERIFY в wp-config.php имеет приоритет (для случаев, когда админка недоступна)
-        $ssl_verify = defined('MOODLE_SYNC_SSL_VERIFY') ? MOODLE_SYNC_SSL_VERIFY : get_option('moodle_sync_ssl_verify', true);
+        $ssl_verify = defined('MOODLE_SYNC_SSL_VERIFY') ? MOODLE_SYNC_SSL_VERIFY : get_option('moodle_sync_ssl_verify', false);
         $timeout = apply_filters('moodle_api_timeout', 120);
         
         // Выполняем POST запрос к Moodle API
