@@ -327,6 +327,7 @@
 }
 
 .csp-card:hover .csp-btn {
+    color: #fff;
     box-shadow: var(--csp-btn-shadow-hover);
 }
 
@@ -350,6 +351,7 @@
 }
 
 .csp-more-link:hover {
+    color: #fff;
     transform: translateY(-2px);
     box-shadow: var(--csp-btn-shadow-hover);
 }
@@ -366,13 +368,13 @@
 .courses-shortcode-premium.csp-style-outline .csp-card:hover .csp-btn {
     background: var(--csp-btn-gradient);
     border-color: transparent;
-    color: var(--csp-btn-color);
+    color: #fff;
 }
 
 .courses-shortcode-premium.csp-style-outline .csp-more-link:hover {
     background: var(--csp-btn-gradient);
     border-color: transparent;
-    color: var(--csp-btn-color);
+    color: #fff;
 }
 
 /* Вариант minimal — простые ссылки без фона */
@@ -382,6 +384,10 @@
     box-shadow: none;
 }
 
+.courses-shortcode-premium.csp-style-minimal .csp-card:hover .csp-btn {
+    color: #fff;
+}
+
 .courses-shortcode-premium.csp-style-minimal .csp-more-link {
     background: transparent;
     color: #68202D;
@@ -389,6 +395,7 @@
 }
 
 .courses-shortcode-premium.csp-style-minimal .csp-more-link:hover {
+    color: #fff;
     text-decoration: underline;
 }
 

@@ -74,11 +74,16 @@ class Course_Moodle_API {
         }
         error_log('Moodle API Call: URL=' . $url . ', Function=' . $function . ', Params=' . print_r($log_params, true));
         
+        // Параметры запроса: sslverify и timeout
+        $ssl_verify = get_option('moodle_sync_ssl_verify', true);
+        $timeout = apply_filters('moodle_api_timeout', 120);
+        
         // Выполняем POST запрос к Moodle API
         // wp_remote_post() - стандартная функция WordPress для выполнения HTTP POST запросов
         $response = wp_remote_post($url, array(
             'body' => $params,                                // Данные для отправки
-            'timeout' => 30                                   // Таймаут запроса (30 секунд)
+            'timeout' => $timeout,                             // Таймаут (120 сек для синхронизации больших объёмов)
+            'sslverify' => (bool) $ssl_verify                 // Проверка SSL (отключается при ошибках с самоподписанными сертификатами)
         ));
         
         // Проверяем, произошла ли ошибка при выполнении запроса

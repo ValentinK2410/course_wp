@@ -135,6 +135,12 @@ class Course_Moodle_Sync {
             'sanitize_callback' => 'sanitize_text_field'  // Очистка текста для безопасности
         ));
         
+        // Регистрируем опцию для проверки SSL при подключении к Moodle
+        register_setting('moodle_sync_settings', 'moodle_sync_ssl_verify', array(
+            'type' => 'boolean',
+            'default' => true  // По умолчанию проверяем SSL
+        ));
+        
         // Регистрируем опцию для включения/выключения автоматической синхронизации
         register_setting('moodle_sync_settings', 'moodle_sync_enabled', array(
             'type' => 'boolean',
@@ -273,6 +279,7 @@ class Course_Moodle_Sync {
         // Получаем текущие значения настроек
         $moodle_url = get_option('moodle_sync_url', '');
         $moodle_token = get_option('moodle_sync_token', '');
+        $moodle_ssl_verify = get_option('moodle_sync_ssl_verify', true);
         $moodle_enabled = get_option('moodle_sync_enabled', false);
         $moodle_update_courses = get_option('moodle_sync_update_courses', true);
         $moodle_update_categories = get_option('moodle_sync_update_categories', true);
@@ -334,6 +341,24 @@ class Course_Moodle_Sync {
                                    class="regular-text" />
                             <p class="description">
                                 <?php _e('Токен для доступа к Moodle REST API. Получить можно в настройках Moodle: Site administration -> Plugins -> Web services -> Manage tokens', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Чекбокс для проверки SSL -->
+                    <tr>
+                        <th scope="row">
+                            <label for="moodle_sync_ssl_verify"><?php _e('Проверять SSL‑сертификат', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="hidden" name="moodle_sync_ssl_verify" value="0" />
+                            <input type="checkbox" 
+                                   id="moodle_sync_ssl_verify" 
+                                   name="moodle_sync_ssl_verify" 
+                                   value="1" 
+                                   <?php checked(1, $moodle_ssl_verify); ?> />
+                            <p class="description">
+                                <?php _e('Если включено — проверяется SSL‑сертификат Moodle (рекомендуется). Отключите только при ошибке «Ошибка при установлении защищённого соединения» (самоподписанный или внутренний сертификат).', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
