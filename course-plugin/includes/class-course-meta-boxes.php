@@ -307,8 +307,13 @@ class Course_Meta_Boxes {
                 </td>
             </tr>
             
-            <!-- Поле "Не обновлять из Moodle" -->
-            <?php $exclude_moodle = get_post_meta($post->ID, '_exclude_from_moodle_sync', true); ?>
+            <!-- Поле "Не обновлять из Moodle" (по умолчанию отмечено) -->
+            <?php
+            $exclude_moodle = get_post_meta($post->ID, '_exclude_from_moodle_sync', true);
+            if ($exclude_moodle === '') {
+                $exclude_moodle = '1'; // По умолчанию отмечено во всех курсах
+            }
+            ?>
             <tr>
                 <th>
                     <label for="exclude_from_moodle_sync"><?php _e('Синхронизация Moodle', 'course-plugin'); ?></label>

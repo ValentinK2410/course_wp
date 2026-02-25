@@ -94,6 +94,9 @@ class Course_Plugin {
         
         // Создание терминов "Уровень сложности" после регистрации таксономий (приоритет 999)
         add_action('init', array($this, 'maybe_ensure_default_level_terms'), 999);
+
+        // Одноразовая миграция: установить галочку "Не обновлять из Moodle" во всех курсах (приоритет 1000)
+        add_action('init', array($this, 'maybe_set_exclude_moodle_default'), 1000);
         
         // Регистрируем загрузку текстового домена для переводов
         // Хук 'plugins_loaded' срабатывает после загрузки всех плагинов
@@ -360,7 +363,30 @@ class Course_Plugin {
             }
         }
     }
-    
+
+    /**
+     * Одноразовая миграция: устанавливает _exclude_from_moodle_sync = '1' во всех курсах,
+     * у которых это поле ещё не задано. Чекбокс «Не обновлять из Moodle» будет отмечен по умолчанию.
+     */
+    public function maybe_set_exclude_moodle_default() {
+        if (get_option('course_plugin_exclude_moodle_default_done')) {
+            return;
+        }
+        $courses = get_posts(array(
+            'post_type'   => 'course',
+            'numberposts' => -1,
+            'post_status' => 'any',
+            'fields'      => 'ids',
+        ));
+        foreach ($courses as $post_id) {
+            $current = get_post_meta($post_id, '_exclude_from_moodle_sync', true);
+            if ($current === '') {
+                update_post_meta($post_id, '_exclude_from_moodle_sync', '1');
+            }
+        }
+        update_option('course_plugin_exclude_moodle_default_done', 1);
+    }
+
     /**
      * Деактивация плагина
      * Вызывается при деактивации плагина в админ-панели WordPress
