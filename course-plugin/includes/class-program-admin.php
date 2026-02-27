@@ -63,6 +63,9 @@ class Program_Admin {
         // Подключаем стили и скрипты для админ-панели
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         
+        // Сворачиваемая подсказка по использованию шорткода программ
+        add_action('admin_notices', array($this, 'add_shortcode_help_notice'), 5);
+        
         // Добавляем метабокс для редактирования текстов архива программ
         add_action('admin_notices', array($this, 'add_archive_texts_meta_box'));
         
@@ -360,6 +363,49 @@ class Program_Admin {
         }
     }
     
+    /**
+     * Сворачиваемая подсказка по использованию шорткода [programs]
+     */
+    public function add_shortcode_help_notice() {
+        global $pagenow, $post_type;
+        if ('edit.php' !== $pagenow || !isset($post_type) || 'program' !== $post_type) {
+            return;
+        }
+        $style = 'margin: 15px 0 20px; border: 1px solid #c3c4c7; border-radius: 4px; overflow: hidden;';
+        ?>
+        <div class="notice notice-info course-plugin-shortcode-help" style="<?php echo $style; ?>">
+            <details style="margin: 0;">
+                <summary style="padding: 12px 16px; cursor: pointer; font-weight: 600; background: #f0f6fc; border-bottom: 1px solid #c3c4c7; user-select: none;">
+                    <?php _e('Как использовать шорткод [programs]', 'course-plugin'); ?>
+                </summary>
+                <div style="padding: 16px 20px; background: #fff;">
+                    <p style="margin-top: 0;"><code>[programs]</code> — <?php _e('выводит карточки программ на странице.', 'course-plugin'); ?></p>
+                    <table class="widefat striped" style="margin-top: 10px; max-width: 650px;">
+                        <thead><tr><th><?php _e('Параметр', 'course-plugin'); ?></th><th><?php _e('По умолчанию', 'course-plugin'); ?></th><th><?php _e('Описание', 'course-plugin'); ?></th></tr></thead>
+                        <tbody>
+                            <tr><td><code>per_page</code></td><td>12</td><td><?php _e('Количество программ', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>specialization</code></td><td>—</td><td><?php _e('Slug специализации', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>level</code></td><td>—</td><td><?php _e('Slug уровня', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>topic</code></td><td>—</td><td><?php _e('Slug темы', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>teacher</code></td><td>—</td><td><?php _e('Slug преподавателя', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>order</code></td><td>asc</td><td><?php _e('Сортировка: asc — от ранних, desc — от поздних', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>orderby</code></td><td>start_date</td><td>date — <?php _e('дата публикации', 'course-plugin'); ?>, start_date — <?php _e('дата начала', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>date_from</code></td><td>—</td><td><?php _e('Начало диапазона (Y-m-d)', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>date_to</code></td><td>—</td><td><?php _e('Конец диапазона (Y-m-d)', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>button_style</code></td><td>default</td><td>default, outline, minimal, theme</td></tr>
+                            <tr><td><code>theme_class</code></td><td>—</td><td><?php _e('Доп. CSS-класс', 'course-plugin'); ?></td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong><?php _e('Примеры:', 'course-plugin'); ?></strong><br>
+                    <code>[programs per_page="6"]</code><br>
+                    <code>[programs order="desc" orderby="start_date"]</code><br>
+                    <code>[programs date_from="2026-01-01" date_to="2026-06-30"]</code></p>
+                </div>
+            </details>
+        </div>
+        <?php
+    }
+
     /**
      * Добавление метабокса для редактирования текстов архива программ
      * Отображается на странице списка программ

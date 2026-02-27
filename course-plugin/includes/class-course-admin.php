@@ -78,6 +78,9 @@ class Course_Admin {
         // Хук 'admin_enqueue_scripts' позволяет добавить CSS и JS только на нужных страницах
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         
+        // Сворачиваемая подсказка по использованию шорткода курсов
+        add_action('admin_notices', array($this, 'add_shortcode_help_notice'), 5);
+        
         // Добавляем метабокс для редактирования текстов архива курсов
         add_action('admin_notices', array($this, 'add_archive_texts_meta_box'));
         
@@ -497,6 +500,59 @@ class Course_Admin {
         // wp_enqueue_script('course-admin-script', COURSE_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), COURSE_PLUGIN_VERSION, true);
     }
     
+    /**
+     * Сворачиваемая подсказка по использованию шорткодов
+     * Отображается на странице курсов и преподавателей
+     */
+    public function add_shortcode_help_notice() {
+        global $pagenow, $post_type;
+        $show_courses = ('edit.php' === $pagenow && isset($post_type) && 'course' === $post_type);
+        $show_teachers = ('edit-tags.php' === $pagenow && isset($_GET['taxonomy']) && 'course_teacher' === sanitize_key($_GET['taxonomy']));
+        if (!$show_courses && !$show_teachers) {
+            return;
+        }
+        $style = 'margin: 15px 0 20px; border: 1px solid #c3c4c7; border-radius: 4px; overflow: hidden;';
+        ?>
+        <div class="notice notice-info course-plugin-shortcode-help" style="<?php echo $style; ?>">
+            <details style="margin: 0;">
+                <summary style="padding: 12px 16px; cursor: pointer; font-weight: 600; background: #f0f6fc; border-bottom: 1px solid #c3c4c7; user-select: none;">
+                    <?php echo $show_courses ? __('Как использовать шорткод [courses]', 'course-plugin') : __('Как использовать шорткод [teachers]', 'course-plugin'); ?>
+                </summary>
+                <div style="padding: 16px 20px; background: #fff;">
+                    <?php if ($show_courses) : ?>
+                    <p style="margin-top: 0;"><code>[courses]</code> — выводит карточки курсов на странице.</p>
+                    <table class="widefat striped" style="margin-top: 10px; max-width: 600px;">
+                        <thead><tr><th><?php _e('Параметр', 'course-plugin'); ?></th><th><?php _e('По умолчанию', 'course-plugin'); ?></th><th><?php _e('Описание', 'course-plugin'); ?></th></tr></thead>
+                        <tbody>
+                            <tr><td><code>per_page</code></td><td>12</td><td><?php _e('Количество курсов', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>specialization</code></td><td>—</td><td><?php _e('Slug специализации', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>level</code></td><td>—</td><td><?php _e('Slug уровня (bakalavrskiy, magistrskiy и т.д.)', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>topic</code></td><td>—</td><td><?php _e('Slug темы', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>teacher</code></td><td>—</td><td><?php _e('Slug преподавателя', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>button_style</code></td><td>default</td><td>default, outline, minimal, theme</td></tr>
+                            <tr><td><code>theme_class</code></td><td>—</td><td><?php _e('Доп. CSS-класс', 'course-plugin'); ?></td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong><?php _e('Пример:', 'course-plugin'); ?></strong> <code>[courses per_page="6" level="magistrskiy"]</code></p>
+                    <?php else : ?>
+                    <p style="margin-top: 0;"><code>[teachers]</code> — выводит карточки преподавателей.</p>
+                    <table class="widefat striped" style="margin-top: 10px; max-width: 600px;">
+                        <thead><tr><th><?php _e('Параметр', 'course-plugin'); ?></th><th><?php _e('По умолчанию', 'course-plugin'); ?></th><th><?php _e('Описание', 'course-plugin'); ?></th></tr></thead>
+                        <tbody>
+                            <tr><td><code>per_page</code></td><td>6</td><td><?php _e('Количество преподавателей', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>columns</code></td><td>3</td><td><?php _e('Колонок в сетке (2, 3, 4)', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>button_style</code></td><td>default</td><td>default, outline, minimal, theme</td></tr>
+                            <tr><td><code>theme_class</code></td><td>—</td><td><?php _e('Доп. CSS-класс', 'course-plugin'); ?></td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong><?php _e('Пример:', 'course-plugin'); ?></strong> <code>[teachers per_page="8" columns="4"]</code></p>
+                    <?php endif; ?>
+                </div>
+            </details>
+        </div>
+        <?php
+    }
+
     /**
      * Добавление метабокса для редактирования текстов архива курсов
      * Отображается на странице списка курсов
