@@ -43,6 +43,8 @@ sso_log('Скрипт запущен');
 
 // Получаем токен из URL
 $token = optional_param('token', '', PARAM_RAW);
+// Исправление: при передаче через URL символ + в base64 может превратиться в пробел
+$token = str_replace(' ', '+', trim($token));
 sso_log('Получен токен из URL. Длина: ' . strlen($token) . ', первые 20 символов: ' . substr($token, 0, 20) . '...');
 
 if (empty($token)) {

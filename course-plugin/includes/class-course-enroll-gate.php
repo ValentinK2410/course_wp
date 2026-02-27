@@ -102,10 +102,9 @@ class Course_Enroll_Gate {
                 $target_path = parse_url($target_url, PHP_URL_PATH);
                 $target_query = parse_url($target_url, PHP_URL_QUERY);
                 $redirect_path = $target_path . ($target_query ? '?' . $target_query : '');
-                $sso_redirect = add_query_arg(array(
-                    'token' => $moodle_token,
-                    'redirect' => $redirect_path,
-                ), $moodle_url . '/sso-login.php');
+                // rawurlencode для токена: base64 содержит + и /, которые могут искажаться в URL
+                $sso_base = $moodle_url . '/sso-login.php';
+                $sso_redirect = $sso_base . '?token=' . rawurlencode($moodle_token) . '&redirect=' . rawurlencode($redirect_path);
                 wp_redirect($sso_redirect);
                 exit;
             }

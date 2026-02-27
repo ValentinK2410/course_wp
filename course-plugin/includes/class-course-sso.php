@@ -114,12 +114,12 @@ class Course_SSO {
         // Генерируем токен для Moodle
         $moodle_token = $this->generate_token($user->ID, 'moodle');
         update_user_meta($user->ID, 'sso_moodle_token', $moodle_token);
-        update_user_meta($user->ID, 'sso_moodle_token_expires', time() + 3600); // Токен действителен 1 час
+        update_user_meta($user->ID, 'sso_moodle_token_expires', time() + 21600); // Токен действителен 6 часов
         
         // Генерируем токен для Laravel
         $laravel_token = $this->generate_token($user->ID, 'laravel');
         update_user_meta($user->ID, 'sso_laravel_token', $laravel_token);
-        update_user_meta($user->ID, 'sso_laravel_token_expires', time() + 3600); // Токен действителен 1 час
+        update_user_meta($user->ID, 'sso_laravel_token_expires', time() + 21600); // Токен действителен 6 часов
         
         error_log('Course SSO: Токены сгенерированы для пользователя ID: ' . $user->ID);
     }
@@ -329,13 +329,13 @@ class Course_SSO {
         if (empty($moodle_token) || empty($moodle_expires) || $moodle_expires < time()) {
             $moodle_token = $this->generate_token($user_id, 'moodle');
             update_user_meta($user_id, 'sso_moodle_token', $moodle_token);
-            update_user_meta($user_id, 'sso_moodle_token_expires', time() + 3600);
+            update_user_meta($user_id, 'sso_moodle_token_expires', time() + 21600);
         }
         
         if (empty($laravel_token) || empty($laravel_expires) || $laravel_expires < time()) {
             $laravel_token = $this->generate_token($user_id, 'laravel');
             update_user_meta($user_id, 'sso_laravel_token', $laravel_token);
-            update_user_meta($user_id, 'sso_laravel_token_expires', time() + 3600);
+            update_user_meta($user_id, 'sso_laravel_token_expires', time() + 21600);
         }
         
         wp_send_json_success(array(
@@ -356,8 +356,11 @@ class Course_SSO {
             return false;
         }
         
+        // Исправление: + в base64 мог превратиться в пробел при передаче через URL
+        $token = str_replace(' ', '+', trim($token));
+        
         // Декодируем токен
-        $decoded = base64_decode($token);
+        $decoded = base64_decode($token, true);
         if (!$decoded) {
             return false;
         }
@@ -378,23 +381,35 @@ class Course_SSO {
         
         // Проверяем срок действия токена
         $expires = get_user_meta($user_id, 'sso_' . $service . '_token_expires', true);
-        if (empty($expires) || $expires < time()) {
+        if (empty($expires) || (int) $expires < time()) {
             return false;
         }
         
-        // Проверяем токен
+        // Проверяем токен: либо совпадение с сохранённым, либо пересчёт хеша (для надёжности при multi-server/race)
         $stored_token = get_user_meta($user_id, 'sso_' . $service . '_token', true);
-        if ($stored_token !== $token) {
-            return false;
+        if ($stored_token === $token) {
+            return array(
+                'user_id' => $user_id,
+                'email' => $user->user_email,
+                'login' => $user->user_login,
+                'name' => $user->display_name
+            );
         }
         
-        // Возвращаем данные пользователя
-        return array(
-            'user_id' => $user_id,
-            'email' => $user->user_email,
-            'login' => $user->user_login,
-            'name' => $user->display_name
-        );
+        // Альтернативная проверка: пересчёт хеша (токен детерминирован)
+        $secret = wp_salt('auth');
+        $data = $user_id . '|' . $user->user_email . '|' . $service;
+        $expected_hash = hash_hmac('sha256', $data, $secret);
+        if (hash_equals($token_hash, $expected_hash)) {
+            return array(
+                'user_id' => $user_id,
+                'email' => $user->user_email,
+                'login' => $user->user_login,
+                'name' => $user->display_name
+            );
+        }
+        
+        return false;
     }
     
     /**
