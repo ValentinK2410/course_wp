@@ -164,6 +164,7 @@ class Course_Plugin {
             'includes/class-course-moodle-user-sync.php', // Класс для синхронизации пользователей между WordPress и Moodle
             'includes/class-course-registration.php',   // Класс для формы регистрации пользователей
             'includes/class-course-sso.php',             // Класс для Single Sign-On (SSO)
+            'includes/class-course-enroll-gate.php',     // Шлюз записи (требует авторизацию перед Moodle)
             'includes/class-course-anti-bot.php',        // Класс для защиты от ботов
             'includes/class-course-anti-bot-admin.php',  // Класс для админ-панели защиты от ботов
             'includes/class-course-email-sender.php',    // Класс для улучшенной отправки email (SMTP поддержка)
@@ -286,6 +287,7 @@ class Course_Plugin {
         // Позволяет пользователям автоматически входить в Moodle и Laravel после входа в WordPress
         if (class_exists('Course_SSO')) {
             Course_SSO::get_instance();
+            Course_Enroll_Gate::get_instance();
         }
         
         // Инициализируем защиту от ботов

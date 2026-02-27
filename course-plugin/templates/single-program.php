@@ -280,7 +280,7 @@ while (have_posts()) : the_post();
                             <span class="price-current"><?php echo $program_price ? number_format($program_price, 0, ',', ' ') : __('Бесплатно', 'course-plugin'); ?><?php if ($program_price) echo ' ₽'; ?></span>
                         </div>
                         <?php if ($program_enroll_url) : ?>
-                            <a href="<?php echo esc_url($program_enroll_url); ?>" class="hero-enroll-btn" target="_blank" rel="noopener">
+                            <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($program_enroll_url) : $program_enroll_url); ?>" class="hero-enroll-btn" target="_blank" rel="noopener">
                                 <?php echo esc_html($enroll_button_text); ?>
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </a>
@@ -580,7 +580,7 @@ while (have_posts()) : the_post();
                         <span class="price-current"><?php echo $program_price ? number_format($program_price, 0, ',', ' ') . ' ₽' : __('Бесплатно', 'course-plugin'); ?></span>
                     </div>
                     <?php if ($program_enroll_url) : ?>
-                        <a href="<?php echo esc_url($program_enroll_url); ?>" class="enroll-btn" target="_blank" rel="noopener">
+                        <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($program_enroll_url) : $program_enroll_url); ?>" class="enroll-btn" target="_blank" rel="noopener">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             <?php echo esc_html($enroll_button_text); ?>
                         </a>
@@ -666,7 +666,7 @@ while (have_posts()) : the_post();
                 <p class="cta-text"><?php echo esc_html($cta_text); ?></p>
             </div>
             <?php if ($program_enroll_url) : ?>
-                <a href="<?php echo esc_url($program_enroll_url); ?>" class="cta-btn" target="_blank" rel="noopener">
+                <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($program_enroll_url) : $program_enroll_url); ?>" class="cta-btn" target="_blank" rel="noopener">
                     <?php echo esc_html($cta_button_text); ?>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>

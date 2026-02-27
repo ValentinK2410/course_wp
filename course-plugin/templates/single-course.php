@@ -388,8 +388,9 @@ while (have_posts()) : the_post();
                 <?php
                 $hero_enroll_url = $course_seminary_new_url ?: $course_seminary_student_url ?: $course_lite_course_url;
                 if ($hero_enroll_url) :
+                    $hero_enroll_href = class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($hero_enroll_url) : $hero_enroll_url;
                 ?>
-                    <a href="<?php echo esc_url($hero_enroll_url); ?>" target="_blank" rel="noopener" class="hero-enroll-btn action-btn action-btn-secondary">
+                    <a href="<?php echo esc_url($hero_enroll_href); ?>" target="_blank" rel="noopener" class="hero-enroll-btn action-btn action-btn-secondary">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                         <?php echo esc_html($btn_enroll_text); ?>
                     </a>
@@ -772,21 +773,21 @@ while (have_posts()) : the_post();
                     <div class="sidebar-card action-card">
                         <div class="action-buttons">
                             <?php if ($course_seminary_new_url) : ?>
-                                <a href="<?php echo esc_url($course_seminary_new_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-primary">
+                                <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($course_seminary_new_url) : $course_seminary_new_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-primary">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                                     <?php echo esc_html($btn_enroll_text); ?>
                                 </a>
                             <?php endif; ?>
                             
                             <?php if ($course_seminary_student_url) : ?>
-                                <a href="<?php echo esc_url($course_seminary_student_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-secondary">
+                                <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($course_seminary_student_url) : $course_seminary_student_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-secondary">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 18C3 14.134 6.134 11 10 11C13.866 11 17 14.134 17 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                                     <?php echo esc_html($btn_student_text); ?>
                                 </a>
                             <?php endif; ?>
                             
                             <?php if ($course_lite_course_url) : ?>
-                                <a href="<?php echo esc_url($course_lite_course_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-outline">
+                                <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($course_lite_course_url) : $course_lite_course_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-outline">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10L10 3L17 10M5 8V16H15V8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     <?php echo esc_html($btn_lite_text); ?>
                                 </a>
@@ -932,8 +933,9 @@ while (have_posts()) : the_post();
             <?php
             $cta_btn_url = $course_seminary_new_url ?: $course_seminary_student_url ?: $course_lite_course_url;
             if ($cta_btn_url) :
+                $cta_btn_href = class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($cta_btn_url) : $cta_btn_url;
             ?>
-                <a href="<?php echo esc_url($cta_btn_url); ?>" target="_blank" rel="noopener" class="cta-btn">
+                <a href="<?php echo esc_url($cta_btn_href); ?>" target="_blank" rel="noopener" class="cta-btn">
                     <?php echo esc_html($cta_button_text); ?>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>

@@ -186,5 +186,10 @@ complete_user_login($user);
 // Логируем успешный вход
 sso_log('Пользователь ' . $email . ' (ID: ' . $user->id . ') успешно вошел в Moodle через SSO');
 
-// Перенаправляем на главную страницу Moodle
-redirect(new moodle_url('/'));
+// Перенаправляем: если передан redirect (путь на Moodle), идём туда; иначе на главную
+$redirect_path = optional_param('redirect', '', PARAM_RAW);
+if (!empty($redirect_path) && preg_match('#^/[a-zA-Z0-9_\-\/%\.\?\=\&\~]+$#', $redirect_path) && strpos($redirect_path, '..') === false) {
+    redirect(new moodle_url($redirect_path));
+} else {
+    redirect(new moodle_url('/'));
+}
