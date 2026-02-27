@@ -1740,13 +1740,13 @@ article.teacher-card {
     margin: 0 auto;
 }
 
-@media (max-width: 991px) {
+@media (min-width: 768px) and (max-width: 1199px) {
     .teachers-shortcode-wrapper .teachers-shortcode-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
     .teachers-shortcode-wrapper .teachers-shortcode-grid {
         grid-template-columns: 1fr !important;
     }
@@ -1816,14 +1816,21 @@ article.teacher-card {
     }
 }
 
-@media (min-width: 1024px) and (max-width: 1199px) {
+@media (min-width: 992px) and (max-width: 1199px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
-        grid-template-columns: repeat(3, 1fr) !important;
+        grid-template-columns: repeat(2, 1fr) !important;
         gap: 20px !important;
     }
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) and (max-width: 991px) {
+    .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 18px !important;
+    }
+}
+
+@media (max-width: 767px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: 1fr !important;
         gap: 16px !important;
@@ -1870,12 +1877,6 @@ article.teacher-card {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-    }
-}
-
-@media (max-width: 991px) {
-    .premium-archive-wrapper.teachers-archive .teachers-grid {
-        grid-template-columns: 1fr !important;
     }
 }
 

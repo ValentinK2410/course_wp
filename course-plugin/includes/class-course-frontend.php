@@ -514,7 +514,14 @@ class Course_Frontend {
                         COURSE_PLUGIN_VERSION,
                         'all'
                     );
-                    $mobile_grid_css = '@media (max-width: 991px) {
+                    $mobile_grid_css = '@media (min-width: 768px) and (max-width: 1199px) {
+                        html body .premium-archive-wrapper.teachers-archive .teachers-grid,
+                        html body .premium-archive-wrapper.teachers-archive #teachers-container,
+                        .teachers-shortcode-wrapper .teachers-shortcode-grid {
+                            grid-template-columns: repeat(2, 1fr) !important;
+                        }
+                    }
+                    @media (max-width: 767px) {
                         html body .premium-archive-wrapper.teachers-archive .teachers-grid,
                         html body .premium-archive-wrapper.teachers-archive #teachers-container,
                         html body #teachers-container,

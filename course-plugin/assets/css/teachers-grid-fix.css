@@ -102,12 +102,11 @@
     }
 }
 
-@media (min-width: 1025px) and (max-width: 1199px) {
+@media (min-width: 992px) and (max-width: 1199px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
-        grid-template-columns: repeat(3, 1fr) !important;
+        grid-template-columns: repeat(2, 1fr) !important;
     }
     
-    /* Критично для 1024+ */
     .premium-archive-wrapper.teachers-archive {
         width: 100% !important;
         max-width: 100% !important;
@@ -124,13 +123,13 @@
     }
 }
 
-@media (min-width: 992px) and (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 991px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
-        grid-template-columns: repeat(3, 1fr) !important;
+        grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
     html body .premium-archive-wrapper.teachers-archive .teachers-grid,
     .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: 1fr !important;
