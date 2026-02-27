@@ -327,7 +327,7 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
         
         <main class="premium-main-content teachers-main-content" style="width: 100% !important; max-width: none !important; float: none !important; margin: 0 !important; padding: 0 !important; clear: both !important;">
             <?php if (!empty($teachers_with_data)) : ?>
-                <div class="teachers-grid" id="teachers-container" style="display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 24px !important; width: 100% !important; max-width: 1200px !important; margin: 0 auto !important; padding: 0 !important; float: none !important; list-style: none !important;">
+                <div class="teachers-grid" id="teachers-container" style="display: grid !important; gap: 24px !important; width: 100% !important; max-width: 1200px !important; margin: 0 auto !important; padding: 0 !important; float: none !important; list-style: none !important;">
                     <?php 
                     $color_schemes = array(
                         array('gradient' => 'linear-gradient(135deg, #8B2D3D 0%, #68202D 100%)', 'accent' => '#68202D'),
