@@ -282,6 +282,13 @@ class Program_Frontend {
             'view' => 'grid',
             'button_style' => 'default',
             'theme_class' => '',
+            // Сортировка по дате: asc — от ранних к поздним, desc — от поздних к ранним
+            'order' => 'asc',
+            // orderby: date — дата публикации, start_date — дата начала программы
+            'orderby' => 'start_date',
+            // Фильтр по дате начала: date_from и date_to в формате Y-m-d
+            'date_from' => '',
+            'date_to' => '',
         ), $atts);
         
         $args = array(
@@ -329,6 +336,61 @@ class Program_Frontend {
                 $tax_query['relation'] = 'AND';
             }
             $args['tax_query'] = $tax_query;
+        }
+        
+        // Сортировка по дате
+        $order = strtolower($atts['order']);
+        if (!in_array($order, array('asc', 'desc'))) {
+            $order = 'asc';
+        }
+        $orderby = strtolower($atts['orderby']);
+        
+        if ($orderby === 'start_date') {
+            $args['meta_key'] = '_program_start_date';
+            $args['orderby'] = 'meta_value';
+            $args['order'] = strtoupper($order);
+            // Программы без даты в конец
+            $args['meta_query'] = array(
+                array(
+                    'key' => '_program_start_date',
+                    'compare' => 'EXISTS',
+                ),
+            );
+        } else {
+            $args['orderby'] = 'date';
+            $args['order'] = strtoupper($order);
+        }
+        
+        // Фильтр по диапазону дат (date_from, date_to)
+        $date_from = trim($atts['date_from']);
+        $date_to = trim($atts['date_to']);
+        if (!empty($date_from) || !empty($date_to)) {
+            $date_meta = array('relation' => 'AND');
+            if (!empty($date_from)) {
+                $date_meta[] = array(
+                    'key' => '_program_start_date',
+                    'value' => $date_from,
+                    'compare' => '>=',
+                    'type' => 'DATE',
+                );
+            }
+            if (!empty($date_to)) {
+                $date_meta[] = array(
+                    'key' => '_program_start_date',
+                    'value' => $date_to,
+                    'compare' => '<=',
+                    'type' => 'DATE',
+                );
+            }
+            if (isset($args['meta_query'])) {
+                $args['meta_query'] = array(
+                    'relation' => 'AND',
+                    $args['meta_query'],
+                    $date_meta,
+                );
+            } else {
+                $args['meta_query'] = $date_meta;
+            }
         }
         
         $programs = new WP_Query($args);
