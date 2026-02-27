@@ -25,12 +25,44 @@ class Course_Enroll_Gate {
         add_rewrite_rule('^enroll/?$', 'index.php?enroll_gate=1', 'top');
         add_filter('query_vars', array($this, 'add_query_vars'));
         add_action('template_redirect', array($this, 'handle_enroll_gate'), 1);
+        add_filter('wp_nav_menu_objects', array($this, 'filter_menu_moodle_links'), 10, 2);
     }
 
     public function add_query_vars($vars) {
         $vars[] = 'enroll_gate';
         $vars[] = 'enroll_url';
         return $vars;
+    }
+
+    /**
+     * Заменяет ссылки на Moodle в меню на шлюз SSO (авторизация → переход в Moodle)
+     * Пункты вроде «Виртуальный класс» ведут через /enroll/ для входа по SSO
+     */
+    public function filter_menu_moodle_links($items, $args) {
+        $moodle_url = rtrim(get_option('moodle_sync_url', ''), '/');
+        if (empty($moodle_url)) {
+            return $items;
+        }
+        $moodle_host = parse_url($moodle_url, PHP_URL_HOST);
+        if (!$moodle_host) {
+            return $items;
+        }
+        foreach ($items as $item) {
+            if (empty($item->url)) {
+                continue;
+            }
+            $item_host = parse_url($item->url, PHP_URL_HOST);
+            if ($item_host && (strtolower($item_host) === strtolower($moodle_host))) {
+                $target = $item->url;
+                // Ссылка на страницу входа Moodle → после SSO ведём на главную
+                $path = parse_url($target, PHP_URL_PATH);
+                if ($path && (strpos($path, '/login/') !== false || $path === '/login/index.php')) {
+                    $target = $moodle_url . '/';
+                }
+                $item->url = self::get_enroll_url($target);
+            }
+        }
+        return $items;
     }
 
     /**
@@ -94,7 +126,7 @@ class Course_Enroll_Gate {
 
             if (empty($moodle_token) || (int) $moodle_expires < time()) {
                 $user = wp_get_current_user();
-            $sso->generate_sso_tokens($user->user_login, $user);
+                $sso->generate_sso_tokens($user->user_login, $user);
                 $moodle_token = get_user_meta($user_id, 'sso_moodle_token', true);
             }
 
