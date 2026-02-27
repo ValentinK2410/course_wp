@@ -148,7 +148,7 @@ $teacher_courses = new WP_Query($courses_args);
                 <div class="teacher-description-full">
                     <h2><?php _e('О преподавателе', 'course-plugin'); ?></h2>
                     <div class="teacher-description-text">
-                        <?php echo wp_kses_post($teacher_description); ?>
+                        <?php echo wp_kses_post(wpautop($teacher_description)); ?>
                     </div>
                 </div>
             <?php endif; ?>
