@@ -347,6 +347,8 @@ class Course_Teacher_Meta {
                 // Для описания используем wp_kses_post для очистки HTML
                 if ($field === 'teacher_description') {
                     $value = wp_kses_post($_POST[$field]);
+                } elseif ($field === 'teacher_education') {
+                    $value = sanitize_textarea_field($_POST[$field]);
                 } else {
                     $value = sanitize_text_field($_POST[$field]);
                 }

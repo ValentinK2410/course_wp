@@ -451,7 +451,7 @@ while (have_posts()) : the_post();
                             <?php endif; ?>
                             <?php if (!empty($block['content'])) : ?>
                             <div class="section-content">
-                                <?php echo wp_kses_post($block['content']); ?>
+                                <?php echo wp_kses_post(wpautop($block['content'])); ?>
                             </div>
                             <?php endif; ?>
                         </section>

@@ -570,7 +570,7 @@ while (have_posts()) : the_post();
                             <?php endif; ?>
                             <?php if (!empty($block['content'])) : ?>
                             <div class="section-content">
-                                <?php echo wp_kses_post($block['content']); ?>
+                                <?php echo wp_kses_post(wpautop($block['content'])); ?>
                             </div>
                             <?php endif; ?>
                         </section>
@@ -880,7 +880,7 @@ while (have_posts()) : the_post();
                                     </div>
                                 <?php endif; ?>
                                 <div class="card-body">
-                                    <?php echo wp_kses_post($block_content); ?>
+                                    <?php echo wp_kses_post(wpautop($block_content)); ?>
                                 </div>
                             <?php else : ?>
                                 <!-- Простой блок без рамки -->
@@ -888,7 +888,7 @@ while (have_posts()) : the_post();
                                     <h4 class="block-title"><?php echo esc_html($block_title); ?></h4>
                                 <?php endif; ?>
                                 <div class="block-content">
-                                    <?php echo wp_kses_post($block_content); ?>
+                                    <?php echo wp_kses_post(wpautop($block_content)); ?>
                                 </div>
                             <?php endif; ?>
                         </div>
