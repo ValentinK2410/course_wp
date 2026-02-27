@@ -86,22 +86,22 @@ sso_log('POST данные: ' . $post_data);
 sso_log('URL запроса: ' . $api_url);
 
 // Выполняем запрос к WordPress API
-// WordPress AJAX работает и через GET, и через POST, поэтому отправляем параметры в URL
-// Используем http_build_query с правильными опциями, чтобы избежать экранирования
-$query_string = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
-$full_url = $api_url . '?' . $query_string;
-sso_log('Полный URL с параметрами: ' . $full_url);
-sso_log('Query string: ' . $query_string);
+// POST: токен в теле запроса — меньше риска искажения при кодировании
+$post_body = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+sso_log('POST body (длина): ' . strlen($post_body));
 
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $full_url);
+curl_setopt($ch, CURLOPT_URL, $api_url);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $post_body);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false); // Не следовать редиректам
 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-    'User-Agent: Moodle-SSO/1.0'
+    'User-Agent: Mozilla/5.0 (compatible; Moodle-SSO/1.0)',
+    'Content-Type: application/x-www-form-urlencoded'
 ));
 
 // Включаем отладку cURL

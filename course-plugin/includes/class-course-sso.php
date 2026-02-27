@@ -441,21 +441,20 @@ class Course_SSO {
             }
         }
         
-        // Получаем токен и сервис, проверяя оба варианта (обычный и с экранированием amp;)
+        // Получаем токен и сервис. НЕ используем sanitize_text_field для токена — он может повредить base64.
         $token = '';
         $service = '';
         
         if (isset($_REQUEST['token'])) {
-            $token = sanitize_text_field($_REQUEST['token']);
+            $token = is_string($_REQUEST['token']) ? wp_unslash($_REQUEST['token']) : '';
         } elseif (isset($_REQUEST['amp;token'])) {
-            // Если параметр пришел как amp;token (из-за HTML экранирования)
-            $token = sanitize_text_field($_REQUEST['amp;token']);
+            $token = is_string($_REQUEST['amp;token']) ? wp_unslash($_REQUEST['amp;token']) : '';
         }
+        $token = str_replace(' ', '+', trim($token)); // + в base64 мог превратиться в пробел
         
         if (isset($_REQUEST['service'])) {
             $service = sanitize_text_field($_REQUEST['service']);
         } elseif (isset($_REQUEST['amp;service'])) {
-            // Если параметр пришел как amp;service (из-за HTML экранирования)
             $service = sanitize_text_field($_REQUEST['amp;service']);
         }
         
