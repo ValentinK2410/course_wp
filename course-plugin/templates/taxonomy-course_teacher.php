@@ -70,6 +70,10 @@ $teacher_courses = new WP_Query($courses_args);
                     <p class="teacher-position"><?php echo esc_html($teacher_position); ?></p>
                 <?php endif; ?>
                 
+                <?php if ($teacher_education) : ?>
+                    <div class="teacher-education-header"><?php echo wpautop(esc_html($teacher_education)); ?></div>
+                <?php endif; ?>
+                
                 <?php if ($teacher_description) : ?>
                     <div class="teacher-description-short">
                         <?php echo wp_kses_post(wp_trim_words($teacher_description, 30, '...')); ?>
