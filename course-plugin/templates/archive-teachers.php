@@ -246,10 +246,10 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
     <header class="premium-archive-header teachers-archive-header">
         <div class="premium-header-content">
             <h1 class="premium-archive-title">
-                <span class="title-accent"><?php _e('Преподаватели', 'course-plugin'); ?></span>
-                <span class="title-sub"><?php _e('наши эксперты и менторы', 'course-plugin'); ?></span>
+                <span class="title-accent"><?php echo esc_html(get_option('teachers_archive_title_main', __('Преподаватели', 'course-plugin'))); ?></span>
+                <span class="title-sub"><?php echo esc_html(get_option('teachers_archive_title_sub', __('наши эксперты и менторы', 'course-plugin'))); ?></span>
             </h1>
-            <p class="premium-archive-subtitle"><?php _e('Познакомьтесь с профессиональной командой специалистов, которые проводят наши курсы и программы', 'course-plugin'); ?></p>
+            <p class="premium-archive-subtitle"><?php echo esc_html(get_option('teachers_archive_subtitle', __('Познакомьтесь с профессиональной командой специалистов, которые проводят наши курсы и программы', 'course-plugin'))); ?></p>
 
             <!-- Статистика -->
             <div class="premium-stats">

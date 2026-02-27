@@ -86,6 +86,12 @@ class Course_Admin {
         
         // Сохраняем настройки архива
         add_action('admin_init', array($this, 'save_archive_texts'));
+        
+        // Метабокс настройки заголовка страницы /teachers/
+        add_action('admin_notices', array($this, 'add_teachers_archive_header_meta_box'));
+        
+        // Сохранение настроек заголовка преподавателей
+        add_action('admin_init', array($this, 'save_teachers_archive_header'));
     }
     
     /**
@@ -659,6 +665,97 @@ class Course_Admin {
         // Перенаправляем с сообщением об успехе
         add_action('admin_notices', function() {
             echo '<div class="notice notice-success is-dismissible"><p>' . __('Настройки архива курсов успешно сохранены!', 'course-plugin') . '</p></div>';
+        });
+    }
+    
+    /**
+     * Метабокс настройки заголовка страницы /teachers/
+     * Отображается на edit-tags.php при taxonomy=course_teacher
+     */
+    public function add_teachers_archive_header_meta_box() {
+        global $pagenow;
+        
+        if ('edit-tags.php' !== $pagenow || !isset($_GET['taxonomy']) || 'course_teacher' !== sanitize_key($_GET['taxonomy'])) {
+            return;
+        }
+        
+        $title_main = get_option('teachers_archive_title_main', __('Преподаватели', 'course-plugin'));
+        $title_sub = get_option('teachers_archive_title_sub', __('наши эксперты и менторы', 'course-plugin'));
+        $subtitle = get_option('teachers_archive_subtitle', __('Познакомьтесь с профессиональной командой специалистов, которые проводят наши курсы и программы', 'course-plugin'));
+        
+        ?>
+        <div class="notice notice-info" style="margin: 20px 0; padding: 15px;">
+            <h2 style="margin-top: 0;"><?php _e('Настройки заголовка страницы /teachers/', 'course-plugin'); ?></h2>
+            <p class="description" style="margin-bottom: 12px;"><?php _e('Эти тексты отображаются в шапке на странице списка преподавателей.', 'course-plugin'); ?></p>
+            <form method="post" action="">
+                <?php wp_nonce_field('teachers_archive_header', 'teachers_archive_header_nonce'); ?>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="teachers_title_main"><?php _e('Заголовок (основная часть)', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="teachers_title_main" name="teachers_title_main" value="<?php echo esc_attr($title_main); ?>" class="regular-text" />
+                            <p class="description"><?php _e('Например: "Преподаватели"', 'course-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="teachers_title_sub"><?php _e('Заголовок (дополнительная часть)', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="teachers_title_sub" name="teachers_title_sub" value="<?php echo esc_attr($title_sub); ?>" class="regular-text" />
+                            <p class="description"><?php _e('Например: "наши эксперты и менторы"', 'course-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="teachers_subtitle"><?php _e('Подзаголовок', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="teachers_subtitle" name="teachers_subtitle" rows="3" class="large-text"><?php echo esc_textarea($subtitle); ?></textarea>
+                            <p class="description"><?php _e('Текст под основным заголовком', 'course-plugin'); ?></p>
+                        </td>
+                    </tr>
+                </table>
+                <p class="submit">
+                    <input type="submit" name="save_teachers_archive_header" class="button button-primary" value="<?php esc_attr_e('Сохранить настройки', 'course-plugin'); ?>" />
+                </p>
+            </form>
+        </div>
+        <?php
+    }
+    
+    /**
+     * Сохранение настроек заголовка страницы /teachers/
+     */
+    public function save_teachers_archive_header() {
+        if (!isset($_POST['save_teachers_archive_header'])) {
+            return;
+        }
+        
+        if (!isset($_POST['teachers_archive_header_nonce']) || !wp_verify_nonce($_POST['teachers_archive_header_nonce'], 'teachers_archive_header')) {
+            return;
+        }
+        
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        
+        if (isset($_POST['teachers_title_main'])) {
+            update_option('teachers_archive_title_main', sanitize_text_field($_POST['teachers_title_main']));
+        }
+        
+        if (isset($_POST['teachers_title_sub'])) {
+            update_option('teachers_archive_title_sub', sanitize_text_field($_POST['teachers_title_sub']));
+        }
+        
+        if (isset($_POST['teachers_subtitle'])) {
+            update_option('teachers_archive_subtitle', sanitize_textarea_field($_POST['teachers_subtitle']));
+        }
+        
+        add_action('admin_notices', function() {
+            echo '<div class="notice notice-success is-dismissible"><p>' . __('Настройки заголовка страницы преподавателей сохранены!', 'course-plugin') . '</p></div>';
         });
     }
 }
