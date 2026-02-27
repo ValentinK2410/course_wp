@@ -97,6 +97,9 @@ class Course_Plugin {
 
         // Одноразовая миграция: установить галочку "Не обновлять из Moodle" во всех курсах (приоритет 1000)
         add_action('init', array($this, 'maybe_set_exclude_moodle_default'), 1000);
+
+        // Flush rewrite rules при обновлении (для /moodle/ и /enroll/)
+        add_action('init', array($this, 'maybe_flush_rewrite_rules'), 1001);
         
         // Регистрируем загрузку текстового домена для переводов
         // Хук 'plugins_loaded' срабатывает после загрузки всех плагинов
@@ -364,6 +367,19 @@ class Course_Plugin {
                 wp_insert_term($name, 'course_level', array('slug' => $slug));
             }
         }
+    }
+
+    /**
+     * Flush rewrite rules при обновлении плагина (для корректной работы /moodle/ и /enroll/)
+     */
+    public function maybe_flush_rewrite_rules() {
+        $saved = get_option('course_plugin_rewrite_version', '');
+        $expected = 'moodle_enroll_v1';
+        if ($saved === $expected) {
+            return;
+        }
+        flush_rewrite_rules();
+        update_option('course_plugin_rewrite_version', $expected);
     }
 
     /**
