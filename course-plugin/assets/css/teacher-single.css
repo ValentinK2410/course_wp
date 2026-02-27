@@ -147,6 +147,15 @@
     margin-bottom: 0;
 }
 
+.teacher-description-header {
+    margin: 0 0 20px 0;
+    max-width: 700px;
+}
+
+.teacher-description-header .teacher-description-short {
+    color: #fff;
+}
+
 .teacher-description-short {
     font-size: 18px;
     line-height: 1.6;

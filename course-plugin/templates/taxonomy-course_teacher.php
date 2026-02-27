@@ -79,8 +79,8 @@ $teacher_courses = new WP_Query($courses_args);
                 <?php endif; ?>
                 
                 <?php if ($teacher_description) : ?>
-                    <div class="teacher-description-short">
-                        <?php echo wp_kses_post(wp_trim_words($teacher_description, 30, '...')); ?>
+                    <div class="teacher-description-header">
+                        <div class="teacher-description-short"><?php echo wp_kses_post(wp_trim_words($teacher_description, 40, '...')); ?></div>
                     </div>
                 <?php endif; ?>
                 
