@@ -1668,19 +1668,17 @@ article.teacher-card {
     padding: 24px;
     display: flex;
     flex-direction: column;
-    min-height: 280px;
 }
 
 .teacher-card-name {
     font-size: 1.125rem;
     font-weight: 700;
-    margin: 0 0 10px;
+    margin: 0 0 8px;
     color: var(--premium-dark);
     line-height: 1.4;
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
-    min-height: 50px;
     display: flex;
     align-items: center;
 }
@@ -1701,12 +1699,11 @@ article.teacher-card {
     font-size: 0.875rem;
     color: var(--premium-gray-600);
     line-height: 1.6;
-    margin: 0 0 16px;
+    margin: 0 0 12px;
     display: -webkit-box;
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    min-height: 84px;
 }
 
 .teacher-card-meta {
@@ -1714,8 +1711,8 @@ article.teacher-card {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-top: auto;
-    padding-top: 12px;
+    margin-top: 12px;
+    padding-top: 0;
     flex-wrap: wrap;
 }
 
@@ -2328,9 +2325,10 @@ article.teacher-card {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-top: 16px;
+    margin-top: 12px;
     font-size: 0.9375rem;
     font-weight: 600;
+    color: #68202d !important;
     text-decoration: none;
     transition: var(--premium-transition-fast);
     padding-top: 12px;
@@ -2338,6 +2336,7 @@ article.teacher-card {
 }
 
 .teacher-view-profile:hover {
+    color: #8B2D3D !important;
     gap: 10px;
 }
 

@@ -476,7 +476,7 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                                         </div>
                                     <?php endif; ?>
                                     
-                                    <a href="<?php echo esc_url($teacher_link); ?>" class="teacher-view-profile" style="color: <?php echo $scheme['accent']; ?>">
+                                    <a href="<?php echo esc_url($teacher_link); ?>" class="teacher-view-profile">
                                         <?php _e('Смотреть профиль', 'course-plugin'); ?>
                                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M1 7H13M13 7L8 2M13 7L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
