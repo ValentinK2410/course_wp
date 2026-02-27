@@ -533,7 +533,19 @@ class Course_Admin {
                             <tr><td><code>theme_class</code></td><td>—</td><td><?php _e('Доп. CSS-класс', 'course-plugin'); ?></td></tr>
                         </tbody>
                     </table>
-                    <p><strong><?php _e('Пример:', 'course-plugin'); ?></strong> <code>[courses per_page="6" level="magistrskiy"]</code></p>
+                    <p><strong><?php _e('Примеры:', 'course-plugin'); ?></strong></p>
+                    <ul style="margin: 8px 0 0; padding-left: 20px; line-height: 1.8;">
+                        <li><code>[courses]</code> — <?php _e('все курсы (12 шт.)', 'course-plugin'); ?></li>
+                        <li><code>[courses per_page="6"]</code> — <?php _e('6 курсов на главной', 'course-plugin'); ?></li>
+                        <li><code>[courses level="bakalavrskiy"]</code> — <?php _e('только бакалаврские', 'course-plugin'); ?></li>
+                        <li><code>[courses level="magistrskiy"]</code> — <?php _e('только магистерские', 'course-plugin'); ?></li>
+                        <li><code>[courses specialization="osnovy-obrazovaniya"]</code> — <?php _e('по slug программы', 'course-plugin'); ?></li>
+                        <li><code>[courses topic="izuchenie-biblii"]</code> — <?php _e('по теме (slug)', 'course-plugin'); ?></li>
+                        <li><code>[courses teacher="ivanov-mihail"]</code> — <?php _e('курсы преподавателя', 'course-plugin'); ?></li>
+                        <li><code>[courses per_page="8" level="bakalavrskiy" topic="dushepopeschenie"]</code> — <?php _e('комбинация фильтров', 'course-plugin'); ?></li>
+                        <li><code>[courses button_style="outline"]</code> — <?php _e('стиль кнопки outline', 'course-plugin'); ?></li>
+                        <li><code>[courses button_style="minimal" theme_class="my-courses"]</code> — <?php _e('минимальный стиль и свой класс', 'course-plugin'); ?></li>
+                    </ul>
                     <?php else : ?>
                     <p style="margin-top: 0;"><code>[teachers]</code> — выводит карточки преподавателей.</p>
                     <table class="widefat striped" style="margin-top: 10px; max-width: 600px;">
