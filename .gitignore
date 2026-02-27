@@ -61,3 +61,4 @@ composer.lock
 
 # Скрипты - все .sh файлы игнорируются
 *.sh
+!course-plugin/deploy-sso-to-moodle.sh
