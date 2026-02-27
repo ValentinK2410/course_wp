@@ -130,13 +130,8 @@
     }
 }
 
-@media (min-width: 768px) and (max-width: 991px) {
-    .premium-archive-wrapper.teachers-archive .teachers-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-}
-
-@media (max-width: 767px) {
+@media (max-width: 991px) {
+    html body .premium-archive-wrapper.teachers-archive .teachers-grid,
     .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: 1fr !important;
     }

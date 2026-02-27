@@ -1740,9 +1740,9 @@ article.teacher-card {
     margin: 0 auto;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991px) {
     .teachers-shortcode-wrapper .teachers-shortcode-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: 1fr !important;
     }
 }
 
@@ -1825,7 +1825,7 @@ article.teacher-card {
 
 @media (max-width: 768px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: 1fr !important;
         gap: 16px !important;
     }
 
@@ -1870,6 +1870,12 @@ article.teacher-card {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+    }
+}
+
+@media (max-width: 991px) {
+    .premium-archive-wrapper.teachers-archive .teachers-grid {
+        grid-template-columns: 1fr !important;
     }
 }
 

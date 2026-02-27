@@ -229,13 +229,7 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
     }
 }
 
-@media (max-width: 767px) {
-    html body .premium-archive-wrapper.teachers-archive .teachers-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-}
-
-@media (max-width: 480px) {
+@media (max-width: 991px) {
     html body .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: 1fr !important;
     }
