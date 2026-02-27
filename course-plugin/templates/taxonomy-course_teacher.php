@@ -17,6 +17,10 @@ $teacher = get_queried_object();
 // Получаем метаполя преподавателя
 $teacher_photo = get_term_meta($teacher->term_id, 'teacher_photo', true);
 $teacher_description = get_term_meta($teacher->term_id, 'teacher_description', true);
+// Fallback: если описания нет в мета, используем стандартное описание термина
+if (empty($teacher_description) && !empty($teacher->description)) {
+    $teacher_description = $teacher->description;
+}
 $teacher_position = get_term_meta($teacher->term_id, 'teacher_position', true);
 $teacher_education = get_term_meta($teacher->term_id, 'teacher_education', true);
 $teacher_email = get_term_meta($teacher->term_id, 'teacher_email', true);

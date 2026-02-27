@@ -58,6 +58,9 @@ class Course_Teacher_Meta {
         
         // Подключаем скрипты WordPress Media для работы с медиа-библиотекой
         add_action('admin_enqueue_scripts', array($this, 'enqueue_media_scripts'));
+        
+        // Синхронизация TinyMCE с textarea перед отправкой формы (wp_editor может не передать контент)
+        add_action('admin_footer-edit-tags.php', array($this, 'add_tinymce_save_before_submit'));
     }
     
     /**
@@ -353,11 +356,38 @@ class Course_Teacher_Meta {
                     $value = sanitize_text_field($_POST[$field]);
                 }
                 update_term_meta($term_id, $field, $value);
-            } else {
-                // Если поле не заполнено, удаляем его
+            } elseif ($field !== 'teacher_description') {
+                // Удаляем только не-описание при отсутствии в POST (описание не трогаем — wp_editor может не передать при некоторых сценариях)
                 delete_term_meta($term_id, $field);
             }
         }
+    }
+    
+    /**
+     * Синхронизация содержимого TinyMCE в textarea перед отправкой формы редактирования преподавателя
+     */
+    public function add_tinymce_save_before_submit() {
+        $screen = get_current_screen();
+        if (!$screen || $screen->taxonomy !== 'course_teacher') {
+            return;
+        }
+        ?>
+        <script>
+        (function() {
+            var formIds = ['edittag', 'addtag'];
+            formIds.forEach(function(id) {
+                var form = document.getElementById(id);
+                if (form) {
+                    form.addEventListener('submit', function() {
+                        if (typeof tinymce !== 'undefined') {
+                            tinymce.triggerSave();
+                        }
+                    });
+                }
+            });
+        })();
+        </script>
+        <?php
     }
     
     /**
