@@ -1740,13 +1740,13 @@ article.teacher-card {
     margin: 0 auto;
 }
 
-@media (min-width: 768px) and (max-width: 1199px) {
+@media (min-width: 596px) and (max-width: 979px) {
     .teachers-shortcode-wrapper .teachers-shortcode-grid {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 595px) {
     .teachers-shortcode-wrapper .teachers-shortcode-grid {
         grid-template-columns: 1fr !important;
     }
@@ -1806,8 +1806,8 @@ article.teacher-card {
     text-decoration: underline;
 }
 
-/* Адаптивность для широких экранов */
-@media (min-width: 1200px) {
+/* ≥980px: 3 колонки */
+@media (min-width: 980px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: repeat(3, 1fr) !important;
         max-width: 1200px !important;
@@ -1816,21 +1816,16 @@ article.teacher-card {
     }
 }
 
-@media (min-width: 992px) and (max-width: 1199px) {
+/* 596px–980px: 2 колонки */
+@media (min-width: 596px) and (max-width: 979px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 20px !important;
     }
 }
 
-@media (min-width: 768px) and (max-width: 991px) {
-    .premium-archive-wrapper.teachers-archive .teachers-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 18px !important;
-    }
-}
-
-@media (max-width: 767px) {
+/* <596px: 1 колонка */
+@media (max-width: 595px) {
     .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: 1fr !important;
         gap: 16px !important;

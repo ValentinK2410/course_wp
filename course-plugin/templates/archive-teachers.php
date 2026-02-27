@@ -207,8 +207,8 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
     display: block !important;
 }
 
-/* Адаптивность для широких экранов */
-@media (min-width: 1200px) {
+/* ≥980px: 3 колонки */
+@media (min-width: 980px) {
     html body .premium-archive-wrapper.teachers-archive .teachers-grid {
         grid-template-columns: repeat(3, 1fr) !important;
         max-width: 1200px !important;
@@ -217,24 +217,16 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
     }
 }
 
-/* 992px–1199px: 2 колонки */
-@media (min-width: 992px) and (max-width: 1199px) {
+/* 596px–980px: 2 колонки */
+@media (min-width: 596px) and (max-width: 979px) {
     html body .premium-archive-wrapper.teachers-archive .teachers-grid,
     html body .premium-archive-wrapper.teachers-archive #teachers-container {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
-/* 768px–991px: 2 колонки */
-@media (min-width: 768px) and (max-width: 991px) {
-    html body .premium-archive-wrapper.teachers-archive .teachers-grid,
-    html body .premium-archive-wrapper.teachers-archive #teachers-container {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-}
-
-/* <768px: 1 колонка */
-@media (max-width: 767px) {
+/* <596px: 1 колонка */
+@media (max-width: 595px) {
     html body .premium-archive-wrapper.teachers-archive .teachers-grid,
     html body .premium-archive-wrapper.teachers-archive #teachers-container,
     html body #teachers-container,
