@@ -76,14 +76,6 @@ $color_schemes = array(
                             <a href="<?php echo esc_url($teacher_link); ?>"><?php echo esc_html($term->name); ?></a>
                         </h2>
                         
-                        <?php if (!empty($specializations)) : ?>
-                            <div class="teacher-specializations">
-                                <?php foreach (array_slice($specializations, 0, 2) as $spec) : ?>
-                                    <span class="specialization-tag"><?php echo esc_html($spec->name); ?></span>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                        
                         <?php if ($teacher_description) : ?>
                             <p class="teacher-card-description"><?php echo esc_html(wp_trim_words($teacher_description, 15, '...')); ?></p>
                         <?php endif; ?>
