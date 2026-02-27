@@ -33,10 +33,11 @@ if ($courses->have_posts()) : ?>
     <div class="<?php echo implode(' ', $wrapper_classes); ?>">
         <div class="csp-grid">
             <?php while ($courses->have_posts()) : $courses->the_post();
-                $price = get_post_meta(get_the_ID(), '_course_price', true);
-                $old_price = get_post_meta(get_the_ID(), '_course_old_price', true);
-                $start_date = get_post_meta(get_the_ID(), '_course_start_date', true);
-                $duration = get_post_meta(get_the_ID(), '_course_duration', true);
+                $is_program = ($ctx['post_type'] === 'program');
+                $price = get_post_meta(get_the_ID(), $is_program ? '_program_price' : '_course_price', true);
+                $old_price = get_post_meta(get_the_ID(), $is_program ? '_program_old_price' : '_course_old_price', true);
+                $start_date = get_post_meta(get_the_ID(), $is_program ? '_program_start_date' : '_course_start_date', true);
+                $duration = get_post_meta(get_the_ID(), $is_program ? '_program_duration' : '_course_duration', true);
                 $rating = get_post_meta(get_the_ID(), '_course_rating', true) ?: 0;
                 $reviews_count = get_post_meta(get_the_ID(), '_course_reviews_count', true) ?: 0;
 
@@ -157,6 +158,6 @@ if ($courses->have_posts()) : ?>
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <p><?php _e('Курсы не найдены.', 'course-plugin'); ?></p>
+        <p><?php echo ($ctx['post_type'] === 'program') ? __('Программы не найдены.', 'course-plugin') : __('Курсы не найдены.', 'course-plugin'); ?></p>
     </div>
 <?php endif; ?>
