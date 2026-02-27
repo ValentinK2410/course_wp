@@ -870,6 +870,15 @@
     box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
 }
 
+/* Карточки с изображением курса */
+.card-header-has-image .card-decoration {
+    display: none;
+}
+
+.card-header-has-image .card-icon {
+    background: rgba(0, 0, 0, 0.4);
+}
+
 .card-decoration {
     position: absolute;
     bottom: -40px;
