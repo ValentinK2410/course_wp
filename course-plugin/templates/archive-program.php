@@ -401,8 +401,23 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                     ?>
                         <article class="premium-course-card" data-id="<?php the_ID(); ?>">
                             <a href="<?php the_permalink(); ?>" class="card-link">
-                                <!-- Верхняя часть карточки с градиентом -->
-                                <div class="card-header" style="background: <?php echo $scheme['gradient']; ?>">
+                                <!-- Верхняя часть карточки: изображение программы или градиент -->
+                                <?php
+                                $header_style = '';
+                                $header_has_image = false;
+                                if (has_post_thumbnail()) {
+                                    $thumb_url = get_the_post_thumbnail_url(get_the_ID(), 'medium_large');
+                                    if ($thumb_url) {
+                                        $header_style = 'background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.5) 100%), url(' . esc_url($thumb_url) . ') center/cover no-repeat;';
+                                        $header_has_image = true;
+                                    }
+                                }
+                                if (empty($header_style)) {
+                                    $header_style = 'background: ' . esc_attr($scheme['gradient']) . ';';
+                                }
+                                $header_class = 'card-header' . ($header_has_image ? ' card-header-has-image' : '');
+                                ?>
+                                <div class="<?php echo esc_attr($header_class); ?>" style="<?php echo $header_style; ?>">
                                     <?php if ($program_tag) : ?>
                                         <span class="card-badge"><?php echo esc_html($program_tag); ?></span>
                                     <?php endif; ?>
