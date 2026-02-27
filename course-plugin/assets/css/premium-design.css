@@ -1544,7 +1544,7 @@
 .teachers-archive .teachers-grid,
 #teachers-container {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     gap: 24px !important;
     list-style: none !important;
     margin: 0 !important;

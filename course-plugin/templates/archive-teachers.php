@@ -230,8 +230,20 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
 }
 
 @media (max-width: 991px) {
-    html body .premium-archive-wrapper.teachers-archive .teachers-grid {
+    html body .premium-archive-wrapper.teachers-archive .teachers-grid,
+    html body .premium-archive-wrapper.teachers-archive #teachers-container,
+    html body #teachers-container {
         grid-template-columns: 1fr !important;
+    }
+}
+
+/* Дополнительно для мобильных — максимальная специфичность */
+@media (max-width: 991px) {
+    body .premium-archive-wrapper.teachers-archive .teachers-grid,
+    body .premium-archive-wrapper.teachers-archive #teachers-container,
+    #teachers-container.teachers-grid {
+        grid-template-columns: 1fr !important;
+        -ms-grid-columns: 1fr !important;
     }
 }
 </style>
