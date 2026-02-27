@@ -23,20 +23,22 @@ class Course_Enroll_Gate {
 
     private function __construct() {
         add_rewrite_rule('^enroll/?$', 'index.php?enroll_gate=1', 'top');
+        add_rewrite_rule('^moodle/?$', 'index.php?moodle_sso=1', 'top');
         add_filter('query_vars', array($this, 'add_query_vars'));
         add_action('template_redirect', array($this, 'handle_enroll_gate'), 1);
+        add_action('template_redirect', array($this, 'handle_moodle_sso'), 1);
         add_filter('wp_nav_menu_objects', array($this, 'filter_menu_moodle_links'), 10, 2);
     }
 
     public function add_query_vars($vars) {
         $vars[] = 'enroll_gate';
         $vars[] = 'enroll_url';
+        $vars[] = 'moodle_sso';
         return $vars;
     }
 
     /**
-     * Заменяет ссылки на Moodle в меню на шлюз SSO (авторизация → переход в Moodle)
-     * Пункты вроде «Виртуальный класс» ведут через /enroll/ для входа по SSO
+     * Заменяет ссылки на Moodle в меню: «Виртуальный класс» → /moodle/ (SSO без /enroll/)
      */
     public function filter_menu_moodle_links($items, $args) {
         $moodle_url = rtrim(get_option('moodle_sync_url', ''), '/');
@@ -53,16 +55,50 @@ class Course_Enroll_Gate {
             }
             $item_host = parse_url($item->url, PHP_URL_HOST);
             if ($item_host && (strtolower($item_host) === strtolower($moodle_host))) {
-                $target = $item->url;
-                // Ссылка на страницу входа Moodle → после SSO ведём на главную
-                $path = parse_url($target, PHP_URL_PATH);
-                if ($path && (strpos($path, '/login/') !== false || $path === '/login/index.php')) {
-                    $target = $moodle_url . '/';
+                $path = parse_url($item->url, PHP_URL_PATH);
+                $is_login_or_root = (!$path || $path === '/' || strpos($path, '/login/') !== false);
+                if ($is_login_or_root) {
+                    $item->url = home_url('/moodle/');
+                } else {
+                    $item->url = self::get_enroll_url($item->url);
                 }
-                $item->url = self::get_enroll_url($target);
             }
         }
         return $items;
+    }
+
+    /**
+     * Обработка /moodle/ — SSO в Moodle (главная), без /enroll/
+     */
+    public function handle_moodle_sso() {
+        if ((int) get_query_var('moodle_sso') !== 1) {
+            return;
+        }
+        $moodle_url = rtrim(get_option('moodle_sync_url', ''), '/');
+        if (empty($moodle_url)) {
+            wp_redirect(home_url('/'));
+            exit;
+        }
+        if (!is_user_logged_in()) {
+            wp_redirect(wp_login_url(home_url('/moodle/')));
+            exit;
+        }
+        $sso = Course_SSO::get_instance();
+        $user_id = get_current_user_id();
+        $moodle_token = get_user_meta($user_id, 'sso_moodle_token', true);
+        $moodle_expires = get_user_meta($user_id, 'sso_moodle_token_expires', true);
+        if (empty($moodle_token) || (int) $moodle_expires < time()) {
+            $user = wp_get_current_user();
+            $sso->generate_sso_tokens($user->user_login, $user);
+            $moodle_token = get_user_meta($user_id, 'sso_moodle_token', true);
+        }
+        if (!empty($moodle_token)) {
+            $sso_redirect = $moodle_url . '/sso-login.php?token=' . rawurlencode($moodle_token) . '&redirect=' . rawurlencode('/');
+            wp_redirect($sso_redirect);
+            exit;
+        }
+        wp_redirect($moodle_url . '/');
+        exit;
     }
 
     /**
