@@ -1118,7 +1118,7 @@
 .premium-courses-grid[data-view="list"] .card-header {
     width: 280px;
     height: auto;
-    min-height: 200px;
+    min-height: 240px;
     flex-shrink: 0;
 }
 
@@ -1322,7 +1322,7 @@
     
     .premium-courses-grid[data-view="list"] .card-header {
         width: 100%;
-        min-height: 160px;
+        min-height: 240px;
     }
     
     .premium-archive-title {
@@ -1369,7 +1369,7 @@
     }
     
     .card-header {
-        height: 140px;
+        height: 200px;
     }
     
     .card-content {
@@ -1408,7 +1408,7 @@
     
     .card-header {
         padding: 20px;
-        height: 120px;
+        height: 160px;
     }
     
     .card-icon {
