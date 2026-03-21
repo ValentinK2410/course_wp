@@ -7,9 +7,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
 /* Разрешаем прокрутку */
-html, html body.login {
+html,
+html body.login {
     overflow: visible !important;
     overflow-y: auto !important;
+    height: auto !important;
 }
 
 /* Фон страницы */
@@ -17,13 +19,13 @@ body.login {
     background: linear-gradient(135deg, #1a0a10 0%, #3d1525 30%, #68202D 60%, #8B2D3D 100%) !important;
     background-attachment: fixed !important;
     min-height: 100vh;
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start !important;
     position: relative;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
     padding: 40px 0 !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
@@ -98,6 +100,7 @@ body.login::after {
     width: 420px !important;
     max-width: 92vw;
     padding: 0 !important;
+    margin: auto 0 !important;
 }
 
 #loginform,
@@ -312,13 +315,25 @@ body.login #login .language-switcher {
 }
 
 body.login .language-switcher *,
-body.login .wp-login-language-switcher * {
+body.login .wp-login-language-switcher *,
+body.login #login .language-switcher * {
     color: rgba(255, 255, 255, 0.7) !important;
 }
 
 body.login .language-switcher .dashicons,
 body.login .wp-login-language-switcher .dashicons {
     color: rgba(255, 255, 255, 0.5) !important;
+}
+
+body.login .language-switcher form,
+body.login .wp-login-language-switcher form,
+body.login #login .language-switcher form {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    backdrop-filter: none !important;
 }
 
 .language-switcher label,
