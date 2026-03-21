@@ -809,14 +809,14 @@ class Course_Registration {
         }
         
         ?>
-        <div id="course-resend-email-wrapper" style="margin-top: 20px; padding: 15px; background: #f0f0f1; border-radius: 4px; border-left: 4px solid #2271b1;">
-            <h3 style="margin-top: 0; font-size: 14px; font-weight: 600;"><?php _e('Не получили письмо при регистрации?', 'course-plugin'); ?></h3>
-            <p style="margin-bottom: 10px; font-size: 13px; color: #50575e;">
+        <div id="course-resend-email-wrapper" class="course-resend-email-section">
+            <h3><?php _e('Не получили письмо при регистрации?', 'course-plugin'); ?></h3>
+            <p>
                 <?php _e('Если вы зарегистрировались, но не получили письмо с данными для входа, введите ваш email ниже и мы отправим письмо повторно.', 'course-plugin'); ?>
             </p>
-            <form id="course-resend-email-form" style="margin: 0;">
+            <form id="course-resend-email-form">
                 <p>
-                    <label for="resend_email" style="display: block; margin-bottom: 5px; font-weight: 600;">
+                    <label for="resend_email">
                         <?php _e('Email адрес:', 'course-plugin'); ?>
                     </label>
                     <input type="email" 
@@ -824,18 +824,15 @@ class Course_Registration {
                            name="resend_email" 
                            value="" 
                            class="input" 
-                           style="width: 100%; padding: 8px; border: 1px solid #8c8f94; border-radius: 4px;"
                            placeholder="<?php esc_attr_e('your-email@example.com', 'course-plugin'); ?>" 
                            required />
                 </p>
                 <p>
-                    <button type="submit" 
-                            class="button button-secondary" 
-                            style="width: 100%; padding: 8px; font-size: 14px;">
+                    <button type="submit" class="button button-secondary">
                         <?php _e('Отправить письмо повторно', 'course-plugin'); ?>
                     </button>
                 </p>
-                <div id="resend-email-message" style="margin-top: 10px; display: none;"></div>
+                <div id="resend-email-message"></div>
             </form>
         </div>
         
