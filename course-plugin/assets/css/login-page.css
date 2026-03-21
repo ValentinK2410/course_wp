@@ -77,7 +77,8 @@ body.login::after {
     padding: 0 !important;
     text-indent: -9999px !important;
     overflow: hidden !important;
-    filter: brightness(0) invert(1) !important;
+    filter: invert(1) !important;
+    mix-blend-mode: screen !important;
     opacity: 0.95;
     transition: opacity 0.3s ease !important;
 }
