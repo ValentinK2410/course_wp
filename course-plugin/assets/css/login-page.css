@@ -6,6 +6,12 @@
 /* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
+/* Разрешаем прокрутку */
+html, html body.login {
+    overflow: visible !important;
+    overflow-y: auto !important;
+}
+
 /* Фон страницы */
 body.login {
     background: linear-gradient(135deg, #1a0a10 0%, #3d1525 30%, #68202D 60%, #8B2D3D 100%) !important;
