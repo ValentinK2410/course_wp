@@ -62,7 +62,7 @@ body.login::after {
     width: 280px !important;
     height: 70px !important;
     display: block !important;
-    margin: 0 auto 8px !important;
+    margin: 0 auto 16px !important;
     padding: 0 !important;
     text-indent: -9999px !important;
     overflow: hidden !important;
@@ -78,13 +78,8 @@ body.login::after {
 #login h1 {
     position: relative;
     z-index: 1;
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-#login h1::before {
-    content: '';
-    display: none;
+    margin-bottom: 10px !important;
+    padding: 20px 0 0 !important;
 }
 
 /* Контейнер формы */
@@ -293,65 +288,113 @@ body.login::after {
     border-left-color: #27ae60 !important;
 }
 
-/* Выбор языка */
-.language-switcher {
+/* Выбор языка — контейнер */
+.login .language-switcher,
+body.login .wp-login-language-switcher,
+body.login div.language-switcher {
+    background: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 14px !important;
+    padding: 16px 20px !important;
     margin-top: 16px !important;
 }
 
-.language-switcher label {
-    color: rgba(255, 255, 255, 0.5) !important;
+.language-switcher label,
+.wp-login-language-switcher label {
+    color: rgba(255, 255, 255, 0.6) !important;
     font-size: 12px !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
 }
 
-.language-switcher select {
+.language-switcher select,
+.wp-login-language-switcher select {
     background: rgba(255, 255, 255, 0.08) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 8px !important;
     color: #fff !important;
-    padding: 6px 10px !important;
+    padding: 8px 12px !important;
     font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
 }
 
-.language-switcher .button {
+.language-switcher select option,
+.wp-login-language-switcher select option {
+    background: #3d1525 !important;
+    color: #fff !important;
+}
+
+.language-switcher .button,
+.wp-login-language-switcher .button,
+.language-switcher input[type="submit"],
+.wp-login-language-switcher input[type="submit"] {
     background: rgba(255, 255, 255, 0.1) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 8px !important;
     color: rgba(255, 255, 255, 0.7) !important;
-    padding: 6px 14px !important;
+    padding: 8px 16px !important;
     font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important;
     cursor: pointer !important;
     transition: all 0.3s ease !important;
 }
 
-.language-switcher .button:hover {
-    background: rgba(255, 255, 255, 0.15) !important;
+.language-switcher .button:hover,
+.wp-login-language-switcher .button:hover,
+.language-switcher input[type="submit"]:hover,
+.wp-login-language-switcher input[type="submit"]:hover {
+    background: rgba(255, 255, 255, 0.18) !important;
     color: #fff !important;
 }
 
-/* Форма повторной отправки письма */
-.course-resend-email-section {
-    background: rgba(255, 255, 255, 0.06) !important;
+/* Форма повторной отправки письма (переопределяем инлайн-стили) */
+#course-resend-email-wrapper,
+.course-resend-email-section,
+body.login #course-resend-email-wrapper {
+    background: rgba(255, 255, 255, 0.07) !important;
     backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 16px !important;
     padding: 24px !important;
     margin-top: 20px !important;
     color: rgba(255, 255, 255, 0.85) !important;
 }
 
+#course-resend-email-wrapper h3,
 .course-resend-email-section h3 {
     color: #fff !important;
     font-family: 'Playfair Display', serif !important;
-    font-size: 16px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
     margin: 0 0 10px !important;
 }
 
+#course-resend-email-wrapper p,
 .course-resend-email-section p {
     color: rgba(255, 255, 255, 0.65) !important;
     font-size: 13px !important;
     line-height: 1.5 !important;
+    font-family: 'Inter', sans-serif !important;
 }
 
+#course-resend-email-wrapper label,
+.course-resend-email-section label {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+#course-resend-email-wrapper input[type="email"],
+#course-resend-email-wrapper input[type="text"],
 .course-resend-email-section input[type="email"],
 .course-resend-email-section input[type="text"] {
     background: rgba(255, 255, 255, 0.08) !important;
@@ -362,9 +405,21 @@ body.login::after {
     width: 100% !important;
     box-sizing: border-box !important;
     font-size: 14px !important;
+    font-family: 'Inter', sans-serif !important;
     margin-bottom: 10px !important;
+    outline: none !important;
+    transition: all 0.3s ease !important;
 }
 
+#course-resend-email-wrapper input[type="email"]:focus,
+#course-resend-email-wrapper input[type="text"]:focus {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 200, 180, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(139, 45, 61, 0.3) !important;
+}
+
+#course-resend-email-wrapper button,
+#course-resend-email-wrapper input[type="submit"],
 .course-resend-email-section button,
 .course-resend-email-section input[type="submit"] {
     background: linear-gradient(135deg, #8B2D3D, #a83a50) !important;
@@ -374,15 +429,26 @@ body.login::after {
     padding: 12px 24px !important;
     font-size: 14px !important;
     font-weight: 600 !important;
+    font-family: 'Inter', sans-serif !important;
     cursor: pointer !important;
     transition: all 0.3s ease !important;
     width: 100% !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
 }
 
+#course-resend-email-wrapper button:hover,
+#course-resend-email-wrapper input[type="submit"]:hover,
 .course-resend-email-section button:hover,
 .course-resend-email-section input[type="submit"]:hover {
     transform: translateY(-1px) !important;
     box-shadow: 0 6px 20px rgba(139, 45, 61, 0.4) !important;
+}
+
+#resend-email-message {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13px !important;
 }
 
 /* Скрываем стандартную стрелку пароля */
@@ -416,7 +482,8 @@ body.login::after {
     }
 
     #login h1 a {
-        font-size: 22px !important;
+        width: 220px !important;
+        height: 55px !important;
     }
 
     #wp-submit {
