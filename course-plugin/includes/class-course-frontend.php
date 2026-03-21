@@ -31,6 +31,11 @@ class Course_Frontend {
      * Конструктор
      */
     private function __construct() {
+        // Кастомная страница входа
+        add_action('login_enqueue_scripts', array($this, 'enqueue_login_assets'));
+        add_filter('login_headerurl', array($this, 'login_logo_url'));
+        add_filter('login_headertext', array($this, 'login_logo_text'));
+        
         // Rewrite rule для страницы всех преподавателей /teachers/
         add_action('init', array($this, 'add_teachers_rewrite_rule'));
         add_filter('query_vars', array($this, 'add_teachers_query_var'));
@@ -730,6 +735,32 @@ class Course_Frontend {
         $shortcode_atts = $atts;
         include COURSE_PLUGIN_DIR . 'templates/teachers-shortcode.php';
         return ob_get_clean();
+    }
+    
+    /**
+     * Подключение стилей для страницы входа
+     */
+    public function enqueue_login_assets() {
+        wp_enqueue_style(
+            'course-login-page',
+            COURSE_PLUGIN_URL . 'assets/css/login-page.css',
+            array(),
+            COURSE_PLUGIN_VERSION
+        );
+    }
+    
+    /**
+     * URL логотипа на странице входа — ведёт на главную сайта
+     */
+    public function login_logo_url() {
+        return home_url('/');
+    }
+    
+    /**
+     * Текст логотипа на странице входа
+     */
+    public function login_logo_text() {
+        return get_bloginfo('name');
     }
 }
 

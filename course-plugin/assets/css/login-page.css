@@ -1,0 +1,450 @@
+/**
+ * Кастомная страница входа WordPress
+ * Стиль МБС — Богословская семинария
+ */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+/* Фон страницы */
+body.login {
+    background: linear-gradient(135deg, #1a0a10 0%, #3d1525 30%, #68202D 60%, #8B2D3D 100%) !important;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+body.login::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(139, 45, 61, 0.4) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(104, 32, 45, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(61, 21, 37, 0.5) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+body.login::after {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/></pattern></defs><rect width="60" height="60" fill="url(%23grid)"/></svg>');
+    pointer-events: none;
+    z-index: 0;
+    animation: subtleShift 30s ease-in-out infinite;
+}
+
+@keyframes subtleShift {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-15px, -15px); }
+}
+
+/* Логотип */
+#login h1 a,
+.login h1 a {
+    background-image: none !important;
+    width: auto !important;
+    height: auto !important;
+    text-indent: 0 !important;
+    font-family: 'Playfair Display', Georgia, serif !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    letter-spacing: 0.02em;
+    padding: 0 !important;
+    margin: 0 0 8px !important;
+    display: block !important;
+    text-align: center;
+    text-decoration: none !important;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    line-height: 1.3 !important;
+}
+
+#login h1 a:hover {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+#login h1 {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+#login h1::before {
+    content: '✦';
+    display: block;
+    font-size: 20px;
+    color: rgba(255, 200, 180, 0.6);
+    margin-bottom: 12px;
+    letter-spacing: 12px;
+    text-align: center;
+}
+
+/* Контейнер формы */
+#login {
+    position: relative;
+    z-index: 1;
+    width: 420px !important;
+    max-width: 92vw;
+    padding: 0 !important;
+}
+
+#loginform,
+.login form {
+    background: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 20px !important;
+    padding: 40px 36px 36px !important;
+    box-shadow:
+        0 25px 60px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    margin-top: 16px !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#loginform:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 30px 70px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Лейблы */
+#loginform label,
+.login form label {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif !important;
+    display: block !important;
+    margin-bottom: 6px !important;
+}
+
+/* Поля ввода */
+#loginform input[type="text"],
+#loginform input[type="password"],
+#loginform input[type="email"],
+.login form input[type="text"],
+.login form input[type="password"],
+.login form input[type="email"] {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 12px !important;
+    color: #fff !important;
+    font-size: 15px !important;
+    font-family: 'Inter', sans-serif !important;
+    padding: 14px 18px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    transition: all 0.3s ease !important;
+    outline: none !important;
+    margin-bottom: 4px !important;
+    height: auto !important;
+}
+
+#loginform input[type="text"]:focus,
+#loginform input[type="password"]:focus,
+#loginform input[type="email"]:focus,
+.login form input[type="text"]:focus,
+.login form input[type="password"]:focus,
+.login form input[type="email"]:focus {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 200, 180, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(139, 45, 61, 0.3), 0 0 20px rgba(139, 45, 61, 0.15) !important;
+}
+
+#loginform input[type="text"]::placeholder,
+#loginform input[type="password"]::placeholder {
+    color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Чекбокс «Запомнить меня» */
+.login .forgetmenot {
+    margin-top: 8px !important;
+}
+
+.login .forgetmenot label {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 13px !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    font-weight: 400 !important;
+}
+
+.login .forgetmenot input[type="checkbox"] {
+    accent-color: #8B2D3D !important;
+}
+
+/* Кнопка входа */
+#wp-submit,
+.login .button-primary {
+    background: linear-gradient(135deg, #8B2D3D 0%, #a83a50 50%, #8B2D3D 100%) !important;
+    background-size: 200% 200% !important;
+    border: none !important;
+    border-radius: 12px !important;
+    color: #fff !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    font-family: 'Inter', sans-serif !important;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 15px 32px !important;
+    width: 100% !important;
+    cursor: pointer !important;
+    transition: all 0.4s ease !important;
+    box-shadow: 0 8px 25px rgba(139, 45, 61, 0.4) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    margin-top: 8px !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+    animation: gradientShift 4s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+#wp-submit:hover,
+.login .button-primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 35px rgba(139, 45, 61, 0.55) !important;
+    filter: brightness(1.1);
+}
+
+#wp-submit:active,
+.login .button-primary:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 4px 15px rgba(139, 45, 61, 0.4) !important;
+}
+
+/* Ссылки под формой */
+#login #nav,
+#login #backtoblog {
+    text-align: center !important;
+    padding: 0 !important;
+    margin: 12px 0 0 !important;
+}
+
+#login #nav a,
+#login #backtoblog a {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 13px !important;
+    font-family: 'Inter', sans-serif !important;
+    text-decoration: none !important;
+    transition: color 0.3s ease !important;
+    font-weight: 400 !important;
+}
+
+#login #nav a:hover,
+#login #backtoblog a:hover {
+    color: #fff !important;
+    text-shadow: 0 0 10px rgba(255, 200, 180, 0.3);
+}
+
+#login #nav {
+    margin-top: 16px !important;
+}
+
+/* Уведомления */
+.login .message,
+.login .success,
+.login #login_error {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-left: 4px solid rgba(255, 200, 180, 0.6) !important;
+    border-radius: 12px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    padding: 14px 18px !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+}
+
+.login .message a,
+.login .success a,
+.login #login_error a {
+    color: rgba(255, 200, 180, 0.9) !important;
+    text-decoration: underline !important;
+}
+
+.login #login_error {
+    border-left-color: #e74c3c !important;
+}
+
+.login .success {
+    border-left-color: #27ae60 !important;
+}
+
+/* Выбор языка */
+.language-switcher {
+    margin-top: 16px !important;
+}
+
+.language-switcher label {
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: 12px !important;
+}
+
+.language-switcher select {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px !important;
+    color: #fff !important;
+    padding: 6px 10px !important;
+    font-size: 13px !important;
+}
+
+.language-switcher .button {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    padding: 6px 14px !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+}
+
+.language-switcher .button:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+}
+
+/* Форма повторной отправки письма */
+.course-resend-email-section {
+    background: rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    margin-top: 20px !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.course-resend-email-section h3 {
+    color: #fff !important;
+    font-family: 'Playfair Display', serif !important;
+    font-size: 16px !important;
+    margin: 0 0 10px !important;
+}
+
+.course-resend-email-section p {
+    color: rgba(255, 255, 255, 0.65) !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+}
+
+.course-resend-email-section input[type="email"],
+.course-resend-email-section input[type="text"] {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    padding: 12px 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 14px !important;
+    margin-bottom: 10px !important;
+}
+
+.course-resend-email-section button,
+.course-resend-email-section input[type="submit"] {
+    background: linear-gradient(135deg, #8B2D3D, #a83a50) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    padding: 12px 24px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+}
+
+.course-resend-email-section button:hover,
+.course-resend-email-section input[type="submit"]:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(139, 45, 61, 0.4) !important;
+}
+
+/* Скрываем стандартную стрелку пароля */
+.login .wp-hide-pw {
+    color: rgba(255, 255, 255, 0.5) !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.login .wp-hide-pw:hover {
+    color: #fff !important;
+}
+
+.login .dashicons {
+    color: inherit !important;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+    #login {
+        width: 100% !important;
+        max-width: 100vw;
+        padding: 0 16px !important;
+        box-sizing: border-box;
+    }
+
+    #loginform,
+    .login form {
+        padding: 28px 24px 24px !important;
+        border-radius: 16px !important;
+    }
+
+    #login h1 a {
+        font-size: 22px !important;
+    }
+
+    #wp-submit {
+        padding: 14px 24px !important;
+    }
+}
+
+/* Убираем стандартный WordPress стиль */
+.login #login_error,
+.login .message,
+.login .success {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.login form .input,
+.login input[type="text"] {
+    margin-top: 0 !important;
+}
+
+/* Скрываем «Сайт работает на WordPress» */
+.login .privacy-policy-page-link {
+    display: none !important;
+}
