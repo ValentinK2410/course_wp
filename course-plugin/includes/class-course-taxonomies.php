@@ -215,7 +215,7 @@ class Course_Taxonomies {
     /**
      * Регистрация таксономии "Преподаватель"
      * Неиерархическая таксономия (как метки)
-     * К одному курсу можно добавить несколько преподавателей
+     * К одному курсу, программе или записи можно добавить несколько преподавателей (общий список терминов)
      */
     private function register_teacher_taxonomy() {
         $labels = array(
@@ -255,7 +255,7 @@ class Course_Taxonomies {
             'rewrite'                    => array('slug' => 'teacher'),                                     // Slug для URL
         );
         
-        // Регистрируем таксономию 'course_teacher' для курсов и программ
-        register_taxonomy('course_teacher', array('course', 'program'), $args);
+        // Регистрируем таксономию 'course_teacher' для курсов, программ и обычных записей (те же термины)
+        register_taxonomy('course_teacher', array('course', 'program', 'post'), $args);
     }
 }
