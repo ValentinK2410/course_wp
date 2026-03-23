@@ -71,8 +71,9 @@ class Course_Registration {
         // Поля и логика как у [course_register] на стандартной форме wp-login.php?action=register
         add_action('register_form', array($this, 'render_wp_login_register_extra_fields'));
         add_filter('registration_errors', array($this, 'validate_wp_login_register_extra'), 20, 3);
-        add_filter('wp_pre_insert_user_data', array($this, 'filter_wp_login_register_user_data'), 10, 4);
         add_filter('wp_send_new_user_notification_email', array($this, 'maybe_disable_wp_default_new_user_email'), 10, 3);
+        // Пароль и имя после создания пользователя — не через wp_pre_insert_user_data (избегаем сбоя wp_insert_user)
+        add_action('user_register', array($this, 'wp_login_register_apply_password_and_profile'), 5, 1);
         add_action('user_register', array($this, 'after_wp_login_register'), 20, 1);
         
         // На wp-login.php: подпись поля «Username» → «Логин пользователя» (вместо «Имя пользователя» в ru_RU)
@@ -1155,44 +1156,42 @@ class Course_Registration {
     }
     
     /**
-     * Подставляет пароль, имя и фамилию при создании пользователя через register_new_user
+     * Сразу после создания пользователя на wp-login: пароль (wp_set_password), имя/фамилия.
+     * Раньше использовался wp_pre_insert_user_data — из-за этого wp_insert_user мог возвращать ошибку,
+     * а WordPress показывал только «Регистрация не удалась…».
      *
-     * @param array $data
-     * @param bool  $update
-     * @param int   $user_id
-     * @param array $userdata
-     * @return array
+     * @param int $user_id
      */
-    public function filter_wp_login_register_user_data($data, $update, $user_id, $userdata) {
-        if ($update) {
-            return $data;
-        }
+    public function wp_login_register_apply_password_and_profile($user_id) {
         if (empty($_POST['course_wp_login_register']) || $_POST['course_wp_login_register'] !== '1') {
-            return $data;
+            return;
         }
         if (!isset($_POST['course_wp_login_nonce']) || !wp_verify_nonce($_POST['course_wp_login_nonce'], 'course_wp_login_register')) {
-            return $data;
+            return;
         }
         if (empty($_POST['user_pass'])) {
-            return $data;
+            return;
+        }
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return;
         }
         $plain = (string) wp_unslash($_POST['user_pass']);
         $modified = $this->adjust_password_for_moodle($plain);
-        $data['user_pass'] = $modified;
-        if (isset($data['user_login'])) {
-            $GLOBALS['moodle_user_sync_password'][$data['user_login']] = $modified;
-        }
+        wp_set_password($modified, $user_id);
+        $GLOBALS['moodle_user_sync_password'][$user->user_login] = $modified;
         $first = isset($_POST['first_name']) ? sanitize_text_field(wp_unslash($_POST['first_name'])) : '';
         $last = isset($_POST['last_name']) ? sanitize_text_field(wp_unslash($_POST['last_name'])) : '';
-        $data['first_name'] = $first;
-        $data['last_name'] = $last;
-        if ($first !== '' || $last !== '') {
-            $data['display_name'] = trim($first . ' ' . $last);
-            if ($data['display_name'] === '') {
-                $data['display_name'] = $data['user_login'];
-            }
+        $display = trim($first . ' ' . $last);
+        if ($display === '') {
+            $display = $user->user_login;
         }
-        return $data;
+        wp_update_user(array(
+            'ID' => $user_id,
+            'first_name' => $first,
+            'last_name' => $last,
+            'display_name' => $display,
+        ));
     }
     
     /**
