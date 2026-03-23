@@ -63,6 +63,11 @@ class Course_Registration {
         add_action('login_footer', array($this, 'add_resend_email_form'));
         add_action('login_form_bottom', array($this, 'add_resend_email_form'));
         
+        // Ссылка «Регистрация» на wp-login.php ведёт на страницу с [course_register] (если выбрана в настройках)
+        add_filter('registration_url', array($this, 'filter_registration_url'));
+        add_action('admin_menu', array($this, 'add_registration_settings_menu'));
+        add_action('admin_init', array($this, 'register_registration_settings'));
+        
         // Логируем регистрацию AJAX-обработчиков
         $log_message = '[' . date('Y-m-d H:i:s') . '] Course_Registration: AJAX обработчики зарегистрированы' . "\n";
         @file_put_contents($log_file, $log_message, FILE_APPEND);
@@ -1051,6 +1056,91 @@ class Course_Registration {
             // Класс API не найден
             wp_send_json_success(array('exists' => false, 'message' => ''));
         }
+    }
+    
+    /**
+     * Подменяет URL регистрации WordPress на страницу с шорткодом [course_register]
+     *
+     * @param string $url URL по умолчанию (wp-login.php?action=register)
+     * @return string
+     */
+    public function filter_registration_url($url) {
+        $page_id = (int) get_option('course_registration_page_id', 0);
+        if ($page_id > 0 && get_post_status($page_id) === 'publish') {
+            $permalink = get_permalink($page_id);
+            if ($permalink) {
+                return $permalink;
+            }
+        }
+        return $url;
+    }
+    
+    /**
+     * Подменю «Настройки» — страница выбора страницы регистрации
+     */
+    public function add_registration_settings_menu() {
+        add_submenu_page(
+            'options-general.php',
+            __('Регистрация (форма)', 'course-plugin'),
+            __('Регистрация (форма)', 'course-plugin'),
+            'manage_options',
+            'course-registration-settings',
+            array($this, 'render_registration_settings_page')
+        );
+    }
+    
+    /**
+     * Регистрация опции course_registration_page_id
+     */
+    public function register_registration_settings() {
+        register_setting(
+            'course_registration_settings',
+            'course_registration_page_id',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 0,
+            )
+        );
+    }
+    
+    /**
+     * Вывод страницы настроек регистрации
+     */
+    public function render_registration_settings_page() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <form method="post" action="options.php">
+                <?php settings_fields('course_registration_settings'); ?>
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row">
+                            <label for="course_registration_page_id"><?php _e('Страница с формой регистрации', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <?php
+                            wp_dropdown_pages(array(
+                                'name' => 'course_registration_page_id',
+                                'id' => 'course_registration_page_id',
+                                'show_option_none' => __('— Стандартная регистрация WordPress —', 'course-plugin'),
+                                'option_none_value' => '0',
+                                'selected' => (int) get_option('course_registration_page_id', 0),
+                            ));
+                            ?>
+                            <p class="description">
+                                <?php _e('Выберите страницу, в которую вставлен шорткод [course_register]. Ссылка «Регистрация» на странице входа (wp-login.php) будет вести на эту страницу.', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button(); ?>
+            </form>
+        </div>
+        <?php
     }
 }
 
