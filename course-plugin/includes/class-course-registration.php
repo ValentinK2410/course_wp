@@ -75,6 +75,9 @@ class Course_Registration {
         add_filter('wp_send_new_user_notification_email', array($this, 'maybe_disable_wp_default_new_user_email'), 10, 3);
         add_action('user_register', array($this, 'after_wp_login_register'), 20, 1);
         
+        // На wp-login.php: подпись поля «Username» → «Логин пользователя» (вместо «Имя пользователя» в ru_RU)
+        add_action('login_init', array($this, 'register_login_username_label_filter'));
+        
         // Логируем регистрацию AJAX-обработчиков
         $log_message = '[' . date('Y-m-d H:i:s') . '] Course_Registration: AJAX обработчики зарегистрированы' . "\n";
         @file_put_contents($log_file, $log_message, FILE_APPEND);
@@ -128,7 +131,7 @@ class Course_Registration {
                 <div class="course-registration-messages" id="course-registration-messages"></div>
                 
                 <p>
-                    <label for="user_login"><?php _e('Логин', 'course-plugin'); ?> <span class="required">*</span></label>
+                    <label for="user_login"><?php _e('Логин пользователя', 'course-plugin'); ?> <span class="required">*</span></label>
                     <input type="text" name="user_login" id="user_login" class="input" value="" size="20" required />
                     <small><?php _e('Используйте только латинские буквы, цифры и символы - и _', 'course-plugin'); ?></small>
                 </p>
@@ -1064,6 +1067,30 @@ class Course_Registration {
             $out .= '1';
         }
         return $out;
+    }
+    
+    /**
+     * Подпись поля логина на странице входа/регистрации WordPress
+     */
+    public function register_login_username_label_filter() {
+        add_filter('gettext', array($this, 'replace_username_label_gettext'), 10, 3);
+    }
+    
+    /**
+     * @param string $translation
+     * @param string $text       Оригинальная строка (англ.)
+     * @param string $domain
+     * @return string
+     */
+    public function replace_username_label_gettext($translation, $text, $domain) {
+        if ($domain !== 'default') {
+            return $translation;
+        }
+        if ($text === 'Username') {
+            // Без вложенного gettext для домена default
+            return 'Логин пользователя';
+        }
+        return $translation;
     }
     
     /**
