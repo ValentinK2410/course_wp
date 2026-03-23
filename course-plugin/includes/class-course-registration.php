@@ -68,7 +68,7 @@ class Course_Registration {
         add_action('admin_menu', array($this, 'add_registration_settings_menu'));
         add_action('admin_init', array($this, 'register_registration_settings'));
         
-        // Поля и логика как у [course_register] на стандартной форме wp-login.php?action=register
+        // wp-login: только стандартные поля (логин, email) + капча + поле «Фамилия» (без паролей)
         add_action('register_form', array($this, 'render_wp_login_register_extra_fields'));
         add_filter('registration_errors', array($this, 'validate_wp_login_register_extra'), 20, 3);
         add_filter('wp_pre_insert_user_data', array($this, 'filter_wp_login_register_user_data'), 10, 4);
@@ -1098,6 +1098,7 @@ class Course_Registration {
     
     /**
      * Дополнительные поля на стандартной форме регистрации wp-login.php
+     * Пароль задаёт ядро WordPress (сгенерированный), письмо — как в настройках сайта.
      */
     public function render_wp_login_register_extra_fields() {
         wp_nonce_field('course_wp_login_register', 'course_wp_login_nonce');
@@ -1106,15 +1107,6 @@ class Course_Registration {
         <p>
             <label for="course_reg_last_name"><?php esc_html_e('Фамилия', 'course-plugin'); ?></label>
             <input type="text" name="last_name" id="course_reg_last_name" class="input" value="<?php echo isset($_POST['last_name']) ? esc_attr(wp_unslash($_POST['last_name'])) : ''; ?>" size="25" />
-        </p>
-        <p>
-            <label for="course_reg_user_pass"><?php esc_html_e('Пароль', 'course-plugin'); ?> <span class="required">*</span></label>
-            <input type="password" name="user_pass" id="course_reg_user_pass" class="input" value="" size="25" autocomplete="new-password" required />
-            <small class="course-registration-hint"><?php esc_html_e('Минимум 8 символов', 'course-plugin'); ?></small>
-        </p>
-        <p>
-            <label for="course_reg_user_pass_confirm"><?php esc_html_e('Подтвердите пароль', 'course-plugin'); ?> <span class="required">*</span></label>
-            <input type="password" name="user_pass_confirm" id="course_reg_user_pass_confirm" class="input" value="" size="25" autocomplete="new-password" required />
         </p>
         <?php
     }
@@ -1136,23 +1128,12 @@ class Course_Registration {
             $errors->add('course_wp_login_nonce', __('Ошибка безопасности. Обновите страницу и попробуйте снова.', 'course-plugin'));
             return $errors;
         }
-        $user_pass = isset($_POST['user_pass']) ? (string) wp_unslash($_POST['user_pass']) : '';
-        $user_pass_confirm = isset($_POST['user_pass_confirm']) ? (string) wp_unslash($_POST['user_pass_confirm']) : '';
-        if ($user_pass === '') {
-            $errors->add('empty_password', __('Введите пароль.', 'course-plugin'));
-        }
-        if ($user_pass !== $user_pass_confirm) {
-            $errors->add('password_mismatch', __('Пароли не совпадают.', 'course-plugin'));
-        }
-        if (strlen($user_pass) > 0 && strlen($user_pass) < 8) {
-            $errors->add('weak_password', __('Пароль должен содержать минимум 8 символов.', 'course-plugin'));
-        }
         return $errors;
     }
     
     /**
-     * Пароль и фамилия при создании пользователя через register_new_user (wp-login.php)
-     * На форме только поле «Фамилия» (имя не запрашиваем).
+     * Фамилия при регистрации через register_new_user; пароль — сгенерированный ядром (wp_create_user),
+     * приводим к Moodle и синхронизации.
      *
      * @param array $data
      * @param bool  $update
@@ -1170,14 +1151,12 @@ class Course_Registration {
         if (!isset($_POST['course_wp_login_nonce']) || !wp_verify_nonce($_POST['course_wp_login_nonce'], 'course_wp_login_register')) {
             return $data;
         }
-        if (empty($_POST['user_pass'])) {
-            return $data;
-        }
-        $plain = (string) wp_unslash($_POST['user_pass']);
-        $modified = $this->adjust_password_for_moodle($plain);
-        $data['user_pass'] = $modified;
-        if (isset($data['user_login'])) {
-            $GLOBALS['moodle_user_sync_password'][$data['user_login']] = $modified;
+        if (!empty($data['user_pass'])) {
+            $modified = $this->adjust_password_for_moodle($data['user_pass']);
+            $data['user_pass'] = $modified;
+            if (isset($data['user_login'])) {
+                $GLOBALS['moodle_user_sync_password'][$data['user_login']] = $modified;
+            }
         }
         $last = isset($_POST['last_name']) ? sanitize_text_field(wp_unslash($_POST['last_name'])) : '';
         $data['first_name'] = '';
@@ -1224,9 +1203,6 @@ class Course_Registration {
         $plain = '';
         if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
             $plain = $GLOBALS['moodle_user_sync_password'][$user->user_login];
-        }
-        if ($plain === '' && isset($_POST['user_pass'])) {
-            $plain = $this->adjust_password_for_moodle((string) wp_unslash($_POST['user_pass']));
         }
         if ($plain === '') {
             return;
