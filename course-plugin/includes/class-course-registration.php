@@ -155,7 +155,7 @@ class Course_Registration {
                 <p>
                     <label for="user_pass"><?php _e('Пароль', 'course-plugin'); ?> <span class="required">*</span></label>
                     <input type="password" name="user_pass" id="user_pass" class="input" value="" size="25" required />
-                    <small><?php _e('Минимум 8 символов', 'course-plugin'); ?></small>
+                    <small class="course-registration-hint"><?php _e('Минимум 8 символов', 'course-plugin'); ?></small>
                 </p>
                 
                 <p>
@@ -388,6 +388,9 @@ class Course_Registration {
             color: #666;
             font-size: 12px;
             margin-top: 5px;
+        }
+        .course-registration-form small.course-registration-hint {
+            color: #aea88e !important;
         }
         .course-registration-messages {
             margin-bottom: 15px;
@@ -1111,7 +1114,7 @@ class Course_Registration {
         <p>
             <label for="course_reg_user_pass"><?php esc_html_e('Пароль', 'course-plugin'); ?> <span class="required">*</span></label>
             <input type="password" name="user_pass" id="course_reg_user_pass" class="input" value="" size="25" autocomplete="new-password" required />
-            <small><?php esc_html_e('Минимум 8 символов', 'course-plugin'); ?></small>
+            <small class="course-registration-hint"><?php esc_html_e('Минимум 8 символов', 'course-plugin'); ?></small>
         </p>
         <p>
             <label for="course_reg_user_pass_confirm"><?php esc_html_e('Подтвердите пароль', 'course-plugin'); ?> <span class="required">*</span></label>
