@@ -724,13 +724,13 @@ class Course_Registration {
             'From: ' . $blogname . ' <' . $admin_email . '>'
         );
         
-        // Проверяем, не отключена ли отправка писем (для тестирования)
+        // Проверяем, не отключена ли отправка кастомных писем (настройки Moodle)
         $disable_email_sending = get_option('disable_email_sending', false);
         if ($disable_email_sending) {
-            $log_message = '[' . date('Y-m-d H:i:s') . '] Отправка писем отключена в настройках. Письмо не отправлено на ' . $user->user_email . "\n";
-            $log_message .= 'Тема: ' . $subject . "\n";
+            $log_message = '[' . date('Y-m-d H:i:s') . '] Кастомное письмо отключено в настройках. Отправляем стандартное уведомление WordPress.' . "\n";
             @file_put_contents($log_file, $log_message, FILE_APPEND);
-            error_log('Course Registration: Отправка писем отключена в настройках. Письмо не отправлено пользователю ' . $user->user_email);
+            error_log('Course Registration: Кастомное письмо отключено — пробуем wp_send_new_user_notifications для ' . $user->user_email);
+            $this->send_wp_core_new_user_notification_user_only($user_id, $log_file);
             return;
         }
         
@@ -740,42 +740,55 @@ class Course_Registration {
         $log_message .= 'Длина сообщения: ' . strlen($message) . " символов\n";
         @file_put_contents($log_file, $log_message, FILE_APPEND);
         
-        // Отправляем письмо
+        // Отправляем письмо с паролем и ссылками (шорткод [course_register])
         $mail_result = wp_mail($user->user_email, $subject, $message, $headers);
         
-        // Логируем результат
         if ($mail_result) {
             $success_msg = 'Course Registration: Письмо успешно отправлено пользователю ' . $user->user_email;
             error_log($success_msg);
             @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] УСПЕХ: ' . $success_msg . "\n", FILE_APPEND);
-        } else {
-            $error_msg = 'Course Registration: ОШИБКА отправки письма пользователю ' . $user->user_email;
-            error_log($error_msg);
-            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА: ' . $error_msg . "\n", FILE_APPEND);
-            
-            // Проверяем, есть ли глобальная переменная с ошибкой wp_mail
-            global $phpmailer;
-            if (isset($phpmailer) && isset($phpmailer->ErrorInfo)) {
-                $phpmailer_error = 'PHPMailer ошибка: ' . $phpmailer->ErrorInfo;
-                error_log('Course Registration: ' . $phpmailer_error);
-                @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ' . $phpmailer_error . "\n", FILE_APPEND);
-            }
+            // Не дублируем письмо ядром — пользователь уже получил логин/пароль в этом письме
+            return;
         }
         
-        // Также пробуем использовать стандартную функцию WordPress для отправки уведомления
-        // Это может помочь, если wp_mail не работает
-        if (function_exists('wp_new_user_notification')) {
-            // Отключаем отправку пароля администратору (второй параметр = false)
-            // Отправляем только пользователю (первый параметр = user_id)
-            try {
-                wp_new_user_notification($user_id, null, 'user');
-                $log_message = '[' . date('Y-m-d H:i:s') . '] Также вызвана стандартная функция wp_new_user_notification()' . "\n";
-                @file_put_contents($log_file, $log_message, FILE_APPEND);
-            } catch (Exception $e) {
-                $error_msg = 'Course Registration: Ошибка при вызове wp_new_user_notification: ' . $e->getMessage();
-                error_log($error_msg);
-                @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА: ' . $error_msg . "\n", FILE_APPEND);
+        $error_msg = 'Course Registration: ОШИБКА отправки письма пользователю ' . $user->user_email;
+        error_log($error_msg);
+        @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ОШИБКА: ' . $error_msg . "\n", FILE_APPEND);
+        
+        global $phpmailer;
+        if (isset($phpmailer) && isset($phpmailer->ErrorInfo)) {
+            $phpmailer_error = 'PHPMailer ошибка: ' . $phpmailer->ErrorInfo;
+            error_log('Course Registration: ' . $phpmailer_error);
+            @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ' . $phpmailer_error . "\n", FILE_APPEND);
+        }
+        
+        // Резерв: стандартное письмо WordPress (ссылка для установки пароля / подтверждение учётной записи)
+        @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . "] Резерв: wp_send_new_user_notifications\n", FILE_APPEND);
+        $this->send_wp_core_new_user_notification_user_only($user_id, $log_file);
+    }
+    
+    /**
+     * Стандартное уведомление WordPress только пользователю (без дубля админу при notify=user).
+     *
+     * @param int    $user_id
+     * @param string $log_file
+     */
+    private function send_wp_core_new_user_notification_user_only($user_id, $log_file = '') {
+        try {
+            if (function_exists('wp_send_new_user_notifications')) {
+                wp_send_new_user_notifications((int) $user_id, 'user');
+            } elseif (function_exists('wp_new_user_notification')) {
+                wp_new_user_notification((int) $user_id, null, 'user');
             }
+            $msg = 'Course Registration: Вызвано стандартное уведомление WP для user_id=' . (int) $user_id;
+            error_log($msg);
+            if ($log_file !== '') {
+                @file_put_contents($log_file, '[' . date('Y-m-d H:i:s') . '] ' . $msg . "\n", FILE_APPEND);
+            }
+        } catch (Exception $e) {
+            error_log('Course Registration: Ошибка send_wp_core_new_user_notification_user_only: ' . $e->getMessage());
+        } catch (Error $e) {
+            error_log('Course Registration: Фатальная ошибка send_wp_core_new_user_notification_user_only: ' . $e->getMessage());
         }
     }
     
