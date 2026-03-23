@@ -544,17 +544,6 @@ body.login #course-resend-email-wrapper {
     margin-top: 0 !important;
 }
 
-/* Подсказки регистрации wp-login.php */
-#login form#registerform #reg_passmail,
-.login form#registerform p#reg_passmail {
-    color: #aea88e !important;
-}
-
-#login form#registerform small.course-registration-hint,
-.login form#registerform small.course-registration-hint {
-    color: #aea88e !important;
-}
-
 /* Скрываем «Сайт работает на WordPress» */
 .login .privacy-policy-page-link {
     display: none !important;

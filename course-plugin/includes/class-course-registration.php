@@ -68,16 +68,6 @@ class Course_Registration {
         add_action('admin_menu', array($this, 'add_registration_settings_menu'));
         add_action('admin_init', array($this, 'register_registration_settings'));
         
-        // wp-login: только стандартные поля (логин, email) + капча + поле «Фамилия» (без паролей)
-        add_action('register_form', array($this, 'render_wp_login_register_extra_fields'));
-        add_filter('registration_errors', array($this, 'validate_wp_login_register_extra'), 20, 3);
-        add_filter('wp_pre_insert_user_data', array($this, 'filter_wp_login_register_user_data'), 10, 4);
-        add_filter('wp_send_new_user_notification_email', array($this, 'maybe_disable_wp_default_new_user_email'), 10, 3);
-        add_action('user_register', array($this, 'after_wp_login_register'), 20, 1);
-        
-        // На wp-login.php: подпись поля «Username» → «Логин пользователя» (вместо «Имя пользователя» в ru_RU)
-        add_action('login_init', array($this, 'register_login_username_label_filter'));
-        
         // Логируем регистрацию AJAX-обработчиков
         $log_message = '[' . date('Y-m-d H:i:s') . '] Course_Registration: AJAX обработчики зарегистрированы' . "\n";
         @file_put_contents($log_file, $log_message, FILE_APPEND);
@@ -131,7 +121,7 @@ class Course_Registration {
                 <div class="course-registration-messages" id="course-registration-messages"></div>
                 
                 <p>
-                    <label for="user_login"><?php _e('Логин пользователя', 'course-plugin'); ?> <span class="required">*</span></label>
+                    <label for="user_login"><?php _e('Логин', 'course-plugin'); ?> <span class="required">*</span></label>
                     <input type="text" name="user_login" id="user_login" class="input" value="" size="20" required />
                     <small><?php _e('Используйте только латинские буквы, цифры и символы - и _', 'course-plugin'); ?></small>
                 </p>
@@ -155,7 +145,7 @@ class Course_Registration {
                 <p>
                     <label for="user_pass"><?php _e('Пароль', 'course-plugin'); ?> <span class="required">*</span></label>
                     <input type="password" name="user_pass" id="user_pass" class="input" value="" size="25" required />
-                    <small class="course-registration-hint"><?php _e('Минимум 8 символов', 'course-plugin'); ?></small>
+                    <small><?php _e('Минимум 8 символов', 'course-plugin'); ?></small>
                 </p>
                 
                 <p>
@@ -389,9 +379,6 @@ class Course_Registration {
             font-size: 12px;
             margin-top: 5px;
         }
-        .course-registration-form small.course-registration-hint {
-            color: #aea88e !important;
-        }
         .course-registration-messages {
             margin-bottom: 15px;
             padding: 10px;
@@ -528,12 +515,28 @@ class Course_Registration {
         // Сохраняем оригинальный пароль для логирования
         $original_password = $user_pass;
         
-        // Moodle: спецсимвол (*, -, #) и цифра
-        $user_pass = $this->adjust_password_for_moodle($original_password);
-        if ($user_pass !== $original_password) {
+        // Проверяем, соответствует ли пароль требованиям Moodle
+        // Moodle требует: хотя бы один специальный символ (*, -, или #) И хотя бы одну цифру
+        // Модифицируем пароль для соответствия требованиям Moodle
+        $moodle_compatible_password = $user_pass;
+        $password_modified = false;
+        
+        if (!preg_match('/[*\-#]/', $moodle_compatible_password)) {
+            $moodle_compatible_password = $moodle_compatible_password . '-';
+            $password_modified = true;
+        }
+        if (!preg_match('/[0-9]/', $moodle_compatible_password)) {
+            $moodle_compatible_password = $moodle_compatible_password . '1';
+            $password_modified = true;
+        }
+        
+        // Используем модифицированный пароль для Moodle
+        if ($password_modified) {
             error_log('Course Registration: Пароль был модифицирован для соответствия требованиям Moodle');
             error_log('Course Registration: Оригинальный пароль (длина: ' . strlen($original_password) . '): ' . substr($original_password, 0, 3) . '***');
-            error_log('Course Registration: Модифицированный пароль (длина: ' . strlen($user_pass) . '): ' . substr($user_pass, 0, 3) . '***');
+            error_log('Course Registration: Модифицированный пароль (длина: ' . strlen($moodle_compatible_password) . '): ' . substr($moodle_compatible_password, 0, 3) . '***');
+            // Используем модифицированный пароль для синхронизации с Moodle
+            $user_pass = $moodle_compatible_password;
         } else {
             error_log('Course Registration: Пароль соответствует требованиям Moodle, используется без изменений');
         }
@@ -1052,182 +1055,6 @@ class Course_Registration {
         } else {
             // Класс API не найден
             wp_send_json_success(array('exists' => false, 'message' => ''));
-        }
-    }
-    
-    /**
-     * Приводит пароль к требованиям Moodle (спецсимвол *-# и цифра)
-     *
-     * @param string $password Исходный пароль
-     * @return string
-     */
-    private function adjust_password_for_moodle($password) {
-        $out = $password;
-        if (!preg_match('/[*\-#]/', $out)) {
-            $out .= '-';
-        }
-        if (!preg_match('/[0-9]/', $out)) {
-            $out .= '1';
-        }
-        return $out;
-    }
-    
-    /**
-     * Подпись поля логина на странице входа/регистрации WordPress
-     */
-    public function register_login_username_label_filter() {
-        add_filter('gettext', array($this, 'replace_username_label_gettext'), 10, 3);
-    }
-    
-    /**
-     * @param string $translation
-     * @param string $text       Оригинальная строка (англ.)
-     * @param string $domain
-     * @return string
-     */
-    public function replace_username_label_gettext($translation, $text, $domain) {
-        if ($domain !== 'default') {
-            return $translation;
-        }
-        if ($text === 'Username') {
-            // Без вложенного gettext для домена default
-            return 'Логин пользователя';
-        }
-        return $translation;
-    }
-    
-    /**
-     * Дополнительные поля на стандартной форме регистрации wp-login.php
-     * Пароль задаёт ядро WordPress (сгенерированный), письмо — как в настройках сайта.
-     */
-    public function render_wp_login_register_extra_fields() {
-        wp_nonce_field('course_wp_login_register', 'course_wp_login_nonce');
-        echo '<input type="hidden" name="course_wp_login_register" value="1" />';
-        ?>
-        <p>
-            <label for="course_reg_last_name"><?php esc_html_e('Фамилия', 'course-plugin'); ?></label>
-            <input type="text" name="last_name" id="course_reg_last_name" class="input" value="<?php echo isset($_POST['last_name']) ? esc_attr(wp_unslash($_POST['last_name'])) : ''; ?>" size="25" />
-        </p>
-        <?php
-    }
-    
-    /**
-     * Валидация полей стандартной регистрации (до создания пользователя)
-     *
-     * @param WP_Error $errors
-     * @param string   $sanitized_user_login
-     * @param string   $user_email
-     * @return WP_Error
-     */
-    public function validate_wp_login_register_extra($errors, $sanitized_user_login, $user_email) {
-        if (empty($_POST['course_wp_login_register']) || $_POST['course_wp_login_register'] !== '1') {
-            $errors->add('course_wp_login_register', __('Обновите страницу регистрации и попробуйте снова.', 'course-plugin'));
-            return $errors;
-        }
-        if (!isset($_POST['course_wp_login_nonce']) || !wp_verify_nonce($_POST['course_wp_login_nonce'], 'course_wp_login_register')) {
-            $errors->add('course_wp_login_nonce', __('Ошибка безопасности. Обновите страницу и попробуйте снова.', 'course-plugin'));
-            return $errors;
-        }
-        return $errors;
-    }
-    
-    /**
-     * Фамилия при регистрации через register_new_user; пароль — сгенерированный ядром (wp_create_user),
-     * приводим к Moodle и синхронизации.
-     *
-     * @param array $data
-     * @param bool  $update
-     * @param int   $user_id
-     * @param array $userdata
-     * @return array
-     */
-    public function filter_wp_login_register_user_data($data, $update, $user_id, $userdata) {
-        if ($update) {
-            return $data;
-        }
-        if (empty($_POST['course_wp_login_register']) || $_POST['course_wp_login_register'] !== '1') {
-            return $data;
-        }
-        if (!isset($_POST['course_wp_login_nonce']) || !wp_verify_nonce($_POST['course_wp_login_nonce'], 'course_wp_login_register')) {
-            return $data;
-        }
-        if (!empty($data['user_pass'])) {
-            $modified = $this->adjust_password_for_moodle($data['user_pass']);
-            $data['user_pass'] = $modified;
-            if (isset($data['user_login'])) {
-                $GLOBALS['moodle_user_sync_password'][$data['user_login']] = $modified;
-            }
-        }
-        $last = isset($_POST['last_name']) ? sanitize_text_field(wp_unslash($_POST['last_name'])) : '';
-        $data['first_name'] = '';
-        $data['last_name'] = $last;
-        if ($last !== '') {
-            $data['display_name'] = $last;
-        } else {
-            $data['display_name'] = isset($data['user_login']) ? $data['user_login'] : '';
-        }
-        return $data;
-    }
-    
-    /**
-     * Отключает стандартное письмо WordPress — отправляем своё через after_wp_login_register
-     *
-     * @param bool   $send
-     * @param int    $user_id
-     * @param string $notify
-     * @return bool
-     */
-    public function maybe_disable_wp_default_new_user_email($send, $user_id, $notify) {
-        if (!empty($_POST['course_wp_login_register']) && $_POST['course_wp_login_register'] === '1') {
-            return false;
-        }
-        return $send;
-    }
-    
-    /**
-     * После регистрации через wp-login: Moodle, письмо и метаполе пароля
-     *
-     * @param int $user_id
-     */
-    public function after_wp_login_register($user_id) {
-        if (empty($_POST['course_wp_login_register']) || $_POST['course_wp_login_register'] !== '1') {
-            return;
-        }
-        if (!isset($_POST['course_wp_login_nonce']) || !wp_verify_nonce($_POST['course_wp_login_nonce'], 'course_wp_login_register')) {
-            return;
-        }
-        $user = get_userdata($user_id);
-        if (!$user) {
-            return;
-        }
-        $plain = '';
-        if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
-            $plain = $GLOBALS['moodle_user_sync_password'][$user->user_login];
-        }
-        if ($plain === '') {
-            return;
-        }
-        update_user_meta($user_id, 'pending_moodle_password', $plain);
-        if (class_exists('Course_Moodle_User_Sync')) {
-            try {
-                Course_Moodle_User_Sync::get_instance()->sync_user($user_id, $plain);
-            } catch (Exception $e) {
-                error_log('Course Registration: after_wp_login_register sync: ' . $e->getMessage());
-            } catch (Error $e) {
-                error_log('Course Registration: after_wp_login_register sync fatal: ' . $e->getMessage());
-            }
-        }
-        try {
-            $this->send_registration_email($user_id, $plain);
-        } catch (Exception $e) {
-            error_log('Course Registration: after_wp_login_register email: ' . $e->getMessage());
-        } catch (Error $e) {
-            error_log('Course Registration: after_wp_login_register email fatal: ' . $e->getMessage());
-        }
-        
-        // Пароль сохранён в Moodle sync; при необходимости очистить глобальную переменную
-        if (isset($GLOBALS['moodle_user_sync_password'][$user->user_login])) {
-            unset($GLOBALS['moodle_user_sync_password'][$user->user_login]);
         }
     }
     
