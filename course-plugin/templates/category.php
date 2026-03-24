@@ -68,6 +68,14 @@ $title = $term && !is_wp_error($term) ? single_term_title('', false) : '';
                             </div>
                             <div class="cpa-card-body">
                                 <h2 class="cpa-card-title"><?php the_title(); ?></h2>
+                                <?php
+                                if (has_excerpt()) {
+                                    $excerpt_plain = wp_strip_all_tags(get_the_excerpt());
+                                    if ($excerpt_plain !== '') {
+                                        echo '<p class="cpa-card-excerpt">' . esc_html(wp_trim_words($excerpt_plain, 40, '…')) . '</p>';
+                                    }
+                                }
+                                ?>
                                 <div class="cpa-card-meta">
                                     <span class="cpa-card-author"><?php echo esc_html(get_the_author()); ?></span>
                                 </div>
