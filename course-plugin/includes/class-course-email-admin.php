@@ -56,17 +56,103 @@ class Course_Email_Admin {
     }
     
     /**
-     * Регистрация настроек
+     * Регистрация настроек (с санитизацией — так надёжнее сохраняется в options.php)
      */
     public function register_settings() {
-        // SMTP настройки
-        register_setting('course_email_settings', 'course_smtp_host');
-        register_setting('course_email_settings', 'course_smtp_port');
-        register_setting('course_email_settings', 'course_smtp_username');
-        register_setting('course_email_settings', 'course_smtp_password');
-        register_setting('course_email_settings', 'course_smtp_encryption');
-        register_setting('course_email_settings', 'course_smtp_from_email');
-        register_setting('course_email_settings', 'course_smtp_from_name');
+        register_setting(
+            'course_email_settings',
+            'course_smtp_host',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => '',
+            )
+        );
+        register_setting(
+            'course_email_settings',
+            'course_smtp_port',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => array($this, 'sanitize_smtp_port'),
+                'default' => 587,
+            )
+        );
+        register_setting(
+            'course_email_settings',
+            'course_smtp_username',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => '',
+            )
+        );
+        register_setting(
+            'course_email_settings',
+            'course_smtp_password',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => array($this, 'sanitize_smtp_password'),
+                'default' => '',
+            )
+        );
+        register_setting(
+            'course_email_settings',
+            'course_smtp_encryption',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => array($this, 'sanitize_smtp_encryption'),
+                'default' => 'tls',
+            )
+        );
+        register_setting(
+            'course_email_settings',
+            'course_smtp_from_email',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_email',
+                'default' => '',
+            )
+        );
+        register_setting(
+            'course_email_settings',
+            'course_smtp_from_name',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => '',
+            )
+        );
+    }
+
+    /**
+     * @param mixed $value Значение из формы.
+     */
+    public function sanitize_smtp_port($value) {
+        $p = absint($value);
+        return ($p >= 1 && $p <= 65535) ? $p : 587;
+    }
+
+    /**
+     * Пустое поле пароля не затирает уже сохранённый пароль.
+     *
+     * @param mixed $value Значение из формы.
+     */
+    public function sanitize_smtp_password($value) {
+        if ($value === null || $value === '') {
+            return (string) get_option('course_smtp_password', '');
+        }
+        return is_string($value) ? $value : '';
+    }
+
+    /**
+     * @param mixed $value Значение из формы.
+     */
+    public function sanitize_smtp_encryption($value) {
+        $v = is_string($value) ? strtolower(trim($value)) : '';
+        if ($v === 'ssl' || $v === 'tls' || $v === '') {
+            return $v;
+        }
+        return 'tls';
     }
     
     /**
@@ -143,9 +229,9 @@ class Course_Email_Admin {
         ?>
         <div class="wrap">
             <h1>Настройки Email (SMTP)</h1>
-            <p>Настройте SMTP для улучшения доставляемости email, особенно для Gmail. Прямая отправка с IP сервера без внешнего SMTP часто блокируется (нет PTR).</p>
+            <p><strong>Основной способ:</strong> заполните поля ниже и нажмите «Сохранить настройки». Для доставки на Gmail и др. нужен внешний SMTP (Yandex, Mail.ru, корпоративная почта) — прямая отправка с IP сервера часто блокируется (нет PTR).</p>
             <?php if (defined('COURSE_SMTP_HOST') && COURSE_SMTP_HOST !== '') : ?>
-                <div class="notice notice-info"><p><strong>Активны константы в <code>wp-config.php</code></strong> (<code>COURSE_SMTP_*</code>) — они имеют приоритет над полями ниже.</p></div>
+                <div class="notice notice-warning"><p>Дополнительно заданы константы <code>COURSE_SMTP_*</code> в <code>wp-config.php</code> — они <strong>перекрывают</strong> значения с этой страницы. Чтобы пользоваться только формой, уберите константы.</p></div>
             <?php endif; ?>
             
             <?php if (!empty($test_results)): ?>
@@ -201,9 +287,12 @@ class Course_Email_Admin {
                         </th>
                         <td>
                             <input type="password" id="course_smtp_password" name="course_smtp_password" 
-                                   value="<?php echo esc_attr(get_option('course_smtp_password', '')); ?>" 
-                                   class="regular-text" />
-                            <p class="description">Пароль или пароль приложения для SMTP</p>
+                                   value="" autocomplete="new-password" class="regular-text" />
+                            <?php if (get_option('course_smtp_password', '') !== '') : ?>
+                                <p class="description"><?php esc_html_e('Пароль уже сохранён в базе. Оставьте поле пустым, чтобы не менять; введите новый — чтобы заменить.', 'course-plugin'); ?></p>
+                            <?php else : ?>
+                                <p class="description"><?php esc_html_e('Пароль или пароль приложения для SMTP.', 'course-plugin'); ?></p>
+                            <?php endif; ?>
                             <p class="description"><strong>Для Gmail:</strong> Используйте пароль приложения, а не обычный пароль. <a href="https://support.google.com/accounts/answer/185833" target="_blank">Как создать пароль приложения</a></p>
                         </td>
                     </tr>
