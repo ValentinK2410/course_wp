@@ -1,0 +1,233 @@
+/**
+ * Архив рубрик (записи блога) — карточки из плагина «Курсы Про».
+ */
+.course-plugin-category-main {
+    width: 100%;
+    min-width: 0;
+}
+
+.course-plugin-category-archive {
+    --cpa-accent: #8b2332;
+    --cpa-text: #1a1a1a;
+    --cpa-muted: #6b6b6b;
+    --cpa-border: rgba(0, 0, 0, 0.08);
+    --cpa-radius: 14px;
+    --cpa-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+    --cpa-shadow-hover: 0 16px 40px rgba(0, 0, 0, 0.12);
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1.5rem 1.25rem 3rem;
+    box-sizing: border-box;
+}
+
+.course-plugin-category-archive .cpa-archive-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.course-plugin-category-archive .cpa-kicker {
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cpa-muted);
+}
+
+.course-plugin-category-archive .cpa-title {
+    margin: 0;
+    font-size: clamp(1.75rem, 4vw, 2.35rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--cpa-text);
+}
+
+.course-plugin-category-archive .cpa-description {
+    margin: 1rem auto 0;
+    max-width: 42rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--cpa-muted);
+}
+
+.course-plugin-category-archive .cpa-description p {
+    margin: 0 0 0.5rem;
+}
+
+.course-plugin-category-archive .cpa-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.course-plugin-category-archive .cpa-post-card {
+    margin: 0;
+    padding: 0;
+}
+
+.course-plugin-category-archive .cpa-card-link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+    background: #fff;
+    border-radius: var(--cpa-radius);
+    border: 1px solid var(--cpa-border);
+    box-shadow: var(--cpa-shadow);
+    overflow: hidden;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.course-plugin-category-archive .cpa-card-link:hover,
+.course-plugin-category-archive .cpa-card-link:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: var(--cpa-shadow-hover);
+}
+
+.course-plugin-category-archive .cpa-card-link:focus-visible {
+    outline: 2px solid var(--cpa-accent);
+    outline-offset: 2px;
+}
+
+.course-plugin-category-archive .cpa-card-media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: linear-gradient(145deg, #e8e4df 0%, #d4cfc7 100%);
+    overflow: hidden;
+}
+
+.course-plugin-category-archive .cpa-card-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.course-plugin-category-archive .cpa-card-thumb--placeholder {
+    min-height: 100%;
+    background: linear-gradient(135deg, #3d3a36 0%, #1f1d1b 100%);
+}
+
+.course-plugin-category-archive .cpa-card-badge {
+    position: absolute;
+    left: 0.75rem;
+    bottom: 0.75rem;
+    max-width: calc(100% - 1.5rem);
+    padding: 0.35rem 0.65rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.2;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    border-radius: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.course-plugin-category-archive .cpa-card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.1rem 1.15rem 1.15rem;
+    gap: 0.75rem;
+}
+
+.course-plugin-category-archive .cpa-card-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--cpa-text);
+}
+
+.course-plugin-category-archive .cpa-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: auto;
+    padding-top: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--cpa-muted);
+}
+
+.course-plugin-category-archive .cpa-card-author {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.course-plugin-category-archive .cpa-card-date {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.course-plugin-category-archive .cpa-empty {
+    text-align: center;
+    color: var(--cpa-muted);
+    margin: 2rem 0;
+}
+
+.course-plugin-category-archive .cpa-pagination {
+    margin-top: 2.5rem;
+}
+
+.course-plugin-category-archive .cpa-pagination .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.course-plugin-category-archive .cpa-pagination .page-numbers {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0 0.65rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--cpa-text);
+    border-radius: 999px;
+    border: 1px solid var(--cpa-border);
+    background: #fff;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.course-plugin-category-archive .cpa-pagination .page-numbers:hover,
+.course-plugin-category-archive .cpa-pagination .page-numbers:focus-visible {
+    border-color: var(--cpa-accent);
+    color: var(--cpa-accent);
+}
+
+.course-plugin-category-archive .cpa-pagination .page-numbers.current {
+    background: var(--cpa-accent);
+    border-color: var(--cpa-accent);
+    color: #fff;
+}
+
+.course-plugin-category-archive .cpa-pagination .page-numbers.dots {
+    border: none;
+    background: transparent;
+}
+
+@media (max-width: 600px) {
+    .course-plugin-category-archive .cpa-card-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

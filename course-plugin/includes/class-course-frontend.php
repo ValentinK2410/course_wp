@@ -171,6 +171,14 @@ class Course_Frontend {
             }
         }
         
+        // Архив рубрик блога (post) — карточки записей из плагина
+        if (apply_filters('course_plugin_use_category_archive_template', true) && is_category()) {
+            $category_template = COURSE_PLUGIN_DIR . 'templates/category.php';
+            if (file_exists($category_template)) {
+                return $category_template;
+            }
+        }
+        
         return $template;
     }
     
@@ -492,6 +500,16 @@ class Course_Frontend {
                 $is_programs_shortcode = has_shortcode($post->post_content, 'programs');
                 $is_resource_authors_shortcode = has_shortcode($post->post_content, 'resource_authors');
             }
+        }
+        
+        // Архив рубрик блога — стили карточек (без остального фронтенда курсов)
+        if (apply_filters('course_plugin_use_category_archive_template', true) && is_category()) {
+            wp_enqueue_style(
+                'course-category-archive',
+                COURSE_PLUGIN_URL . 'assets/css/category-archive.css',
+                array(),
+                COURSE_PLUGIN_VERSION
+            );
         }
         
         // Подключаем стили и скрипты на страницах курсов и преподавателей
