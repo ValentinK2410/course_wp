@@ -42,7 +42,9 @@ class Course_Frontend {
         add_filter('request', array($this, 'teachers_archive_request'), 1);
         
         // Подключаем шаблоны
-        add_filter('template_include', array($this, 'course_template_loader'));
+        add_filter('template_include', array($this, 'course_template_loader'), 99);
+        // Архив рубрик: FSE/блоковые темы не всегда используют template_include — дублируем через redirect
+        add_action('template_redirect', array($this, 'maybe_render_category_archive'), 999);
         add_action('template_redirect', array($this, 'teachers_archive_redirect'), 1);
         
         // Добавляем фильтры в запрос
@@ -98,6 +100,33 @@ class Course_Frontend {
             $wp_query->is_404 = false;
             status_header(200);
         }
+    }
+    
+    /**
+     * Рендер архива рубрик из плагина (обходит блоковые темы, где template_include не срабатывает).
+     */
+    public function maybe_render_category_archive() {
+        if (!apply_filters('course_plugin_use_category_archive_template', true)) {
+            return;
+        }
+        if (is_admin() || wp_doing_ajax() || wp_doing_cron()) {
+            return;
+        }
+        if (defined('REST_REQUEST') && REST_REQUEST) {
+            return;
+        }
+        if (is_feed() || is_embed()) {
+            return;
+        }
+        if (!is_category()) {
+            return;
+        }
+        $category_template = COURSE_PLUGIN_DIR . 'templates/category.php';
+        if (!is_readable($category_template)) {
+            return;
+        }
+        include $category_template;
+        exit;
     }
     
     /**
@@ -168,14 +197,6 @@ class Course_Frontend {
             $template_path = COURSE_PLUGIN_DIR . 'templates/archive-teachers.php';
             if (file_exists($template_path)) {
                 return $template_path;
-            }
-        }
-        
-        // Архив рубрик блога (post) — карточки записей из плагина
-        if (apply_filters('course_plugin_use_category_archive_template', true) && is_category()) {
-            $category_template = COURSE_PLUGIN_DIR . 'templates/category.php';
-            if (file_exists($category_template)) {
-                return $category_template;
             }
         }
         
