@@ -3,6 +3,17 @@
  * Класс для улучшенной отправки email с поддержкой SMTP и альтернативных методов
  * SMTP настраивается через хук phpmailer_init (совместимо с WordPress 6.x / namespaced PHPMailer).
  *
+ * Внешний SMTP обязателен для доставки на Gmail и др., если у IP сервера нет PTR.
+ * Настройки: «Настройки → Email (SMTP)» или константы в wp-config.php (имеют приоритет над опциями):
+ *
+ * define('COURSE_SMTP_HOST', 'smtp.yandex.ru');
+ * define('COURSE_SMTP_PORT', 465);
+ * define('COURSE_SMTP_USERNAME', 'robot@example.org');
+ * define('COURSE_SMTP_PASSWORD', 'пароль-приложения');
+ * define('COURSE_SMTP_ENCRYPTION', 'ssl'); // tls | ssl | ''
+ * define('COURSE_SMTP_FROM_EMAIL', 'robot@example.org');
+ * define('COURSE_SMTP_FROM_NAME', 'Богословская семинария');
+ *
  * @copyright Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
  * @author Кузьменко Валентин (Valentink2410)
  */
@@ -38,6 +49,76 @@ class Course_Email_Sender {
     }
 
     /**
+     * SMTP включён (опции или константы wp-config).
+     */
+    public static function is_smtp_fully_configured() {
+        $h = self::smtp_host();
+        $u = self::smtp_username();
+        $p = self::smtp_password();
+        return $h !== '' && $u !== '' && $p !== '';
+    }
+
+    /**
+     * @param string $option_key Ключ get_option без префикса course_smtp_
+     * @param mixed  $default
+     * @return mixed
+     */
+    private static function smtp_const_or_option($option_key, $default = '') {
+        $map = array(
+            'host' => 'COURSE_SMTP_HOST',
+            'port' => 'COURSE_SMTP_PORT',
+            'username' => 'COURSE_SMTP_USERNAME',
+            'password' => 'COURSE_SMTP_PASSWORD',
+            'encryption' => 'COURSE_SMTP_ENCRYPTION',
+            'from_email' => 'COURSE_SMTP_FROM_EMAIL',
+            'from_name' => 'COURSE_SMTP_FROM_NAME',
+        );
+        if (!isset($map[$option_key])) {
+            return $default;
+        }
+        $cname = $map[$option_key];
+        if (defined($cname)) {
+            $v = constant($cname);
+            if ($v !== null && $v !== '') {
+                return $v;
+            }
+        }
+        return get_option('course_smtp_' . $option_key, $default);
+    }
+
+    private static function smtp_host() {
+        return (string) self::smtp_const_or_option('host', '');
+    }
+
+    private static function smtp_username() {
+        return (string) self::smtp_const_or_option('username', '');
+    }
+
+    private static function smtp_password() {
+        return (string) self::smtp_const_or_option('password', '');
+    }
+
+    private static function smtp_port() {
+        $p = self::smtp_const_or_option('port', 587);
+        return absint($p) > 0 ? absint($p) : 587;
+    }
+
+    private static function smtp_encryption() {
+        $e = self::smtp_const_or_option('encryption', 'tls');
+        return (string) $e;
+    }
+
+    private static function smtp_from_email() {
+        $v = self::smtp_const_or_option('from_email', '');
+        return $v !== '' ? (string) $v : (string) get_option('admin_email');
+    }
+
+    private static function smtp_from_name() {
+        $v = self::smtp_const_or_option('from_name', '');
+        return $v !== '' ? (string) $v : (string) get_bloginfo('name');
+    }
+
+    /**
      * Подключение SMTP к экземпляру PHPMailer, который использует wp_mail() (WP 5.5+).
      *
      * @param \PHPMailer\PHPMailer\PHPMailer $phpmailer Объект из WordPress.
@@ -47,9 +128,9 @@ class Course_Email_Sender {
             return;
         }
 
-        $smtp_host = get_option('course_smtp_host', '');
-        $smtp_username = get_option('course_smtp_username', '');
-        $smtp_password = get_option('course_smtp_password', '');
+        $smtp_host = self::smtp_host();
+        $smtp_username = self::smtp_username();
+        $smtp_password = self::smtp_password();
 
         if (empty($smtp_host) || empty($smtp_username) || empty($smtp_password)) {
             return;
@@ -60,10 +141,10 @@ class Course_Email_Sender {
         $phpmailer->SMTPAuth = true;
         $phpmailer->Username = $smtp_username;
         $phpmailer->Password = $smtp_password;
-        $phpmailer->Port = absint(get_option('course_smtp_port', 587));
+        $phpmailer->Port = self::smtp_port();
         $phpmailer->CharSet = 'UTF-8';
 
-        $enc = get_option('course_smtp_encryption', 'tls');
+        $enc = self::smtp_encryption();
         if ('' === $enc) {
             $phpmailer->SMTPSecure = '';
         } elseif ('ssl' === strtolower((string) $enc)) {
@@ -72,8 +153,18 @@ class Course_Email_Sender {
             $phpmailer->SMTPSecure = 'tls';
         }
 
-        $from_email = get_option('course_smtp_from_email', get_option('admin_email'));
-        $from_name = get_option('course_smtp_from_name', get_bloginfo('name'));
+        if (defined('COURSE_SMTP_DISABLE_SSL_VERIFY') && COURSE_SMTP_DISABLE_SSL_VERIFY) {
+            $phpmailer->SMTPOptions = array(
+                'ssl' => array(
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                ),
+            );
+        }
+
+        $from_email = self::smtp_from_email();
+        $from_name = self::smtp_from_name();
         if (!empty($from_email)) {
             $phpmailer->setFrom($from_email, $from_name);
             $phpmailer->addReplyTo($from_email, $from_name);
@@ -100,12 +191,9 @@ class Course_Email_Sender {
             );
         }
 
-        $smtp_host = get_option('course_smtp_host', '');
-        $smtp_username = get_option('course_smtp_username', '');
-        $smtp_password = get_option('course_smtp_password', '');
-        if (empty($smtp_host) || empty($smtp_username) || empty($smtp_password)) {
+        if (!self::is_smtp_fully_configured()) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('Course Email: SMTP не настроен (host/username/password), используем wp_mail / mail()');
+                error_log('Course Email: SMTP не настроен (Настройки или константы COURSE_SMTP_* в wp-config.php). Прямая отправка с сервера может блокироваться Gmail (PTR).');
             }
         }
 
@@ -207,13 +295,11 @@ class Course_Email_Sender {
 
         $improved_headers[] = 'Content-Type: text/plain; charset=UTF-8';
 
-        $smtp_from_email = get_option('course_smtp_from_email', '');
-        $smtp_from_name = get_option('course_smtp_from_name', '');
-        $has_smtp = !empty(get_option('course_smtp_host')) && !empty(get_option('course_smtp_username')) && !empty(get_option('course_smtp_password'));
+        $has_smtp = self::is_smtp_fully_configured();
 
-        if ($has_smtp && !empty($smtp_from_email)) {
-            $from_name = !empty($smtp_from_name) ? $smtp_from_name : (!empty($site_name) ? $site_name : 'WordPress');
-            $from_email = $smtp_from_email;
+        if ($has_smtp) {
+            $from_email = self::smtp_from_email();
+            $from_name = self::smtp_from_name();
         } else {
             $from_name = !empty($site_name) ? $site_name : 'WordPress';
             $from_email = !empty($admin_email) ? $admin_email : 'noreply@' . parse_url($site_url, PHP_URL_HOST);

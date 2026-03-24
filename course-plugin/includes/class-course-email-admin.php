@@ -143,7 +143,10 @@ class Course_Email_Admin {
         ?>
         <div class="wrap">
             <h1>Настройки Email (SMTP)</h1>
-            <p>Настройте SMTP для улучшения доставляемости email, особенно для Gmail.</p>
+            <p>Настройте SMTP для улучшения доставляемости email, особенно для Gmail. Прямая отправка с IP сервера без внешнего SMTP часто блокируется (нет PTR).</p>
+            <?php if (defined('COURSE_SMTP_HOST') && COURSE_SMTP_HOST !== '') : ?>
+                <div class="notice notice-info"><p><strong>Активны константы в <code>wp-config.php</code></strong> (<code>COURSE_SMTP_*</code>) — они имеют приоритет над полями ниже.</p></div>
+            <?php endif; ?>
             
             <?php if (!empty($test_results)): ?>
                 <?php foreach ($test_results as $result): ?>
