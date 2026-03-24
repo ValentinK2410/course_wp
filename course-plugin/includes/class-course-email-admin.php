@@ -229,7 +229,7 @@ class Course_Email_Admin {
         ?>
         <div class="wrap">
             <h1>Настройки Email (SMTP)</h1>
-            <p><strong>Основной способ:</strong> заполните поля ниже и нажмите «Сохранить настройки». Для доставки на Gmail и др. нужен внешний SMTP (Yandex, Mail.ru, корпоративная почта) — прямая отправка с IP сервера часто блокируется (нет PTR).</p>
+            <p><strong>Основной способ:</strong> заполните поля ниже и нажмите «Сохранить настройки». Рекомендуем <strong>Яндекс Почту</strong> (или Яндекс 360 для домена): внешний SMTP нужен, чтобы письма не шли напрямую с IP сервера (иначе часто блокировка, в т.ч. из‑за PTR).</p>
             <?php if (defined('COURSE_SMTP_HOST') && COURSE_SMTP_HOST !== '') : ?>
                 <div class="notice notice-warning"><p>Дополнительно заданы константы <code>COURSE_SMTP_*</code> в <code>wp-config.php</code> — они <strong>перекрывают</strong> значения с этой страницы. Чтобы пользоваться только формой, уберите константы.</p></div>
             <?php endif; ?>
@@ -252,8 +252,8 @@ class Course_Email_Admin {
                         <td>
                             <input type="text" id="course_smtp_host" name="course_smtp_host" 
                                    value="<?php echo esc_attr(get_option('course_smtp_host', '')); ?>" 
-                                   class="regular-text" placeholder="smtp.gmail.com" />
-                            <p class="description">Например: smtp.gmail.com, smtp.yandex.ru, smtp.mail.ru</p>
+                                   class="regular-text" placeholder="smtp.yandex.ru" />
+                            <p class="description"><?php esc_html_e('Для Яндекса: smtp.yandex.ru. Также: smtp.mail.ru, smtp.gmail.com и др.', 'course-plugin'); ?></p>
                         </td>
                     </tr>
                     
@@ -265,7 +265,7 @@ class Course_Email_Admin {
                             <input type="number" id="course_smtp_port" name="course_smtp_port" 
                                    value="<?php echo esc_attr(get_option('course_smtp_port', 587)); ?>" 
                                    class="small-text" min="1" max="65535" />
-                            <p class="description">Обычно 587 для TLS или 465 для SSL</p>
+                            <p class="description"><?php esc_html_e('Яндекс: 465 (SSL) или 587 (TLS). Не смешивайте: к 465 — шифрование SSL, к 587 — TLS.', 'course-plugin'); ?></p>
                         </td>
                     </tr>
                     
@@ -276,8 +276,8 @@ class Course_Email_Admin {
                         <td>
                             <input type="text" id="course_smtp_username" name="course_smtp_username" 
                                    value="<?php echo esc_attr(get_option('course_smtp_username', '')); ?>" 
-                                   class="regular-text" placeholder="your-email@gmail.com" />
-                            <p class="description">Email адрес для авторизации на SMTP сервере</p>
+                                   class="regular-text" placeholder="vasya@yandex.ru" />
+                            <p class="description"><?php esc_html_e('Для Яндекса — полный адрес ящика (логин), как при входе в почту.', 'course-plugin'); ?></p>
                         </td>
                     </tr>
                     
@@ -293,7 +293,8 @@ class Course_Email_Admin {
                             <?php else : ?>
                                 <p class="description"><?php esc_html_e('Пароль или пароль приложения для SMTP.', 'course-plugin'); ?></p>
                             <?php endif; ?>
-                            <p class="description"><strong>Для Gmail:</strong> Используйте пароль приложения, а не обычный пароль. <a href="https://support.google.com/accounts/answer/185833" target="_blank">Как создать пароль приложения</a></p>
+                            <p class="description"><strong>Яндекс:</strong> <?php esc_html_e('пароль от почты. При включённой двухфакторной аутентификации — создайте пароль приложения в настройках аккаунта.', 'course-plugin'); ?> <a href="https://yandex.ru/support/id/authorization/app-passwords.html" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Справка Яндекса', 'course-plugin'); ?></a></p>
+                            <p class="description"><strong>Gmail:</strong> <?php esc_html_e('пароль приложения.', 'course-plugin'); ?> <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener noreferrer">Google</a></p>
                         </td>
                     </tr>
                     
@@ -319,7 +320,7 @@ class Course_Email_Admin {
                             <input type="email" id="course_smtp_from_email" name="course_smtp_from_email" 
                                    value="<?php echo esc_attr(get_option('course_smtp_from_email', get_option('admin_email'))); ?>" 
                                    class="regular-text" />
-                            <p class="description">Email адрес, который будет указан как отправитель</p>
+                            <p class="description"><?php esc_html_e('Для Яндекса лучше указать тот же адрес, что и в «SMTP Логин» (или доверенный алиас в настройках ящика).', 'course-plugin'); ?></p>
                         </td>
                     </tr>
                     
@@ -389,25 +390,23 @@ class Course_Email_Admin {
             
             <hr>
             
-            <h2>Рекомендации для Gmail</h2>
+            <h2><?php esc_html_e('Готовые значения для Яндекс Почты', 'course-plugin'); ?></h2>
             <div class="notice notice-info">
-                <p><strong>Для улучшения доставляемости в Gmail:</strong></p>
-                <ol>
-                    <li>Используйте SMTP настройки выше (рекомендуется)</li>
-                    <li>Для Gmail используйте пароль приложения, а не обычный пароль</li>
-                    <li>Настройте SPF записи в DNS вашего домена</li>
-                    <li>Настройте DKIM подпись для вашего домена</li>
-                    <li>Настройте DMARC политику</li>
-                    <li>Убедитесь, что email отправителя совпадает с доменом сайта</li>
-                </ol>
-                <p><strong>SMTP настройки для Gmail:</strong></p>
+                <p><strong><?php esc_html_e('Скопируйте в форму выше (свой ящик и пароль подставьте свои):', 'course-plugin'); ?></strong></p>
                 <ul>
-                    <li>SMTP Сервер: smtp.gmail.com</li>
-                    <li>SMTP Порт: 587</li>
-                    <li>Шифрование: TLS</li>
-                    <li>Логин: ваш Gmail адрес</li>
-                    <li>Пароль: пароль приложения (не обычный пароль!)</li>
+                    <li><strong>SMTP:</strong> smtp.yandex.ru</li>
+                    <li><strong><?php esc_html_e('Вариант А:', 'course-plugin'); ?></strong> <?php esc_html_e('порт 465, шифрование SSL', 'course-plugin'); ?></li>
+                    <li><strong><?php esc_html_e('Вариант Б:', 'course-plugin'); ?></strong> <?php esc_html_e('порт 587, шифрование TLS', 'course-plugin'); ?></li>
+                    <li><strong><?php esc_html_e('Логин:', 'course-plugin'); ?></strong> <?php esc_html_e('полный email, например ivan@yandex.ru или user@ваш-домен.ru (если почта на Яндексе для домена)', 'course-plugin'); ?></li>
+                    <li><strong><?php esc_html_e('Пароль:', 'course-plugin'); ?></strong> <?php esc_html_e('от ящика; при 2FA — пароль приложения', 'course-plugin'); ?></li>
+                    <li><strong><?php esc_html_e('От кого:', 'course-plugin'); ?></strong> <?php esc_html_e('тот же email, что логин (или разрешённый в Яндексе адрес)', 'course-plugin'); ?></li>
                 </ul>
+                <p><a href="https://yandex.ru/support/yandex-360/customers/mail/ru/mail-clients" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Официальная справка Яндекса про почтовые программы', 'course-plugin'); ?></a></p>
+            </div>
+            
+            <h2><?php esc_html_e('Альтернатива: Gmail', 'course-plugin'); ?></h2>
+            <div class="notice notice-info">
+                <p><strong>SMTP:</strong> smtp.gmail.com, <?php esc_html_e('порт', 'course-plugin'); ?> 587, TLS. <?php esc_html_e('Пароль — только приложения Google.', 'course-plugin'); ?></p>
             </div>
         </div>
         <?php

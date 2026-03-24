@@ -7,10 +7,10 @@
  * Настройки: «Настройки → Email (SMTP)» или константы в wp-config.php (имеют приоритет над опциями):
  *
  * define('COURSE_SMTP_HOST', 'smtp.yandex.ru');
- * define('COURSE_SMTP_PORT', 465);
- * define('COURSE_SMTP_USERNAME', 'robot@example.org');
+ * define('COURSE_SMTP_PORT', 465); // или 587 + TLS
+ * define('COURSE_SMTP_USERNAME', 'robot@yandex.ru');
  * define('COURSE_SMTP_PASSWORD', 'пароль-приложения');
- * define('COURSE_SMTP_ENCRYPTION', 'ssl'); // tls | ssl | ''
+ * define('COURSE_SMTP_ENCRYPTION', 'ssl'); // для 465 — ssl; для 587 — tls
  * define('COURSE_SMTP_FROM_EMAIL', 'robot@example.org');
  * define('COURSE_SMTP_FROM_NAME', 'Богословская семинария');
  *
