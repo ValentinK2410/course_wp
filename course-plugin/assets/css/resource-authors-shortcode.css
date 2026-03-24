@@ -1,39 +1,56 @@
 /**
- * Блок «Авторы» для страницы Ресурсы (как виджет «Категории» в сайдбаре)
+ * Блок «Авторы» — визуально как виджет «Категории» в сайдбаре (МБС)
  */
 
 .course-resource-authors-widget {
-    margin: 0 0 1.75em;
+    --cra-accent: #68202d;
+    --cra-title-rule: rgba(0, 0, 0, 0.12);
+    --cra-text: #9a9a9a;
+    --cra-text-hover: #68202d;
+    margin: 0 0 2em;
     max-width: 100%;
 }
 
+/* Заголовок: жирный serif + полоса: слева бордо, справа тонкая серая линия на всю ширину */
 .course-resource-authors-widget__title {
-    margin: 0 0 0.65em;
-    padding: 0 0 0.5em;
+    margin: 0 0 1rem;
+    padding: 0 0 0.55rem;
     font-family: Georgia, "Times New Roman", Times, serif;
     font-size: 1.125rem;
-    font-weight: 400;
-    line-height: 1.3;
+    font-weight: 700;
+    line-height: 1.35;
     color: inherit;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    border-bottom: 1px solid var(--cra-title-rule);
+    position: relative;
+}
+
+.course-resource-authors-widget__title::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 3.25rem;
+    height: 3px;
+    background-color: var(--cra-accent);
 }
 
 .course-resource-authors-widget__list {
     margin: 0;
     padding: 0;
     list-style: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .course-resource-authors-widget__list li {
     margin: 0;
-    padding: 0.35em 0;
+    padding: 0.65em 0;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: 0.35em 0.75em;
+    gap: 0.5rem 1rem;
+    line-height: 1.5;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    line-height: 1.45;
 }
 
 .course-resource-authors-widget__list li:last-child {
@@ -44,19 +61,23 @@
     flex: 1 1 auto;
     min-width: 0;
     text-decoration: none;
-    color: #6b7a8f;
+    color: var(--cra-text);
+    font-size: 0.9375rem;
+    font-weight: 400;
     transition: color 0.15s ease;
 }
 
 .course-resource-authors-widget__list a:hover,
 .course-resource-authors-widget__list a:focus {
-    color: #4a5d75;
-    text-decoration: underline;
+    color: var(--cra-text-hover);
+    text-decoration: none;
 }
 
 .course-resource-authors-widget__count {
     flex: 0 0 auto;
-    color: #6b7a8f;
-    font-size: 0.95em;
+    margin-left: auto;
+    color: var(--cra-text);
+    font-size: 0.9375rem;
+    font-weight: 400;
     white-space: nowrap;
 }
