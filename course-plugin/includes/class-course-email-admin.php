@@ -254,6 +254,7 @@ class Course_Email_Admin {
                     <p><?php esc_html_e('Если пароль не сохранялся: введите пароль от Яндекса и нажмите «Сохранить настройки», затем снова «Отправить тестовое письмо».', 'course-plugin'); ?></p>
                 <?php endif; ?>
                 <p class="description"><?php esc_html_e('Отладка SMTP в лог: в wp-config.php временно добавьте define(\'COURSE_SMTP_DEBUG\', true); и WP_DEBUG_LOG — в debug.log появятся строки «Course SMTP debug».', 'course-plugin'); ?></p>
+                <p class="description"><?php esc_html_e('Если установлен плагин «WP Mail SMTP» или аналог, временно отключите его — он может перехватывать wp_mail. Плагин «Курсы» при сбое wp_mail делает вторую попытку напрямую через SMTP.', 'course-plugin'); ?></p>
             </div>
             
             <form method="post" action="options.php">

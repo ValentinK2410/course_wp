@@ -147,13 +147,14 @@ class Course_Email_Sender {
     }
 
     /**
-     * Подключение SMTP к экземпляру PHPMailer, который использует wp_mail() (WP 5.5+).
+     * Общая настройка SMTP для любого PHPMailer (wp_mail или прямая отправка).
      *
-     * @param \PHPMailer\PHPMailer\PHPMailer $phpmailer Объект из WordPress.
+     * @param \PHPMailer\PHPMailer\PHPMailer $phpmailer Объект PHPMailer.
+     * @return bool true если SMTP применён.
      */
-    public function configure_phpmailer_smtp($phpmailer) {
+    private function apply_smtp_settings_to_mailer($phpmailer) {
         if (get_option('disable_email_sending')) {
-            return;
+            return false;
         }
 
         $smtp_host = self::smtp_host();
@@ -161,7 +162,7 @@ class Course_Email_Sender {
         $smtp_password = self::smtp_password();
 
         if (empty($smtp_host) || empty($smtp_username) || empty($smtp_password)) {
-            return;
+            return false;
         }
 
         $phpmailer->isSMTP();
@@ -181,7 +182,6 @@ class Course_Email_Sender {
             $phpmailer->SMTPAutoTLS = false;
         } elseif ('ssl' === $enc_l) {
             $phpmailer->SMTPSecure = 'ssl';
-            // Порт 465: implicit SSL — без доп. STARTTLS.
             $phpmailer->SMTPAutoTLS = ($port !== 465);
         } else {
             $phpmailer->SMTPSecure = 'tls';
@@ -210,6 +210,77 @@ class Course_Email_Sender {
         if (!empty($from_email)) {
             $phpmailer->setFrom($from_email, $from_name);
             $phpmailer->addReplyTo($from_email, $from_name);
+        }
+
+        return true;
+    }
+
+    /**
+     * Подключение SMTP к экземпляру PHPMailer, который использует wp_mail() (WP 5.5+).
+     *
+     * @param \PHPMailer\PHPMailer\PHPMailer $phpmailer Объект из WordPress.
+     */
+    public function configure_phpmailer_smtp($phpmailer) {
+        $this->apply_smtp_settings_to_mailer($phpmailer);
+    }
+
+    /**
+     * Загрузка классов PHPMailer из ядра WordPress.
+     */
+    private function load_phpmailer_classes() {
+        if (class_exists('\PHPMailer\PHPMailer\PHPMailer', false)) {
+            return true;
+        }
+        $base = ABSPATH . WPINC . '/PHPMailer/';
+        if (!is_readable($base . 'PHPMailer.php')) {
+            return false;
+        }
+        require_once $base . 'Exception.php';
+        require_once $base . 'PHPMailer.php';
+        require_once $base . 'SMTP.php';
+        return class_exists('\PHPMailer\PHPMailer\PHPMailer', false);
+    }
+
+    /**
+     * Отправка через PHPMailer + SMTP без wp_mail (обходит плагины вроде WP Mail SMTP, ломающие цепочку).
+     *
+     * @param string $to Email получателя.
+     * @param string $subject Тема.
+     * @param string $message Текст.
+     * @return array Результат.
+     */
+    private function send_via_phpmailer_direct($to, $subject, $message) {
+        if (!self::is_smtp_fully_configured()) {
+            return array('success' => false, 'message' => 'SMTP не настроен', 'method' => 'phpmailer_direct');
+        }
+        if (!$this->load_phpmailer_classes()) {
+            return array('success' => false, 'message' => 'PHPMailer не найден в WordPress', 'method' => 'phpmailer_direct');
+        }
+
+        $mail = null;
+        try {
+            $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+            if (!$this->apply_smtp_settings_to_mailer($mail)) {
+                return array('success' => false, 'message' => 'SMTP не применён', 'method' => 'phpmailer_direct');
+            }
+            $mail->addAddress($to);
+            $mail->Subject = $subject;
+            $mail->isHTML(false);
+            $mail->Body = $message;
+            $mail->send();
+            error_log("Course Email: Прямая отправка PHPMailer успешна на {$to}");
+            return array(
+                'success' => true,
+                'message' => __('Отправлено напрямую через SMTP (обход wp_mail)', 'course-plugin'),
+                'method' => 'phpmailer_direct',
+            );
+        } catch (\Throwable $e) {
+            $msg = $e->getMessage();
+            if ($mail && is_object($mail) && !empty($mail->ErrorInfo)) {
+                $msg .= ' [' . $mail->ErrorInfo . ']';
+            }
+            error_log("Course Email: PHPMailer direct ошибка на {$to}: {$msg}");
+            return array('success' => false, 'message' => $msg, 'method' => 'phpmailer_direct');
         }
     }
 
@@ -244,14 +315,31 @@ class Course_Email_Sender {
             return $wp_mail_result;
         }
 
+        if (self::is_smtp_fully_configured()) {
+            $pm_result = $this->send_via_phpmailer_direct($to, $subject, $message);
+            if ($pm_result['success']) {
+                return $pm_result;
+            }
+        } else {
+            $pm_result = array('message' => '');
+        }
+
         $direct_result = $this->send_via_direct($to, $subject, $message, $headers);
         if ($direct_result['success']) {
             return $direct_result;
         }
 
+        $parts = array_filter(
+            array(
+                $wp_mail_result['message'],
+                isset($pm_result['message']) ? $pm_result['message'] : '',
+                $direct_result['message'],
+            )
+        );
+
         return array(
             'success' => false,
-            'message' => 'Все методы отправки не сработали. Последняя ошибка: ' . $direct_result['message'],
+            'message' => __('Не удалось отправить. ', 'course-plugin') . implode(' | ', $parts),
             'method' => 'none',
         );
     }
