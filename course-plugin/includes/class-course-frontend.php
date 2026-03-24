@@ -54,6 +54,7 @@ class Course_Frontend {
         // Добавляем шорткоды для отображения курсов и преподавателей
         add_shortcode('courses', array($this, 'courses_shortcode'));
         add_shortcode('teachers', array($this, 'teachers_shortcode'));
+        add_shortcode('resource_authors', array($this, 'resource_authors_shortcode'));
     }
     
     /**
@@ -481,6 +482,7 @@ class Course_Frontend {
         $is_teachers_shortcode = false;
         $is_courses_shortcode = false;
         $is_programs_shortcode = false;
+        $is_resource_authors_shortcode = false;
         if (is_singular() || is_front_page()) {
             $post_id = is_front_page() && get_option('page_on_front') ? get_option('page_on_front') : get_queried_object_id();
             $post = $post_id ? get_post($post_id) : null;
@@ -488,12 +490,13 @@ class Course_Frontend {
                 $is_teachers_shortcode = has_shortcode($post->post_content, 'teachers');
                 $is_courses_shortcode = has_shortcode($post->post_content, 'courses');
                 $is_programs_shortcode = has_shortcode($post->post_content, 'programs');
+                $is_resource_authors_shortcode = has_shortcode($post->post_content, 'resource_authors');
             }
         }
         
         // Подключаем стили и скрипты на страницах курсов и преподавателей
         $is_teachers_archive = (int) get_query_var('teachers_archive') === 1;
-        if (is_post_type_archive('course') || is_singular('course') || is_tax('course_teacher') || $is_teachers_archive || $is_teachers_shortcode || $is_courses_shortcode || $is_programs_shortcode) {
+        if (is_post_type_archive('course') || is_singular('course') || is_tax('course_teacher') || $is_teachers_archive || $is_teachers_shortcode || $is_courses_shortcode || $is_programs_shortcode || $is_resource_authors_shortcode) {
             wp_enqueue_style(
                 'course-frontend-style',
                 COURSE_PLUGIN_URL . 'assets/css/frontend.css',
@@ -546,6 +549,16 @@ class Course_Frontend {
                     'courses-shortcode-style',
                     COURSE_PLUGIN_URL . 'assets/css/courses-shortcode.css',
                     array('course-frontend-style'),
+                    COURSE_PLUGIN_VERSION
+                );
+            }
+            
+            // Список авторов записей (страница «Ресурсы»)
+            if ($is_resource_authors_shortcode) {
+                wp_enqueue_style(
+                    'course-resource-authors',
+                    COURSE_PLUGIN_URL . 'assets/css/resource-authors-shortcode.css',
+                    array(),
                     COURSE_PLUGIN_VERSION
                 );
             }
@@ -735,6 +748,106 @@ class Course_Frontend {
         $shortcode_atts = $atts;
         include COURSE_PLUGIN_DIR . 'templates/teachers-shortcode.php';
         return ob_get_clean();
+    }
+    
+    /**
+     * Список авторов записей (блог): имя, число постов, ссылка на архив автора /author/…/
+     * Для страницы «Ресурсы» в стиле виджета «Категории».
+     *
+     * Параметры:
+     * - title — заголовок блока (по умолчанию «Авторы»)
+     * - orderby — name | count (сортировка)
+     * - order — ASC | DESC
+     *
+     * Пример: [resource_authors] или [resource_authors title="Авторы" orderby="count" order="DESC"]
+     */
+    public function resource_authors_shortcode($atts) {
+        wp_enqueue_style(
+            'course-resource-authors',
+            COURSE_PLUGIN_URL . 'assets/css/resource-authors-shortcode.css',
+            array(),
+            COURSE_PLUGIN_VERSION,
+            true
+        );
+        
+        $atts = shortcode_atts(array(
+            'title' => __('Авторы', 'course-plugin'),
+            'orderby' => 'name',
+            'order' => 'ASC',
+        ), $atts, 'resource_authors');
+        
+        $orderby = isset($atts['orderby']) && $atts['orderby'] === 'count' ? 'count' : 'name';
+        $order = isset($atts['order']) && strtoupper($atts['order']) === 'DESC' ? 'DESC' : 'ASC';
+        
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            "SELECT post_author, COUNT(*) AS cnt FROM {$wpdb->posts} 
+             WHERE post_status = 'publish' AND post_type = 'post' AND post_author > 0 
+             GROUP BY post_author",
+            ARRAY_A
+        );
+        
+        if (empty($rows)) {
+            return '';
+        }
+        
+        $exclude = apply_filters('course_resource_authors_exclude_user_ids', array());
+        if (!is_array($exclude)) {
+            $exclude = array();
+        }
+        
+        $items = array();
+        foreach ($rows as $row) {
+            $uid = (int) $row['post_author'];
+            if ($uid <= 0 || in_array($uid, $exclude, true)) {
+                continue;
+            }
+            $user = get_userdata($uid);
+            if (!$user) {
+                continue;
+            }
+            $items[] = array(
+                'user' => $user,
+                'count' => (int) $row['cnt'],
+            );
+        }
+        
+        if (empty($items)) {
+            return '';
+        }
+        
+        if ($orderby === 'name') {
+            usort($items, function ($a, $b) use ($order) {
+                $cmp = strcasecmp($a['user']->display_name, $b['user']->display_name);
+                return $order === 'ASC' ? $cmp : -$cmp;
+            });
+        } else {
+            usort($items, function ($a, $b) use ($order) {
+                $cmp = $a['count'] - $b['count'];
+                return $order === 'ASC' ? $cmp : -$cmp;
+            });
+        }
+        
+        $title = isset($atts['title']) ? $atts['title'] : __('Авторы', 'course-plugin');
+        
+        ob_start();
+        ?>
+        <div class="course-resource-authors-widget">
+            <h3 class="course-resource-authors-widget__title"><?php echo esc_html($title); ?></h3>
+            <ul class="course-resource-authors-widget__list">
+                <?php foreach ($items as $item) {
+                    $user = $item['user'];
+                    $url = get_author_posts_url($user->ID);
+                    ?>
+                    <li>
+                        <a href="<?php echo esc_url($url); ?>"><?php echo esc_html($user->display_name); ?></a>
+                        <span class="course-resource-authors-widget__count">(<?php echo (int) $item['count']; ?>)</span>
+                    </li>
+                <?php } ?>
+            </ul>
+        </div>
+        <?php
+        return trim(ob_get_clean());
     }
     
     /**
