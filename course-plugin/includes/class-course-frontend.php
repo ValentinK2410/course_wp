@@ -830,18 +830,20 @@ class Course_Frontend {
         
         $title = isset($atts['title']) ? $atts['title'] : __('Авторы', 'course-plugin');
         
+        $widget_id = apply_filters('course_resource_authors_widget_id', 'resource-authors-1');
+        
         ob_start();
         ?>
-        <div class="course-resource-authors-widget">
-            <h3 class="course-resource-authors-widget__title"><?php echo esc_html($title); ?></h3>
-            <ul class="course-resource-authors-widget__list">
+        <div id="<?php echo esc_attr($widget_id); ?>" class="widget widget_categories course-resource-authors-widget">
+            <p class="widget-title heading"><span><?php echo esc_html($title); ?></span></p>
+            <ul>
                 <?php foreach ($items as $item) {
                     $user = $item['user'];
                     $url = get_author_posts_url($user->ID);
+                    $count = (int) $item['count'];
                     ?>
-                    <li>
-                        <a href="<?php echo esc_url($url); ?>"><?php echo esc_html($user->display_name); ?></a>
-                        <span class="course-resource-authors-widget__count">(<?php echo (int) $item['count']; ?>)</span>
+                    <li class="cat-item cat-item-<?php echo (int) $user->ID; ?>">
+                        <a href="<?php echo esc_url($url); ?>"><?php echo esc_html($user->display_name); ?> <span class="count">(<?php echo $count; ?>)</span></a>
                     </li>
                 <?php } ?>
             </ul>
