@@ -198,7 +198,7 @@ class Course_Email_Admin {
                             
                             if ($result['success']) {
                                 $success_count++;
-                                $results_details[] = '<strong>' . esc_html($email) . '</strong>: ✓ Успешно (метод: ' . esc_html($result['method']) . ')';
+                                $results_details[] = '<strong>' . esc_html($email) . '</strong>: ✓ ' . esc_html($result['message']) . ' <em>(' . esc_html($result['method']) . ')</em>';
                             } else {
                                 $fail_count++;
                                 $results_details[] = '<strong>' . esc_html($email) . '</strong>: ✗ Ошибка - ' . esc_html($result['message']);
@@ -239,6 +239,21 @@ class Course_Email_Admin {
                     <?php echo $result; ?>
                 <?php endforeach; ?>
             <?php endif; ?>
+            
+            <?php
+            $diag_disable = get_option('disable_email_sending', false);
+            $diag_smtp_ok = class_exists('Course_Email_Sender') && Course_Email_Sender::is_smtp_fully_configured();
+            ?>
+            <div class="notice <?php echo $diag_smtp_ok && !$diag_disable ? 'notice-success' : 'notice-warning'; ?>" style="margin:12px 0;">
+                <p><strong><?php esc_html_e('Диагностика перед отправкой:', 'course-plugin'); ?></strong></p>
+                <ul style="list-style:disc;padding-left:1.5em;margin:0;">
+                    <li><?php echo $diag_disable ? '<span style="color:#b32d2e;">✗</span> ' . esc_html__('Включено «Отключить отправку писем» (Moodle) — письма блокируются.', 'course-plugin') : '✓ ' . esc_html__('Массовая отправка не отключена в настройках Moodle.', 'course-plugin'); ?></li>
+                    <li><?php echo $diag_smtp_ok ? '✓ ' . esc_html__('SMTP задан: хост, логин и пароль есть в базе.', 'course-plugin') : '<span style="color:#b32d2e;">✗</span> ' . esc_html__('SMTP неполный: нужны сервер, логин и сохранённый пароль.', 'course-plugin'); ?></li>
+                </ul>
+                <?php if (!$diag_smtp_ok) : ?>
+                    <p><?php esc_html_e('Если пароль не сохранялся: введите пароль от Яндекса и нажмите «Сохранить настройки», затем снова «Отправить тестовое письмо».', 'course-plugin'); ?></p>
+                <?php endif; ?>
+            </div>
             
             <form method="post" action="options.php">
                 <?php settings_fields('course_email_settings'); ?>

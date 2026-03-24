@@ -45,7 +45,7 @@ class Course_Email_Sender {
      * Конструктор класса
      */
     private function __construct() {
-        add_action('phpmailer_init', array($this, 'configure_phpmailer_smtp'), 10, 1);
+        add_action('phpmailer_init', array($this, 'configure_phpmailer_smtp'), 999, 1);
     }
 
     /**
@@ -143,6 +143,7 @@ class Course_Email_Sender {
         $phpmailer->Password = $smtp_password;
         $phpmailer->Port = self::smtp_port();
         $phpmailer->CharSet = 'UTF-8';
+        $phpmailer->SMTPAutoTLS = true;
 
         $enc = self::smtp_encryption();
         if ('' === $enc) {
@@ -185,8 +186,8 @@ class Course_Email_Sender {
         if ($disable_email_sending) {
             error_log("Course Email: Отправка писем отключена в настройках. Письмо не отправлено на {$to}. Тема: {$subject}");
             return array(
-                'success' => true,
-                'message' => 'Отправка писем отключена в настройках (режим тестирования)',
+                'success' => false,
+                'message' => __('Отправка отключена: в настройках синхронизации Moodle включено «Отключить отправку писем». Снимите галочку и сохраните.', 'course-plugin'),
                 'method' => 'disabled',
             );
         }
@@ -230,20 +231,40 @@ class Course_Email_Sender {
 
         $improved_headers = $this->improve_headers_for_gmail($headers, $to);
 
+        $wp_mail_failed_text = '';
+        $on_mail_failed = function ($wp_error) use (&$wp_mail_failed_text) {
+            if (is_wp_error($wp_error)) {
+                $wp_mail_failed_text = $wp_error->get_error_message();
+            }
+        };
+        add_action('wp_mail_failed', $on_mail_failed, 10, 1);
+
         $result = wp_mail($to, $subject, $message, $improved_headers);
 
+        remove_action('wp_mail_failed', $on_mail_failed, 10);
+
         if ($result) {
+            $detail = self::is_smtp_fully_configured()
+                ? __(' (через SMTP из настроек плагина)', 'course-plugin')
+                : __(' (без SMTP плагина — с сервера)', 'course-plugin');
             error_log("Course Email: Письмо успешно отправлено через wp_mail на {$to}");
-            return array('success' => true, 'message' => 'Письмо отправлено через wp_mail', 'method' => 'wp_mail');
+            return array(
+                'success' => true,
+                'message' => __('Письмо принято к отправке через wp_mail', 'course-plugin') . $detail,
+                'method' => 'wp_mail',
+            );
         }
 
         global $phpmailer;
-        $error = 'Неизвестная ошибка';
-        if (isset($phpmailer) && is_object($phpmailer) && isset($phpmailer->ErrorInfo)) {
+        $error = $wp_mail_failed_text;
+        if ($error === '' && isset($phpmailer) && is_object($phpmailer) && !empty($phpmailer->ErrorInfo)) {
             $error = $phpmailer->ErrorInfo;
         }
+        if ($error === '') {
+            $error = __('Неизвестная ошибка (wp_mail вернул false). Проверьте SMTP: хост, порт, шифрование 465+SSL или 587+TLS, логин и пароль.', 'course-plugin');
+        }
         error_log("Course Email: Ошибка wp_mail отправки на {$to}: {$error}");
-        return array('success' => false, 'message' => 'wp_mail ошибка: ' . $error, 'method' => 'wp_mail');
+        return array('success' => false, 'message' => 'wp_mail: ' . $error, 'method' => 'wp_mail');
     }
 
     /**
