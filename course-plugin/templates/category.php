@@ -70,7 +70,6 @@ $title = $term && !is_wp_error($term) ? single_term_title('', false) : '';
                                 <h2 class="cpa-card-title"><?php the_title(); ?></h2>
                                 <div class="cpa-card-meta">
                                     <span class="cpa-card-author"><?php echo esc_html(get_the_author()); ?></span>
-                                    <time class="cpa-card-date" datetime="<?php echo esc_attr(get_the_date('c')); ?>"><?php echo esc_html(get_the_date()); ?></time>
                                 </div>
                             </div>
                         </a>
