@@ -235,9 +235,10 @@ class Course_Email_Sender {
         if (!is_readable($base . 'PHPMailer.php')) {
             return false;
         }
-        require_once $base . 'Exception.php';
+        // Как в wp-includes/pluggable.php (wp_mail): PHPMailer → SMTP → Exception.
         require_once $base . 'PHPMailer.php';
         require_once $base . 'SMTP.php';
+        require_once $base . 'Exception.php';
         return class_exists('\PHPMailer\PHPMailer\PHPMailer', false);
     }
 
@@ -250,6 +251,9 @@ class Course_Email_Sender {
      * @return array Результат.
      */
     private function send_via_phpmailer_direct($to, $subject, $message) {
+        if (!is_email($to)) {
+            return array('success' => false, 'message' => 'Некорректный email получателя', 'method' => 'phpmailer_direct');
+        }
         if (!self::is_smtp_fully_configured()) {
             return array('success' => false, 'message' => 'SMTP не настроен', 'method' => 'phpmailer_direct');
         }
