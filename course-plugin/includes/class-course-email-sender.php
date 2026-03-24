@@ -45,7 +45,35 @@ class Course_Email_Sender {
      * Конструктор класса
      */
     private function __construct() {
-        add_action('phpmailer_init', array($this, 'configure_phpmailer_smtp'), 999, 1);
+        add_filter('wp_mail_from', array($this, 'filter_wp_mail_from'), 1000);
+        add_filter('wp_mail_from_name', array($this, 'filter_wp_mail_from_name'), 1000);
+        add_action('phpmailer_init', array($this, 'configure_phpmailer_smtp'), 99999, 1);
+    }
+
+    /**
+     * Единый адрес отправителя с настройками SMTP (важно для Яндекса/Gmail).
+     *
+     * @param string $email Текущий from.
+     * @return string
+     */
+    public function filter_wp_mail_from($email) {
+        if (get_option('disable_email_sending') || !self::is_smtp_fully_configured()) {
+            return $email;
+        }
+        $smtp = self::smtp_from_email();
+        return is_email($smtp) ? $smtp : $email;
+    }
+
+    /**
+     * @param string $name Текущее имя отправителя.
+     * @return string
+     */
+    public function filter_wp_mail_from_name($name) {
+        if (get_option('disable_email_sending') || !self::is_smtp_fully_configured()) {
+            return $name;
+        }
+        $n = self::smtp_from_name();
+        return $n !== '' ? $n : $name;
     }
 
     /**
@@ -141,17 +169,30 @@ class Course_Email_Sender {
         $phpmailer->SMTPAuth = true;
         $phpmailer->Username = $smtp_username;
         $phpmailer->Password = $smtp_password;
-        $phpmailer->Port = self::smtp_port();
+        $port = self::smtp_port();
+        $phpmailer->Port = $port;
         $phpmailer->CharSet = 'UTF-8';
-        $phpmailer->SMTPAutoTLS = true;
+        $phpmailer->Timeout = 30;
 
         $enc = self::smtp_encryption();
+        $enc_l = strtolower((string) $enc);
         if ('' === $enc) {
             $phpmailer->SMTPSecure = '';
-        } elseif ('ssl' === strtolower((string) $enc)) {
+            $phpmailer->SMTPAutoTLS = false;
+        } elseif ('ssl' === $enc_l) {
             $phpmailer->SMTPSecure = 'ssl';
+            // Порт 465: implicit SSL — без доп. STARTTLS.
+            $phpmailer->SMTPAutoTLS = ($port !== 465);
         } else {
             $phpmailer->SMTPSecure = 'tls';
+            $phpmailer->SMTPAutoTLS = true;
+        }
+
+        if (defined('COURSE_SMTP_DEBUG') && COURSE_SMTP_DEBUG) {
+            $phpmailer->SMTPDebug = 2;
+            $phpmailer->Debugoutput = function ($str, $level) {
+                error_log('Course SMTP debug: ' . trim((string) $str));
+            };
         }
 
         if (defined('COURSE_SMTP_DISABLE_SSL_VERIFY') && COURSE_SMTP_DISABLE_SSL_VERIFY) {
@@ -312,19 +353,35 @@ class Course_Email_Sender {
         $email_domain = substr(strrchr($to, '@'), 1);
         $is_gmail = (strpos(strtolower((string) $email_domain), 'gmail.com') !== false);
 
+        $has_smtp = self::is_smtp_fully_configured();
+
+        // При SMTP From/Reply-To задаёт PHPMailer + фильтры wp_mail_from — дубли в заголовках ломают Яндекс/Gmail.
+        if ($has_smtp) {
+            $improved_headers = array();
+            $improved_headers[] = 'Content-Type: text/plain; charset=UTF-8';
+            $from_email = self::smtp_from_email();
+            if ($is_gmail) {
+                $improved_headers[] = 'List-Unsubscribe: <' . $site_url . '>, <mailto:' . $from_email . '?subject=unsubscribe>';
+                $improved_headers[] = 'Precedence: bulk';
+            }
+            foreach ($headers as $header) {
+                $header_lower = strtolower($header);
+                if (strpos($header_lower, 'from:') === 0 ||
+                    strpos($header_lower, 'reply-to:') === 0 ||
+                    strpos($header_lower, 'content-type:') === 0) {
+                    continue;
+                }
+                $improved_headers[] = $header;
+            }
+            return $improved_headers;
+        }
+
         $improved_headers = array();
 
         $improved_headers[] = 'Content-Type: text/plain; charset=UTF-8';
 
-        $has_smtp = self::is_smtp_fully_configured();
-
-        if ($has_smtp) {
-            $from_email = self::smtp_from_email();
-            $from_name = self::smtp_from_name();
-        } else {
-            $from_name = !empty($site_name) ? $site_name : 'WordPress';
-            $from_email = !empty($admin_email) ? $admin_email : 'noreply@' . parse_url($site_url, PHP_URL_HOST);
-        }
+        $from_name = !empty($site_name) ? $site_name : 'WordPress';
+        $from_email = !empty($admin_email) ? $admin_email : 'noreply@' . parse_url($site_url, PHP_URL_HOST);
 
         $improved_headers[] = 'From: ' . $from_name . ' <' . $from_email . '>';
         $improved_headers[] = 'Reply-To: ' . $from_name . ' <' . $from_email . '>';

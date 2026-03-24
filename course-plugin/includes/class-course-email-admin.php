@@ -253,6 +253,7 @@ class Course_Email_Admin {
                 <?php if (!$diag_smtp_ok) : ?>
                     <p><?php esc_html_e('Если пароль не сохранялся: введите пароль от Яндекса и нажмите «Сохранить настройки», затем снова «Отправить тестовое письмо».', 'course-plugin'); ?></p>
                 <?php endif; ?>
+                <p class="description"><?php esc_html_e('Отладка SMTP в лог: в wp-config.php временно добавьте define(\'COURSE_SMTP_DEBUG\', true); и WP_DEBUG_LOG — в debug.log появятся строки «Course SMTP debug».', 'course-plugin'); ?></p>
             </div>
             
             <form method="post" action="options.php">
