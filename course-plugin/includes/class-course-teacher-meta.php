@@ -61,6 +61,8 @@ class Course_Teacher_Meta {
         
         // Синхронизация TinyMCE с textarea перед отправкой формы (wp_editor может не передать контент)
         add_action('admin_footer-edit-tags.php', array($this, 'add_tinymce_save_before_submit'));
+        
+        add_action('wp_ajax_course_teacher_toggle_biblical_hide', array($this, 'ajax_toggle_biblical_hide'));
     }
     
     /**
@@ -75,8 +77,96 @@ class Course_Teacher_Meta {
             if ($screen && $screen->taxonomy === 'course_teacher') {
                 // Подключаем скрипты WordPress Media API
                 wp_enqueue_media();
+                if ($hook === 'edit-tags.php') {
+                    wp_enqueue_script('jquery');
+                    wp_add_inline_script(
+                        'jquery',
+                        $this->get_teacher_list_biblical_inline_script(),
+                        'after'
+                    );
+                }
             }
         }
+    }
+    
+    /**
+     * Скрипт: галочка «скрыть в библейском разделе» в таблице списка преподавателей.
+     *
+     * @return string
+     */
+    private function get_teacher_list_biblical_inline_script() {
+        $nonce = wp_create_nonce('course_teacher_biblical_list');
+        $ajax = admin_url('admin-ajax.php');
+        $saving = esc_js(__('Сохранение…', 'course-plugin'));
+        $err = esc_js(__('Не удалось сохранить', 'course-plugin'));
+        return <<<JS
+jQuery(function($) {
+    $(document).on('change', '.course-teacher-hide-biblical-cb', function() {
+        var cb = $(this);
+        var termId = cb.data('term-id');
+        var hide = cb.is(':checked') ? '1' : '0';
+        cb.prop('disabled', true);
+        var row = cb.closest('tr');
+        row.find('.course-teacher-biblical-status').text('{$saving}');
+        $.ajax({
+            url: '{$ajax}',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'course_teacher_toggle_biblical_hide',
+                nonce: '{$nonce}',
+                term_id: termId,
+                hide: hide
+            }
+        }).done(function(res) {
+            if (res && res.success && res.data) {
+                var lbl = typeof res.data === 'object' && res.data.label ? res.data.label : '';
+                row.find('.course-teacher-biblical-status').text(lbl);
+            } else {
+                alert('{$err}');
+                cb.prop('checked', !cb.prop('checked'));
+            }
+        }).fail(function() {
+            alert('{$err}');
+            cb.prop('checked', !cb.prop('checked'));
+        }).always(function() {
+            cb.prop('disabled', false);
+        });
+    });
+});
+JS;
+    }
+    
+    /**
+     * AJAX: сохранить teacher_hide_in_biblical из списка преподавателей.
+     */
+    public function ajax_toggle_biblical_hide() {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'course_teacher_biblical_list')) {
+            wp_send_json_error(array('message' => 'bad nonce'), 403);
+        }
+        $term_id = isset($_POST['term_id']) ? (int) $_POST['term_id'] : 0;
+        if ($term_id <= 0) {
+            wp_send_json_error(array('message' => 'bad term'), 400);
+        }
+        $term = get_term($term_id, 'course_teacher');
+        if (!$term || is_wp_error($term)) {
+            wp_send_json_error(array('message' => 'not found'), 404);
+        }
+        $tax_obj = get_taxonomy('course_teacher');
+        if (!$tax_obj || !current_user_can($tax_obj->cap->edit_terms)) {
+            wp_send_json_error(array('message' => 'forbidden'), 403);
+        }
+        $hide = isset($_POST['hide']) && (string) $_POST['hide'] === '1';
+        if ($hide) {
+            update_term_meta($term_id, 'teacher_hide_in_biblical', '1');
+        } else {
+            delete_term_meta($term_id, 'teacher_hide_in_biblical');
+        }
+        wp_send_json_success(array(
+            'label' => $hide
+                ? __('Скрыт в библ. разделе', 'course-plugin')
+                : __('Показан в библ. разделе', 'course-plugin'),
+        ));
     }
     
     /**
@@ -428,7 +518,7 @@ class Course_Teacher_Meta {
         $new_columns['name'] = $columns['name'];
         $new_columns['description'] = $columns['description'];
         $new_columns['slug'] = $columns['slug'];
-        $new_columns['teacher_biblical'] = __('Библ. раздел', 'course-plugin');
+        $new_columns['teacher_biblical'] = __('Библейский раздел', 'course-plugin');
         $new_columns['posts'] = $columns['posts'];
         return $new_columns;
     }
@@ -451,9 +541,27 @@ class Course_Teacher_Meta {
             }
         }
         if ($column_name === 'teacher_biblical') {
-            return self::is_teacher_hidden_in_biblical($term_id)
-                ? '<span title="' . esc_attr__('Скрыт в библейском разделе', 'course-plugin') . '">' . esc_html__('скрыт', 'course-plugin') . '</span>'
-                : '—';
+            $hidden = self::is_teacher_hidden_in_biblical($term_id);
+            $cb_id = 'course-teacher-biblical-' . (int) $term_id;
+            $status = $hidden
+                ? __('Скрыт в библ. разделе', 'course-plugin')
+                : __('Показан в библ. разделе', 'course-plugin');
+            ob_start();
+            ?>
+            <div class="course-teacher-biblical-cell" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <label for="<?php echo esc_attr($cb_id); ?>" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+                    <input type="checkbox"
+                           id="<?php echo esc_attr($cb_id); ?>"
+                           class="course-teacher-hide-biblical-cb"
+                           data-term-id="<?php echo (int) $term_id; ?>"
+                           value="1"
+                        <?php checked($hidden); ?> />
+                    <span><?php esc_html_e('Скрыть', 'course-plugin'); ?></span>
+                </label>
+                <span class="course-teacher-biblical-status description" style="margin:0;"><?php echo esc_html($status); ?></span>
+            </div>
+            <?php
+            return ob_get_clean();
         }
         return $content;
     }
