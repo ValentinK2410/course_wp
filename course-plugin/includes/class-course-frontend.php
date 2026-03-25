@@ -733,11 +733,6 @@ class Course_Frontend {
             'specialization' => '',
         ), $atts);
         
-        $force_biblical = !empty($atts['biblical']) && in_array(strtolower((string) $atts['biblical']), array('1', 'yes', 'true'), true);
-        $spec_slug = isset($atts['specialization']) ? sanitize_title($atts['specialization']) : '';
-        $is_biblical_shortcode = $force_biblical
-            || ($spec_slug !== '' && class_exists('Course_Teacher_Meta') && Course_Teacher_Meta::slug_is_biblical($spec_slug));
-        
         $teachers_args = array(
             'taxonomy' => 'course_teacher',
             'hide_empty' => false,
@@ -751,7 +746,7 @@ class Course_Frontend {
             return '<p>' . __('Преподаватели не найдены.', 'course-plugin') . '</p>';
         }
         
-        if ($is_biblical_shortcode && class_exists('Course_Teacher_Meta')) {
+        if (class_exists('Course_Teacher_Meta')) {
             $filtered = array();
             foreach ($teachers as $term) {
                 if (!Course_Teacher_Meta::is_teacher_hidden_in_biblical($term->term_id)) {

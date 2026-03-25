@@ -12,7 +12,6 @@ get_header();
 $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
 $sort = isset($_GET['sort']) ? sanitize_text_field($_GET['sort']) : 'name';
 $specialization_filter = isset($_GET['specialization']) ? (array)$_GET['specialization'] : array();
-$is_biblical_teachers_context = class_exists('Course_Teacher_Meta') && Course_Teacher_Meta::specialization_slugs_match_biblical($specialization_filter);
 
 // Получаем всех преподавателей
 $teachers_args = array(
@@ -32,7 +31,7 @@ $teachers = get_terms($teachers_args);
 $teachers_with_data = array();
 if (!is_wp_error($teachers)) {
     foreach ($teachers as $term) {
-        if ($is_biblical_teachers_context && class_exists('Course_Teacher_Meta') && Course_Teacher_Meta::is_teacher_hidden_in_biblical($term->term_id)) {
+        if (class_exists('Course_Teacher_Meta') && Course_Teacher_Meta::is_teacher_hidden_in_biblical($term->term_id)) {
             continue;
         }
         $teacher_photo = get_term_meta($term->term_id, 'teacher_photo', true);

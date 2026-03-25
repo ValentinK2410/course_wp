@@ -290,7 +290,7 @@ JS;
                     <input type="checkbox" name="teacher_hide_in_biblical" id="teacher_hide_in_biblical" value="1" <?php checked(get_term_meta($term->term_id, 'teacher_hide_in_biblical', true), '1'); ?> />
                     <?php _e('Скрыть в библейском разделе сайта', 'course-plugin'); ?>
                 </label>
-                <p class="description"><?php _e('Не показывать в каталоге при фильтре по библейским направлениям, на страницах программ с этими направлениями и в шорткоде [teachers biblical="1"].', 'course-plugin'); ?></p>
+                <p class="description"><?php _e('Не показывать на странице /teachers/ и в шорткоде [teachers]. Дополнительно скрывается в блоке преподавателей у программ с библейскими направлениями (список slug задаётся в настройках списка преподавателей).', 'course-plugin'); ?></p>
             </td>
         </tr>
         
@@ -397,7 +397,7 @@ JS;
                 <input type="checkbox" name="teacher_hide_in_biblical" id="teacher_hide_in_biblical" value="1" />
                 <?php _e('Скрыть в библейском разделе сайта', 'course-plugin'); ?>
             </label>
-            <p class="description"><?php _e('Не показывать в каталоге /teachers/ при фильтре по библейским направлениям, на страницах программ с этими направлениями и в шорткоде [teachers biblical="1"].', 'course-plugin'); ?></p>
+                <p class="description"><?php _e('Не показывать на странице /teachers/ и в шорткоде [teachers]. Дополнительно скрывается в блоке преподавателей у программ с библейскими направлениями (список slug задаётся в настройках списка преподавателей).', 'course-plugin'); ?></p>
         </div>
         
         <script>
