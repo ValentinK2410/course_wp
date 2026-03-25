@@ -193,6 +193,17 @@ class Course_Teacher_Meta {
             </td>
         </tr>
         
+        <tr class="form-field">
+            <th scope="row"><?php _e('Библейский раздел', 'course-plugin'); ?></th>
+            <td>
+                <label for="teacher_hide_in_biblical">
+                    <input type="checkbox" name="teacher_hide_in_biblical" id="teacher_hide_in_biblical" value="1" <?php checked(get_term_meta($term->term_id, 'teacher_hide_in_biblical', true), '1'); ?> />
+                    <?php _e('Скрыть в библейском разделе сайта', 'course-plugin'); ?>
+                </label>
+                <p class="description"><?php _e('Не показывать в каталоге при фильтре по библейским направлениям, на страницах программ с этими направлениями и в шорткоде [teachers biblical="1"].', 'course-plugin'); ?></p>
+            </td>
+        </tr>
+        
         <script>
         jQuery(document).ready(function($) {
             $('#teacher_photo_button').on('click', function(e) {
@@ -291,6 +302,14 @@ class Course_Teacher_Meta {
             </p>
         </div>
         
+        <div class="form-field">
+            <label for="teacher_hide_in_biblical">
+                <input type="checkbox" name="teacher_hide_in_biblical" id="teacher_hide_in_biblical" value="1" />
+                <?php _e('Скрыть в библейском разделе сайта', 'course-plugin'); ?>
+            </label>
+            <p class="description"><?php _e('Не показывать в каталоге /teachers/ при фильтре по библейским направлениям, на страницах программ с этими направлениями и в шорткоде [teachers biblical="1"].', 'course-plugin'); ?></p>
+        </div>
+        
         <script>
         jQuery(document).ready(function($) {
             $('#teacher_photo_button').on('click', function(e) {
@@ -361,6 +380,12 @@ class Course_Teacher_Meta {
                 delete_term_meta($term_id, $field);
             }
         }
+        
+        if (isset($_POST['teacher_hide_in_biblical']) && $_POST['teacher_hide_in_biblical'] === '1') {
+            update_term_meta($term_id, 'teacher_hide_in_biblical', '1');
+        } else {
+            delete_term_meta($term_id, 'teacher_hide_in_biblical');
+        }
     }
     
     /**
@@ -403,6 +428,7 @@ class Course_Teacher_Meta {
         $new_columns['name'] = $columns['name'];
         $new_columns['description'] = $columns['description'];
         $new_columns['slug'] = $columns['slug'];
+        $new_columns['teacher_biblical'] = __('Библ. раздел', 'course-plugin');
         $new_columns['posts'] = $columns['posts'];
         return $new_columns;
     }
@@ -424,7 +450,103 @@ class Course_Teacher_Meta {
                 return '—';
             }
         }
+        if ($column_name === 'teacher_biblical') {
+            return self::is_teacher_hidden_in_biblical($term_id)
+                ? '<span title="' . esc_attr__('Скрыт в библейском разделе', 'course-plugin') . '">' . esc_html__('скрыт', 'course-plugin') . '</span>'
+                : '—';
+        }
         return $content;
+    }
+    
+    /**
+     * Slug'и направлений (course_specialization), которые считаются библейским разделом.
+     * Опция course_biblical_specialization_slugs или константа COURSE_BIBLICAL_SPECIALIZATION_SLUGS (через запятую).
+     *
+     * @return string[]
+     */
+    public static function get_biblical_specialization_slugs() {
+        $raw = get_option('course_biblical_specialization_slugs', '');
+        if (defined('COURSE_BIBLICAL_SPECIALIZATION_SLUGS') && is_string(COURSE_BIBLICAL_SPECIALIZATION_SLUGS) && COURSE_BIBLICAL_SPECIALIZATION_SLUGS !== '') {
+            $raw = COURSE_BIBLICAL_SPECIALIZATION_SLUGS;
+        }
+        return array_values(array_unique(array_filter(array_map('trim', explode(',', (string) $raw)))));
+    }
+    
+    /**
+     * @param string $slug Slug направления.
+     * @return bool
+     */
+    public static function slug_is_biblical($slug) {
+        $slug = sanitize_title($slug);
+        if ($slug === '') {
+            return false;
+        }
+        return in_array($slug, self::get_biblical_specialization_slugs(), true);
+    }
+    
+    /**
+     * Пересечение slug'ов из фильтра со списком библейских направлений.
+     *
+     * @param string[] $slugs Slug'и из GET или шорткода.
+     * @return bool
+     */
+    public static function specialization_slugs_match_biblical($slugs) {
+        $bib = self::get_biblical_specialization_slugs();
+        if (empty($bib) || empty($slugs)) {
+            return false;
+        }
+        foreach ((array) $slugs as $s) {
+            $s = sanitize_title($s);
+            if ($s !== '' && in_array($s, $bib, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * @param WP_Term[] $terms Термины course_specialization.
+     * @return bool
+     */
+    public static function specialization_terms_are_biblical($terms) {
+        if (empty($terms) || is_wp_error($terms)) {
+            return false;
+        }
+        $slugs = array();
+        foreach ($terms as $t) {
+            if (isset($t->slug)) {
+                $slugs[] = $t->slug;
+            }
+        }
+        return self::specialization_slugs_match_biblical($slugs);
+    }
+    
+    /**
+     * @param int $term_id ID преподавателя (course_teacher).
+     * @return bool
+     */
+    public static function is_teacher_hidden_in_biblical($term_id) {
+        return get_term_meta((int) $term_id, 'teacher_hide_in_biblical', true) === '1';
+    }
+    
+    /**
+     * Убирает преподавателей с галочкой «скрыть в библейском разделе», если контекст библейский.
+     *
+     * @param WP_Term[]|null $terms
+     * @param bool           $is_biblical_context
+     * @return WP_Term[]|null
+     */
+    public static function filter_teacher_terms_for_biblical($terms, $is_biblical_context) {
+        if (!$is_biblical_context || $terms === false || empty($terms) || is_wp_error($terms)) {
+            return $terms;
+        }
+        $out = array();
+        foreach ($terms as $t) {
+            if (!self::is_teacher_hidden_in_biblical($t->term_id)) {
+                $out[] = $t;
+            }
+        }
+        return $out;
     }
 }
 

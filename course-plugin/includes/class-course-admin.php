@@ -559,11 +559,13 @@ class Course_Admin {
                         <tbody>
                             <tr><td><code>per_page</code></td><td>6</td><td><?php _e('Количество преподавателей', 'course-plugin'); ?></td></tr>
                             <tr><td><code>columns</code></td><td>3</td><td><?php _e('Колонок в сетке (2, 3, 4)', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>biblical</code></td><td>—</td><td><?php _e('1 — скрыть преподавателей с галочкой «библейский раздел»', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>specialization</code></td><td>—</td><td><?php _e('Slug направления; если он в списке библейских — то же скрытие', 'course-plugin'); ?></td></tr>
                             <tr><td><code>button_style</code></td><td>default</td><td>default, outline, minimal, theme</td></tr>
                             <tr><td><code>theme_class</code></td><td>—</td><td><?php _e('Доп. CSS-класс', 'course-plugin'); ?></td></tr>
                         </tbody>
                     </table>
-                    <p><strong><?php _e('Пример:', 'course-plugin'); ?></strong> <code>[teachers per_page="8" columns="4"]</code></p>
+                    <p><strong><?php _e('Примеры:', 'course-plugin'); ?></strong> <code>[teachers per_page="8" columns="4"]</code>, <code>[teachers biblical="1"]</code></p>
                     <?php endif; ?>
                 </div>
             </details>
@@ -682,6 +684,7 @@ class Course_Admin {
         $title_main = get_option('teachers_archive_title_main', __('Преподаватели', 'course-plugin'));
         $title_sub = get_option('teachers_archive_title_sub', __('наши эксперты и менторы', 'course-plugin'));
         $subtitle = get_option('teachers_archive_subtitle', __('Познакомьтесь с профессиональной командой специалистов, которые проводят наши курсы и программы', 'course-plugin'));
+        $biblical_slugs = get_option('course_biblical_specialization_slugs', '');
         
         ?>
         <div class="notice notice-info" style="margin: 20px 0; padding: 15px;">
@@ -715,6 +718,15 @@ class Course_Admin {
                         <td>
                             <textarea id="teachers_subtitle" name="teachers_subtitle" rows="3" class="large-text"><?php echo esc_textarea($subtitle); ?></textarea>
                             <p class="description"><?php _e('Текст под основным заголовком', 'course-plugin'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="course_biblical_specialization_slugs"><?php _e('Библейский раздел (slug направлений)', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="course_biblical_specialization_slugs" name="course_biblical_specialization_slugs" value="<?php echo esc_attr($biblical_slugs); ?>" class="large-text" placeholder="izuchenie-biblii, bible-school" />
+                            <p class="description"><?php _e('Slug таксономии «Программы» (course_specialization), через запятую. Для этих направлений преподаватели с галочкой «Скрыть в библейском разделе» не показываются в каталоге при соответствующем фильтре и на страницах программ. Опционально: константа COURSE_BIBLICAL_SPECIALIZATION_SLUGS в wp-config.php.', 'course-plugin'); ?></p>
                         </td>
                     </tr>
                 </table>
@@ -752,6 +764,10 @@ class Course_Admin {
         
         if (isset($_POST['teachers_subtitle'])) {
             update_option('teachers_archive_subtitle', sanitize_textarea_field($_POST['teachers_subtitle']));
+        }
+        
+        if (isset($_POST['course_biblical_specialization_slugs'])) {
+            update_option('course_biblical_specialization_slugs', sanitize_text_field($_POST['course_biblical_specialization_slugs']));
         }
         
         add_action('admin_notices', function() {

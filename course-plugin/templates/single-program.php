@@ -34,6 +34,10 @@ while (have_posts()) : the_post();
     // Получаем связанные термины таксономий для программы
     $teachers = get_the_terms(get_the_ID(), 'course_teacher');
     $specializations = get_the_terms(get_the_ID(), 'course_specialization');
+    $program_is_biblical = class_exists('Course_Teacher_Meta') && Course_Teacher_Meta::specialization_terms_are_biblical($specializations);
+    if (class_exists('Course_Teacher_Meta')) {
+        $teachers = Course_Teacher_Meta::filter_teacher_terms_for_biblical($teachers, $program_is_biblical);
+    }
     $levels = get_the_terms(get_the_ID(), 'course_level');
     $topics = get_the_terms(get_the_ID(), 'course_topic'); // Темы программы
     
@@ -395,7 +399,10 @@ while (have_posts()) : the_post();
                             $course_number = 1;
                             foreach ($related_courses_list as $course) : 
                                 $course_teacher = get_the_terms($course->ID, 'course_teacher');
-                                $course_teacher_name = ($course_teacher && !is_wp_error($course_teacher)) ? $course_teacher[0]->name : '';
+                                if (class_exists('Course_Teacher_Meta')) {
+                                    $course_teacher = Course_Teacher_Meta::filter_teacher_terms_for_biblical($course_teacher, $program_is_biblical);
+                                }
+                                $course_teacher_name = ($course_teacher && !is_wp_error($course_teacher) && !empty($course_teacher)) ? $course_teacher[0]->name : '';
                                 $course_duration = get_post_meta($course->ID, '_course_duration', true);
                             ?>
                                 <article class="course-list-item">

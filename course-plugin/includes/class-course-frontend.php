@@ -729,19 +729,42 @@ class Course_Frontend {
             'columns' => 3,
             'button_style' => 'default',
             'theme_class' => '',
+            'biblical' => '',
+            'specialization' => '',
         ), $atts);
+        
+        $force_biblical = !empty($atts['biblical']) && in_array(strtolower((string) $atts['biblical']), array('1', 'yes', 'true'), true);
+        $spec_slug = isset($atts['specialization']) ? sanitize_title($atts['specialization']) : '';
+        $is_biblical_shortcode = $force_biblical
+            || ($spec_slug !== '' && class_exists('Course_Teacher_Meta') && Course_Teacher_Meta::slug_is_biblical($spec_slug));
         
         $teachers_args = array(
             'taxonomy' => 'course_teacher',
             'hide_empty' => false,
             'orderby' => 'name',
             'order' => 'ASC',
-            'number' => intval($atts['per_page']),
         );
         
         $teachers = get_terms($teachers_args);
         
         if (is_wp_error($teachers) || empty($teachers)) {
+            return '<p>' . __('Преподаватели не найдены.', 'course-plugin') . '</p>';
+        }
+        
+        if ($is_biblical_shortcode && class_exists('Course_Teacher_Meta')) {
+            $filtered = array();
+            foreach ($teachers as $term) {
+                if (!Course_Teacher_Meta::is_teacher_hidden_in_biblical($term->term_id)) {
+                    $filtered[] = $term;
+                }
+            }
+            $teachers = $filtered;
+        }
+        
+        $limit = max(1, intval($atts['per_page']));
+        $teachers = array_slice($teachers, 0, $limit);
+        
+        if (empty($teachers)) {
             return '<p>' . __('Преподаватели не найдены.', 'course-plugin') . '</p>';
         }
         
