@@ -427,14 +427,22 @@ class Course_Moodle_API {
     }
     
     /**
-     * Поиск когорт (глобальных групп Moodle) в системном контексте — одна страница.
+     * Поиск когорт (глобальных групп Moodle) — одна порция записей.
      *
-     * @param string $query Строка поиска (пустая — все доступные по правам).
-     * @param int    $page Номер страницы (с 0).
-     * @param int    $perpage Записей на страницу.
+     * В Moodle WS core_cohort_search_cohorts используются параметры includes, limitfrom, limitnum
+     * (не page/perpage — иначе Moodle возвращает «неверное значение параметра»).
+     *
+     * @param string $query Строка поиска (пустая — все в пределах лимита и прав).
+     * @param int    $limitfrom Смещение.
+     * @param int    $limitnum Сколько записей.
+     * @param string|null $includes all|parents|self (по умолчанию all — все когорты сайта).
      * @return array|false Ответ Moodle или false.
      */
-    public function search_cohorts($query = '', $page = 0, $perpage = 100) {
+    public function search_cohorts($query = '', $limitfrom = 0, $limitnum = 100, $includes = null) {
+        if ($includes === null || $includes === '') {
+            $includes = (string) apply_filters('moodle_api_cohort_search_includes', 'all');
+        }
+        
         $context = apply_filters(
             'moodle_api_cohort_search_context',
             array(
@@ -446,10 +454,11 @@ class Course_Moodle_API {
         return $this->call(
             'core_cohort_search_cohorts',
             array(
-                'query'   => $query,
-                'context' => $context,
-                'page'    => (int) $page,
-                'perpage' => (int) $perpage,
+                'query'     => $query,
+                'context'   => $context,
+                'includes'  => $includes,
+                'limitfrom' => (int) $limitfrom,
+                'limitnum'  => (int) $limitnum,
             )
         );
     }
@@ -460,20 +469,30 @@ class Course_Moodle_API {
      * @return array{list: array<int, array{id:int, name:string, idnumber:string}>}|array{exception:string, message:string}|false
      */
     public function get_all_cohorts() {
-        $perpage = max(10, min(500, (int) apply_filters('moodle_api_cohorts_per_page', 100)));
-        $query   = (string) apply_filters('moodle_api_cohort_search_query', '');
+        $limitnum = max(10, min(500, (int) apply_filters('moodle_api_cohorts_per_page', 100)));
+        $query    = (string) apply_filters('moodle_api_cohort_search_query', '');
+        $includes = apply_filters('moodle_api_cohort_search_includes', 'all');
         
-        $by_id = array();
-        $page  = 0;
+        $by_id      = array();
+        $limitfrom  = 0;
         
         while (true) {
-            $result = $this->search_cohorts($query, $page, $perpage);
+            $result = $this->search_cohorts($query, $limitfrom, $limitnum, $includes);
             
             if ($result === false) {
                 return false;
             }
             if (is_array($result) && isset($result['exception'])) {
-                return $result;
+                // Режим «all» требует прав на системный контекст; пробуем «parents» в системном контексте.
+                if ($includes === 'all' && isset($result['errorcode']) && $result['errorcode'] === 'nopermissions') {
+                    $includes = 'parents';
+                    $result     = $this->search_cohorts($query, $limitfrom, $limitnum, $includes);
+                    if ($result === false || (is_array($result) && isset($result['exception']))) {
+                        return $result;
+                    }
+                } else {
+                    return $result;
+                }
             }
             
             $cohorts = array();
@@ -497,10 +516,10 @@ class Course_Moodle_API {
                 );
             }
             
-            if (count($cohorts) < $perpage) {
+            if (count($cohorts) < $limitnum) {
                 break;
             }
-            $page++;
+            $limitfrom += $limitnum;
         }
         
         $list = array_values($by_id);
