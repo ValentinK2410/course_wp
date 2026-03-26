@@ -44,6 +44,13 @@ class Course_Moodle_Sync {
     private $api;
     
     /**
+     * Какие шаги синхронизации выполнять в текущем запуске (категории, когорты, курсы, студенты, Laravel).
+     *
+     * @var array<string, bool>
+     */
+    private $sync_run_flags = array();
+    
+    /**
      * Получить экземпляр класса
      * Паттерн Singleton: гарантирует создание только одного экземпляра класса
      * 
@@ -215,6 +222,23 @@ class Course_Moodle_Sync {
             'sanitize_callback' => 'sanitize_text_field'  // Очистка текста для безопасности
         ));
         
+        $bool_setting = function ($v) {
+            return filter_var($v, FILTER_VALIDATE_BOOLEAN);
+        };
+        foreach (array(
+            'moodle_sync_include_categories' => true,
+            'moodle_sync_include_cohorts' => true,
+            'moodle_sync_include_courses' => true,
+            'moodle_sync_include_students' => true,
+            'moodle_sync_include_laravel' => true,
+        ) as $opt => $default) {
+            register_setting('moodle_sync_settings', $opt, array(
+                'type' => 'boolean',
+                'default' => $default,
+                'sanitize_callback' => $bool_setting,
+            ));
+        }
+        
         // Регистрируем опцию для SSO API ключа
         register_setting('moodle_sync_settings', 'sso_api_key', array(
             'type' => 'string',
@@ -364,9 +388,13 @@ class Course_Moodle_Sync {
             if ($result['success']) {
                 $courses_info = '';
                 $categories_info = '';
+                $students_info = '';
+                $laravel_info = '';
                 
                 // Формируем информацию о курсах
-                if (isset($result['courses_result'])) {
+                if (isset($result['courses_result']['skipped_by_choice']) && $result['courses_result']['skipped_by_choice']) {
+                    $courses_info = __('Курсы WordPress: шаг не выбран', 'course-plugin');
+                } elseif (isset($result['courses_result'])) {
                     $cr = $result['courses_result'];
                     $courses_info = sprintf(
                         __('Курсов: %d (создано: %d, обновлено: %d, пропущено: %d)', 'course-plugin'),
@@ -380,7 +408,9 @@ class Course_Moodle_Sync {
                 }
                 
                 // Формируем информацию о категориях
-                if (isset($result['categories_result'])) {
+                if (isset($result['categories_result']['skipped_by_choice']) && $result['categories_result']['skipped_by_choice']) {
+                    $categories_info = __('Категории Moodle: шаг не выбран', 'course-plugin');
+                } elseif (isset($result['categories_result'])) {
                     $catr = $result['categories_result'];
                     $categories_info = sprintf(
                         __('Категорий: %d (создано: %d, обновлено: %d, пропущено: %d)', 'course-plugin'),
@@ -394,7 +424,9 @@ class Course_Moodle_Sync {
                 }
                 
                 $cohorts_info = '';
-                if (isset($result['cohorts_result']) && is_array($result['cohorts_result'])) {
+                if (isset($result['cohorts_result']['skipped_by_choice']) && $result['cohorts_result']['skipped_by_choice']) {
+                    $cohorts_info = __('Когорты: шаг не выбран', 'course-plugin');
+                } elseif (isset($result['cohorts_result']) && is_array($result['cohorts_result'])) {
                     $cr = $result['cohorts_result'];
                     if (!empty($cr['success'])) {
                         $cohorts_info = sprintf(__('Когорт: %d', 'course-plugin'), isset($cr['count']) ? (int) $cr['count'] : 0);
@@ -408,7 +440,19 @@ class Course_Moodle_Sync {
                     $cohorts_info = sprintf(__('Когорт: %d', 'course-plugin'), (int) $result['cohorts']);
                 }
                 
-                $parts = array_filter(array($courses_info, $categories_info, $cohorts_info));
+                if (!empty($result['sync_run_flags'])) {
+                    $flags = $result['sync_run_flags'];
+                    if (empty($flags['students'])) {
+                        $students_info = __('Записи студентов: шаг не выбран', 'course-plugin');
+                    } else {
+                        $students_info = __('Записи студентов: выполнено', 'course-plugin');
+                    }
+                    if (!empty($flags['courses']) && empty($flags['laravel'])) {
+                        $laravel_info = __('Laravel API: отправка курсов отключена для этого запуска', 'course-plugin');
+                    }
+                }
+                
+                $parts = array_filter(array($courses_info, $categories_info, $cohorts_info, $students_info, $laravel_info));
                 echo '<div class="notice notice-success is-dismissible"><p>' . 
                      __('Синхронизация завершена!', 'course-plugin') . ' ' . 
                      implode(', ', $parts) . 
@@ -433,6 +477,11 @@ class Course_Moodle_Sync {
         $sso_api_key = get_option('sso_api_key', '');
         $moodle_sso_api_key = get_option('moodle_sso_api_key', '');
         $disable_email_sending = get_option('disable_email_sending', false);
+        $moodle_sync_include_categories = (bool) get_option('moodle_sync_include_categories', true);
+        $moodle_sync_include_cohorts    = (bool) get_option('moodle_sync_include_cohorts', true);
+        $moodle_sync_include_courses    = (bool) get_option('moodle_sync_include_courses', true);
+        $moodle_sync_include_students   = (bool) get_option('moodle_sync_include_students', true);
+        $moodle_sync_include_laravel    = (bool) get_option('moodle_sync_include_laravel', true);
         
         ?>
         <div class="wrap">
@@ -616,6 +665,65 @@ class Course_Moodle_Sync {
                     </tr>
                 </table>
                 
+                <h2><?php _e('Состав синхронизации', 'course-plugin'); ?></h2>
+                <p class="description">
+                    <?php _e('Используется при автоматической синхронизации (cron). При ручной синхронизации ниже можно задать шаги только для текущего запуска.', 'course-plugin'); ?>
+                </p>
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row"><?php _e('Категории курсов Moodle', 'course-plugin'); ?></th>
+                        <td>
+                            <input type="hidden" name="moodle_sync_include_categories" value="0" />
+                            <label>
+                                <input type="checkbox" name="moodle_sync_include_categories" id="moodle_sync_include_categories" value="1" <?php checked($moodle_sync_include_categories); ?> />
+                                <?php _e('Импортировать категории в WordPress', 'course-plugin'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Глобальные группы (когорты)', 'course-plugin'); ?></th>
+                        <td>
+                            <input type="hidden" name="moodle_sync_include_cohorts" value="0" />
+                            <label>
+                                <input type="checkbox" name="moodle_sync_include_cohorts" id="moodle_sync_include_cohorts" value="1" <?php checked($moodle_sync_include_cohorts); ?> />
+                                <?php _e('Обновлять список когорт Moodle', 'course-plugin'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Курсы WordPress', 'course-plugin'); ?></th>
+                        <td>
+                            <input type="hidden" name="moodle_sync_include_courses" value="0" />
+                            <label>
+                                <input type="checkbox" name="moodle_sync_include_courses" id="moodle_sync_include_courses" value="1" <?php checked($moodle_sync_include_courses); ?> />
+                                <?php _e('Синхронизировать курсы из Moodle в записи «Курс»', 'course-plugin'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Записи студентов', 'course-plugin'); ?></th>
+                        <td>
+                            <input type="hidden" name="moodle_sync_include_students" value="0" />
+                            <label>
+                                <input type="checkbox" name="moodle_sync_include_students" id="moodle_sync_include_students" value="1" <?php checked($moodle_sync_include_students); ?> />
+                                <?php _e('Синхронизировать зачисления студентов по курсам', 'course-plugin'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="moodle_sync_include_laravel"><?php _e('Laravel API', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="hidden" name="moodle_sync_include_laravel" value="0" />
+                            <label>
+                                <input type="checkbox" name="moodle_sync_include_laravel" id="moodle_sync_include_laravel" value="1" <?php checked($moodle_sync_include_laravel); ?> />
+                                <?php _e('Отправлять курсы в Laravel при синхронизации курсов (требуется URL и токен API выше)', 'course-plugin'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                </table>
+                
                 <h2><?php _e('Настройки Single Sign-On (SSO)', 'course-plugin'); ?></h2>
                 <p class="description"><?php _e('Позволяет пользователям автоматически входить в Moodle и Laravel после входа в WordPress.', 'course-plugin'); ?></p>
                 
@@ -713,10 +821,40 @@ class Course_Moodle_Sync {
                 // wp_nonce_field() создает скрытое поле с токеном безопасности
                 wp_nonce_field('moodle_sync_manual', 'moodle_sync_nonce'); 
                 ?>
-                <input type="submit" 
-                       name="moodle_sync_manual" 
-                       class="button button-primary" 
-                       value="<?php esc_attr_e('Синхронизировать сейчас', 'course-plugin'); ?>" />
+                <fieldset class="course-moodle-sync-manual-steps" style="margin: 1em 0; padding: 12px 14px; max-width: 720px; border: 1px solid #c3c4c7; background: #fcfcfc;">
+                    <legend><strong><?php _e('Шаги этой синхронизации', 'course-plugin'); ?></strong></legend>
+                    <p class="description" style="margin-top: 0;">
+                        <?php _e('По умолчанию отмечены те же пункты, что сохранены выше для автоматической синхронизации. Снимите галочки, чтобы пропустить шаг только в этом запуске.', 'course-plugin'); ?>
+                    </p>
+                    <p>
+                        <label style="display: block; margin: 0.35em 0;">
+                            <input type="checkbox" name="moodle_sync_manual_categories" value="1" <?php checked($moodle_sync_include_categories); ?> />
+                            <?php _e('Категории курсов Moodle', 'course-plugin'); ?>
+                        </label>
+                        <label style="display: block; margin: 0.35em 0;">
+                            <input type="checkbox" name="moodle_sync_manual_cohorts" value="1" <?php checked($moodle_sync_include_cohorts); ?> />
+                            <?php _e('Глобальные группы (когорты)', 'course-plugin'); ?>
+                        </label>
+                        <label style="display: block; margin: 0.35em 0;">
+                            <input type="checkbox" name="moodle_sync_manual_courses" value="1" <?php checked($moodle_sync_include_courses); ?> />
+                            <?php _e('Курсы WordPress', 'course-plugin'); ?>
+                        </label>
+                        <label style="display: block; margin: 0.35em 0;">
+                            <input type="checkbox" name="moodle_sync_manual_students" value="1" <?php checked($moodle_sync_include_students); ?> />
+                            <?php _e('Записи студентов по курсам', 'course-plugin'); ?>
+                        </label>
+                        <label style="display: block; margin: 0.35em 0;">
+                            <input type="checkbox" name="moodle_sync_manual_laravel" value="1" <?php checked($moodle_sync_include_laravel); ?> />
+                            <?php _e('Отправка курсов в Laravel API', 'course-plugin'); ?>
+                        </label>
+                    </p>
+                </fieldset>
+                <p>
+                    <input type="submit" 
+                           name="moodle_sync_manual" 
+                           class="button button-primary" 
+                           value="<?php esc_attr_e('Синхронизировать сейчас', 'course-plugin'); ?>" />
+                </p>
             </form>
         </div>
         <?php
@@ -735,6 +873,43 @@ class Course_Moodle_Sync {
                 array('back_link' => true)
             );
         }
+    }
+    
+    /**
+     * Шаги синхронизации по умолчанию (cron и сохранённые настройки).
+     *
+     * @return array<string, bool>
+     */
+    private function get_default_sync_run_flags() {
+        return array(
+            'categories' => (bool) get_option('moodle_sync_include_categories', true),
+            'cohorts'    => (bool) get_option('moodle_sync_include_cohorts', true),
+            'courses'    => (bool) get_option('moodle_sync_include_courses', true),
+            'students'   => (bool) get_option('moodle_sync_include_students', true),
+            'laravel'    => (bool) get_option('moodle_sync_include_laravel', true),
+        );
+    }
+    
+    /**
+     * Ручная синхронизация: шаги из формы; иначе — опции для cron.
+     *
+     * @param bool $manual
+     * @return array<string, bool>
+     */
+    private function resolve_sync_run_flags($manual) {
+        if ($manual && isset($_POST['moodle_sync_manual'], $_POST['moodle_sync_nonce'])) {
+            $nonce = isset($_POST['moodle_sync_nonce']) ? sanitize_text_field(wp_unslash($_POST['moodle_sync_nonce'])) : '';
+            if ($nonce && wp_verify_nonce($nonce, 'moodle_sync_manual')) {
+                return array(
+                    'categories' => !empty($_POST['moodle_sync_manual_categories']),
+                    'cohorts'    => !empty($_POST['moodle_sync_manual_cohorts']),
+                    'courses'    => !empty($_POST['moodle_sync_manual_courses']),
+                    'students'   => !empty($_POST['moodle_sync_manual_students']),
+                    'laravel'    => !empty($_POST['moodle_sync_manual_laravel']),
+                );
+            }
+        }
+        return $this->get_default_sync_run_flags();
     }
     
     /**
@@ -787,39 +962,86 @@ class Course_Moodle_Sync {
             }
         }
         
+        $this->sync_run_flags = $this->resolve_sync_run_flags($manual);
+        $any_step = false;
+        foreach ($this->sync_run_flags as $on) {
+            if ($on) {
+                $any_step = true;
+                break;
+            }
+        }
+        if (!$any_step) {
+            return array(
+                'success' => false,
+                'message' => __('Не выбран ни один шаг синхронизации. Отметьте нужные пункты и повторите.', 'course-plugin'),
+                'courses' => 0,
+                'categories' => 0,
+                'cohorts' => 0,
+                'sync_run_flags' => $this->sync_run_flags,
+            );
+        }
+        
         // Счетчики для статистики
         $courses_count = 0;
         $categories_count = 0;
         
         // Синхронизируем категории курсов
-        $categories_result = $this->sync_categories();
-        if (is_array($categories_result)) {
-            $categories_count = $categories_result['count'];
+        if (!empty($this->sync_run_flags['categories'])) {
+            $categories_result = $this->sync_categories();
+            if (is_array($categories_result)) {
+                $categories_count = $categories_result['count'];
+            } else {
+                $categories_count = 0;
+            }
         } else {
-            $categories_count = 0;
+            $categories_result = array(
+                'count' => 0,
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+                'skipped_by_choice' => true,
+            );
         }
         
         // Глобальные группы (когорты Moodle)
-        $cohorts_result = $this->sync_global_groups();
-        $cohorts_count  = (is_array($cohorts_result) && !empty($cohorts_result['success'])) ? (int) $cohorts_result['count'] : 0;
+        if (!empty($this->sync_run_flags['cohorts'])) {
+            $cohorts_result = $this->sync_global_groups();
+            $cohorts_count  = (is_array($cohorts_result) && !empty($cohorts_result['success'])) ? (int) $cohorts_result['count'] : 0;
+        } else {
+            $cohorts_result = array('success' => true, 'count' => 0, 'skipped_by_choice' => true);
+            $cohorts_count  = 0;
+        }
         
         // Синхронизируем курсы
-        $courses_result = $this->sync_courses();
-        if (is_array($courses_result)) {
-            $courses_count = $courses_result['count'];
+        if (!empty($this->sync_run_flags['courses'])) {
+            $courses_result = $this->sync_courses();
+            if (is_array($courses_result)) {
+                $courses_count = $courses_result['count'];
+            } else {
+                $courses_count = 0;
+            }
         } else {
+            $courses_result = array(
+                'count' => 0,
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+                'skipped_by_choice' => true,
+            );
             $courses_count = 0;
         }
         
         // Синхронизируем студентов (с обработкой ошибок)
-        try {
-            $this->sync_students();
-        } catch (Exception $e) {
-            error_log('Moodle Sync: Ошибка при синхронизации студентов: ' . $e->getMessage());
-            error_log('Moodle Sync: Stack trace: ' . $e->getTraceAsString());
-        } catch (Error $e) {
-            error_log('Moodle Sync: Критическая ошибка при синхронизации студентов: ' . $e->getMessage());
-            error_log('Moodle Sync: Stack trace: ' . $e->getTraceAsString());
+        if (!empty($this->sync_run_flags['students'])) {
+            try {
+                $this->sync_students();
+            } catch (Exception $e) {
+                error_log('Moodle Sync: Ошибка при синхронизации студентов: ' . $e->getMessage());
+                error_log('Moodle Sync: Stack trace: ' . $e->getTraceAsString());
+            } catch (Error $e) {
+                error_log('Moodle Sync: Критическая ошибка при синхронизации студентов: ' . $e->getMessage());
+                error_log('Moodle Sync: Stack trace: ' . $e->getTraceAsString());
+            }
         }
         
         // Возвращаем результат синхронизации
@@ -832,6 +1054,7 @@ class Course_Moodle_Sync {
             'courses_result' => $courses_result,
             'categories_result' => $categories_result,
             'cohorts_result' => $cohorts_result,
+            'sync_run_flags' => $this->sync_run_flags,
         );
     }
     
@@ -1299,8 +1522,10 @@ class Course_Moodle_Sync {
             update_post_meta($post_id, 'moodle_course_visible', absint($course['visible']));
         }
         
-        // Отправляем курс в Laravel приложение
-        $this->sync_course_to_laravel($post_id, $course, $action);
+        // Отправляем курс в Laravel приложение (если шаг включён в текущей синхронизации)
+        if (!empty($this->sync_run_flags['laravel'])) {
+            $this->sync_course_to_laravel($post_id, $course, $action);
+        }
         
         return $action;
     }
