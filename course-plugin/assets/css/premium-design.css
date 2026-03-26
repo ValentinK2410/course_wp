@@ -289,11 +289,13 @@
     transform: translateY(-50%);
     color: var(--premium-gray-400);
     pointer-events: none;
+    display: block;
+    flex-shrink: 0;
 }
 
 .filter-search-input {
     width: 100%;
-    padding: 14px 16px 14px 44px;
+    padding: 14px 16px 14px 3.25rem;
     border: 2px solid var(--premium-gray-200);
     border-radius: var(--premium-radius);
     font-size: 0.9375rem;
@@ -2024,7 +2026,7 @@ article.teacher-card {
 
 .filter-search-input {
     width: 100%;
-    padding: 12px 16px 12px 44px;
+    padding: 12px 16px 12px 3.25rem;
     border: 2px solid var(--premium-gray-300);
     border-radius: var(--premium-radius);
     font-size: 0.9375rem;
@@ -2732,6 +2734,7 @@ article.teacher-card {
     
     .filter-search-input {
         font-size: 16px !important; /* Предотвращает зум на iOS */
+        padding-left: 3.25rem !important;
     }
     
     .premium-sort-select {
