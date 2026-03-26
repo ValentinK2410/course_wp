@@ -811,6 +811,35 @@ class Course_SSO {
     }
     
     /**
+     * Извлекает moodle_user_id из POST/REQUEST и сырого тела запроса.
+     * Учитывает баг клиентов: в теле вместо разделителя & попадает HTML-сущность &amp;,
+     * из-за чего PHP кладёт значение в ключ «amp;moodle_user_id» и ID остаётся 0.
+     *
+     * @param string $raw_input Содержимое php://input.
+     * @return int
+     */
+    private function parse_sso_moodle_user_id_from_request($raw_input) {
+        if (isset($_POST['moodle_user_id']) && $_POST['moodle_user_id'] !== '' && $_POST['moodle_user_id'] !== null) {
+            return (int) $_POST['moodle_user_id'];
+        }
+        if (isset($_POST['amp;moodle_user_id']) && $_POST['amp;moodle_user_id'] !== '') {
+            error_log('Course SSO: moodle_user_id прочитан из ключа amp;moodle_user_id (клиент отправил &amp; вместо & в теле POST)');
+            return (int) $_POST['amp;moodle_user_id'];
+        }
+        if (isset($_REQUEST['moodle_user_id']) && $_REQUEST['moodle_user_id'] !== '' && $_REQUEST['moodle_user_id'] !== null) {
+            return (int) $_REQUEST['moodle_user_id'];
+        }
+        if ($raw_input !== '') {
+            $fixed = str_replace('&amp;', '&', $raw_input);
+            parse_str($fixed, $parsed);
+            if (!empty($parsed['moodle_user_id'])) {
+                return (int) $parsed['moodle_user_id'];
+            }
+        }
+        return 0;
+    }
+    
+    /**
      * AJAX обработчик для получения SSO токенов из Moodle
      * Используется для генерации токенов для кнопок перехода в WordPress и Laravel
      * 
@@ -851,11 +880,7 @@ class Course_SSO {
             error_log('Course SSO: Email найден в $_REQUEST: ' . $email);
         }
         
-        if (isset($_POST['moodle_user_id']) && !empty($_POST['moodle_user_id'])) {
-            $moodle_user_id = intval($_POST['moodle_user_id']);
-        } elseif (isset($_REQUEST['moodle_user_id']) && !empty($_REQUEST['moodle_user_id'])) {
-            $moodle_user_id = intval($_REQUEST['moodle_user_id']);
-        }
+        $moodle_user_id = $this->parse_sso_moodle_user_id_from_request($raw_input);
         
         error_log('Course SSO: Запрос токенов из Moodle. Email: ' . ($email ? $email : 'ПУСТО') . ', Moodle ID: ' . $moodle_user_id);
         
@@ -879,6 +904,14 @@ class Course_SSO {
             }
         } else {
             error_log('Course SSO: Пользователь найден по email. WordPress ID: ' . $user->ID);
+        }
+        
+        if ($moodle_user_id > 0) {
+            $existing_moodle = (int) get_user_meta($user->ID, 'moodle_user_id', true);
+            if ($existing_moodle !== $moodle_user_id) {
+                update_user_meta($user->ID, 'moodle_user_id', $moodle_user_id);
+                error_log('Course SSO: Синхронизирован moodle_user_id в метаполе WordPress: ' . $moodle_user_id);
+            }
         }
         
         // Генерируем токены для WordPress и Laravel
