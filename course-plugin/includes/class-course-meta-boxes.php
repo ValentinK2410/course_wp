@@ -204,6 +204,21 @@ class Course_Meta_Boxes {
                 </td>
             </tr>
             
+            <tr>
+                <th>
+                    <label for="course_organizer"><?php _e('Организатор', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <?php $course_organizer = get_post_meta($post->ID, '_course_organizer', true); ?>
+                    <select id="course_organizer" name="course_organizer" class="regular-text">
+                        <?php foreach (self::get_organizer_choices_for_select() as $val => $label) : ?>
+                            <option value="<?php echo esc_attr($val); ?>" <?php selected($course_organizer, $val); ?>><?php echo esc_html($label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="description"><?php _e('Организация, от имени которой проводится курс (отображается на странице курса и в списках).', 'course-plugin'); ?></p>
+                </td>
+            </tr>
+            
             <!-- Поле "Дата начала курса" -->
             <tr>
                 <th>
@@ -1221,6 +1236,57 @@ class Course_Meta_Boxes {
     }
     
     /**
+     * Варианты поля «Организатор» (курс и программа).
+     *
+     * @return array<string, string> value => label
+     */
+    public static function get_organizer_choices_for_select() {
+        return array(
+            '' => __('— Не указано —', 'course-plugin'),
+            'mbs_moscow' => __('Московская богословская семинария МБС', 'course-plugin'),
+            'seminary_moscow' => __('Богословская семинария в г. Москва', 'course-plugin'),
+        );
+    }
+    
+    /**
+     * @return string[]
+     */
+    public static function get_valid_organizer_keys() {
+        return array('mbs_moscow', 'seminary_moscow');
+    }
+    
+    /**
+     * @param string $key Значение мета _course_organizer / _program_organizer.
+     * @return string Текст для вывода или пустая строка.
+     */
+    public static function get_organizer_label($key) {
+        $key = (string) $key;
+        if ($key === '') {
+            return '';
+        }
+        $map = array(
+            'mbs_moscow' => __('Московская богословская семинария МБС', 'course-plugin'),
+            'seminary_moscow' => __('Богословская семинария в г. Москва', 'course-plugin'),
+        );
+        return isset($map[$key]) ? $map[$key] : '';
+    }
+    
+    /**
+     * @param mixed $posted Значение из POST.
+     * @return string Пустая строка или допустимый ключ.
+     */
+    public static function sanitize_organizer_meta_key($posted) {
+        if (!is_string($posted) && !is_numeric($posted)) {
+            return '';
+        }
+        $posted = sanitize_text_field(wp_unslash((string) $posted));
+        if ($posted === '') {
+            return '';
+        }
+        return in_array($posted, self::get_valid_organizer_keys(), true) ? $posted : '';
+    }
+    
+    /**
      * Возвращает массив доступных иконок для карточек курсов
      * 
      * @return array [slug => ['label' => string, 'svg' => string], ...]
@@ -1596,6 +1662,15 @@ class Course_Meta_Boxes {
         // Сохраняем "Не обновлять из Moodle" (исключить курс из синхронизации)
         $exclude_from_moodle = isset($_POST['exclude_from_moodle_sync']) && $_POST['exclude_from_moodle_sync'] === '1' ? '1' : '0';
         update_post_meta($post_id, '_exclude_from_moodle_sync', $exclude_from_moodle);
+        
+        if (isset($_POST['course_organizer'])) {
+            $org = self::sanitize_organizer_meta_key($_POST['course_organizer']);
+            if ($org === '') {
+                delete_post_meta($post_id, '_course_organizer');
+            } else {
+                update_post_meta($post_id, '_course_organizer', $org);
+            }
+        }
         
         // Проходим по каждому полю из массива $fields
         foreach ($fields as $field) {

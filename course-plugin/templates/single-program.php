@@ -27,6 +27,9 @@ while (have_posts()) : the_post();
     $program_tag = get_post_meta(get_the_ID(), '_program_tag', true);
     $program_additional_text = get_post_meta(get_the_ID(), '_program_additional_text', true);
     $program_enroll_url = get_post_meta(get_the_ID(), '_program_enroll_url', true); // Ссылка для записи на программу
+    $program_organizer_label = class_exists('Course_Meta_Boxes')
+        ? Course_Meta_Boxes::get_organizer_label(get_post_meta(get_the_ID(), '_program_organizer', true))
+        : '';
     
     // ============================================
     // ПОЛУЧЕНИЕ ТАКСОНОМИЙ
@@ -524,6 +527,15 @@ while (have_posts()) : the_post();
                     </div>
                     <div class="card-body">
                         <ul class="info-list">
+                            <?php if ($program_organizer_label) : ?>
+                                <li class="info-item">
+                                    <span class="info-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 17V7L10 3L17 7V17H12V11H8V17H3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                                    </span>
+                                    <span class="info-label"><?php _e('Организатор:', 'course-plugin'); ?></span>
+                                    <span class="info-value"><?php echo esc_html($program_organizer_label); ?></span>
+                                </li>
+                            <?php endif; ?>
                             <?php if ($show_field_duration && $program_duration) : ?>
                                 <li class="info-item">
                                     <span class="info-icon">

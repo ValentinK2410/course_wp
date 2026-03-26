@@ -49,6 +49,8 @@ if ($courses->have_posts()) : ?>
                 $specializations = get_the_terms(get_the_ID(), 'course_specialization');
                 $levels = get_the_terms(get_the_ID(), 'course_level');
                 $teachers = get_the_terms(get_the_ID(), 'course_teacher');
+                $organizer_key = get_post_meta(get_the_ID(), $is_program ? '_program_organizer' : '_course_organizer', true);
+                $organizer_label = class_exists('Course_Meta_Boxes') ? Course_Meta_Boxes::get_organizer_label($organizer_key) : '';
             ?>
                 <article class="csp-card">
                     <a href="<?php the_permalink(); ?>" class="csp-card-link">
@@ -88,6 +90,13 @@ if ($courses->have_posts()) : ?>
                             </div>
 
                             <h3 class="csp-card-title"><?php the_title(); ?></h3>
+
+                            <?php if ($organizer_label) : ?>
+                                <p class="csp-card-organizer" style="font-size:0.8rem;margin:0.25rem 0 0.35rem;color:#555;">
+                                    <strong><?php _e('Организатор:', 'course-plugin'); ?></strong>
+                                    <?php echo esc_html($organizer_label); ?>
+                                </p>
+                            <?php endif; ?>
 
                             <p class="csp-card-excerpt"><?php echo wp_trim_words(get_the_excerpt(), 14, '...'); ?></p>
 

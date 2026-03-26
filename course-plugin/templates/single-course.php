@@ -27,6 +27,9 @@ while (have_posts()) : the_post();
     $course_rating = get_post_meta(get_the_ID(), '_course_rating', true) ?: 0; // Рейтинг курса (по умолчанию 0)
     $course_reviews_count = get_post_meta(get_the_ID(), '_course_reviews_count', true) ?: 0; // Количество отзывов (по умолчанию 0)
     $course_location = get_post_meta(get_the_ID(), '_course_location', true); // Место проведения курса
+    $course_organizer_label = class_exists('Course_Meta_Boxes')
+        ? Course_Meta_Boxes::get_organizer_label(get_post_meta(get_the_ID(), '_course_organizer', true))
+        : '';
     
     // ============================================
     // ДОПОЛНИТЕЛЬНЫЕ ПОЛЯ КУРСА
@@ -672,6 +675,15 @@ while (have_posts()) : the_post();
                     </div>
                     <div class="card-body">
                         <ul class="overview-list">
+                            <?php if ($course_organizer_label) : ?>
+                                <li class="overview-item">
+                                    <span class="overview-icon">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 17V7L10 3L17 7V17H12V11H8V17H3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                                    </span>
+                                    <span class="overview-label"><?php _e('Организатор:', 'course-plugin'); ?></span>
+                                    <span class="overview-value"><?php echo esc_html($course_organizer_label); ?></span>
+                                </li>
+                            <?php endif; ?>
                             <?php if ($show_field_language && $course_language) : ?>
                                 <li class="overview-item">
                                     <span class="overview-icon">
@@ -747,7 +759,8 @@ while (have_posts()) : the_post();
                         </ul>
                         <?php 
                         // Если список пустой, показываем сообщение
-                        $has_visible_fields = ($show_field_language && $course_language) || 
+                        $has_visible_fields = ($course_organizer_label !== '') ||
+                                             ($show_field_language && $course_language) || 
                                              ($show_field_weeks && $course_weeks) || 
                                              ($show_field_credits && $course_credits) || 
                                              ($show_field_hours && $course_hours_per_week) || 

@@ -191,6 +191,24 @@ class Program_Meta_Boxes {
             
             <tr>
                 <th>
+                    <label for="program_organizer"><?php _e('Организатор', 'course-plugin'); ?></label>
+                </th>
+                <td>
+                    <?php
+                    $program_organizer = get_post_meta($post->ID, '_program_organizer', true);
+                    $org_choices = class_exists('Course_Meta_Boxes') ? Course_Meta_Boxes::get_organizer_choices_for_select() : array();
+                    ?>
+                    <select id="program_organizer" name="program_organizer" class="regular-text">
+                        <?php foreach ($org_choices as $val => $label) : ?>
+                            <option value="<?php echo esc_attr($val); ?>" <?php selected($program_organizer, $val); ?>><?php echo esc_html($label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="description"><?php _e('Организация, от имени которой проводится программа (отображается на странице программы и в списках).', 'course-plugin'); ?></p>
+                </td>
+            </tr>
+            
+            <tr>
+                <th>
                     <label for="program_tag"><?php _e('Тег программы', 'course-plugin'); ?></label>
                 </th>
                 <td>
@@ -766,6 +784,15 @@ class Program_Meta_Boxes {
         // Сохранение даты окончания
         if (isset($_POST['program_end_date'])) {
             update_post_meta($post_id, '_program_end_date', sanitize_text_field($_POST['program_end_date']));
+        }
+        
+        if (isset($_POST['program_organizer']) && class_exists('Course_Meta_Boxes')) {
+            $org = Course_Meta_Boxes::sanitize_organizer_meta_key($_POST['program_organizer']);
+            if ($org === '') {
+                delete_post_meta($post_id, '_program_organizer');
+            } else {
+                update_post_meta($post_id, '_program_organizer', $org);
+            }
         }
         
         // Сохранение связанных курсов

@@ -563,6 +563,9 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                         $course_location = get_post_meta(get_the_ID(), '_course_location', true);
                         $show_card_icon = get_post_meta(get_the_ID(), '_course_show_card_icon', true);
                         $card_icon_type = get_post_meta(get_the_ID(), '_course_card_icon_type', true);
+                        $course_organizer_label = class_exists('Course_Meta_Boxes')
+                            ? Course_Meta_Boxes::get_organizer_label(get_post_meta(get_the_ID(), '_course_organizer', true))
+                            : '';
                         
                         // По умолчанию показываем иконку
                         if ($show_card_icon === '') {
@@ -740,6 +743,13 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                                 <!-- Контент карточки -->
                                 <div class="card-content">
                                     <h2 class="card-title"><?php the_title(); ?></h2>
+                                    
+                                    <?php if ($course_organizer_label) : ?>
+                                        <p class="card-organizer" style="font-size:0.85rem;margin:0.35rem 0 0.5rem;color:#555;line-height:1.35;">
+                                            <strong><?php _e('Организатор:', 'course-plugin'); ?></strong>
+                                            <?php echo esc_html($course_organizer_label); ?>
+                                        </p>
+                                    <?php endif; ?>
                                     
                                     <?php if ($teacher_name) : ?>
                                         <p class="card-teacher">
