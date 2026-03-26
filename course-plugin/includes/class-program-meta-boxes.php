@@ -115,6 +115,15 @@ class Program_Meta_Boxes {
             'side',
             'default'
         );
+        
+        add_meta_box(
+            'program_global_group',
+            __('Глобальная группа (Moodle)', 'course-plugin'),
+            array($this, 'render_program_global_group_meta_box'),
+            'program',
+            'side',
+            'default'
+        );
     }
     
     /**
@@ -723,6 +732,61 @@ class Program_Meta_Boxes {
     }
     
     /**
+     * Метабокс: привязка к когорте Moodle (глобальная группа).
+     */
+    public function render_program_global_group_meta_box($post) {
+        $saved_id = (int) get_post_meta($post->ID, '_program_moodle_cohort_id', true);
+        $groups     = function_exists('course_plugin_get_moodle_global_groups')
+            ? course_plugin_get_moodle_global_groups()
+            : get_option('moodle_sync_global_groups', array());
+        if (!is_array($groups)) {
+            $groups = array();
+        }
+        $ids_in_list = array();
+        foreach ($groups as $g) {
+            if (is_array($g) && isset($g['id'])) {
+                $ids_in_list[] = (int) $g['id'];
+            }
+        }
+        ?>
+        <p>
+            <label for="program_moodle_cohort_id"><?php esc_html_e('Когорта Moodle', 'course-plugin'); ?></label>
+        </p>
+        <select name="program_moodle_cohort_id" id="program_moodle_cohort_id" class="widefat">
+            <option value=""><?php esc_html_e('Не привязано', 'course-plugin'); ?></option>
+            <?php
+            if ($saved_id > 0 && ! in_array($saved_id, $ids_in_list, true)) {
+                printf(
+                    '<option value="%d" selected="selected">%s</option>',
+                    esc_attr((string) $saved_id),
+                    esc_html(sprintf(__('Сохранённая группа (ID %d)', 'course-plugin'), $saved_id))
+                );
+            }
+            foreach ($groups as $g) {
+                if (! is_array($g) || ! isset($g['id'])) {
+                    continue;
+                }
+                $gid   = (int) $g['id'];
+                $label = isset($g['name']) ? (string) $g['name'] : '';
+                if (! empty($g['idnumber'])) {
+                    $label .= ' (' . $g['idnumber'] . ')';
+                }
+                printf(
+                    '<option value="%d" %s>%s</option>',
+                    $gid,
+                    selected($saved_id, $gid, false),
+                    esc_html($label)
+                );
+            }
+            ?>
+        </select>
+        <p class="description">
+            <?php esc_html_e('Список когорт обновляется при синхронизации Moodle (Настройки → Moodle Sync).', 'course-plugin'); ?>
+        </p>
+        <?php
+    }
+    
+    /**
      * Сохранение данных метабоксов
      */
     public function save_meta_boxes($post_id) {
@@ -792,6 +856,15 @@ class Program_Meta_Boxes {
                 delete_post_meta($post_id, '_program_organizer');
             } else {
                 update_post_meta($post_id, '_program_organizer', $org);
+            }
+        }
+        
+        if (isset($_POST['program_moodle_cohort_id'])) {
+            $cid = absint($_POST['program_moodle_cohort_id']);
+            if ($cid === 0) {
+                delete_post_meta($post_id, '_program_moodle_cohort_id');
+            } else {
+                update_post_meta($post_id, '_program_moodle_cohort_id', $cid);
             }
         }
         

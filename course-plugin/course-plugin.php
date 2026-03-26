@@ -3,7 +3,7 @@
  * Plugin Name: Курсы Про
  * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
- * Version: 1.3.45
+ * Version: 1.3.46
  * Author: Кузьменко Валентин (Valentink2410)
  * Author URI: https://github.com/ValentinK2410
  * Copyright: Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 
 // Определяем константы плагина для использования в других файлах
 // COURSE_PLUGIN_VERSION - версия плагина для версионирования стилей и скриптов
-define('COURSE_PLUGIN_VERSION', '1.3.45');
+define('COURSE_PLUGIN_VERSION', '1.3.46');
 
 // COURSE_PLUGIN_DIR - абсолютный путь к директории плагина (например: /var/www/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -452,6 +452,16 @@ class Course_Plugin {
 function course_plugin_init() {
     // Создаем и возвращаем единственный экземпляр класса Course_Plugin
     return Course_Plugin::get_instance();
+}
+
+/**
+ * Когорты Moodle (глобальные группы), синхронизированные в опции плагина.
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function course_plugin_get_moodle_global_groups() {
+    $groups = get_option('moodle_sync_global_groups', array());
+    return is_array($groups) ? $groups : array();
 }
 
 // Запускаем плагин сразу после загрузки файла

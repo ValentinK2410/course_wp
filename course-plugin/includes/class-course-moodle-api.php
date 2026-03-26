@@ -425,6 +425,94 @@ class Course_Moodle_API {
         
         return false;
     }
+    
+    /**
+     * Поиск когорт (глобальных групп Moodle) в системном контексте — одна страница.
+     *
+     * @param string $query Строка поиска (пустая — все доступные по правам).
+     * @param int    $page Номер страницы (с 0).
+     * @param int    $perpage Записей на страницу.
+     * @return array|false Ответ Moodle или false.
+     */
+    public function search_cohorts($query = '', $page = 0, $perpage = 100) {
+        $context = apply_filters(
+            'moodle_api_cohort_search_context',
+            array(
+                'contextid'    => 1,
+                'contextlevel' => 'system',
+            )
+        );
+        
+        return $this->call(
+            'core_cohort_search_cohorts',
+            array(
+                'query'   => $query,
+                'context' => $context,
+                'page'    => (int) $page,
+                'perpage' => (int) $perpage,
+            )
+        );
+    }
+    
+    /**
+     * Все когорты сайта: постраничный обход core_cohort_search_cohorts.
+     *
+     * @return array{list: array<int, array{id:int, name:string, idnumber:string}>}|array{exception:string, message:string}|false
+     */
+    public function get_all_cohorts() {
+        $perpage = max(10, min(500, (int) apply_filters('moodle_api_cohorts_per_page', 100)));
+        $query   = (string) apply_filters('moodle_api_cohort_search_query', '');
+        
+        $by_id = array();
+        $page  = 0;
+        
+        while (true) {
+            $result = $this->search_cohorts($query, $page, $perpage);
+            
+            if ($result === false) {
+                return false;
+            }
+            if (is_array($result) && isset($result['exception'])) {
+                return $result;
+            }
+            
+            $cohorts = array();
+            if (isset($result['cohorts']) && is_array($result['cohorts'])) {
+                $cohorts = $result['cohorts'];
+            }
+            
+            if (empty($cohorts)) {
+                break;
+            }
+            
+            foreach ($cohorts as $c) {
+                if (!is_array($c) || !isset($c['id'])) {
+                    continue;
+                }
+                $id = (int) $c['id'];
+                $by_id[ $id ] = array(
+                    'id'       => $id,
+                    'name'     => isset($c['name']) ? (string) $c['name'] : '',
+                    'idnumber' => isset($c['idnumber']) ? (string) $c['idnumber'] : '',
+                );
+            }
+            
+            if (count($cohorts) < $perpage) {
+                break;
+            }
+            $page++;
+        }
+        
+        $list = array_values($by_id);
+        usort(
+            $list,
+            function ($a, $b) {
+                return strcasecmp($a['name'], $b['name']);
+            }
+        );
+        
+        return array('list' => $list);
+    }
 }
 
 

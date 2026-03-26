@@ -150,6 +150,15 @@ class Course_Moodle_Sync {
             'moodle-sync',                          // Уникальный идентификатор страницы (slug)
             array($this, 'admin_page')             // Функция для отображения содержимого страницы
         );
+        
+        add_submenu_page(
+            'options-general.php',
+            __('Глобальные группы (Moodle)', 'course-plugin'),
+            __('Глобальные группы (Moodle)', 'course-plugin'),
+            'manage_options',
+            'moodle-global-groups',
+            array($this, 'render_global_groups_page')
+        );
     }
     
     /**
@@ -223,6 +232,88 @@ class Course_Moodle_Sync {
             'type' => 'boolean',
             'default' => false  // По умолчанию письма отправляются
         ));
+    }
+    
+    /**
+     * Список глобальных групп (когорт Moodle), сохранённых при последней синхронизации.
+     */
+    public function render_global_groups_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('У вас нет прав для доступа к этой странице.', 'course-plugin'));
+        }
+        
+        $groups   = get_option('moodle_sync_global_groups', array());
+        $updated  = get_option('moodle_sync_global_groups_updated', 0);
+        $sync_url = admin_url('options-general.php?page=moodle-sync');
+        
+        if (!is_array($groups)) {
+            $groups = array();
+        }
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Глобальные группы (когорты Moodle)', 'course-plugin'); ?></h1>
+            <p class="description">
+                <?php esc_html_e('Список заполняется при синхронизации с Moodle (вручную на странице «Moodle Sync» или по расписанию). В программах можно привязать одну когорту к записи.', 'course-plugin'); ?>
+                <a href="<?php echo esc_url($sync_url); ?>"><?php esc_html_e('Перейти к синхронизации Moodle', 'course-plugin'); ?></a>
+            </p>
+            <p>
+                <?php
+                if ($updated) {
+                    echo esc_html(
+                        sprintf(
+                            /* translators: %s: localized datetime */
+                            __('Список последний раз обновлён: %s', 'course-plugin'),
+                            wp_date(
+                                get_option('date_format') . ' ' . get_option('time_format'),
+                                (int) $updated
+                            )
+                        )
+                    );
+                } else {
+                    esc_html_e('Список ещё не синхронизирован.', 'course-plugin');
+                }
+                ?>
+            </p>
+            <?php if (empty($groups)) : ?>
+                <p><?php esc_html_e('Когорты не найдены. Выполните синхронизацию Moodle или проверьте права токена на функцию core_cohort_search_cohorts.', 'course-plugin'); ?></p>
+            <?php else : ?>
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th scope="col"><?php esc_html_e('ID Moodle', 'course-plugin'); ?></th>
+                            <th scope="col"><?php esc_html_e('Название', 'course-plugin'); ?></th>
+                            <th scope="col"><?php esc_html_e('ID number', 'course-plugin'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($groups as $row) : ?>
+                            <?php
+                            if (!is_array($row) || !isset($row['id'])) {
+                                continue;
+                            }
+                            ?>
+                            <tr>
+                                <td><?php echo esc_html((string) $row['id']); ?></td>
+                                <td><?php echo esc_html(isset($row['name']) ? $row['name'] : ''); ?></td>
+                                <td><?php echo esc_html(isset($row['idnumber']) ? $row['idnumber'] : ''); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <p class="description">
+                    <?php
+                    echo esc_html(
+                        sprintf(
+                            /* translators: %d: number of cohorts */
+                            __('Всего: %d', 'course-plugin'),
+                            count($groups)
+                        )
+                    );
+                    ?>
+                </p>
+            <?php endif; ?>
+        </div>
+        <?php
     }
     
     /**
@@ -302,9 +393,25 @@ class Course_Moodle_Sync {
                     $categories_info = sprintf(__('Категорий: %d', 'course-plugin'), $result['categories']);
                 }
                 
+                $cohorts_info = '';
+                if (isset($result['cohorts_result']) && is_array($result['cohorts_result'])) {
+                    $cr = $result['cohorts_result'];
+                    if (!empty($cr['success'])) {
+                        $cohorts_info = sprintf(__('Когорт: %d', 'course-plugin'), isset($cr['count']) ? (int) $cr['count'] : 0);
+                    } else {
+                        $cohorts_info = sprintf(
+                            __('Когорты: не обновлены (%s)', 'course-plugin'),
+                            isset($cr['message']) ? $cr['message'] : ''
+                        );
+                    }
+                } elseif (isset($result['cohorts'])) {
+                    $cohorts_info = sprintf(__('Когорт: %d', 'course-plugin'), (int) $result['cohorts']);
+                }
+                
+                $parts = array_filter(array($courses_info, $categories_info, $cohorts_info));
                 echo '<div class="notice notice-success is-dismissible"><p>' . 
                      __('Синхронизация завершена!', 'course-plugin') . ' ' . 
-                     $courses_info . ', ' . $categories_info . 
+                     implode(', ', $parts) . 
                      '</p></div>';
             } else {
                 echo '<div class="notice notice-error is-dismissible"><p>' . 
@@ -646,7 +753,8 @@ class Course_Moodle_Sync {
                 'success' => false,
                 'message' => __('Автоматическая синхронизация отключена', 'course-plugin'),
                 'courses' => 0,
-                'categories' => 0
+                'categories' => 0,
+                'cohorts' => 0,
             );
         }
         
@@ -658,7 +766,8 @@ class Course_Moodle_Sync {
                 'success' => false,
                 'message' => $message,
                 'courses' => 0,
-                'categories' => 0
+                'categories' => 0,
+                'cohorts' => 0,
             );
         }
         
@@ -672,7 +781,8 @@ class Course_Moodle_Sync {
                     'success' => false,
                     'message' => __('Ошибка: класс Course_Moodle_API не найден. Проверьте, что все файлы плагина загружены.', 'course-plugin'),
                     'courses' => 0,
-                    'categories' => 0
+                    'categories' => 0,
+                    'cohorts' => 0,
                 );
             }
         }
@@ -688,6 +798,10 @@ class Course_Moodle_Sync {
         } else {
             $categories_count = 0;
         }
+        
+        // Глобальные группы (когорты Moodle)
+        $cohorts_result = $this->sync_global_groups();
+        $cohorts_count  = (is_array($cohorts_result) && !empty($cohorts_result['success'])) ? (int) $cohorts_result['count'] : 0;
         
         // Синхронизируем курсы
         $courses_result = $this->sync_courses();
@@ -714,8 +828,61 @@ class Course_Moodle_Sync {
             'message' => __('Синхронизация успешно завершена', 'course-plugin'),
             'courses' => $courses_count,
             'categories' => $categories_count,
+            'cohorts' => $cohorts_count,
             'courses_result' => $courses_result,
-            'categories_result' => $categories_result
+            'categories_result' => $categories_result,
+            'cohorts_result' => $cohorts_result,
+        );
+    }
+    
+    /**
+     * Синхронизация списка глобальных групп (когорт) из Moodle в опцию WordPress.
+     *
+     * @return array{success:bool, count:int, message?:string}|false
+     */
+    private function sync_global_groups() {
+        if (!$this->api) {
+            return array(
+                'success' => false,
+                'count' => 0,
+                'message' => __('API Moodle не инициализирован', 'course-plugin'),
+            );
+        }
+        
+        $result = $this->api->get_all_cohorts();
+        
+        if ($result === false) {
+            error_log('Moodle Sync: не удалось получить когорты (get_all_cohorts = false)');
+            return array(
+                'success' => false,
+                'count' => 0,
+                'message' => __('Не удалось запросить когорты в Moodle', 'course-plugin'),
+            );
+        }
+        
+        if (is_array($result) && isset($result['exception'])) {
+            $msg = isset($result['message']) ? $result['message'] : 'exception';
+            error_log('Moodle Sync: ошибка API когорт: ' . $msg);
+            return array(
+                'success' => false,
+                'count' => 0,
+                'message' => $msg,
+            );
+        }
+        
+        $list      = isset($result['list']) && is_array($result['list']) ? $result['list'] : array();
+        $synced_at = gmdate('c');
+        foreach ($list as &$row) {
+            $row['synced_at'] = $synced_at;
+        }
+        unset($row);
+        
+        update_option('moodle_sync_global_groups', $list);
+        update_option('moodle_sync_global_groups_updated', time());
+        
+        return array(
+            'success' => true,
+            'count' => count($list),
         );
     }
     
