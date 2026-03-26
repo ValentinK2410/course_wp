@@ -767,7 +767,7 @@ class Course_Frontend {
         foreach ($teachers as $term) {
             $teacher_photo = get_term_meta($term->term_id, 'teacher_photo', true);
             $teacher_position = get_term_meta($term->term_id, 'teacher_position', true);
-            $teacher_description = get_term_meta($term->term_id, 'teacher_description', true);
+            $teacher_education = get_term_meta($term->term_id, 'teacher_education', true);
             
             $courses_query = new WP_Query(array(
                 'post_type' => 'course',
@@ -795,7 +795,7 @@ class Course_Frontend {
                 'term' => $term,
                 'photo' => $teacher_photo,
                 'position' => $teacher_position,
-                'description' => $teacher_description,
+                'education' => $teacher_education,
                 'courses_count' => $courses_count,
                 'specializations' => is_wp_error($specializations) ? array() : $specializations,
             );

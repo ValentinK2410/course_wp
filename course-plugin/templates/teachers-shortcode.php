@@ -35,7 +35,7 @@ $color_schemes = array(
             $term = $item['term'];
             $teacher_photo = $item['photo'];
             $teacher_position = $item['position'];
-            $teacher_description = $item['description'];
+            $teacher_education = isset($item['education']) ? $item['education'] : '';
             $courses_count = $item['courses_count'];
             $specializations = $item['specializations'];
             
@@ -76,8 +76,14 @@ $color_schemes = array(
                             <a href="<?php echo esc_url($teacher_link); ?>"><?php echo esc_html($term->name); ?></a>
                         </h2>
                         
-                        <?php if ($teacher_description) : ?>
-                            <p class="teacher-card-description"><?php echo esc_html(wp_trim_words($teacher_description, 15, '...')); ?></p>
+                        <?php
+                        $edu_short = '';
+                        if ($teacher_education) {
+                            $edu_short = wp_trim_words(wp_strip_all_tags($teacher_education), 15, '…');
+                        }
+                        ?>
+                        <?php if ($edu_short !== '') : ?>
+                            <p class="teacher-card-description teacher-card-education"><?php echo esc_html($edu_short); ?></p>
                         <?php endif; ?>
                         
                         <div class="teacher-card-meta">

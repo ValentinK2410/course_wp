@@ -36,7 +36,7 @@ if (!is_wp_error($teachers)) {
         }
         $teacher_photo = get_term_meta($term->term_id, 'teacher_photo', true);
         $teacher_position = get_term_meta($term->term_id, 'teacher_position', true);
-        $teacher_description = get_term_meta($term->term_id, 'teacher_description', true);
+        $teacher_education = get_term_meta($term->term_id, 'teacher_education', true);
         $teacher_email = get_term_meta($term->term_id, 'teacher_email', true);
         $teacher_phone = get_term_meta($term->term_id, 'teacher_phone', true);
         $teacher_facebook = get_term_meta($term->term_id, 'teacher_facebook', true);
@@ -105,7 +105,7 @@ if (!is_wp_error($teachers)) {
             'courses_list' => $courses_list,
             'photo' => $teacher_photo,
             'position' => $teacher_position,
-            'description' => $teacher_description,
+            'education' => $teacher_education,
             'email' => $teacher_email,
             'phone' => $teacher_phone,
             'facebook' => $teacher_facebook,
@@ -349,7 +349,7 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                         $courses_list = $item['courses_list'];
                         $teacher_photo = $item['photo'];
                         $teacher_position = $item['position'];
-                        $teacher_description = $item['description'];
+                        $teacher_education = isset($item['education']) ? $item['education'] : '';
                         $teacher_email = $item['email'];
                         $teacher_phone = $item['phone'];
                         $teacher_facebook = $item['facebook'];
@@ -412,8 +412,14 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                                         <a href="<?php echo esc_url($teacher_link); ?>"><?php echo esc_html($term->name); ?></a>
                                     </h2>
                                     
-                                    <?php if ($teacher_description) : ?>
-                                        <p class="teacher-card-description"><?php echo esc_html(wp_trim_words($teacher_description, 20, '...')); ?></p>
+                                    <?php
+                                    $education_snippet = '';
+                                    if ($teacher_education) {
+                                        $education_snippet = wp_trim_words(wp_strip_all_tags($teacher_education), 22, '…');
+                                    }
+                                    ?>
+                                    <?php if ($education_snippet !== '') : ?>
+                                        <p class="teacher-card-description teacher-card-education"><?php echo esc_html($education_snippet); ?></p>
                                     <?php endif; ?>
                                     
                                     <div class="teacher-card-meta">
@@ -429,18 +435,9 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                                         </span>
                                     </div>
                                     
-                                    <!-- Контакты -->
-                                    <?php if ($teacher_email || $teacher_phone || $teacher_facebook || $teacher_twitter || $teacher_linkedin) : ?>
+                                    <!-- Контакты (email на карточке архива не показываем — компактнее) -->
+                                    <?php if ($teacher_phone || $teacher_facebook || $teacher_twitter || $teacher_linkedin) : ?>
                                         <div class="teacher-contacts">
-                                            <?php if ($teacher_email) : ?>
-                                                <a href="mailto:<?php echo esc_attr($teacher_email); ?>" class="contact-icon" title="Email">
-                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <rect x="1" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/>
-                                                        <path d="M1 5L8 9L15 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                                    </svg>
-                                                </a>
-                                            <?php endif; ?>
-                                            
                                             <?php if ($teacher_phone) : ?>
                                                 <a href="tel:<?php echo esc_attr($teacher_phone); ?>" class="contact-icon" title="<?php _e('Телефон', 'course-plugin'); ?>">
                                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
