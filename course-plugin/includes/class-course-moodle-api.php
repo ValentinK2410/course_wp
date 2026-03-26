@@ -532,6 +532,69 @@ class Course_Moodle_API {
         
         return array('list' => $list);
     }
+
+    /**
+     * Добавить пользователя в глобальную группу Moodle (когорту).
+     * WS: core_cohort_add_cohort_members — токен должен иметь право на эту функцию.
+     *
+     * @param int $cohort_id      ID когорты в Moodle.
+     * @param int $moodle_user_id ID пользователя в Moodle.
+     * @return array|false Ответ Moodle или false.
+     */
+    public function add_cohort_members($cohort_id, $moodle_user_id) {
+        $cohort_id = (int) $cohort_id;
+        $moodle_user_id = (int) $moodle_user_id;
+        if ($cohort_id <= 0 || $moodle_user_id <= 0) {
+            return false;
+        }
+
+        return $this->call(
+            'core_cohort_add_cohort_members',
+            array(
+                'members' => array(
+                    array(
+                        'cohorttype' => array(
+                            'type'  => 'id',
+                            'value' => (string) $cohort_id,
+                        ),
+                        'usertype' => array(
+                            'type'  => 'id',
+                            'value' => (string) $moodle_user_id,
+                        ),
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Отправить пользователю мгновенное сообщение в Moodle (уведомление; при настройках может уйти на email).
+     * WS: core_message_send_instant_messages.
+     *
+     * @param int    $to_moodle_user_id Получатель (ID в Moodle).
+     * @param string $text              Текст сообщения.
+     * @param int    $textformat        Формат: 0 plain, 1 HTML (FORMAT_HTML).
+     * @return array|false
+     */
+    public function send_instant_message($to_moodle_user_id, $text, $textformat = 1) {
+        $to_moodle_user_id = (int) $to_moodle_user_id;
+        if ($to_moodle_user_id <= 0 || $text === '') {
+            return false;
+        }
+
+        return $this->call(
+            'core_message_send_instant_messages',
+            array(
+                'messages' => array(
+                    array(
+                        'touserid'   => $to_moodle_user_id,
+                        'text'       => $text,
+                        'textformat' => (int) $textformat,
+                    ),
+                ),
+            )
+        );
+    }
 }
 
 

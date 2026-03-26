@@ -27,6 +27,20 @@ while (have_posts()) : the_post();
     $program_tag = get_post_meta(get_the_ID(), '_program_tag', true);
     $program_additional_text = get_post_meta(get_the_ID(), '_program_additional_text', true);
     $program_enroll_url = get_post_meta(get_the_ID(), '_program_enroll_url', true); // Ссылка для записи на программу
+    // Регистрация на сайте с передачей program_id (когорта Moodle задаётся в карточке программы)
+    $registration_page_id = (int) get_option('course_registration_page_id', 0);
+    $program_site_registration_url = '';
+    if ($registration_page_id && get_post_status($registration_page_id) === 'publish') {
+        $program_site_registration_url = add_query_arg('program_id', get_the_ID(), get_permalink($registration_page_id));
+    }
+    $program_register_url = '';
+    $program_register_is_external = false;
+    if (!empty($program_enroll_url)) {
+        $program_register_url = class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($program_enroll_url) : $program_enroll_url;
+        $program_register_is_external = true;
+    } elseif (!empty($program_site_registration_url)) {
+        $program_register_url = $program_site_registration_url;
+    }
     $program_organizer_label = class_exists('Course_Meta_Boxes')
         ? Course_Meta_Boxes::get_organizer_label(get_post_meta(get_the_ID(), '_program_organizer', true))
         : '';
@@ -286,13 +300,13 @@ while (have_posts()) : the_post();
                             <?php endif; ?>
                             <span class="price-current"><?php echo $program_price ? number_format($program_price, 0, ',', ' ') : __('Бесплатно', 'course-plugin'); ?><?php if ($program_price) echo ' ₽'; ?></span>
                         </div>
-                        <?php if ($program_enroll_url) : ?>
-                            <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($program_enroll_url) : $program_enroll_url); ?>" class="hero-enroll-btn" target="_blank" rel="noopener">
+                        <?php if ($program_register_url) : ?>
+                            <a href="<?php echo esc_url($program_register_url); ?>" class="hero-enroll-btn"<?php echo $program_register_is_external ? ' target="_blank" rel="noopener"' : ''; ?>>
                                 <?php echo esc_html($enroll_button_text); ?>
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </a>
                         <?php else : ?>
-                            <button class="hero-enroll-btn">
+                            <button type="button" class="hero-enroll-btn">
                                 <?php echo esc_html($enroll_button_text); ?>
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </button>
@@ -598,13 +612,13 @@ while (have_posts()) : the_post();
                         <?php endif; ?>
                         <span class="price-current"><?php echo $program_price ? number_format($program_price, 0, ',', ' ') . ' ₽' : __('Бесплатно', 'course-plugin'); ?></span>
                     </div>
-                    <?php if ($program_enroll_url) : ?>
-                        <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($program_enroll_url) : $program_enroll_url); ?>" class="enroll-btn" target="_blank" rel="noopener">
+                    <?php if ($program_register_url) : ?>
+                        <a href="<?php echo esc_url($program_register_url); ?>" class="enroll-btn"<?php echo $program_register_is_external ? ' target="_blank" rel="noopener"' : ''; ?>>
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             <?php echo esc_html($enroll_button_text); ?>
                         </a>
                     <?php else : ?>
-                        <button class="enroll-btn">
+                        <button type="button" class="enroll-btn">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             <?php echo esc_html($enroll_button_text); ?>
                         </button>
@@ -684,8 +698,8 @@ while (have_posts()) : the_post();
                 <h2 class="cta-title"><?php echo esc_html($cta_title); ?></h2>
                 <p class="cta-text"><?php echo esc_html($cta_text); ?></p>
             </div>
-            <?php if ($program_enroll_url) : ?>
-                <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($program_enroll_url) : $program_enroll_url); ?>" class="cta-btn" target="_blank" rel="noopener">
+            <?php if ($program_register_url) : ?>
+                <a href="<?php echo esc_url($program_register_url); ?>" class="cta-btn"<?php echo $program_register_is_external ? ' target="_blank" rel="noopener"' : ''; ?>>
                     <?php echo esc_html($cta_button_text); ?>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>

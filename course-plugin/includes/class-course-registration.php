@@ -101,11 +101,26 @@ class Course_Registration {
         
         // Обрабатываем атрибуты шорткода
         $atts = shortcode_atts(array(
-            'redirect' => '',  // URL для редиректа после регистрации
+            'redirect'   => '', // URL для редиректа после регистрации
+            'program_id' => '', // ID записи типа program (альтернатива ?program_id= в URL)
         ), $atts);
         
         // Получаем URL для редиректа
         $redirect_url = !empty($atts['redirect']) ? esc_url($atts['redirect']) : home_url();
+
+        // Запись на программу: program_id из шорткода или из query string
+        $registration_program_id = 0;
+        if (!empty($atts['program_id'])) {
+            $registration_program_id = absint($atts['program_id']);
+        } elseif (isset($_GET['program_id'])) {
+            $registration_program_id = absint($_GET['program_id']);
+        }
+        if ($registration_program_id > 0) {
+            $prog_post = get_post($registration_program_id);
+            if (!$prog_post || $prog_post->post_type !== 'program' || $prog_post->post_status !== 'publish') {
+                $registration_program_id = 0;
+            }
+        }
         
         // Начинаем буферизацию вывода
         ob_start();
@@ -115,8 +130,24 @@ class Course_Registration {
                 <?php wp_nonce_field('course_register', 'course_register_nonce'); ?>
                 <input type="hidden" name="action" value="course_register">
                 <input type="hidden" name="redirect_to" value="<?php echo esc_attr($redirect_url); ?>">
+                <?php if ($registration_program_id > 0) : ?>
+                <input type="hidden" name="registration_program_id" value="<?php echo esc_attr((string) $registration_program_id); ?>" />
+                <?php endif; ?>
                 
                 <h3><?php _e('Регистрация', 'course-plugin'); ?></h3>
+                <?php if ($registration_program_id > 0) : ?>
+                <p class="course-registration-program-notice">
+                    <?php
+                    echo esc_html(
+                        sprintf(
+                            /* translators: %s: program title */
+                            __('Запись на программу: %s', 'course-plugin'),
+                            get_the_title($registration_program_id)
+                        )
+                    );
+                    ?>
+                </p>
+                <?php endif; ?>
                 
                 <div class="course-registration-messages" id="course-registration-messages"></div>
                 
@@ -411,6 +442,14 @@ class Course_Registration {
             border: 1px solid #ffc107;
             color: #856404;
         }
+        .course-registration-program-notice {
+            padding: 10px 12px;
+            margin: 0 0 12px;
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 4px;
+            font-size: 14px;
+        }
         </style>
         <?php
         return ob_get_clean();
@@ -490,6 +529,14 @@ class Course_Registration {
         $user_pass = isset($_POST['user_pass']) ? $_POST['user_pass'] : '';
         $user_pass_confirm = isset($_POST['user_pass_confirm']) ? $_POST['user_pass_confirm'] : '';
         $redirect_to = isset($_POST['redirect_to']) ? esc_url_raw($_POST['redirect_to']) : home_url();
+        
+        $registration_program_id = isset($_POST['registration_program_id']) ? absint($_POST['registration_program_id']) : 0;
+        if ($registration_program_id > 0) {
+            $prog_post = get_post($registration_program_id);
+            if (!$prog_post || $prog_post->post_type !== 'program' || $prog_post->post_status !== 'publish') {
+                $registration_program_id = 0;
+            }
+        }
         
         // Валидация данных
         if (empty($user_login)) {
@@ -592,6 +639,10 @@ class Course_Registration {
         update_user_meta($user_id, 'pending_moodle_password', $user_pass);
         error_log('Course Registration: Пароль сохранен в метаполе');
         
+        if ($registration_program_id > 0) {
+            update_user_meta($user_id, 'registration_program_id', $registration_program_id);
+        }
+        
         // Синхронизируем пользователя с Moodle сразу после регистрации
         if (class_exists('Course_Moodle_User_Sync')) {
             try {
@@ -605,6 +656,23 @@ class Course_Registration {
                     error_log('Course Registration: УСПЕХ! Пользователь синхронизирован с Moodle');
                 } else {
                     error_log('Course Registration: ВНИМАНИЕ! Синхронизация с Moodle не удалась, но пользователь создан в WordPress');
+                }
+                
+                if ($registration_program_id > 0) {
+                    $cohort_id = (int) get_post_meta($registration_program_id, '_program_moodle_cohort_id', true);
+                    if ($cohort_id > 0) {
+                        $cohort_ok = $sync_instance->add_user_to_program_cohort($user_id, $cohort_id);
+                        if ($cohort_ok) {
+                            error_log('Course Registration: пользователь добавлен в когорту Moodle ' . $cohort_id);
+                        } else {
+                            error_log('Course Registration: не удалось добавить в когорту Moodle ' . $cohort_id);
+                        }
+                    }
+                    $program_title = get_the_title($registration_program_id);
+                    $msg_ok        = $sync_instance->send_program_registration_moodle_message($user_id, $program_title);
+                    if ($msg_ok) {
+                        error_log('Course Registration: отправлено уведомление в Moodle о записи на программу');
+                    }
                 }
             } catch (Exception $e) {
                 error_log('Course Registration: ОШИБКА при синхронизации с Moodle: ' . $e->getMessage());

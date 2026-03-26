@@ -1077,5 +1077,135 @@ class Course_Moodle_User_Sync {
             }
         }
     }
+
+    /**
+     * Добавить пользователя WordPress в когорту Moodle, привязанную к программе.
+     *
+     * @param int $wp_user_id ID пользователя WordPress.
+     * @param int $cohort_id  ID когорты в Moodle.
+     * @return bool Успех (или уже в группе с предупреждением).
+     */
+    public function add_user_to_program_cohort($wp_user_id, $cohort_id) {
+        $wp_user_id = (int) $wp_user_id;
+        $cohort_id  = (int) $cohort_id;
+        if ($wp_user_id <= 0 || $cohort_id <= 0) {
+            return false;
+        }
+
+        $moodle_user_id = (int) get_user_meta($wp_user_id, 'moodle_user_id', true);
+        if (!$moodle_user_id) {
+            error_log('Moodle User Sync: add_user_to_program_cohort — нет moodle_user_id для WP user ' . $wp_user_id);
+            return false;
+        }
+
+        $this->moodle_url   = get_option('moodle_sync_url', '');
+        $this->moodle_token = get_option('moodle_sync_token', '');
+        $sync_enabled       = get_option('moodle_sync_users_enabled', true);
+
+        if (!$sync_enabled || empty($this->moodle_url) || empty($this->moodle_token)) {
+            error_log('Moodle User Sync: add_user_to_program_cohort — синхронизация отключена или нет URL/токена');
+            return false;
+        }
+
+        $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+        $result    = $this->api->add_cohort_members($cohort_id, $moodle_user_id);
+
+        if ($result === false) {
+            error_log('Moodle User Sync: add_cohort_members — запрос не выполнен');
+            return false;
+        }
+        if (is_array($result) && isset($result['exception'])) {
+            error_log('Moodle User Sync: add_cohort_members — исключение API: ' . print_r($result, true));
+            return false;
+        }
+
+        $already = false;
+        if (isset($result[0]) && is_array($result[0]) && isset($result[0]['warnings']) && is_array($result[0]['warnings'])) {
+            foreach ($result[0]['warnings'] as $w) {
+                $code = isset($w['warningcode']) ? $w['warningcode'] : '';
+                error_log('Moodle User Sync: предупреждение когорты: ' . print_r($w, true));
+                if ($code === 'alreadycohortmember' || (isset($w['message']) && is_string($w['message']) && stripos($w['message'], 'already') !== false)) {
+                    $already = true;
+                }
+            }
+        }
+
+        update_user_meta($wp_user_id, 'moodle_program_cohort_id', $cohort_id);
+        if ($already) {
+            error_log('Moodle User Sync: пользователь Moodle ' . $moodle_user_id . ' уже в когорте ' . $cohort_id);
+        } else {
+            error_log('Moodle User Sync: пользователь Moodle ' . $moodle_user_id . ' добавлен в когорту ' . $cohort_id);
+        }
+
+        return true;
+    }
+
+    /**
+     * Уведомление в Moodle о записи на программу (мгновенное сообщение; при включённой почте в Moodle может продублироваться email).
+     *
+     * @param int    $wp_user_id    ID пользователя WordPress.
+     * @param string $program_title Название программы.
+     * @return bool
+     */
+    public function send_program_registration_moodle_message($wp_user_id, $program_title = '') {
+        $wp_user_id = (int) $wp_user_id;
+        if ($wp_user_id <= 0) {
+            return false;
+        }
+
+        if (!apply_filters('course_send_moodle_program_registration_message', true, $wp_user_id, $program_title)) {
+            return false;
+        }
+
+        $moodle_user_id = (int) get_user_meta($wp_user_id, 'moodle_user_id', true);
+        if (!$moodle_user_id) {
+            error_log('Moodle User Sync: send_program_registration_moodle_message — нет moodle_user_id');
+            return false;
+        }
+
+        $this->moodle_url   = get_option('moodle_sync_url', '');
+        $this->moodle_token = get_option('moodle_sync_token', '');
+        $sync_enabled       = get_option('moodle_sync_users_enabled', true);
+
+        if (!$sync_enabled || empty($this->moodle_url) || empty($this->moodle_token)) {
+            return false;
+        }
+
+        $blogname = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+        $title    = $program_title !== '' ? $program_title : __('программу', 'course-plugin');
+
+        $plain = sprintf(
+            /* translators: 1: site name, 2: program title */
+            __('Здравствуйте!
+
+Вы успешно зарегистрировались на сайте %1$s и записаны на программу «%2$s».
+
+Дальнейшие уведомления по обучению вы можете получать здесь в Moodle (и на email, если включено в вашем профиле Moodle).
+
+С уважением,
+%1$s', 'course-plugin'),
+            $blogname,
+            $title
+        );
+
+        $text = apply_filters('course_moodle_program_registration_message_text', $plain, $wp_user_id, $program_title);
+
+        $this->api    = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+        $textformat   = (int) apply_filters('course_moodle_program_registration_message_format', 0, $wp_user_id);
+        $result       = $this->api->send_instant_message($moodle_user_id, $text, $textformat);
+
+        if ($result === false) {
+            error_log('Moodle User Sync: send_instant_message — запрос не выполнен');
+            return false;
+        }
+        if (is_array($result) && isset($result['exception'])) {
+            error_log('Moodle User Sync: send_instant_message — исключение: ' . print_r($result, true));
+            return false;
+        }
+
+        update_user_meta($wp_user_id, 'moodle_program_welcome_sent', time());
+        error_log('Moodle User Sync: отправлено мгновенное сообщение в Moodle пользователю ' . $moodle_user_id);
+        return true;
+    }
 }
 
