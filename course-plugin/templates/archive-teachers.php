@@ -334,16 +334,7 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
             <?php if (!empty($teachers_with_data)) : ?>
                 <div class="teachers-grid" id="teachers-container" style="display: grid !important; gap: 24px !important; width: 100% !important; max-width: 1200px !important; margin: 0 auto !important; padding: 0 !important; float: none !important; list-style: none !important;">
                     <?php 
-                    $color_schemes = array(
-                        array('gradient' => 'linear-gradient(135deg, #8B2D3D 0%, #68202D 100%)', 'accent' => '#68202D'),
-                        array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c'),
-                        array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe'),
-                        array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b'),
-                        array('gradient' => 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', 'accent' => '#fa709a'),
-                        array('gradient' => 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)', 'accent' => '#a8edea'),
-                    );
-                    
-                    foreach ($teachers_with_data as $index => $item) :
+                    foreach ($teachers_with_data as $item) :
                         $term = $item['term'];
                         $courses_count = $item['courses_count'];
                         $courses_list = $item['courses_list'];
@@ -362,11 +353,10 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                             $teacher_link = '#';
                         }
                         
-                        $scheme = $color_schemes[$index % count($color_schemes)];
                     ?>
                         <article class="teacher-card" data-teacher-id="<?php echo $term->term_id; ?>">
                             <div class="teacher-card-inner">
-                                <div class="teacher-card-image" style="background: <?php echo $scheme['gradient']; ?>">
+                                <div class="teacher-card-image">
                                     <?php if ($teacher_photo) : ?>
                                         <img src="<?php echo esc_url($teacher_photo); ?>" alt="<?php echo esc_attr($term->name); ?>" loading="lazy" />
                                     <?php else : ?>

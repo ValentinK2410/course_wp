@@ -1518,9 +1518,9 @@
 /* ================================================
    АРХИВ ПРЕПОДАВАТЕЛЕЙ /teachers/
    ================================================ */
-.premium-archive-wrapper.teachers-archive .premium-archive-header {
+/* .premium-archive-wrapper.teachers-archive .premium-archive-header {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
+} */
 
 .teachers-archive-container,
 .premium-archive-wrapper.teachers-archive .teachers-archive-container {
@@ -2124,6 +2124,7 @@ article.teacher-card {
     overflow: hidden;
     min-height: 250px;
     max-height: 350px;
+    background: linear-gradient(135deg, #8B2D3D 0%, #68202D 100%);
 }
 
 .teacher-card-placeholder {

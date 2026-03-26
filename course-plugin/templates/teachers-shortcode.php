@@ -20,18 +20,11 @@ if ($theme_class) {
     $wrapper_classes[] = $theme_class;
 }
 
-$color_schemes = array(
-    array('gradient' => 'linear-gradient(135deg, #8B2D3D 0%, #68202D 100%)', 'accent' => '#68202D'),
-    array('gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 'accent' => '#f5576c'),
-    array('gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 'accent' => '#4facfe'),
-    array('gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', 'accent' => '#43e97b'),
-    array('gradient' => 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', 'accent' => '#fa709a'),
-);
 ?>
 
 <div class="<?php echo esc_attr(implode(' ', $wrapper_classes)); ?>" data-columns="<?php echo esc_attr($columns); ?>">
     <div class="teachers-shortcode-grid" style="display: grid; grid-template-columns: repeat(<?php echo $columns; ?>, 1fr); gap: 24px;">
-        <?php foreach ($teachers_with_data as $index => $item) :
+        <?php foreach ($teachers_with_data as $item) :
             $term = $item['term'];
             $teacher_photo = $item['photo'];
             $teacher_position = $item['position'];
@@ -44,11 +37,10 @@ $color_schemes = array(
                 $teacher_link = '#';
             }
             
-            $scheme = $color_schemes[$index % count($color_schemes)];
         ?>
             <article class="teacher-card teacher-card-shortcode">
                 <div class="teacher-card-inner">
-                    <div class="teacher-card-image" style="background: <?php echo esc_attr($scheme['gradient']); ?>">
+                    <div class="teacher-card-image">
                         <?php if ($teacher_photo) : ?>
                             <a href="<?php echo esc_url($teacher_link); ?>">
                                 <img src="<?php echo esc_url($teacher_photo); ?>" alt="<?php echo esc_attr($term->name); ?>" loading="lazy" />
