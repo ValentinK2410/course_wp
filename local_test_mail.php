@@ -175,8 +175,14 @@ if (isset($GLOBALS['phpmailer']) && is_object($GLOBALS['phpmailer']) && !empty($
     if (stripos((string) $GLOBALS['phpmailer']->ErrorInfo, 'авторизации') !== false
         || stripos((string) $GLOBALS['phpmailer']->ErrorInfo, 'SMTP') !== false) {
         echo "\nПодсказка: в админке WP откройте настройки SMTP-плагина и проверьте логин, пароль, порт (465/587) и шифрование.\n";
-        echo "Или проверьте отправку через sendmail: ?key=...&sendmail=1\n";
+        echo "Или проверьте отправку через sendmail в браузере: ?key=...&sendmail=1\n";
     }
+}
+if ($is_cli) {
+    $self = basename(__FILE__);
+    echo "\n";
+    echo "Обход SMTP (письмо через mail()/sendmail на сервере, без плагинов WP):\n";
+    echo '  php ' . $self . ' sendmail ' . escapeshellarg($to) . "\n";
 }
 if (defined('WP_DEBUG') && WP_DEBUG && function_exists('error_get_last')) {
     $e = error_get_last();
