@@ -218,6 +218,51 @@ if (!$wp_loaded) {
         }
     }
 
+    // Плагин course-plugin: отдельные опции и константы (не путать с wp_mail_smtp)
+    if (class_exists('Course_Email_Sender')) {
+        diag_section('Плагин course-plugin: Course_Email_Sender');
+        $smtp_ok = Course_Email_Sender::is_smtp_fully_configured();
+        diag_line('is_smtp_fully_configured(): ' . ($smtp_ok ? 'ДА — на хуке phpmailer_init включается SMTP (приоритет 99999)' : 'нет — SMTP из плагина не подставляется'));
+        $course_opt_keys = array(
+            'course_smtp_host',
+            'course_smtp_port',
+            'course_smtp_username',
+            'course_smtp_password',
+            'course_smtp_encryption',
+            'course_smtp_from_email',
+            'course_smtp_from_name',
+        );
+        foreach ($course_opt_keys as $ck) {
+            $v = get_option($ck, '');
+            if ($ck === 'course_smtp_password') {
+                diag_line($ck . ': ' . ($v !== '' && $v !== null ? '*** задано, длина ' . strlen((string) $v) . ' ***' : '(пусто)'));
+            } else {
+                diag_line($ck . ': ' . ($v !== '' && $v !== null ? (string) $v : '(пусто)'));
+            }
+        }
+        $consts = array(
+            'COURSE_SMTP_HOST',
+            'COURSE_SMTP_PORT',
+            'COURSE_SMTP_USERNAME',
+            'COURSE_SMTP_PASSWORD',
+            'COURSE_SMTP_ENCRYPTION',
+            'COURSE_SMTP_FROM_EMAIL',
+            'COURSE_SMTP_FROM_NAME',
+        );
+        foreach ($consts as $c) {
+            if (defined($c)) {
+                if ($c === 'COURSE_SMTP_PASSWORD') {
+                    diag_line($c . ': определена в wp-config (значение скрыто)');
+                } else {
+                    diag_line($c . ': ' . (string) constant($c));
+                }
+            }
+        }
+    } else {
+        diag_section('Плагин course-plugin: Course_Email_Sender');
+        diag_line('Класс не загружен (плагин не активен?).');
+    }
+
     // Хуки phpmailer
     diag_section('Хуки phpmailer_init / wp_mail (приоритеты)');
     $diag_hook = static function ($tag) {
