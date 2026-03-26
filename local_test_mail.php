@@ -7,6 +7,10 @@
  *
  * Браузер: https://ваш-сайт.ru/local_test_mail.php?key=ВАШ_СЕКРЕТ  (или добавьте &to=другой@email.ru)
  * CLI:     LOCAL_TEST_MAIL_SECRET=xxx php local_test_mail.php
+ *
+ * Если в выводе: «Ошибка авторизации SMTP» — исправьте логин/пароль SMTP в настройках WordPress
+ * (WP Mail SMTP, Post SMTP и т.д.). Для Gmail используйте пароль приложения, не обычный пароль.
+ * Предупреждения плагинов (например Elementor) в CLI часто не влияют на доставку почты.
  */
 
 declare(strict_types=1);
@@ -48,6 +52,18 @@ if ($wp_load === null) {
     http_response_code(500);
     echo "Не найден wp-load.php. Положите local_test_mail.php в корень WordPress или добавьте путь в \$wp_load_candidates.\n";
     exit;
+}
+
+// В CLI у WordPress нет $_SERVER как у веб-запроса — часть плагинов ругается; задаём минимальный контекст.
+if ($is_cli) {
+    if (empty($_SERVER['HTTP_HOST'])) {
+        $_SERVER['HTTP_HOST'] = 'localhost';
+    }
+    $_SERVER['REQUEST_URI'] = $_SERVER['REQUEST_URI'] ?? '/';
+    $_SERVER['SERVER_NAME'] = $_SERVER['SERVER_NAME'] ?? $_SERVER['HTTP_HOST'];
+    $_SERVER['HTTPS']       = $_SERVER['HTTPS'] ?? 'off';
+    $_SERVER['SERVER_PORT'] = $_SERVER['SERVER_PORT'] ?? '80';
+    $_SERVER['REQUEST_METHOD'] = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 }
 
 require_once $wp_load;
@@ -101,10 +117,17 @@ if ($sent) {
 echo "ОШИБКА: wp_mail вернул false.\n";
 if (isset($GLOBALS['phpmailer']) && is_object($GLOBALS['phpmailer']) && !empty($GLOBALS['phpmailer']->ErrorInfo)) {
     echo 'PHPMailer: ' . $GLOBALS['phpmailer']->ErrorInfo . "\n";
+    if (stripos((string) $GLOBALS['phpmailer']->ErrorInfo, 'авторизации') !== false
+        || stripos((string) $GLOBALS['phpmailer']->ErrorInfo, 'SMTP') !== false) {
+        echo "\nПодсказка: в админке WP откройте настройки SMTP-плагина и проверьте логин, пароль, порт (465/587) и шифрование.\n";
+    }
 }
 if (defined('WP_DEBUG') && WP_DEBUG && function_exists('error_get_last')) {
     $e = error_get_last();
-    if ($e) {
+    if ($e && isset($e['message']) && is_string($e['message'])
+        && (stripos($e['message'], 'elementor') !== false || stripos($e['message'], 'theme-builder') !== false)) {
+        echo "\n(Сообщение Elementor в CLI часто можно игнорировать при проверке SMTP.)\n";
+    } elseif ($e) {
         echo 'Last PHP error: ' . print_r($e, true) . "\n";
     }
 }
