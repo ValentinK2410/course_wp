@@ -783,11 +783,16 @@ class Course_Frontend {
             ));
             
             $courses_count = $courses_query->found_posts;
-            $specializations = get_terms(array(
-                'taxonomy' => 'course_specialization',
-                'object_ids' => wp_list_pluck($courses_query->posts, 'ID'),
-                'hide_empty' => true,
-            ));
+            $course_ids = wp_list_pluck($courses_query->posts, 'ID');
+            if (empty($course_ids)) {
+                $specializations = array();
+            } else {
+                $specializations = get_terms(array(
+                    'taxonomy' => 'course_specialization',
+                    'object_ids' => $course_ids,
+                    'hide_empty' => true,
+                ));
+            }
             
             wp_reset_postdata();
             

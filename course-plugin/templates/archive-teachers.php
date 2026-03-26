@@ -71,12 +71,18 @@ if (!is_wp_error($teachers)) {
             wp_reset_postdata();
         }
         
-        // Получаем специализации преподавателя (из его курсов)
-        $specializations = get_terms(array(
-            'taxonomy' => 'course_specialization',
-            'object_ids' => wp_list_pluck($courses_query->posts, 'ID'),
-            'hide_empty' => true,
-        ));
+        // Специализации только из курсов преподавателя. Пустой object_ids в get_terms()
+        // не ограничивает выборку — WordPress возвращает все термины таксономии.
+        $course_ids = wp_list_pluck($courses_query->posts, 'ID');
+        if (empty($course_ids)) {
+            $specializations = array();
+        } else {
+            $specializations = get_terms(array(
+                'taxonomy' => 'course_specialization',
+                'object_ids' => $course_ids,
+                'hide_empty' => true,
+            ));
+        }
         
         $teacher_specializations = array();
         if (!is_wp_error($specializations)) {
