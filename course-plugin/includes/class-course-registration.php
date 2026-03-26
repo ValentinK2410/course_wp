@@ -169,8 +169,8 @@ class Course_Registration {
                 </p>
                 
                 <p>
-                    <label for="last_name"><?php _e('Фамилия', 'course-plugin'); ?></label>
-                    <input type="text" name="last_name" id="last_name" class="input" value="" size="25" />
+                    <label for="last_name"><?php _e('Фамилия', 'course-plugin'); ?> <span class="required">*</span></label>
+                    <input type="text" name="last_name" id="last_name" class="input" value="" size="25" required />
                 </p>
                 
                 <p>
@@ -547,6 +547,10 @@ class Course_Registration {
             wp_send_json_error(array('message' => __('Введите корректный email адрес.', 'course-plugin')));
         }
         
+        if (empty($last_name)) {
+            wp_send_json_error(array('message' => __('Введите фамилию.', 'course-plugin')));
+        }
+        
         if (empty($user_pass)) {
             wp_send_json_error(array('message' => __('Введите пароль.', 'course-plugin')));
         }
@@ -770,26 +774,27 @@ class Course_Registration {
         $message .= sprintf(__('Email: %s', 'course-plugin'), $user->user_email) . "\r\n";
         $message .= sprintf(__('Пароль: %s', 'course-plugin'), $password) . "\r\n\r\n";
         
-        // Если пользователь синхронизирован с Moodle, добавляем информацию о всех платформах
+        $message .= __('Вы можете использовать эти данные для входа на:', 'course-plugin') . "\r\n";
+        $message .= sprintf(__('- Сайт МБС: %s', 'course-plugin'), wp_login_url()) . "\r\n";
+        $message .= sprintf(__('- Виртуальный класс МБС: %s', 'course-plugin'), 'https://class.russianseminary.org/login/index.php') . "\r\n";
         if ($moodle_user_id && !empty($moodle_url)) {
-            $message .= __('Вы можете использовать эти данные для входа на:', 'course-plugin') . "\r\n";
-            $message .= sprintf(__('- WordPress: %s', 'course-plugin'), wp_login_url()) . "\r\n";
-            $message .= sprintf(__('- Moodle: %s', 'course-plugin'), rtrim($moodle_url, '/') . '/login/index.php') . "\r\n";
-            if (!empty($laravel_url)) {
-                $message .= sprintf(__('- Система управления: %s', 'course-plugin'), rtrim($laravel_url, '/') . '/login') . "\r\n";
+            $moodle_login = rtrim($moodle_url, '/') . '/login/index.php';
+            if ($moodle_login !== 'https://class.russianseminary.org/login/index.php') {
+                $message .= sprintf(__('- Moodle: %s', 'course-plugin'), $moodle_login) . "\r\n";
             }
-            $message .= "\r\n";
-        } else {
-            $message .= sprintf(__('Войти на сайт: %s', 'course-plugin'), wp_login_url()) . "\r\n\r\n";
         }
+        if (!empty($laravel_url)) {
+            $message .= sprintf(__('- Система управления: %s', 'course-plugin'), rtrim($laravel_url, '/') . '/login') . "\r\n";
+        }
+        $message .= "\r\n";
         
         $message .= __('С уважением,', 'course-plugin') . "\r\n";
         $message .= sprintf(__('Команда %s', 'course-plugin'), $blogname) . "\r\n";
         
-        // Заголовки письма
+        $from_email = 'mbs@russianseminary.org';
         $headers = array(
             'Content-Type: text/plain; charset=UTF-8',
-            'From: ' . $blogname . ' <' . $admin_email . '>'
+            'From: ' . $blogname . ' <' . $from_email . '>'
         );
         
         // Проверяем, не отключена ли отправка кастомных писем (настройки Moodle)
