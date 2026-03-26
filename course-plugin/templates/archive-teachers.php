@@ -12,6 +12,7 @@ get_header();
 $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
 $sort = isset($_GET['sort']) ? sanitize_text_field($_GET['sort']) : 'name';
 $specialization_filter = isset($_GET['specialization']) ? (array)$_GET['specialization'] : array();
+$specialization_filter = array_map('sanitize_text_field', $specialization_filter);
 
 // Получаем всех преподавателей
 $teachers_args = array(
@@ -29,6 +30,7 @@ $teachers = get_terms($teachers_args);
 
 // Подсчёт курсов и получение дополнительных данных для каждого преподавателя
 $teachers_with_data = array();
+$teacher_count_by_spec = array();
 if (!is_wp_error($teachers)) {
     foreach ($teachers as $term) {
         if (class_exists('Course_Teacher_Meta') && Course_Teacher_Meta::is_teacher_hidden_in_biblical($term->term_id)) {
@@ -89,6 +91,13 @@ if (!is_wp_error($teachers)) {
             foreach ($specializations as $spec) {
                 $teacher_specializations[] = $spec->slug;
             }
+        }
+        
+        foreach (array_unique($teacher_specializations) as $spec_slug) {
+            if (!isset($teacher_count_by_spec[$spec_slug])) {
+                $teacher_count_by_spec[$spec_slug] = 0;
+            }
+            $teacher_count_by_spec[$spec_slug]++;
         }
         
         // Фильтрация по специализации
@@ -308,11 +317,13 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                     <div class="filter-dropdown-menu" id="specialization-filter-menu">
                         <?php foreach ($all_specializations as $spec) : 
                             $checked = in_array($spec->slug, $specialization_filter) ? 'checked' : '';
+                            $spec_teacher_count = isset($teacher_count_by_spec[$spec->slug]) ? (int) $teacher_count_by_spec[$spec->slug] : 0;
                         ?>
                             <label class="filter-option">
                                 <input type="checkbox" name="specialization[]" value="<?php echo esc_attr($spec->slug); ?>" <?php echo $checked; ?>>
                                 <span class="option-checkbox"></span>
                                 <span class="option-text"><?php echo esc_html($spec->name); ?></span>
+                                <span class="option-count"><?php echo $spec_teacher_count; ?></span>
                             </label>
                         <?php endforeach; ?>
                     </div>
