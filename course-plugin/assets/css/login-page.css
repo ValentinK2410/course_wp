@@ -506,6 +506,44 @@ body.login #course-resend-email-wrapper {
     color: inherit !important;
 }
 
+/* Регистрация: wp-login.php?action=register — цвет текста */
+body.login-action-register #login .message,
+body.login-action-register #registerform label,
+body.login-action-register #registerform p,
+body.login-action-register #registerform .description,
+body.login-action-register #registerform #reg_passmail,
+body.login-action-register #registerform .indicator-hint,
+body.login-action-register .login form label,
+body.login-action-register #login #nav,
+body.login-action-register #login #nav a,
+body.login-action-register #login #backtoblog,
+body.login-action-register #login #backtoblog a,
+body.login-action-register #login .language-switcher,
+body.login-action-register #login .language-switcher label,
+body.login-action-register #login .language-switcher a {
+    color: #a1927e !important;
+}
+
+body.login-action-register #registerform input[type="text"],
+body.login-action-register #registerform input[type="email"] {
+    color: #a1927e !important;
+}
+
+body.login-action-register #registerform input::placeholder {
+    color: rgba(161, 146, 126, 0.5) !important;
+}
+
+body.login-action-register #registerform input[type="submit"],
+body.login-action-register #registerform .button.button-primary,
+body.login-action-register #registerform #wp-submit {
+    color: #fff !important;
+}
+
+body.login-action-register #login #nav a:hover,
+body.login-action-register #login #backtoblog a:hover {
+    color: #c9b8a4 !important;
+}
+
 /* Адаптивность */
 @media (max-width: 480px) {
     #login {
