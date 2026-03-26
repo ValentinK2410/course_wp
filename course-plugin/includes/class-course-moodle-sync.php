@@ -667,7 +667,7 @@ class Course_Moodle_Sync {
                 
                 <h2><?php _e('Состав синхронизации', 'course-plugin'); ?></h2>
                 <p class="description">
-                    <?php _e('Используется при автоматической синхронизации (cron). При ручной синхронизации ниже можно задать шаги только для текущего запуска.', 'course-plugin'); ?>
+                    <?php _e('Одинаковые настройки для автоматической синхронизации (по расписанию) и для кнопки «Синхронизировать сейчас». Сохраните изменения перед ручным запуском.', 'course-plugin'); ?>
                 </p>
                 <table class="form-table" role="presentation">
                     <tr>
@@ -813,7 +813,9 @@ class Course_Moodle_Sync {
             
             <!-- Раздел для ручной синхронизации -->
             <h2><?php _e('Ручная синхронизация', 'course-plugin'); ?></h2>
-            <p><?php _e('Нажмите кнопку ниже для немедленной синхронизации данных из Moodle.', 'course-plugin'); ?></p>
+            <p class="description">
+                <?php _e('Запускает синхронизацию сразу по тем же шагам, что заданы в разделе «Состав синхронизации» выше (после сохранения настроек).', 'course-plugin'); ?>
+            </p>
             
             <form method="post" action="">
                 <?php 
@@ -821,34 +823,6 @@ class Course_Moodle_Sync {
                 // wp_nonce_field() создает скрытое поле с токеном безопасности
                 wp_nonce_field('moodle_sync_manual', 'moodle_sync_nonce'); 
                 ?>
-                <fieldset class="course-moodle-sync-manual-steps" style="margin: 1em 0; padding: 12px 14px; max-width: 720px; border: 1px solid #c3c4c7; background: #fcfcfc;">
-                    <legend><strong><?php _e('Шаги этой синхронизации', 'course-plugin'); ?></strong></legend>
-                    <p class="description" style="margin-top: 0;">
-                        <?php _e('По умолчанию отмечены те же пункты, что сохранены выше для автоматической синхронизации. Снимите галочки, чтобы пропустить шаг только в этом запуске.', 'course-plugin'); ?>
-                    </p>
-                    <p>
-                        <label style="display: block; margin: 0.35em 0;">
-                            <input type="checkbox" name="moodle_sync_manual_categories" value="1" <?php checked($moodle_sync_include_categories); ?> />
-                            <?php _e('Категории курсов Moodle', 'course-plugin'); ?>
-                        </label>
-                        <label style="display: block; margin: 0.35em 0;">
-                            <input type="checkbox" name="moodle_sync_manual_cohorts" value="1" <?php checked($moodle_sync_include_cohorts); ?> />
-                            <?php _e('Глобальные группы (когорты)', 'course-plugin'); ?>
-                        </label>
-                        <label style="display: block; margin: 0.35em 0;">
-                            <input type="checkbox" name="moodle_sync_manual_courses" value="1" <?php checked($moodle_sync_include_courses); ?> />
-                            <?php _e('Курсы WordPress', 'course-plugin'); ?>
-                        </label>
-                        <label style="display: block; margin: 0.35em 0;">
-                            <input type="checkbox" name="moodle_sync_manual_students" value="1" <?php checked($moodle_sync_include_students); ?> />
-                            <?php _e('Записи студентов по курсам', 'course-plugin'); ?>
-                        </label>
-                        <label style="display: block; margin: 0.35em 0;">
-                            <input type="checkbox" name="moodle_sync_manual_laravel" value="1" <?php checked($moodle_sync_include_laravel); ?> />
-                            <?php _e('Отправка курсов в Laravel API', 'course-plugin'); ?>
-                        </label>
-                    </p>
-                </fieldset>
                 <p>
                     <input type="submit" 
                            name="moodle_sync_manual" 
@@ -876,7 +850,7 @@ class Course_Moodle_Sync {
     }
     
     /**
-     * Шаги синхронизации по умолчанию (cron и сохранённые настройки).
+     * Шаги синхронизации из опций (cron и кнопка «Синхронизировать сейчас»).
      *
      * @return array<string, bool>
      */
@@ -888,28 +862,6 @@ class Course_Moodle_Sync {
             'students'   => (bool) get_option('moodle_sync_include_students', true),
             'laravel'    => (bool) get_option('moodle_sync_include_laravel', true),
         );
-    }
-    
-    /**
-     * Ручная синхронизация: шаги из формы; иначе — опции для cron.
-     *
-     * @param bool $manual
-     * @return array<string, bool>
-     */
-    private function resolve_sync_run_flags($manual) {
-        if ($manual && isset($_POST['moodle_sync_manual'], $_POST['moodle_sync_nonce'])) {
-            $nonce = isset($_POST['moodle_sync_nonce']) ? sanitize_text_field(wp_unslash($_POST['moodle_sync_nonce'])) : '';
-            if ($nonce && wp_verify_nonce($nonce, 'moodle_sync_manual')) {
-                return array(
-                    'categories' => !empty($_POST['moodle_sync_manual_categories']),
-                    'cohorts'    => !empty($_POST['moodle_sync_manual_cohorts']),
-                    'courses'    => !empty($_POST['moodle_sync_manual_courses']),
-                    'students'   => !empty($_POST['moodle_sync_manual_students']),
-                    'laravel'    => !empty($_POST['moodle_sync_manual_laravel']),
-                );
-            }
-        }
-        return $this->get_default_sync_run_flags();
     }
     
     /**
@@ -962,7 +914,7 @@ class Course_Moodle_Sync {
             }
         }
         
-        $this->sync_run_flags = $this->resolve_sync_run_flags($manual);
+        $this->sync_run_flags = $this->get_default_sync_run_flags();
         $any_step = false;
         foreach ($this->sync_run_flags as $on) {
             if ($on) {
