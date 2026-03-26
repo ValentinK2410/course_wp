@@ -315,6 +315,23 @@
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
+/* Темы/block editor часто задают input { padding: … } и затирают отступ под иконку */
+.premium-filters-sidebar .filter-search-box input.filter-search-input,
+.premium-archive-wrapper .filter-search-box input.filter-search-input,
+.teachers-toolbar .filter-search-box input.filter-search-input {
+    padding-left: 3.5rem !important;
+    padding-right: 16px !important;
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+    box-sizing: border-box !important;
+}
+
+.premium-filters-sidebar .filter-search-box .search-icon,
+.premium-archive-wrapper .filter-search-box .search-icon,
+.teachers-toolbar .filter-search-box .search-icon {
+    left: 14px !important;
+}
+
 /* Подсказки поиска (архив курсов / программ) */
 .filter-search-box--with-suggest {
     z-index: 5;
@@ -2734,7 +2751,7 @@ article.teacher-card {
     
     .filter-search-input {
         font-size: 16px !important; /* Предотвращает зум на iOS */
-        padding-left: 3.25rem !important;
+        padding-left: 3.5rem !important;
     }
     
     .premium-sort-select {

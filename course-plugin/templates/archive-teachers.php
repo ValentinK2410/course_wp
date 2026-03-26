@@ -299,7 +299,7 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                         <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
                         <path d="M13 13L16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    <input type="text" class="filter-search-input" id="teacher-search-input" placeholder="<?php _e('Поиск преподавателя...', 'course-plugin'); ?>" value="<?php echo esc_attr($search); ?>">
+                    <input type="text" class="filter-search-input" id="teacher-search-input" placeholder="<?php _e('Поиск преподавателя...', 'course-plugin'); ?>" value="<?php echo esc_attr($search); ?>" style="padding-left:3.5rem!important;box-sizing:border-box!important;">
                 </div>
                 
                 <?php if (!empty($all_specializations) && !is_wp_error($all_specializations)) : ?>

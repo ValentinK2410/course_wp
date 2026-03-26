@@ -117,7 +117,7 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                         <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
                         <path d="M13 13L16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    <input type="text" class="filter-search-input" id="course-archive-search-input" placeholder="<?php _e('Поиск курса...', 'course-plugin'); ?>" name="search" value="<?php echo isset($_GET['search']) ? esc_attr($_GET['search']) : ''; ?>" autocomplete="off" aria-autocomplete="list" aria-controls="course-archive-search-suggest">
+                    <input type="text" class="filter-search-input" id="course-archive-search-input" placeholder="<?php _e('Поиск курса...', 'course-plugin'); ?>" name="search" value="<?php echo isset($_GET['search']) ? esc_attr($_GET['search']) : ''; ?>" autocomplete="off" aria-autocomplete="list" aria-controls="course-archive-search-suggest" style="padding-left:3.5rem!important;box-sizing:border-box!important;">
                     <div class="archive-search-suggest" id="course-archive-search-suggest" hidden></div>
                 </div>
                 
