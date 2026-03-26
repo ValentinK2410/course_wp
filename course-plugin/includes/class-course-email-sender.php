@@ -234,6 +234,9 @@ class Course_Email_Sender {
      * @param \PHPMailer\PHPMailer\PHPMailer $phpmailer Объект из WordPress.
      */
     public function configure_phpmailer_smtp($phpmailer) {
+        if (!self::is_smtp_fully_configured()) {
+            return;
+        }
         $this->apply_smtp_settings_to_mailer($phpmailer);
     }
 
