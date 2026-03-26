@@ -92,59 +92,30 @@
             }
         });
         
-        // Поиск по фильтрам для курсов
-        $('#filter-search-input').on('input', function() {
-            var searchTerm = $(this).val().toLowerCase();
-            filterSections(searchTerm, '#course-filters-form');
-        });
-        
-        // Поиск по фильтрам для программ
-        $('#filter-search-input-program').on('input', function() {
-            var searchTerm = $(this).val().toLowerCase();
-            filterSections(searchTerm, '#program-filters-form');
-        });
-        
-        // Функция фильтрации секций фильтров
-        function filterSections(searchTerm, formSelector) {
-            var form = $(formSelector);
-            var sections = form.find('.filter-section');
-            
-            if (searchTerm === '') {
-                sections.show();
-                sections.find('.filter-checkbox-label').show();
+        // Поиск по названию в архиве курсов и программ (?search= → на сервере в WP_Query как s)
+        function bindArchiveTitleSearch(inputSelector) {
+            var $input = $(inputSelector);
+            if (!$input.length) {
                 return;
             }
-            
-            sections.each(function() {
-                var section = $(this);
-                var sectionTitle = section.find('.filter-section-title').text().toLowerCase();
-                var labels = section.find('.filter-checkbox-label');
-                var visibleCount = 0;
-                
-                // Проверяем заголовок секции
-                var sectionMatches = sectionTitle.indexOf(searchTerm) !== -1;
-                
-                // Проверяем каждый элемент в секции
-                labels.each(function() {
-                    var label = $(this);
-                    var labelText = label.find('span').text().toLowerCase();
-                    
-                    if (labelText.indexOf(searchTerm) !== -1 || sectionMatches) {
-                        label.show();
-                        visibleCount++;
+            var timeout;
+            $input.on('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    var url = new URL(window.location.href);
+                    var term = $input.val().trim();
+                    if (term) {
+                        url.searchParams.set('search', term);
                     } else {
-                        label.hide();
+                        url.searchParams.delete('search');
                     }
-                });
-                
-                // Показываем/скрываем секцию в зависимости от результатов
-                if (sectionMatches || visibleCount > 0) {
-                    section.show();
-                } else {
-                    section.hide();
-                }
+                    url.searchParams.delete('paged');
+                    window.location.href = url.toString();
+                }, 500);
             });
         }
+        bindArchiveTitleSearch('#course-archive-search-input');
+        bindArchiveTitleSearch('#program-archive-search-input');
         
         // Анимация появления фильтров при загрузке
         $('.filter-section').each(function(index) {

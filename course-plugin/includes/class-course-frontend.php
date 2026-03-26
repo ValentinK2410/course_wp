@@ -245,6 +245,11 @@ class Course_Frontend {
             $query->set('post_type', 'course');
             $query->set('post_status', 'publish');  // Только опубликованные курсы
             
+            // Поиск по названию/содержимому (в форме поле name="search", в WP — query var s)
+            if (isset($_GET['search']) && $_GET['search'] !== '') {
+                $query->set('s', sanitize_text_field(wp_unslash($_GET['search'])));
+            }
+            
             // Количество курсов на странице (из GET параметра или по умолчанию 15)
             $posts_per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 15;
             $query->set('posts_per_page', $posts_per_page);
