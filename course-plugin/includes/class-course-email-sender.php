@@ -235,6 +235,14 @@ class Course_Email_Sender {
      */
     public function configure_phpmailer_smtp($phpmailer) {
         if (!self::is_smtp_fully_configured()) {
+            if ($phpmailer->Mailer === 'smtp') {
+                $phpmailer->isMail();
+                $phpmailer->Host       = 'localhost';
+                $phpmailer->SMTPAuth   = false;
+                $phpmailer->Username   = '';
+                $phpmailer->Password   = '';
+                $phpmailer->SMTPSecure = '';
+            }
             return;
         }
         $this->apply_smtp_settings_to_mailer($phpmailer);
