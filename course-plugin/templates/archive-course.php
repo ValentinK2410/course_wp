@@ -112,12 +112,13 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
             
             <form method="get" class="premium-filters-form" id="course-filters-form">
                 <!-- Поиск -->
-                <div class="filter-search-box">
+                <div class="filter-search-box filter-search-box--with-suggest">
                     <svg class="search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
                         <path d="M13 13L16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    <input type="text" class="filter-search-input" id="course-archive-search-input" placeholder="<?php _e('Поиск курса...', 'course-plugin'); ?>" name="search" value="<?php echo isset($_GET['search']) ? esc_attr($_GET['search']) : ''; ?>" autocomplete="off">
+                    <input type="text" class="filter-search-input" id="course-archive-search-input" placeholder="<?php _e('Поиск курса...', 'course-plugin'); ?>" name="search" value="<?php echo isset($_GET['search']) ? esc_attr($_GET['search']) : ''; ?>" autocomplete="off" aria-autocomplete="list" aria-controls="course-archive-search-suggest">
+                    <div class="archive-search-suggest" id="course-archive-search-suggest" hidden></div>
                 </div>
                 
                 <!-- Преподаватель -->

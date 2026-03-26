@@ -313,6 +313,66 @@
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
+/* Подсказки поиска (архив курсов / программ) */
+.filter-search-box--with-suggest {
+    z-index: 5;
+}
+
+.archive-search-suggest:not([hidden]) {
+    display: block;
+}
+
+.archive-search-suggest {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 250;
+    background: var(--premium-white);
+    border-radius: var(--premium-radius);
+    box-shadow: var(--premium-shadow-lg);
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--premium-gray-200);
+    text-align: left;
+}
+
+.archive-search-suggest-item {
+    display: block;
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    color: var(--premium-dark);
+    text-decoration: none;
+    border-bottom: 1px solid var(--premium-gray-100);
+    transition: background 0.15s ease;
+    line-height: 1.35;
+}
+
+.archive-search-suggest-item:hover {
+    background: var(--premium-gray-100);
+}
+
+.archive-search-suggest-empty {
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+    color: var(--premium-gray-500);
+    border-bottom: 1px solid var(--premium-gray-100);
+}
+
+.archive-search-suggest-all {
+    display: block;
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--premium-primary);
+    text-decoration: none;
+    border-top: 1px solid var(--premium-gray-200);
+}
+
+.archive-search-suggest-all:hover {
+    background: var(--premium-gray-50);
+}
+
 /* Группа фильтров */
 .filter-group {
     margin-bottom: 8px;

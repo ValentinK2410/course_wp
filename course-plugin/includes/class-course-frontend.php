@@ -51,6 +51,8 @@ class Course_Frontend {
         add_action('pre_get_posts', array($this, 'filter_courses_query'));
         // Поиск на архиве: только заголовок (не post_content — иначе ложные совпадения)
         add_filter('posts_where', array($this, 'filter_courses_archive_title_search_where'), 10, 2);
+        add_action('wp_ajax_course_archive_search_suggest', array($this, 'ajax_archive_search_suggest'));
+        add_action('wp_ajax_nopriv_course_archive_search_suggest', array($this, 'ajax_archive_search_suggest'));
         
         // Подключаем стили и скрипты
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
@@ -493,6 +495,41 @@ class Course_Frontend {
         $where .= $wpdb->prepare(" AND {$wpdb->posts}.post_title LIKE %s", $like);
         return $where;
     }
+
+    /**
+     * AJAX: подсказки по названию при вводе в поиске архива курсов/программ.
+     */
+    public function ajax_archive_search_suggest() {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'course_frontend_nonce')) {
+            wp_send_json_error(array('message' => 'bad nonce'));
+        }
+        $term = isset($_POST['term']) ? sanitize_text_field(wp_unslash($_POST['term'])) : '';
+        $post_type = isset($_POST['post_type']) ? sanitize_key($_POST['post_type']) : 'course';
+        if (!in_array($post_type, array('course', 'program'), true)) {
+            $post_type = 'course';
+        }
+        $len = function_exists('mb_strlen') ? mb_strlen($term, 'UTF-8') : strlen($term);
+        if ($len < 2) {
+            wp_send_json_success(array('items' => array()));
+        }
+        global $wpdb;
+        $like = '%' . $wpdb->esc_like($term) . '%';
+        $ids = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT ID FROM {$wpdb->posts} WHERE post_type = %s AND post_status = 'publish' AND post_title LIKE %s ORDER BY post_title ASC LIMIT 10",
+                $post_type,
+                $like
+            )
+        );
+        $items = array();
+        foreach ($ids as $id) {
+            $items[] = array(
+                'title' => get_the_title($id),
+                'url' => get_permalink($id),
+            );
+        }
+        wp_send_json_success(array('items' => $items));
+    }
     
     /**
      * Сортировка по термину таксономии уровня
@@ -680,6 +717,8 @@ class Course_Frontend {
             wp_localize_script('course-frontend-script', 'courseFrontend', array(
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('course_frontend_nonce'),
+                'searchSuggestAll' => __('Все результаты поиска', 'course-plugin'),
+                'searchSuggestEmpty' => __('Нет совпадений по названию', 'course-plugin'),
             ));
         }
     }

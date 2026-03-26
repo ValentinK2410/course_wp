@@ -311,6 +311,8 @@ class Program_Frontend {
             wp_localize_script('course-frontend-script', 'courseFrontend', array(
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('course_frontend_nonce'),
+                'searchSuggestAll' => __('Все результаты поиска', 'course-plugin'),
+                'searchSuggestEmpty' => __('Нет совпадений по названию', 'course-plugin'),
             ));
         }
     }

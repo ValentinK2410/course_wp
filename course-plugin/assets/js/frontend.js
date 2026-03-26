@@ -92,30 +92,111 @@
             }
         });
         
-        // Поиск по названию в архиве курсов и программ (?search= → на сервере в WP_Query как s)
-        function bindArchiveTitleSearch(inputSelector) {
+        // Подсказки при вводе в поиске архива курсов/программ (AJAX)
+        function archiveSearchUrlForTerm(term) {
+            var url = new URL(window.location.href);
+            if (term) {
+                url.searchParams.set('search', term);
+            } else {
+                url.searchParams.delete('search');
+            }
+            url.searchParams.delete('paged');
+            return url.toString();
+        }
+        function bindArchiveSearchSuggest(inputSelector, postType) {
+            if (typeof courseFrontend === 'undefined') {
+                return;
+            }
             var $input = $(inputSelector);
             if (!$input.length) {
                 return;
             }
-            var timeout;
+            var $box = $input.closest('.filter-search-box');
+            var $suggest = $box.find('.archive-search-suggest');
+            if (!$suggest.length) {
+                $suggest = $('<div class="archive-search-suggest" role="listbox"></div>');
+                $box.append($suggest);
+            }
+            var xhr = null;
+            var debounceMs = 280;
+            var debounceTimeout;
+            function hideSuggest() {
+                $suggest.empty().attr('hidden', true);
+            }
+            function showSuggest() {
+                $suggest.removeAttr('hidden');
+            }
             $input.on('input', function() {
-                clearTimeout(timeout);
-                timeout = setTimeout(function() {
-                    var url = new URL(window.location.href);
-                    var term = $input.val().trim();
-                    if (term) {
-                        url.searchParams.set('search', term);
-                    } else {
-                        url.searchParams.delete('search');
+                clearTimeout(debounceTimeout);
+                var term = $input.val().trim();
+                if (term.length < 2) {
+                    if (xhr) {
+                        xhr.abort();
                     }
-                    url.searchParams.delete('paged');
-                    window.location.href = url.toString();
-                }, 500);
+                    hideSuggest();
+                    return;
+                }
+                debounceTimeout = setTimeout(function() {
+                    if (xhr) {
+                        xhr.abort();
+                    }
+                    xhr = $.ajax({
+                        url: courseFrontend.ajaxurl,
+                        method: 'POST',
+                        dataType: 'json',
+                        data: {
+                            action: 'course_archive_search_suggest',
+                            nonce: courseFrontend.nonce,
+                            term: term,
+                            post_type: postType
+                        }
+                    }).done(function(res) {
+                        if (!res || !res.success || !res.data) {
+                            hideSuggest();
+                            return;
+                        }
+                        var items = res.data.items || [];
+                        $suggest.empty();
+                        if (items.length === 0) {
+                            $suggest.append(
+                                $('<div class="archive-search-suggest-empty"></div>').text(
+                                    courseFrontend.searchSuggestEmpty || ''
+                                )
+                            );
+                        } else {
+                            items.forEach(function(item) {
+                                var $a = $('<a class="archive-search-suggest-item" role="option"></a>');
+                                $a.attr('href', item.url).text(item.title);
+                                $suggest.append($a);
+                            });
+                        }
+                        var allLabel = courseFrontend.searchSuggestAll || '';
+                        var $all = $('<a class="archive-search-suggest-all"></a>');
+                        $all.attr('href', archiveSearchUrlForTerm(term)).text(allLabel);
+                        $suggest.append($all);
+                        showSuggest();
+                    }).fail(function() {
+                        hideSuggest();
+                    });
+                }, debounceMs);
+            });
+            $input.on('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    window.location.href = archiveSearchUrlForTerm($input.val().trim());
+                }
+                if (e.key === 'Escape') {
+                    hideSuggest();
+                }
+            });
+            $(document).on('mousedown.archiveSuggestClose', function(e) {
+                if (!$box.is(e.target) && $box.has(e.target).length === 0) {
+                    hideSuggest();
+                }
             });
         }
-        bindArchiveTitleSearch('#course-archive-search-input');
-        bindArchiveTitleSearch('#program-archive-search-input');
+        bindArchiveSearchSuggest('#course-archive-search-input', 'course');
+        bindArchiveSearchSuggest('#program-archive-search-input', 'program');
         
         // Анимация появления фильтров при загрузке
         $('.filter-section').each(function(index) {
