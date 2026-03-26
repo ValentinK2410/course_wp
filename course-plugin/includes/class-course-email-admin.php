@@ -61,6 +61,16 @@ class Course_Email_Admin {
     public function register_settings() {
         register_setting(
             'course_email_settings',
+            'course_smtp_enabled',
+            array(
+                'type' => 'boolean',
+                'sanitize_callback' => array($this, 'sanitize_smtp_enabled'),
+                'default' => true,
+                'show_in_rest' => false,
+            )
+        );
+        register_setting(
+            'course_email_settings',
             'course_smtp_host',
             array(
                 'type' => 'string',
@@ -122,6 +132,16 @@ class Course_Email_Admin {
                 'default' => '',
             )
         );
+    }
+
+    /**
+     * Чекбокс «внешний SMTP»: 0/1 из формы.
+     *
+     * @param mixed $value Значение из формы.
+     * @return bool
+     */
+    public function sanitize_smtp_enabled($value) {
+        return $value === '1' || $value === 1 || $value === true;
     }
 
     /**
@@ -229,7 +249,7 @@ class Course_Email_Admin {
         ?>
         <div class="wrap">
             <h1>Настройки Email (SMTP)</h1>
-            <p><strong>Основной способ:</strong> заполните поля ниже и нажмите «Сохранить настройки». Рекомендуем <strong>Яндекс Почту</strong> (или Яндекс 360 для домена): внешний SMTP нужен, чтобы письма не шли напрямую с IP сервера (иначе часто блокировка, в т.ч. из‑за PTR).</p>
+            <p><strong>Внешний SMTP</strong> (Яндекс, Mail.ru и т.п.) — по желанию. Если снять галочку «Использовать внешний SMTP», письма пойдут через обычный <code>wp_mail</code> / почту на сервере (sendmail/postfix), без логина к Яндексу.</p>
             <?php if (defined('COURSE_SMTP_HOST') && COURSE_SMTP_HOST !== '') : ?>
                 <div class="notice notice-warning"><p>Дополнительно заданы константы <code>COURSE_SMTP_*</code> в <code>wp-config.php</code> — они <strong>перекрывают</strong> значения с этой страницы. Чтобы пользоваться только формой, уберите константы.</p></div>
             <?php endif; ?>
@@ -242,16 +262,19 @@ class Course_Email_Admin {
             
             <?php
             $diag_disable = get_option('disable_email_sending', false);
+            $diag_ext_smtp_on = get_option('course_smtp_enabled', true);
             $diag_smtp_ok = class_exists('Course_Email_Sender') && Course_Email_Sender::is_smtp_fully_configured();
             ?>
-            <div class="notice <?php echo $diag_smtp_ok && !$diag_disable ? 'notice-success' : 'notice-warning'; ?>" style="margin:12px 0;">
+            <div class="notice <?php echo ($diag_smtp_ok || !$diag_ext_smtp_on) && !$diag_disable ? 'notice-success' : 'notice-warning'; ?>" style="margin:12px 0;">
                 <p><strong><?php esc_html_e('Диагностика перед отправкой:', 'course-plugin'); ?></strong></p>
                 <ul style="list-style:disc;padding-left:1.5em;margin:0;">
                     <li><?php echo $diag_disable ? '<span style="color:#b32d2e;">✗</span> ' . esc_html__('Включено «Отключить отправку писем» (Moodle) — письма блокируются.', 'course-plugin') : '✓ ' . esc_html__('Массовая отправка не отключена в настройках Moodle.', 'course-plugin'); ?></li>
-                    <li><?php echo $diag_smtp_ok ? '✓ ' . esc_html__('SMTP задан: хост, логин и пароль есть в базе.', 'course-plugin') : '<span style="color:#b32d2e;">✗</span> ' . esc_html__('SMTP неполный: нужны сервер, логин и сохранённый пароль.', 'course-plugin'); ?></li>
+                    <li><?php echo $diag_ext_smtp_on
+                        ? ($diag_smtp_ok ? '✓ ' . esc_html__('Внешний SMTP включён и данные заполнены.', 'course-plugin') : '<span style="color:#b32d2e;">✗</span> ' . esc_html__('Внешний SMTP включён, но не хватает сервера/логина/пароля.', 'course-plugin'))
+                        : '✓ ' . esc_html__('Внешний SMTP отключён — используется почта сервера (без Яндекса и т.п.).', 'course-plugin'); ?></li>
                 </ul>
-                <?php if (!$diag_smtp_ok) : ?>
-                    <p><?php esc_html_e('Если пароль не сохранялся: введите пароль от Яндекса и нажмите «Сохранить настройки», затем снова «Отправить тестовое письмо».', 'course-plugin'); ?></p>
+                <?php if ($diag_ext_smtp_on && !$diag_smtp_ok) : ?>
+                    <p><?php esc_html_e('Если пароль не сохранялся: введите пароль и нажмите «Сохранить настройки», затем снова «Отправить тестовое письмо». Либо снимите «Использовать внешний SMTP», чтобы не зависеть от SMTP.', 'course-plugin'); ?></p>
                 <?php endif; ?>
                 <p class="description"><?php esc_html_e('Отладка SMTP в лог: в wp-config.php временно добавьте define(\'COURSE_SMTP_DEBUG\', true); и WP_DEBUG_LOG — в debug.log появятся строки «Course SMTP debug».', 'course-plugin'); ?></p>
                 <p class="description"><?php esc_html_e('Если установлен плагин «WP Mail SMTP» или аналог, временно отключите его — он может перехватывать wp_mail. Плагин «Курсы» при сбое wp_mail делает вторую попытку напрямую через SMTP.', 'course-plugin'); ?></p>
@@ -262,6 +285,17 @@ class Course_Email_Admin {
                 <?php do_settings_sections('course_email_settings'); ?>
                 
                 <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Режим', 'course-plugin'); ?></th>
+                        <td>
+                            <input type="hidden" name="course_smtp_enabled" value="0" />
+                            <label>
+                                <input type="checkbox" name="course_smtp_enabled" value="1" <?php checked(get_option('course_smtp_enabled', true)); ?> />
+                                <?php esc_html_e('Использовать внешний SMTP (Яндекс, Mail.ru и др.)', 'course-plugin'); ?>
+                            </label>
+                            <p class="description"><?php esc_html_e('Снимите галочку, чтобы отправка шла через почтовую систему сервера (как php mail/sendmail), без SMTP-логина.', 'course-plugin'); ?></p>
+                        </td>
+                    </tr>
                     <tr>
                         <th scope="row">
                             <label for="course_smtp_host">SMTP Сервер</label>

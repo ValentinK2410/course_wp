@@ -14,6 +14,10 @@
  * define('COURSE_SMTP_FROM_EMAIL', 'robot@example.org');
  * define('COURSE_SMTP_FROM_NAME', 'Богословская семинария');
  *
+ * Отключить внешний SMTP (слать через mail/sendmail на сервере):
+ * define('COURSE_SMTP_ENABLED', false);
+ * или в админке «Настройки → Email (SMTP)» снимите «Использовать внешний SMTP».
+ *
  * @copyright Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
  * @author Кузьменко Валентин (Valentink2410)
  */
@@ -80,6 +84,15 @@ class Course_Email_Sender {
      * SMTP включён (опции или константы wp-config).
      */
     public static function is_smtp_fully_configured() {
+        if (apply_filters('course_force_disable_smtp', false)) {
+            return false;
+        }
+        if (defined('COURSE_SMTP_ENABLED') && !constant('COURSE_SMTP_ENABLED')) {
+            return false;
+        }
+        if (!get_option('course_smtp_enabled', true)) {
+            return false;
+        }
         $h = self::smtp_host();
         $u = self::smtp_username();
         $p = self::smtp_password();

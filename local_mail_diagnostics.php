@@ -221,6 +221,7 @@ if (!$wp_loaded) {
     // Плагин course-plugin: отдельные опции и константы (не путать с wp_mail_smtp)
     if (class_exists('Course_Email_Sender')) {
         diag_section('Плагин course-plugin: Course_Email_Sender');
+        diag_line('course_smtp_enabled (внешний SMTP): ' . (get_option('course_smtp_enabled', true) ? 'да' : 'НЕТ — используется почта сервера'));
         $smtp_ok = Course_Email_Sender::is_smtp_fully_configured();
         diag_line('is_smtp_fully_configured(): ' . ($smtp_ok ? 'ДА — на хуке phpmailer_init включается SMTP (приоритет 99999)' : 'нет — SMTP из плагина не подставляется'));
         $course_opt_keys = array(
