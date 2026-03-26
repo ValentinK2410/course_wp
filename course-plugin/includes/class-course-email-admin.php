@@ -132,6 +132,28 @@ class Course_Email_Admin {
                 'default' => '',
             )
         );
+        register_setting(
+            'course_email_settings',
+            'course_test_email_addresses',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_textarea_field',
+                'default' => '',
+            )
+        );
+    }
+
+    /**
+     * Сохранённые адреса для тестовой отправки (если пусто — email администратора).
+     *
+     * @return string
+     */
+    private static function get_test_email_addresses_for_display() {
+        $v = get_option('course_test_email_addresses', '');
+        if ($v === '' || $v === false) {
+            return (string) get_option('admin_email');
+        }
+        return (string) $v;
     }
 
     /**
@@ -181,10 +203,10 @@ class Course_Email_Admin {
     public function render_settings_page() {
         // Обработка тестовой отправки
         $test_results = array();
-        if (isset($_POST['test_email']) && isset($_POST['test_email_addresses'])) {
+        if (isset($_POST['test_email'])) {
             check_admin_referer('course_email_test');
             
-            $test_addresses = sanitize_textarea_field($_POST['test_email_addresses']);
+            $test_addresses = sanitize_textarea_field(self::get_test_email_addresses_for_display());
             $test_subject = isset($_POST['test_email_subject']) ? sanitize_text_field($_POST['test_email_subject']) : 'Тест отправки email';
             $test_message_text = isset($_POST['test_email_message']) ? sanitize_textarea_field($_POST['test_email_message']) : '';
             
@@ -386,6 +408,17 @@ class Course_Email_Admin {
                             <p class="description">Имя, которое будет отображаться как отправитель</p>
                         </td>
                     </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="course_test_email_addresses"><?php esc_html_e('Email адреса для теста', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="course_test_email_addresses" name="course_test_email_addresses" rows="4" class="large-text"><?php echo esc_textarea(self::get_test_email_addresses_for_display()); ?></textarea>
+                            <p class="description">
+                                <?php esc_html_e('Сохраняется кнопкой «Сохранить настройки». Эти адреса используются в блоке «Тестовая отправка» ниже.', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
                 </table>
                 
                 <?php submit_button('Сохранить настройки'); ?>
@@ -394,23 +427,10 @@ class Course_Email_Admin {
             <hr>
             
             <h2>Тестовая отправка</h2>
-            <p>Отправьте тестовое письмо на один или несколько адресов для проверки настроек отправки email.</p>
+            <p><?php esc_html_e('Письма уходят на адреса из поля «Email адреса для теста» в форме выше (после сохранения настроек).', 'course-plugin'); ?></p>
             <form method="post" action="">
                 <?php wp_nonce_field('course_email_test'); ?>
                 <table class="form-table">
-                    <tr>
-                        <th scope="row">
-                            <label for="test_email_addresses">Email адреса для теста</label>
-                        </th>
-                        <td>
-                            <textarea id="test_email_addresses" name="test_email_addresses" 
-                                      rows="4" class="large-text" required><?php echo esc_textarea(get_option('admin_email')); ?></textarea>
-                            <p class="description">
-                                Укажите один или несколько email адресов (разделяйте запятыми, пробелами или переносами строк).<br>
-                                Например: test@gmail.com, test@yandex.ru или каждый адрес с новой строки
-                            </p>
-                        </td>
-                    </tr>
                     <tr>
                         <th scope="row">
                             <label for="test_email_subject">Тема письма</label>
