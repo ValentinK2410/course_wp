@@ -49,6 +49,8 @@ class Course_Frontend {
         
         // Добавляем фильтры в запрос
         add_action('pre_get_posts', array($this, 'filter_courses_query'));
+        // Поиск на архиве: только заголовок (не post_content — иначе ложные совпадения)
+        add_filter('posts_where', array($this, 'filter_courses_archive_title_search_where'), 10, 2);
         
         // Подключаем стили и скрипты
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
@@ -245,10 +247,7 @@ class Course_Frontend {
             $query->set('post_type', 'course');
             $query->set('post_status', 'publish');  // Только опубликованные курсы
             
-            // Поиск по названию/содержимому (в форме поле name="search", в WP — query var s)
-            if (isset($_GET['search']) && $_GET['search'] !== '') {
-                $query->set('s', sanitize_text_field(wp_unslash($_GET['search'])));
-            }
+            // Поиск по строке: см. filter_courses_archive_title_search_where (только post_title, не WP s)
             
             // Количество курсов на странице (из GET параметра или по умолчанию 15)
             $posts_per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 15;
@@ -450,6 +449,49 @@ class Course_Frontend {
                 }
             }
         }
+    }
+    
+    /**
+     * Текущий запрос — архив курсов (/course/, /courses/).
+     */
+    private function is_course_archive_request() {
+        if (function_exists('is_post_type_archive') && is_post_type_archive('course')) {
+            return true;
+        }
+        if (!isset($_SERVER['REQUEST_URI'])) {
+            return false;
+        }
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        if ($path === null) {
+            return false;
+        }
+        return (bool) preg_match('#/(course|courses)(/page/\d+)?/?$#', $path);
+    }
+
+    /**
+     * Поиск на архиве курсов только по заголовку (?search=), без post_content/excerpt.
+     */
+    public function filter_courses_archive_title_search_where($where, $wp_query) {
+        if (is_admin() || !$wp_query->is_main_query()) {
+            return $where;
+        }
+        if ($wp_query->get('post_type') !== 'course') {
+            return $where;
+        }
+        if (!$this->is_course_archive_request()) {
+            return $where;
+        }
+        if (!isset($_GET['search']) || $_GET['search'] === '') {
+            return $where;
+        }
+        $term = sanitize_text_field(wp_unslash($_GET['search']));
+        if ($term === '') {
+            return $where;
+        }
+        global $wpdb;
+        $like = '%' . $wpdb->esc_like($term) . '%';
+        $where .= $wpdb->prepare(" AND {$wpdb->posts}.post_title LIKE %s", $like);
+        return $where;
     }
     
     /**
