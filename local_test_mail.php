@@ -5,11 +5,14 @@
  * Разместите файл в КОРНЕ WordPress (рядом с wp-load.php) или поправьте путь $wp_load_candidates ниже.
  * После проверки удалите файл с сервера или ограничьте доступ.
  *
- * Браузер: https://ваш-сайт.ru/local_test_mail.php?key=ВАШ_СЕКРЕТ&to=email@example.com
- * CLI:     LOCAL_TEST_MAIL_SECRET=xxx php local_test_mail.php email@example.com
+ * Браузер: https://ваш-сайт.ru/local_test_mail.php?key=ВАШ_СЕКРЕТ  (или добавьте &to=другой@email.ru)
+ * CLI:     LOCAL_TEST_MAIL_SECRET=xxx php local_test_mail.php
  */
 
 declare(strict_types=1);
+
+// Получатель по умолчанию (если не указан to в URL или аргумент в CLI).
+$default_to = 'valentink2410@gmail.com';
 
 // Секрет: задайте переменную окружения или замените строку (не коммитьте реальный ключ в публичный репозиторий).
 $secret = getenv('LOCAL_TEST_MAIL_SECRET');
@@ -62,9 +65,13 @@ if ($is_cli) {
     $to = isset($_GET['to']) ? sanitize_email((string) $_GET['to']) : '';
 }
 
+if ($to === '' && $default_to !== '') {
+    $to = $default_to;
+}
+
 if ($to === '' || !is_email($to)) {
     http_response_code(400);
-    echo "Укажите корректный email.\n";
+    echo "Укажите корректный email в \$default_to или параметр to.\n";
     echo "Пример: ?key=...&to=test@example.com\n";
     echo "CLI: php local_test_mail.php test@example.com\n";
     exit;
