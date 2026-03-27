@@ -183,14 +183,14 @@ class Course_Moodle_User_Sync {
         // Обновляем настройки API перед синхронизацией
         $this->moodle_url = get_option('moodle_sync_url', '');
         $this->moodle_token = get_option('moodle_sync_token', '');
-        $sync_enabled = get_option('moodle_sync_users_enabled', true);
+        $sync_enabled_raw = get_option('moodle_sync_users_enabled', '');
+        $sync_enabled = ($sync_enabled_raw === '0') ? false : true;
         
         if (class_exists('Course_Logger')) {
-            Course_Logger::info('Настройки - URL: ' . $this->moodle_url . ', Token: ' . (empty($this->moodle_token) ? 'не установлен' : 'установлен') . ', Включено: ' . ($sync_enabled ? 'да' : 'нет'));
+            Course_Logger::info('Настройки - URL: ' . $this->moodle_url . ', Token: ' . (empty($this->moodle_token) ? 'не установлен' : 'установлен') . ', Включено: ' . ($sync_enabled ? 'да' : 'нет') . ' (raw: ' . var_export($sync_enabled_raw, true) . ')');
         }
-        error_log('Moodle User Sync: Настройки - URL: ' . $this->moodle_url . ', Token: ' . (empty($this->moodle_token) ? 'не установлен' : 'установлен') . ', Включено: ' . ($sync_enabled ? 'да' : 'нет'));
+        error_log('Moodle User Sync: Настройки - URL: ' . $this->moodle_url . ', Token: ' . (empty($this->moodle_token) ? 'не установлен' : 'установлен') . ', Включено: ' . ($sync_enabled ? 'да' : 'нет') . ' (raw: ' . var_export($sync_enabled_raw, true) . ')');
         
-        // Проверяем настройки перед синхронизацией
         if (!$sync_enabled) {
             if (class_exists('Course_Logger')) {
                 Course_Logger::warning('Синхронизация пользователей отключена в настройках');
@@ -283,18 +283,16 @@ class Course_Moodle_User_Sync {
             return; // Если пользователь не найден, прекращаем выполнение
         }
         
-        // Проверяем, включена ли синхронизация пользователей
-        $sync_enabled = get_option('moodle_sync_users_enabled', true);
+        $sync_enabled_raw = get_option('moodle_sync_users_enabled', '');
+        $sync_enabled = ($sync_enabled_raw === '0') ? false : true;
         if (!$sync_enabled) {
             error_log('Moodle User Sync: Синхронизация пользователей отключена');
             return;
         }
         
-        // Обновляем настройки API на случай, если они изменились
         $this->moodle_url = get_option('moodle_sync_url', '');
         $this->moodle_token = get_option('moodle_sync_token', '');
         
-        // Нормализуем URL (убираем слеш в конце)
         $this->moodle_url = rtrim($this->moodle_url, '/');
         
         error_log('Moodle User Sync: Настройки - URL: ' . $this->moodle_url . ', Token установлен: ' . (!empty($this->moodle_token) ? 'да' : 'нет'));
@@ -690,14 +688,13 @@ class Course_Moodle_User_Sync {
             return;
         }
         
-        // Проверяем, включена ли синхронизация пользователей
-        $sync_enabled = get_option('moodle_sync_users_enabled', true);
+        $sync_enabled_raw = get_option('moodle_sync_users_enabled', '');
+        $sync_enabled = ($sync_enabled_raw === '0') ? false : true;
         if (!$sync_enabled) {
             error_log('Moodle User Sync: Синхронизация пользователей отключена');
             return;
         }
         
-        // Проверяем, создан ли уже пользователь в Moodle
         $moodle_user_id = get_user_meta($user_id, 'moodle_user_id', true);
         if ($moodle_user_id) {
             error_log('Moodle User Sync: Пользователь ID ' . $user_id . ' уже синхронизирован с Moodle (ID: ' . $moodle_user_id . '), обновляем пароль');
@@ -1100,7 +1097,8 @@ class Course_Moodle_User_Sync {
 
         $this->moodle_url   = get_option('moodle_sync_url', '');
         $this->moodle_token = get_option('moodle_sync_token', '');
-        $sync_enabled       = get_option('moodle_sync_users_enabled', true);
+        $sync_enabled_raw   = get_option('moodle_sync_users_enabled', '');
+        $sync_enabled       = ($sync_enabled_raw === '0') ? false : true;
 
         if (!$sync_enabled || empty($this->moodle_url) || empty($this->moodle_token)) {
             error_log('Moodle User Sync: add_user_to_program_cohort — синхронизация отключена или нет URL/токена');
@@ -1165,7 +1163,8 @@ class Course_Moodle_User_Sync {
 
         $this->moodle_url   = get_option('moodle_sync_url', '');
         $this->moodle_token = get_option('moodle_sync_token', '');
-        $sync_enabled       = get_option('moodle_sync_users_enabled', true);
+        $sync_enabled_raw   = get_option('moodle_sync_users_enabled', '');
+        $sync_enabled       = ($sync_enabled_raw === '0') ? false : true;
 
         if (!$sync_enabled || empty($this->moodle_url) || empty($this->moodle_token)) {
             return false;

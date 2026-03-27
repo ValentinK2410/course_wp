@@ -20,7 +20,10 @@ echo "user_id: " . $u->ID . "\n";
 echo "email: " . $u->user_email . "\n";
 echo "moodle_user_id: " . get_user_meta($u->ID, 'moodle_user_id', true) . "\n";
 echo "email_confirmed: " . get_user_meta($u->ID, 'email_confirmed', true) . "\n";
-echo "Moodle sync enabled: " . get_option('moodle_sync_users_enabled', 'not set') . "\n";
+echo "pending_moodle_password: " . (get_user_meta($u->ID, 'pending_moodle_password', true) ? 'YES' : 'NO') . "\n";
+$raw = get_option('moodle_sync_users_enabled', 'NOT_SET');
+echo "Moodle sync enabled raw: " . var_export($raw, true) . "\n";
+echo "Moodle sync enabled (fixed): " . (($raw === '0') ? 'NO' : 'YES') . "\n";
 echo "Moodle URL: " . get_option('moodle_sync_url', '') . "\n";
 echo "Moodle token set: " . (get_option('moodle_sync_token', '') ? 'YES' : 'NO') . "\n";
 
