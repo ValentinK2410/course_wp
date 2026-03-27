@@ -3,7 +3,7 @@
  * Plugin Name: Курсы Про
  * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
- * Version: 1.3.56
+ * Version: 1.3.57
  * Author: Кузьменко Валентин (Valentink2410)
  * Author URI: https://github.com/ValentinK2410
  * Copyright: Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 
 // Определяем константы плагина для использования в других файлах
 // COURSE_PLUGIN_VERSION - версия плагина для версионирования стилей и скриптов
-define('COURSE_PLUGIN_VERSION', '1.3.56');
+define('COURSE_PLUGIN_VERSION', '1.3.57');
 
 // COURSE_PLUGIN_DIR - абсолютный путь к директории плагина (например: /var/www/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -172,6 +172,7 @@ class Course_Plugin {
             'includes/class-course-anti-bot-admin.php',  // Класс для админ-панели защиты от ботов
             'includes/class-course-email-sender.php',    // Класс для улучшенной отправки email (SMTP поддержка)
             'includes/class-course-email-admin.php',    // Класс для админ-панели настроек email (SMTP)
+            'includes/class-course-wp-login-registration.php', // Поля Имя/Фамилия + пароль в стандартной регистрации wp-login.php
         );
         
         // Проходим по каждому файлу в массиве
@@ -314,6 +315,11 @@ class Course_Plugin {
         // Добавляет страницу настроек "Настройки → Email (SMTP)"
         if (class_exists('Course_Email_Admin')) {
             Course_Email_Admin::get_instance();
+        }
+        
+        // Расширение стандартной формы регистрации wp-login.php (Имя/Фамилия + пароль + Moodle)
+        if (class_exists('Course_WP_Login_Registration')) {
+            Course_WP_Login_Registration::get_instance();
         }
     }
     

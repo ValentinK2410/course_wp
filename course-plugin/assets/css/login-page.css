@@ -582,6 +582,21 @@ body.login-action-register #login #backtoblog a:hover {
     margin-top: 0 !important;
 }
 
+/* Дополнительные поля регистрации (Имя / Фамилия) */
+body.login-action-register #registerform #first_name,
+body.login-action-register #registerform #last_name {
+    color: #a1927e !important;
+}
+
+body.login-action-register #registerform .required {
+    color: #c9544d !important;
+}
+
+/* Скрываем стандартное сообщение «Ссылка для подтверждения будет отправлена на email» */
+body.login-action-register #reg_passmail {
+    display: none !important;
+}
+
 /* Скрываем «Сайт работает на WordPress» */
 .login .privacy-policy-page-link {
     display: none !important;

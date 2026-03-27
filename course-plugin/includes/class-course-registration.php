@@ -63,8 +63,8 @@ class Course_Registration {
         add_action('login_footer', array($this, 'add_resend_email_form'));
         add_action('login_form_bottom', array($this, 'add_resend_email_form'));
         
-        // Ссылка «Регистрация» на wp-login.php ведёт на страницу с [course_register] (если выбрана в настройках)
-        add_filter('registration_url', array($this, 'filter_registration_url'));
+        // Отключено: теперь используется стандартная регистрация wp-login.php?action=register
+        // add_filter('registration_url', array($this, 'filter_registration_url'));
         add_action('admin_menu', array($this, 'add_registration_settings_menu'));
         add_action('admin_init', array($this, 'register_registration_settings'));
         

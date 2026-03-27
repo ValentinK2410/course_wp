@@ -27,19 +27,14 @@ while (have_posts()) : the_post();
     $program_tag = get_post_meta(get_the_ID(), '_program_tag', true);
     $program_additional_text = get_post_meta(get_the_ID(), '_program_additional_text', true);
     $program_enroll_url = get_post_meta(get_the_ID(), '_program_enroll_url', true); // Ссылка для записи на программу
-    // Регистрация на сайте с передачей program_id (когорта Moodle задаётся в карточке программы)
-    $registration_page_id = (int) get_option('course_registration_page_id', 0);
-    $program_site_registration_url = '';
-    if ($registration_page_id && get_post_status($registration_page_id) === 'publish') {
-        $program_site_registration_url = add_query_arg('program_id', get_the_ID(), get_permalink($registration_page_id));
-    }
+    // Регистрация: стандартная форма wp-login.php?action=register
     $program_register_url = '';
     $program_register_is_external = false;
     if (!empty($program_enroll_url)) {
         $program_register_url = class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($program_enroll_url) : $program_enroll_url;
         $program_register_is_external = true;
-    } elseif (!empty($program_site_registration_url)) {
-        $program_register_url = $program_site_registration_url;
+    } else {
+        $program_register_url = wp_registration_url();
     }
     $program_organizer_label = class_exists('Course_Meta_Boxes')
         ? Course_Meta_Boxes::get_organizer_label(get_post_meta(get_the_ID(), '_program_organizer', true))
