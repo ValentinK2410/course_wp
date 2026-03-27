@@ -209,15 +209,16 @@ class Course_WP_Login_Registration {
             $password .= '1';
         }
 
+        // Токен подтверждения email — ПЕРЕД wp_set_password, чтобы хук sync_user_on_password_set
+        // видел email_confirmed=0 и не создавал аккаунт в Moodle преждевременно
+        $token = wp_generate_password(32, false);
+        update_user_meta($user_id, 'email_confirm_token', $token);
+        update_user_meta($user_id, 'email_confirmed', '0');
+
         wp_set_password($password, $user_id);
 
         update_user_meta($user_id, 'pending_moodle_password', $password);
         set_transient('course_reg_password_' . $user_id, $password, 300);
-
-        // Токен подтверждения email
-        $token = wp_generate_password(32, false);
-        update_user_meta($user_id, 'email_confirm_token', $token);
-        update_user_meta($user_id, 'email_confirmed', '0');
 
         error_log('WP Login Registration: Пользователь создан user_id=' . $user_id . ', ожидает подтверждения email');
     }
