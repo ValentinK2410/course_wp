@@ -582,6 +582,11 @@ body.login-action-register #login #backtoblog a:hover {
     margin-top: 0 !important;
 }
 
+/* Скрываем поле «Логин» на странице регистрации (автогенерация из email) */
+body.login-action-register #registerform > p:first-child {
+    display: none !important;
+}
+
 /* Дополнительные поля регистрации (Имя / Фамилия) */
 body.login-action-register #registerform #first_name,
 body.login-action-register #registerform #last_name {
@@ -595,6 +600,11 @@ body.login-action-register #registerform .required {
 /* Скрываем стандартное сообщение «Ссылка для подтверждения будет отправлена на email» */
 body.login-action-register #reg_passmail {
     display: none !important;
+}
+
+/* Сообщение о подтверждении email */
+.course-email-confirmed {
+    border-left-color: #00a32a !important;
 }
 
 /* Скрываем «Сайт работает на WordPress» */
