@@ -40,7 +40,7 @@ class Course_WP_Login_Registration {
         add_action('login_enqueue_scripts', array($this, 'enqueue_register_styles'));
 
         // Обработка ссылки подтверждения email
-        add_action('init', array($this, 'handle_email_confirmation'));
+        add_action('init', array($this, 'handle_email_confirmation'), 1);
 
         // Сообщение на странице входа после подтверждения
         add_filter('login_message', array($this, 'login_confirmation_message'));
@@ -292,6 +292,8 @@ class Course_WP_Login_Registration {
             return;
         }
 
+        error_log('WP Login Registration: handle_email_confirmation ВЫЗВАН, token=' . $_GET['course_confirm_email']);
+
         $token = sanitize_text_field($_GET['course_confirm_email']);
 
         $users = get_users(array(
@@ -301,15 +303,19 @@ class Course_WP_Login_Registration {
         ));
 
         if (empty($users)) {
-            wp_safe_redirect(add_query_arg('email_confirm_status', 'invalid', wp_login_url()));
+            error_log('WP Login Registration: Токен не найден в БД');
+            wp_redirect(wp_login_url() . '?email_confirm_status=invalid');
             exit;
         }
 
         $user = $users[0];
+        error_log('WP Login Registration: Найден пользователь user_id=' . $user->ID . ' login=' . $user->user_login);
+
         $already_confirmed = get_user_meta($user->ID, 'email_confirmed', true);
 
         if ($already_confirmed === '1') {
-            wp_safe_redirect(add_query_arg('email_confirm_status', 'already', wp_login_url()));
+            error_log('WP Login Registration: Email уже подтверждён для user_id=' . $user->ID);
+            wp_redirect(wp_login_url() . '?email_confirm_status=already');
             exit;
         }
 
@@ -332,11 +338,14 @@ class Course_WP_Login_Registration {
             } catch (\Error $e) {
                 error_log('WP Login Registration: Фатальная ошибка Moodle-синхронизации: ' . $e->getMessage());
             }
+        } else {
+            error_log('WP Login Registration: Пароль не найден или Moodle Sync недоступен для user_id=' . $user->ID);
         }
 
         delete_user_meta($user->ID, 'pending_moodle_password');
 
-        wp_safe_redirect(add_query_arg('email_confirm_status', 'confirmed', wp_login_url()));
+        error_log('WP Login Registration: Редирект на wp-login.php?email_confirm_status=confirmed');
+        wp_redirect(wp_login_url() . '?email_confirm_status=confirmed');
         exit;
     }
 
