@@ -681,7 +681,13 @@ class Course_Moodle_User_Sync {
             Course_Logger::info('sync_user_on_password_set вызван для пользователя ID: ' . $user_id);
         }
         
-        // Получаем данные пользователя
+        // Если email ещё не подтверждён — не синхронизируем (sync произойдёт после подтверждения)
+        $email_confirmed = get_user_meta($user_id, 'email_confirmed', true);
+        if ($email_confirmed === '0') {
+            error_log('Moodle User Sync: sync_user_on_password_set — email не подтверждён, пропускаем (user_id=' . $user_id . ')');
+            return;
+        }
+        
         $user = get_userdata($user_id);
         if (!$user) {
             error_log('Moodle User Sync: Пользователь с ID ' . $user_id . ' не найден');
