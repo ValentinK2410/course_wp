@@ -39,8 +39,8 @@ class Course_WP_Login_Registration {
 
         add_action('login_enqueue_scripts', array($this, 'enqueue_register_styles'));
 
-        // Обработка ссылки подтверждения email
-        add_action('init', array($this, 'handle_email_confirmation'), 1);
+        // Обработка ссылки подтверждения email (wp-login.php не кешируется)
+        add_action('login_init', array($this, 'handle_email_confirmation'));
 
         // Сообщение на странице входа после подтверждения
         add_filter('login_message', array($this, 'login_confirmation_message'));
@@ -238,7 +238,7 @@ class Course_WP_Login_Registration {
         delete_transient('course_reg_password_' . $user->ID);
 
         $token = get_user_meta($user->ID, 'email_confirm_token', true);
-        $confirm_url = site_url('?course_confirm_email=' . urlencode($token));
+        $confirm_url = add_query_arg(array('action' => 'confirm_email', 'token' => $token), wp_login_url());
 
         $message  = sprintf(__('Здравствуйте, %s!', 'course-plugin'), $user->display_name) . "\r\n\r\n";
         $message .= sprintf(__('Добро пожаловать на сайт %s!', 'course-plugin'), $blogname) . "\r\n\r\n";
@@ -288,13 +288,17 @@ class Course_WP_Login_Registration {
     // ------------------------------------------------------------------
 
     public function handle_email_confirmation() {
-        if (!isset($_GET['course_confirm_email']) || empty($_GET['course_confirm_email'])) {
+        $action = isset($_GET['action']) ? $_GET['action'] : '';
+        if ($action !== 'confirm_email') {
+            return;
+        }
+        if (!isset($_GET['token']) || empty($_GET['token'])) {
             return;
         }
 
-        error_log('WP Login Registration: handle_email_confirmation ВЫЗВАН, token=' . $_GET['course_confirm_email']);
+        error_log('WP Login Registration: handle_email_confirmation ВЫЗВАН, token=' . $_GET['token']);
 
-        $token = sanitize_text_field($_GET['course_confirm_email']);
+        $token = sanitize_text_field($_GET['token']);
 
         $users = get_users(array(
             'meta_key'   => 'email_confirm_token',
