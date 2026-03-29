@@ -109,9 +109,10 @@ class Course_Plugin {
         // Добавляем поддержку Elementor для типов постов курсов и программ
         add_action('elementor/init', array($this, 'add_elementor_support'));
 
-        // Подписчики: скрыть admin bar и запретить доступ к wp-admin
+        // Подписчики: скрыть admin bar, запретить wp-admin, добавить «Выйти» в меню
         add_action('after_setup_theme', array($this, 'hide_admin_bar_for_subscribers'));
         add_action('admin_init', array($this, 'redirect_subscribers_from_admin'));
+        add_filter('wp_nav_menu_items', array($this, 'add_logout_link_for_subscribers'), 10, 2);
     }
     
     /**
@@ -163,6 +164,22 @@ class Course_Plugin {
             wp_redirect(home_url('/'));
             exit;
         }
+    }
+
+    /**
+     * Добавить ссылку «Выйти» в навигационное меню для авторизованных подписчиков
+     */
+    public function add_logout_link_for_subscribers($items, $args) {
+        if (!is_user_logged_in() || current_user_can('edit_posts')) {
+            return $items;
+        }
+        $user = wp_get_current_user();
+        $logout_url = wp_logout_url(home_url('/'));
+        $name = esc_html($user->display_name);
+        $items .= '<li class="menu-item menu-item-logout">'
+                 . '<a href="' . esc_url($logout_url) . '">' . $name . ' (Выйти)</a>'
+                 . '</li>';
+        return $items;
     }
     
     /**
