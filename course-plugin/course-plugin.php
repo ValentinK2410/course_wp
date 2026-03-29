@@ -109,10 +109,10 @@ class Course_Plugin {
         // Добавляем поддержку Elementor для типов постов курсов и программ
         add_action('elementor/init', array($this, 'add_elementor_support'));
 
-        // Подписчики: скрыть admin bar, запретить wp-admin, добавить «Выйти» в меню
+        // Подписчики: скрыть admin bar, запретить wp-admin, кнопка выхода
         add_action('after_setup_theme', array($this, 'hide_admin_bar_for_subscribers'));
         add_action('admin_init', array($this, 'redirect_subscribers_from_admin'));
-        add_filter('wp_nav_menu_items', array($this, 'add_logout_link_for_subscribers'), 10, 2);
+        add_action('wp_footer', array($this, 'render_subscriber_logout_button'));
     }
     
     /**
@@ -167,19 +167,27 @@ class Course_Plugin {
     }
 
     /**
-     * Добавить ссылку «Выйти» в навигационное меню для авторизованных подписчиков
+     * Маленькая кнопка выхода для подписчиков (нижний правый угол)
      */
-    public function add_logout_link_for_subscribers($items, $args) {
+    public function render_subscriber_logout_button() {
         if (!is_user_logged_in() || current_user_can('edit_posts')) {
-            return $items;
+            return;
         }
-        $user = wp_get_current_user();
         $logout_url = wp_logout_url(home_url('/'));
-        $name = esc_html($user->display_name);
-        $items .= '<li class="menu-item menu-item-logout">'
-                 . '<a href="' . esc_url($logout_url) . '">' . $name . ' (Выйти)</a>'
-                 . '</li>';
-        return $items;
+        $avatar = get_avatar_url(get_current_user_id(), array('size' => 64));
+        ?>
+        <a href="<?php echo esc_url($logout_url); ?>" class="course-subscriber-logout" title="Выйти">
+            <img src="<?php echo esc_url($avatar); ?>" alt="" />
+            <span class="course-subscriber-logout__label">Выйти</span>
+        </a>
+        <style>
+        .course-subscriber-logout{position:fixed;bottom:18px;right:18px;z-index:9999;width:40px;height:40px;border-radius:50%;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.25);transition:width .25s,border-radius .25s;display:flex;align-items:center;text-decoration:none;background:#fff}
+        .course-subscriber-logout img{width:40px;height:40px;border-radius:50%;flex-shrink:0}
+        .course-subscriber-logout__label{white-space:nowrap;font-size:13px;color:#333;padding:0 14px 0 8px;opacity:0;transition:opacity .2s}
+        .course-subscriber-logout:hover{width:130px;border-radius:20px}
+        .course-subscriber-logout:hover .course-subscriber-logout__label{opacity:1}
+        </style>
+        <?php
     }
     
     /**
