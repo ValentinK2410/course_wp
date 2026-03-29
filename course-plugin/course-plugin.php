@@ -3,7 +3,7 @@
  * Plugin Name: Курсы Про
  * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
- * Version: 1.3.61
+ * Version: 1.3.62
  * Author: Кузьменко Валентин (Valentink2410)
  * Author URI: https://github.com/ValentinK2410
  * Copyright: Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 
 // Определяем константы плагина для использования в других файлах
 // COURSE_PLUGIN_VERSION - версия плагина для версионирования стилей и скриптов
-define('COURSE_PLUGIN_VERSION', '1.3.61');
+define('COURSE_PLUGIN_VERSION', '1.3.62');
 
 // COURSE_PLUGIN_DIR - абсолютный путь к директории плагина (например: /var/www/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -108,6 +108,10 @@ class Course_Plugin {
         
         // Добавляем поддержку Elementor для типов постов курсов и программ
         add_action('elementor/init', array($this, 'add_elementor_support'));
+
+        // Подписчики: скрыть admin bar и запретить доступ к wp-admin
+        add_action('after_setup_theme', array($this, 'hide_admin_bar_for_subscribers'));
+        add_action('admin_init', array($this, 'redirect_subscribers_from_admin'));
     }
     
     /**
@@ -140,6 +144,25 @@ class Course_Plugin {
             }
             return $post_types;
         });
+    }
+
+    /**
+     * Скрыть admin bar для подписчиков
+     */
+    public function hide_admin_bar_for_subscribers() {
+        if (is_user_logged_in() && current_user_can('subscriber') && !current_user_can('edit_posts')) {
+            show_admin_bar(false);
+        }
+    }
+
+    /**
+     * Редирект подписчиков из wp-admin на главную страницу
+     */
+    public function redirect_subscribers_from_admin() {
+        if (current_user_can('subscriber') && !current_user_can('edit_posts') && !wp_doing_ajax()) {
+            wp_redirect(home_url('/'));
+            exit;
+        }
     }
     
     /**
