@@ -341,11 +341,15 @@ class Course_Moodle_User_Sync {
         $moodle_user_by_username = $this->api->get_user_by_username($user->user_login);
         
         if ($moodle_user_by_username) {
-            // Если пользователь уже существует в Moodle с таким username, обновляем его данные
-            update_user_meta($user_id, 'moodle_user_id', $moodle_user_by_username['id']);
-            
-            error_log('Moodle User Sync: Пользователь с username ' . $user->user_login . ' уже существует в Moodle (ID: ' . $moodle_user_by_username['id'] . ', email: ' . (isset($moodle_user_by_username['email']) ? $moodle_user_by_username['email'] : 'неизвестно') . '), данные обновлены. Новый пользователь не создается.');
-            return;
+            // Username существует в Moodle — привязываем ТОЛЬКО если email совпадает
+            $moodle_email = isset($moodle_user_by_username['email']) ? $moodle_user_by_username['email'] : '';
+            if (strtolower($moodle_email) === strtolower($user->user_email)) {
+                update_user_meta($user_id, 'moodle_user_id', $moodle_user_by_username['id']);
+                error_log('Moodle User Sync: Username ' . $user->user_login . ' найден в Moodle с тем же email, привязываем ID: ' . $moodle_user_by_username['id']);
+                return;
+            }
+            // Email разный — это другой человек, продолжаем создание с альтернативным username
+            error_log('Moodle User Sync: Username ' . $user->user_login . ' занят в Moodle (email: ' . $moodle_email . ' != ' . $user->user_email . '), создадим с другим username');
         }
         
         error_log('Moodle User Sync: Пользователь ' . $user->user_email . ' НЕ найден в Moodle, продолжаем создание нового пользователя');
