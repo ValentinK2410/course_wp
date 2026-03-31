@@ -681,11 +681,21 @@ class Course_Moodle_User_Sync {
             Course_Logger::info('sync_user_on_password_set вызван для пользователя ID: ' . $user_id);
         }
         
-        // Если email ещё не подтверждён — не синхронизируем (sync произойдёт после подтверждения)
-        $email_confirmed = get_user_meta($user_id, 'email_confirmed', true);
-        if ($email_confirmed === '0') {
-            error_log('Moodle User Sync: sync_user_on_password_set — email не подтверждён, пропускаем (user_id=' . $user_id . ')');
-            return;
+        // Блокируем sync для новых пользователей до подтверждения email.
+        // wp_insert_user() вызывает wp_set_password() ДО хука user_register,
+        // поэтому email_confirmed может быть ещё пустой (meta не установлена).
+        //
+        // Логика: если у пользователя НЕТ moodle_user_id — это новый или неподтверждённый.
+        //   - email_confirmed === '1' → разрешаем (подтверждение прошло)
+        //   - всё остальное ('0', '', отсутствует) → блокируем
+        // Если moodle_user_id есть — старый пользователь, пропускаем проверку.
+        $existing_moodle_id = get_user_meta($user_id, 'moodle_user_id', true);
+        if (empty($existing_moodle_id)) {
+            $email_confirmed = get_user_meta($user_id, 'email_confirmed', true);
+            if ($email_confirmed !== '1') {
+                error_log('Moodle User Sync: sync_user_on_password_set — email не подтверждён (confirmed=' . var_export($email_confirmed, true) . '), пропускаем user_id=' . $user_id);
+                return;
+            }
         }
         
         $user = get_userdata($user_id);
