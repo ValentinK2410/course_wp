@@ -220,6 +220,13 @@ class Course_WP_Login_Registration {
         update_user_meta($user_id, 'pending_moodle_password', $password);
         set_transient('course_reg_password_' . $user_id, $password, 300);
 
+        if (!empty($_REQUEST['redirect_to'])) {
+            $redirect = wp_validate_redirect(wp_unslash($_REQUEST['redirect_to']), '');
+            if (!empty($redirect)) {
+                update_user_meta($user_id, 'pending_enroll_redirect', $redirect);
+            }
+        }
+
         error_log('WP Login Registration: Пользователь создан user_id=' . $user_id . ', ожидает подтверждения email');
     }
 
@@ -348,6 +355,15 @@ class Course_WP_Login_Registration {
         }
 
         delete_user_meta($user->ID, 'pending_moodle_password');
+
+        $pending = get_user_meta($user->ID, 'pending_enroll_redirect', true);
+        delete_user_meta($user->ID, 'pending_enroll_redirect');
+
+        if (!empty($pending)) {
+            error_log('WP Login Registration: Редирект после подтверждения на сохранённый URL');
+            wp_safe_redirect($pending);
+            exit;
+        }
 
         error_log('WP Login Registration: Редирект на wp-login.php?email_confirm_status=confirmed');
         wp_redirect(wp_login_url() . '?email_confirm_status=confirmed');

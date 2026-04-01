@@ -34,6 +34,7 @@ class Course_Enroll_Gate {
         $vars[] = 'enroll_gate';
         $vars[] = 'enroll_url';
         $vars[] = 'enroll_program';
+        $vars[] = 'enroll_course';
         $vars[] = 'moodle_sso';
         return $vars;
     }
@@ -106,9 +107,10 @@ class Course_Enroll_Gate {
      * Сформировать URL шлюза записи
      *
      * @param string $target_url  Целевой URL в Moodle.
-     * @param int    $program_id  ID программы WordPress (для записи в когорту).
+     * @param int    $program_id  ID поста программы (для записи в когорту и мета организатора).
+     * @param int    $course_id   ID поста курса (для мета организатора).
      */
-    public static function get_enroll_url($target_url, $program_id = 0) {
+    public static function get_enroll_url($target_url, $program_id = 0, $course_id = 0) {
         if (empty($target_url)) {
             return '';
         }
@@ -119,7 +121,20 @@ class Course_Enroll_Gate {
         if ($program_id > 0) {
             $args['enroll_program'] = (int) $program_id;
         }
+        if ($course_id > 0) {
+            $args['enroll_course'] = (int) $course_id;
+        }
         return add_query_arg($args, home_url('/enroll/'));
+    }
+
+    /**
+     * URL регистрации с сохранением возврата (курс/программа или шлюз записи).
+     *
+     * @param string $redirect_url Куда вернуть пользователя после регистрации и подтверждения email.
+     */
+    public static function get_registration_url_with_redirect($redirect_url) {
+        $redirect_url = wp_validate_redirect($redirect_url, home_url('/'));
+        return add_query_arg('redirect_to', $redirect_url, wp_registration_url());
     }
 
     /**
@@ -141,12 +156,16 @@ class Course_Enroll_Gate {
         }
 
         $program_id = (int) (get_query_var('enroll_program') ?: (isset($_GET['enroll_program']) ? absint($_GET['enroll_program']) : 0));
+        $course_id  = (int) (get_query_var('enroll_course') ?: (isset($_GET['enroll_course']) ? absint($_GET['enroll_course']) : 0));
         $return_args = array(
             'enroll_gate' => '1',
             'enroll_url'  => $target_encoded,
         );
         if ($program_id > 0) {
             $return_args['enroll_program'] = $program_id;
+        }
+        if ($course_id > 0) {
+            $return_args['enroll_course'] = $course_id;
         }
         $current_enroll_url = add_query_arg($return_args, home_url('/enroll/'));
 
@@ -188,7 +207,11 @@ class Course_Enroll_Gate {
                 $redirect_path = $target_path . ($target_query ? '?' . $target_query : '');
                 // rawurlencode для токена: base64 содержит + и /, которые могут искажаться в URL
                 $sso_base = $moodle_url . '/sso-login.php';
+                $profile_mbs = self::should_require_moodle_profile_mbs($program_id, $course_id);
                 $sso_redirect = $sso_base . '?token=' . rawurlencode($moodle_token) . '&redirect=' . rawurlencode($redirect_path);
+                if ($profile_mbs) {
+                    $sso_redirect .= '&profile_mbs=1';
+                }
                 wp_redirect($sso_redirect);
                 exit;
             }
@@ -240,5 +263,24 @@ class Course_Enroll_Gate {
         } else {
             error_log('Enroll Gate: не удалось записать пользователя ' . $user_id . ' в когорту ' . $cohort_id);
         }
+    }
+
+    /**
+     * Нужно ли проверять заполнение профиля в Moodle (организатор МБС Москва).
+     *
+     * @param int $program_id ID поста program.
+     * @param int $course_id  ID поста course.
+     * @return bool
+     */
+    public static function should_require_moodle_profile_mbs($program_id, $course_id) {
+        if ($program_id > 0) {
+            $org = get_post_meta($program_id, '_program_organizer', true);
+            return ($org === 'mbs_moscow');
+        }
+        if ($course_id > 0) {
+            $org = get_post_meta($course_id, '_course_organizer', true);
+            return ($org === 'mbs_moscow');
+        }
+        return false;
     }
 }

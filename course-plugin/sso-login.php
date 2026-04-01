@@ -185,13 +185,45 @@ sso_log('Пользователь найден в Moodle. ID: ' . $user->id . ',
 // Автоматически входим пользователя
 complete_user_login($user);
 
+// Актуальные поля профиля после входа
+$user = $DB->get_record('user', array('id' => $user->id, 'deleted' => 0));
+
 // Логируем успешный вход
 sso_log('Пользователь ' . $email . ' (ID: ' . $user->id . ') успешно вошел в Moodle через SSO');
 
-// Перенаправляем: если передан redirect (путь на Moodle), идём туда; иначе на главную
 $redirect_path = optional_param('redirect', '', PARAM_RAW);
+$profile_mbs = optional_param('profile_mbs', 0, PARAM_INT);
+
+// Запись на программу МБС (Москва): при необходимости сначала открыть редактирование профиля
+if ($user && $profile_mbs && sso_mbs_profile_needs_completion($user)) {
+    sso_log('profile_mbs: профиль неполный, редирект на /user/edit.php');
+    $ret = '';
+    if (!empty($redirect_path) && preg_match('#^/[a-zA-Z0-9_\-\/%\.\?\=\&\~]+$#', $redirect_path) && strpos($redirect_path, '..') === false) {
+        $ret = $redirect_path;
+    }
+    $editparams = ['id' => $user->id];
+    if ($ret !== '') {
+        $editparams['return'] = $ret;
+    }
+    redirect(new moodle_url('/user/edit.php', $editparams));
+}
+
+// Перенаправляем: если передан redirect (путь на Moodle), идём туда; иначе на главную
 if (!empty($redirect_path) && preg_match('#^/[a-zA-Z0-9_\-\/%\.\?\=\&\~]+$#', $redirect_path) && strpos($redirect_path, '..') === false) {
     redirect(new moodle_url($redirect_path));
 } else {
     redirect(new moodle_url('/'));
+}
+
+/**
+ * Проверка обязательных полей профиля для МБС (имя, фамилия, контакт).
+ *
+ * @param stdClass $user Запись пользователя Moodle после complete_user_login.
+ * @return bool true — нужно заполнить профиль.
+ */
+function sso_mbs_profile_needs_completion($user) {
+    global $CFG;
+    require_once($CFG->dirroot . '/user/profile/lib.php');
+    profile_load_custom_fields($user);
+    return (trim($user->firstname) === '' || trim($user->lastname) === '');
 }
