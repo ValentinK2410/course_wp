@@ -172,6 +172,18 @@ class Course_Enroll_Gate {
         // Не авторизован — перенаправляем на вход с возвратом сюда
         if (!is_user_logged_in()) {
             $login_url = wp_login_url($current_enroll_url);
+            // Cookie: если redirect_to потеряется при регистрации, сохраним URL шлюза записи
+            if (!headers_sent()) {
+                setcookie(
+                    'course_pending_enroll',
+                    $current_enroll_url,
+                    time() + DAY_IN_SECONDS,
+                    COOKIEPATH,
+                    COOKIE_DOMAIN,
+                    is_ssl(),
+                    true
+                );
+            }
             wp_redirect($login_url);
             exit;
         }

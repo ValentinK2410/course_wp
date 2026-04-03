@@ -69,7 +69,17 @@ class Course_WP_Login_Registration {
     public function render_extra_fields() {
         $first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '';
         $last_name  = isset($_POST['last_name'])  ? sanitize_text_field($_POST['last_name'])  : '';
+        $redirect_to = '';
+        if (!empty($_POST['course_redirect_to'])) {
+            $redirect_to = wp_validate_redirect(wp_unslash($_POST['course_redirect_to']), '');
+        }
+        if (empty($redirect_to) && !empty($_REQUEST['redirect_to'])) {
+            $redirect_to = wp_validate_redirect(wp_unslash($_REQUEST['redirect_to']), '');
+        }
         ?>
+        <?php if (!empty($redirect_to)) : ?>
+            <input type="hidden" name="course_redirect_to" value="<?php echo esc_attr($redirect_to); ?>" />
+        <?php endif; ?>
         <p>
             <label for="first_name"><?php _e('Имя', 'course-plugin'); ?><br />
                 <input type="text" name="first_name" id="first_name" class="input"
@@ -220,11 +230,21 @@ class Course_WP_Login_Registration {
         update_user_meta($user_id, 'pending_moodle_password', $password);
         set_transient('course_reg_password_' . $user_id, $password, 300);
 
-        if (!empty($_REQUEST['redirect_to'])) {
+        $redirect = '';
+        if (!empty($_POST['course_redirect_to'])) {
+            $redirect = wp_validate_redirect(wp_unslash($_POST['course_redirect_to']), '');
+        }
+        if (empty($redirect) && !empty($_REQUEST['redirect_to'])) {
             $redirect = wp_validate_redirect(wp_unslash($_REQUEST['redirect_to']), '');
-            if (!empty($redirect)) {
-                update_user_meta($user_id, 'pending_enroll_redirect', $redirect);
+        }
+        if (empty($redirect) && !empty($_COOKIE['course_pending_enroll'])) {
+            $redirect = wp_validate_redirect(wp_unslash($_COOKIE['course_pending_enroll']), '');
+            if (!headers_sent()) {
+                setcookie('course_pending_enroll', '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
             }
+        }
+        if (!empty($redirect)) {
+            update_user_meta($user_id, 'pending_enroll_redirect', $redirect);
         }
 
         error_log('WP Login Registration: Пользователь создан user_id=' . $user_id . ', ожидает подтверждения email');
@@ -359,8 +379,21 @@ class Course_WP_Login_Registration {
         $pending = get_user_meta($user->ID, 'pending_enroll_redirect', true);
         delete_user_meta($user->ID, 'pending_enroll_redirect');
 
+        // Автовход после подтверждения email — чтобы сразу пройти шлюз записи в Moodle без повторного ввода пароля
+        if (apply_filters('course_auto_login_after_email_confirm', true, $user) && !headers_sent()) {
+            wp_set_current_user($user->ID);
+            wp_set_auth_cookie($user->ID, true, is_ssl());
+            /**
+             * Fires after the user has successfully logged in after email confirmation.
+             *
+             * @param string $user_login Username.
+             * @param WP_User $user WP_User object.
+             */
+            do_action('wp_login', $user->user_login, $user);
+        }
+
         if (!empty($pending)) {
-            error_log('WP Login Registration: Редирект после подтверждения на сохранённый URL');
+            error_log('WP Login Registration: Редирект после подтверждения на сохранённый URL (автовход выполнен)');
             wp_safe_redirect($pending);
             exit;
         }
