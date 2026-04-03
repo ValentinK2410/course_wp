@@ -41,6 +41,9 @@ while (have_posts()) : the_post();
     $program_organizer_label = class_exists('Course_Meta_Boxes')
         ? Course_Meta_Boxes::get_organizer_label(get_post_meta(get_the_ID(), '_program_organizer', true))
         : '';
+
+    // Гостям показываем вводное окно перед переходом к записи/регистрации
+    $program_show_enroll_intro_modal = !empty($program_register_url) && !is_user_logged_in();
     
     // ============================================
     // ПОЛУЧЕНИЕ ТАКСОНОМИЙ
@@ -297,11 +300,16 @@ while (have_posts()) : the_post();
                             <?php endif; ?>
                             <span class="price-current"><?php echo $program_price ? number_format($program_price, 0, ',', ' ') : __('Бесплатно', 'course-plugin'); ?><?php if ($program_price) echo ' ₽'; ?></span>
                         </div>
-                        <?php if ($program_register_url) : ?>
+                        <?php if ($program_register_url && !$program_show_enroll_intro_modal) : ?>
                             <a href="<?php echo esc_url($program_register_url); ?>" class="hero-enroll-btn"<?php echo $program_register_is_external ? ' target="_blank" rel="noopener"' : ''; ?>>
                                 <?php echo esc_html($enroll_button_text); ?>
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             </a>
+                        <?php elseif ($program_register_url && $program_show_enroll_intro_modal) : ?>
+                            <button type="button" class="hero-enroll-btn js-course-program-enroll-modal-open" aria-haspopup="dialog" aria-controls="course-program-registration-modal">
+                                <?php echo esc_html($enroll_button_text); ?>
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
                         <?php else : ?>
                             <button type="button" class="hero-enroll-btn">
                                 <?php echo esc_html($enroll_button_text); ?>
@@ -609,11 +617,16 @@ while (have_posts()) : the_post();
                         <?php endif; ?>
                         <span class="price-current"><?php echo $program_price ? number_format($program_price, 0, ',', ' ') . ' ₽' : __('Бесплатно', 'course-plugin'); ?></span>
                     </div>
-                    <?php if ($program_register_url) : ?>
+                    <?php if ($program_register_url && !$program_show_enroll_intro_modal) : ?>
                         <a href="<?php echo esc_url($program_register_url); ?>" class="enroll-btn"<?php echo $program_register_is_external ? ' target="_blank" rel="noopener"' : ''; ?>>
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                             <?php echo esc_html($enroll_button_text); ?>
                         </a>
+                    <?php elseif ($program_register_url && $program_show_enroll_intro_modal) : ?>
+                        <button type="button" class="enroll-btn js-course-program-enroll-modal-open" aria-haspopup="dialog" aria-controls="course-program-registration-modal">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                            <?php echo esc_html($enroll_button_text); ?>
+                        </button>
                     <?php else : ?>
                         <button type="button" class="enroll-btn">
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -695,14 +708,78 @@ while (have_posts()) : the_post();
                 <h2 class="cta-title"><?php echo esc_html($cta_title); ?></h2>
                 <p class="cta-text"><?php echo esc_html($cta_text); ?></p>
             </div>
-            <?php if ($program_register_url) : ?>
+            <?php if ($program_register_url && !$program_show_enroll_intro_modal) : ?>
                 <a href="<?php echo esc_url($program_register_url); ?>" class="cta-btn"<?php echo $program_register_is_external ? ' target="_blank" rel="noopener"' : ''; ?>>
                     <?php echo esc_html($cta_button_text); ?>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>
+            <?php elseif ($program_register_url && $program_show_enroll_intro_modal) : ?>
+                <button type="button" class="cta-btn js-course-program-enroll-modal-open" aria-haspopup="dialog" aria-controls="course-program-registration-modal">
+                    <?php echo esc_html($cta_button_text); ?>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
             <?php endif; ?>
         </div>
     </section>
+    <?php endif; ?>
+
+    <?php if (!empty($program_show_enroll_intro_modal)) : ?>
+    <div id="course-program-registration-modal" class="course-program-reg-modal" hidden role="dialog" aria-modal="true" aria-labelledby="course-program-reg-modal-title">
+        <div class="course-program-reg-modal__overlay js-course-program-enroll-modal-close" tabindex="-1"></div>
+        <div class="course-program-reg-modal__panel">
+            <button type="button" class="course-program-reg-modal__close js-course-program-enroll-modal-close" aria-label="<?php echo esc_attr__('Закрыть', 'course-plugin'); ?>">&times;</button>
+            <h2 id="course-program-reg-modal-title" class="course-program-reg-modal__title"><?php esc_html_e('ПРОЦЕСС РЕГИСТРАЦИИ НА ПРОГРАММУ', 'course-plugin'); ?></h2>
+            <p class="course-program-reg-modal__lead"><?php esc_html_e('Процесс включает в себя два шага', 'course-plugin'); ?></p>
+
+            <div class="course-program-reg-modal__step">
+                <h3 class="course-program-reg-modal__step-title"><?php esc_html_e('ШАГ 1. Вход в аккаунт', 'course-plugin'); ?></h3>
+                <p class="course-program-reg-modal__text"><?php esc_html_e('Первый шаг включает в себя создание аккаунта на учебной платформе семинарии или вход в аккаунт, если он у вас уже есть. При создании аккаунта вам нужно будет ввести ФИО и адрес электронной почты. На указанный вами адрес электронной почты вам придёт ссылка, нажав на которую вы сможете перейти к следующему шагу регистрации.', 'course-plugin'); ?></p>
+            </div>
+
+            <div class="course-program-reg-modal__step">
+                <h3 class="course-program-reg-modal__step-title"><?php esc_html_e('ШАГ 2. Получение доступа на платформу и предоставление необходимых данных', 'course-plugin'); ?></h3>
+                <p class="course-program-reg-modal__text"><?php esc_html_e('Когда вы перейдёте по ссылке, которая придёт вам на email, вы попадёте в раздел зачисления на программу, где вам нужно будет ввести необходимые данные (рекомендацию и т. п.). У вас будет время, чтобы всё это сделать до вступительных экзаменов.', 'course-plugin'); ?></p>
+            </div>
+
+            <p class="course-program-reg-modal__actions">
+                <a href="<?php echo esc_url($program_register_url); ?>" class="course-program-reg-modal__cta"<?php echo $program_register_is_external ? ' target="_blank" rel="noopener"' : ''; ?>>
+                    <?php esc_html_e('Приступить к регистрации', 'course-plugin'); ?>
+                </a>
+            </p>
+        </div>
+    </div>
+    <style>
+        .course-program-reg-modal[hidden]{display:none!important;}
+        .course-program-reg-modal.is-open{display:flex!important;position:fixed;inset:0;z-index:100000;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;}
+        .course-program-reg-modal__overlay{position:absolute;inset:0;background:rgba(15,15,20,.72);backdrop-filter:blur(4px);}
+        .course-program-reg-modal__panel{position:relative;max-width:560px;width:100%;max-height:90vh;overflow:auto;background:#fff;color:#1a1a1a;border-radius:12px;padding:28px 24px 24px;box-shadow:0 24px 64px rgba(0,0,0,.35);}
+        .course-program-reg-modal__close{position:absolute;top:12px;right:14px;border:0;background:transparent;font-size:28px;line-height:1;cursor:pointer;color:#666;padding:4px 8px;}
+        .course-program-reg-modal__close:hover{color:#111;}
+        .course-program-reg-modal__title{font-size:1.15rem;font-weight:700;margin:0 0 8px;letter-spacing:.02em;line-height:1.3;}
+        .course-program-reg-modal__lead{font-size:.95rem;color:#444;margin:0 0 20px;font-weight:600;}
+        .course-program-reg-modal__step{margin-bottom:18px;}
+        .course-program-reg-modal__step-title{font-size:.9rem;font-weight:700;margin:0 0 8px;color:#68202d;}
+        .course-program-reg-modal__text{font-size:.88rem;line-height:1.55;margin:0;color:#333;}
+        .course-program-reg-modal__actions{margin:24px 0 0;text-align:center;}
+        .course-program-reg-modal__cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,#68202d,#a13d4c);color:#fff!important;text-decoration:none;border-radius:8px;font-weight:600;font-size:.95rem;transition:opacity .2s,transform .15s;}
+        .course-program-reg-modal__cta:hover{opacity:.95;transform:translateY(-1px);color:#fff!important;}
+        body.course-program-reg-modal-open{overflow:hidden;}
+    </style>
+    <script>
+    (function(){
+        var modal = document.getElementById('course-program-registration-modal');
+        if (!modal) return;
+        function openModal(){ modal.hidden = false; modal.classList.add('is-open'); document.body.classList.add('course-program-reg-modal-open'); }
+        function closeModal(){ modal.classList.remove('is-open'); modal.hidden = true; document.body.classList.remove('course-program-reg-modal-open'); }
+        document.querySelectorAll('.js-course-program-enroll-modal-open').forEach(function(btn){
+            btn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
+        });
+        modal.querySelectorAll('.js-course-program-enroll-modal-close').forEach(function(el){
+            el.addEventListener('click', function(){ closeModal(); });
+        });
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal(); });
+    })();
+    </script>
     <?php endif; ?>
 </div>
 
