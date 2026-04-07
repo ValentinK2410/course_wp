@@ -245,9 +245,74 @@ class Course_WP_Login_Registration {
         }
         if (!empty($redirect)) {
             update_user_meta($user_id, 'pending_enroll_redirect', $redirect);
+            $this->save_pending_enroll_intent_from_url($user_id, $redirect);
+        } else {
+            delete_user_meta($user_id, 'pending_enroll_program_id');
+            delete_user_meta($user_id, 'pending_enroll_course_id');
         }
 
         error_log('WP Login Registration: Пользователь создан user_id=' . $user_id . ', ожидает подтверждения email');
+    }
+
+    /**
+     * Сохраняет ID программы/курса из URL шлюза записи — для персонализации письма.
+     *
+     * @param int    $user_id ID пользователя.
+     * @param string $url     URL (например /enroll/?enroll_program=…).
+     */
+    private function save_pending_enroll_intent_from_url($user_id, $url) {
+        delete_user_meta($user_id, 'pending_enroll_program_id');
+        delete_user_meta($user_id, 'pending_enroll_course_id');
+        if (empty($url)) {
+            return;
+        }
+        $query = wp_parse_url($url, PHP_URL_QUERY);
+        if (empty($query)) {
+            return;
+        }
+        parse_str($query, $args);
+        if (!empty($args['enroll_program'])) {
+            $pid = absint($args['enroll_program']);
+            if ($pid > 0) {
+                update_user_meta($user_id, 'pending_enroll_program_id', $pid);
+            }
+        }
+        if (!empty($args['enroll_course'])) {
+            $cid = absint($args['enroll_course']);
+            if ($cid > 0) {
+                update_user_meta($user_id, 'pending_enroll_course_id', $cid);
+            }
+        }
+    }
+
+    /**
+     * Текст для письма: на что пользователь хотел записаться.
+     *
+     * @param int $user_id ID пользователя.
+     * @return string Пустая строка или абзацы plain text.
+     */
+    private function get_enroll_intent_lines_for_email($user_id) {
+        $pid = (int) get_user_meta($user_id, 'pending_enroll_program_id', true);
+        $cid = (int) get_user_meta($user_id, 'pending_enroll_course_id', true);
+        $lines = array();
+        if ($pid > 0 && get_post_type($pid) === 'program') {
+            $title = wp_strip_all_tags(get_the_title($pid));
+            $lines[] = sprintf(
+                __('Вы начали регистрацию, чтобы записаться на программу: «%s».', 'course-plugin'),
+                $title
+            );
+        }
+        if ($cid > 0 && get_post_type($cid) === 'course') {
+            $title = wp_strip_all_tags(get_the_title($cid));
+            $lines[] = sprintf(
+                __('Вы начали регистрацию, чтобы записаться на курс: «%s».', 'course-plugin'),
+                $title
+            );
+        }
+        if (empty($lines)) {
+            return '';
+        }
+        return implode("\r\n", $lines);
     }
 
     // ------------------------------------------------------------------
@@ -270,6 +335,11 @@ class Course_WP_Login_Registration {
 
         $message  = sprintf(__('Здравствуйте, %s!', 'course-plugin'), $user->display_name) . "\r\n\r\n";
         $message .= sprintf(__('Добро пожаловать на сайт %s!', 'course-plugin'), $blogname) . "\r\n\r\n";
+
+        $intent_text = $this->get_enroll_intent_lines_for_email($user->ID);
+        if ($intent_text !== '') {
+            $message .= $intent_text . "\r\n\r\n";
+        }
 
         $message .= __('Ваши данные для входа:', 'course-plugin') . "\r\n";
         $message .= sprintf(__('Логин: %s', 'course-plugin'), $user->user_login) . "\r\n";
@@ -378,6 +448,8 @@ class Course_WP_Login_Registration {
 
         $pending = get_user_meta($user->ID, 'pending_enroll_redirect', true);
         delete_user_meta($user->ID, 'pending_enroll_redirect');
+        delete_user_meta($user->ID, 'pending_enroll_program_id');
+        delete_user_meta($user->ID, 'pending_enroll_course_id');
 
         // Автовход после подтверждения email — чтобы сразу пройти шлюз записи в Moodle без повторного ввода пароля
         if (apply_filters('course_auto_login_after_email_confirm', true, $user) && !headers_sent()) {
@@ -394,7 +466,9 @@ class Course_WP_Login_Registration {
 
         if (!empty($pending)) {
             error_log('WP Login Registration: Редирект после подтверждения на сохранённый URL (автовход выполнен)');
-            wp_safe_redirect($pending);
+            $pending_with_flash = add_query_arg('email_confirmed', '1', $pending);
+            $pending_with_flash = apply_filters('course_redirect_after_email_confirm', $pending_with_flash, $user, $pending);
+            wp_safe_redirect($pending_with_flash);
             exit;
         }
 

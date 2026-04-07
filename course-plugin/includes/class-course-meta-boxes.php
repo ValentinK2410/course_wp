@@ -145,7 +145,73 @@ class Course_Meta_Boxes {
             'side',                                               // Контекст: 'side' - боковая панель
             'default'                                             // Приоритет
         );
+
+        add_meta_box(
+            'course_moodle_cohort',
+            __('Moodle: когорта записи', 'course-plugin'),
+            array($this, 'render_course_moodle_cohort_meta_box'),
+            'course',
+            'side',
+            'default'
+        );
         
+    }
+
+    /**
+     * Привязка курса к глобальной группе (когорте) Moodle — запись через шлюз /enroll/.
+     *
+     * @param WP_Post $post Пост курса.
+     */
+    public function render_course_moodle_cohort_meta_box($post) {
+        $saved_id = (int) get_post_meta($post->ID, '_course_moodle_cohort_id', true);
+        $groups     = function_exists('course_plugin_get_moodle_global_groups')
+            ? course_plugin_get_moodle_global_groups()
+            : get_option('moodle_sync_global_groups', array());
+        if (!is_array($groups)) {
+            $groups = array();
+        }
+        $ids_in_list = array();
+        foreach ($groups as $g) {
+            if (is_array($g) && isset($g['id'])) {
+                $ids_in_list[] = (int) $g['id'];
+            }
+        }
+        ?>
+        <p>
+            <label for="course_moodle_cohort_id"><?php esc_html_e('Когорта Moodle', 'course-plugin'); ?></label>
+        </p>
+        <select name="course_moodle_cohort_id" id="course_moodle_cohort_id" class="widefat">
+            <option value=""><?php esc_html_e('Не привязано', 'course-plugin'); ?></option>
+            <?php
+            if ($saved_id > 0 && ! in_array($saved_id, $ids_in_list, true)) {
+                printf(
+                    '<option value="%d" selected="selected">%s</option>',
+                    esc_attr((string) $saved_id),
+                    esc_html(sprintf(__('Сохранённая группа (ID %d)', 'course-plugin'), $saved_id))
+                );
+            }
+            foreach ($groups as $g) {
+                if (! is_array($g) || ! isset($g['id'])) {
+                    continue;
+                }
+                $gid   = (int) $g['id'];
+                $label = isset($g['name']) ? (string) $g['name'] : '';
+                if (! empty($g['idnumber'])) {
+                    $label .= ' (' . $g['idnumber'] . ')';
+                }
+                printf(
+                    '<option value="%d" %s>%s</option>',
+                    $gid,
+                    selected($saved_id, $gid, false),
+                    esc_html($label)
+                );
+            }
+            ?>
+        </select>
+        <p class="description">
+            <?php esc_html_e('Используется при записи на курс через шлюз «Записаться». Список обновляется при синхронизации Moodle.', 'course-plugin'); ?>
+        </p>
+        <?php
     }
     
     /**
@@ -1457,6 +1523,15 @@ class Course_Meta_Boxes {
         // Проверка типа поста: сохраняем метаполя только для курсов
         if (get_post_type($post_id) !== 'course') {
             return; // Если это не курс, выходим из функции
+        }
+
+        if (isset($_POST['course_moodle_cohort_id'])) {
+            $cid = absint($_POST['course_moodle_cohort_id']);
+            if ($cid === 0) {
+                delete_post_meta($post_id, '_course_moodle_cohort_id');
+            } else {
+                update_post_meta($post_id, '_course_moodle_cohort_id', $cid);
+            }
         }
         
         // Массив названий полей, которые нужно сохранить

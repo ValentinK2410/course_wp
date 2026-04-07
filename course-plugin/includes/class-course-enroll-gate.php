@@ -188,8 +188,10 @@ class Course_Enroll_Gate {
             exit;
         }
 
-        // Запись в когорту Moodle, если передан program_id
+        // Запись в когорты Moodle (программа и/или курс), если заданы мета-поля
         $this->maybe_enroll_in_cohort();
+
+        $email_confirmed_flash = isset($_GET['email_confirmed']) && (string) $_GET['email_confirmed'] === '1';
 
         // Авторизован — выполняем SSO в Moodle и переход на целевой URL
         $moodle_url = rtrim(get_option('moodle_sync_url', ''), '/');
@@ -224,6 +226,10 @@ class Course_Enroll_Gate {
                 if ($profile_mbs) {
                     $sso_redirect .= '&profile_mbs=1';
                 }
+                if ($email_confirmed_flash && apply_filters('course_show_email_confirmed_interstitial', true, $user_id)) {
+                    $this->output_email_confirmed_interstitial($sso_redirect);
+                    exit;
+                }
                 wp_redirect($sso_redirect);
                 exit;
             }
@@ -234,23 +240,63 @@ class Course_Enroll_Gate {
     }
 
     /**
-     * Добавить текущего пользователя в когорту Moodle, привязанную к программе.
-     * Вызывается из handle_enroll_gate() при наличии GET-параметра enroll_program.
+     * Краткий экран после подтверждения email (до перехода в Moodle по SSO).
+     *
+     * @param string $sso_redirect_url Полный URL sso-login.php.
+     */
+    private function output_email_confirmed_interstitial($sso_redirect_url) {
+        header('Content-Type: text/html; charset=UTF-8');
+        nocache_headers();
+        $url = esc_url($sso_redirect_url);
+        $msg = esc_html__(
+            'Email подтверждён — мы убедились, что вы настоящий человек. Сейчас откроется виртуальный класс…',
+            'course-plugin'
+        );
+        $link_text = __('Перейти сейчас', 'course-plugin');
+        echo '<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
+        echo '<meta http-equiv="refresh" content="2;url=' . esc_attr($url) . '">';
+        echo '<title>' . esc_html__('Подтверждение email', 'course-plugin') . '</title>';
+        echo '<style>body{font-family:system-ui,-apple-system,sans-serif;max-width:28rem;margin:3rem auto;padding:0 1.25rem;line-height:1.55;color:#1a1a1a;background:#fafafa;}';
+        echo '.box{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:1.25rem 1.35rem;box-shadow:0 2px 8px rgba(0,0,0,.06);}';
+        echo '.box p{margin:0 0 1rem;}a{color:#1565c0;}</style></head><body><div class="box"><p>' . $msg . '</p>';
+        echo '<p><a href="' . $url . '">' . esc_html($link_text) . '</a></p></div></body></html>';
+    }
+
+    /**
+     * Запись в когорты Moodle для программы и/или курса (если в мета заданы ID когорт).
+     * Вызывается из handle_enroll_gate() при наличии enroll_program / enroll_course в запросе.
      */
     private function maybe_enroll_in_cohort() {
         $program_id = (int) (get_query_var('enroll_program') ?: (isset($_GET['enroll_program']) ? absint($_GET['enroll_program']) : 0));
-        if ($program_id <= 0) {
-            return;
+        $course_id  = (int) (get_query_var('enroll_course') ?: (isset($_GET['enroll_course']) ? absint($_GET['enroll_course']) : 0));
+
+        if ($program_id > 0) {
+            $cohort_id = (int) get_post_meta($program_id, '_program_moodle_cohort_id', true);
+            if ($cohort_id > 0) {
+                $this->enroll_user_in_moodle_cohort($cohort_id, 'program', $program_id);
+            } else {
+                error_log('Enroll Gate: когорта не привязана к программе ID=' . $program_id);
+            }
         }
 
-        $cohort_id = (int) get_post_meta($program_id, '_program_moodle_cohort_id', true);
-        if ($cohort_id <= 0) {
-            error_log('Enroll Gate: когорта не привязана к программе ID=' . $program_id);
-            return;
+        if ($course_id > 0) {
+            $cohort_id = (int) get_post_meta($course_id, '_course_moodle_cohort_id', true);
+            if ($cohort_id > 0) {
+                $this->enroll_user_in_moodle_cohort($cohort_id, 'course', $course_id);
+            } else {
+                error_log('Enroll Gate: когорта не привязана к курсу ID=' . $course_id);
+            }
         }
+    }
 
+    /**
+     * @param int    $cohort_id   ID когорты в Moodle.
+     * @param string $entity_type 'program' | 'course'.
+     * @param int    $entity_id   ID поста program или course.
+     */
+    private function enroll_user_in_moodle_cohort($cohort_id, $entity_type, $entity_id) {
         $user_id = get_current_user_id();
-        if (!$user_id) {
+        if (!$user_id || $cohort_id <= 0) {
             return;
         }
 
@@ -263,15 +309,27 @@ class Course_Enroll_Gate {
         $result = $sync->add_user_to_program_cohort($user_id, $cohort_id);
 
         if ($result) {
-            $enrolled = get_user_meta($user_id, 'enrolled_programs', true);
-            if (!is_array($enrolled)) {
-                $enrolled = array();
+            if ($entity_type === 'program') {
+                $enrolled = get_user_meta($user_id, 'enrolled_programs', true);
+                if (!is_array($enrolled)) {
+                    $enrolled = array();
+                }
+                if (!in_array($entity_id, $enrolled, true)) {
+                    $enrolled[] = $entity_id;
+                    update_user_meta($user_id, 'enrolled_programs', $enrolled);
+                }
+                error_log('Enroll Gate: пользователь ' . $user_id . ' записан в когорту ' . $cohort_id . ' (программа ' . $entity_id . ')');
+            } else {
+                $enrolled = get_user_meta($user_id, 'enrolled_courses', true);
+                if (!is_array($enrolled)) {
+                    $enrolled = array();
+                }
+                if (!in_array($entity_id, $enrolled, true)) {
+                    $enrolled[] = $entity_id;
+                    update_user_meta($user_id, 'enrolled_courses', $enrolled);
+                }
+                error_log('Enroll Gate: пользователь ' . $user_id . ' записан в когорту ' . $cohort_id . ' (курс ' . $entity_id . ')');
             }
-            if (!in_array($program_id, $enrolled)) {
-                $enrolled[] = $program_id;
-                update_user_meta($user_id, 'enrolled_programs', $enrolled);
-            }
-            error_log('Enroll Gate: пользователь ' . $user_id . ' записан в когорту ' . $cohort_id . ' (программа ' . $program_id . ')');
         } else {
             error_log('Enroll Gate: не удалось записать пользователя ' . $user_id . ' в когорту ' . $cohort_id);
         }
