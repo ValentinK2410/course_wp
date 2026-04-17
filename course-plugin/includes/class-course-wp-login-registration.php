@@ -436,7 +436,11 @@ class Course_WP_Login_Registration {
                 $sync->sync_user($user->ID, $password);
                 error_log('WP Login Registration: Moodle-синхронизация выполнена после подтверждения email для user_id=' . $user->ID);
 
+                // registration_program_id — из формы плагина (AJAX); pending_enroll_program_id — из URL шлюза /enroll/?enroll_program= при регистрации через wp-login.php
                 $registration_program_id = (int) get_user_meta($user->ID, 'registration_program_id', true);
+                if ($registration_program_id <= 0) {
+                    $registration_program_id = (int) get_user_meta($user->ID, 'pending_enroll_program_id', true);
+                }
                 if ($registration_program_id > 0 && get_post_type($registration_program_id) === 'program') {
                     $cohort_id = (int) get_post_meta($registration_program_id, '_program_moodle_cohort_id', true);
                     if ($cohort_id > 0) {
