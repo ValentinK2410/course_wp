@@ -601,6 +601,38 @@ class Course_Moodle_API {
     }
 
     /**
+     * Собрать предупреждения из ответа Moodle WS (в т.ч. вложенные массивы с ключом "warnings").
+     * Для enrol_manual_enrol_users ошибки часто приходят здесь, а не в поле exception.
+     *
+     * @param mixed $data Декодированный JSON.
+     * @return array Список элементов с warningcode/message.
+     */
+    public static function extract_warnings_from_ws_response($data) {
+        $acc = array();
+        self::walk_moodle_warnings_recursive($data, $acc);
+        return $acc;
+    }
+
+    /**
+     * @param mixed $data
+     * @param array $acc
+     */
+    private static function walk_moodle_warnings_recursive($data, &$acc) {
+        if (! is_array($data)) {
+            return;
+        }
+        if (isset($data['warningcode']) && $data['warningcode'] !== '' && $data['warningcode'] !== null) {
+            $acc[] = $data;
+            return;
+        }
+        foreach ($data as $v) {
+            if (is_array($v)) {
+                self::walk_moodle_warnings_recursive($v, $acc);
+            }
+        }
+    }
+
+    /**
      * Отправить пользователю мгновенное сообщение в Moodle (уведомление; при настройках может уйти на email).
      * WS: core_message_send_instant_messages.
      *

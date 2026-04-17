@@ -185,6 +185,14 @@ class Course_Moodle_Sync {
             'type' => 'string',
             'sanitize_callback' => 'sanitize_text_field'  // Очистка текста для безопасности
         ));
+
+        register_setting('moodle_sync_settings', 'moodle_manual_enrol_role_id', array(
+            'type' => 'integer',
+            'default' => 0,
+            'sanitize_callback' => function ($v) {
+                return absint($v);
+            },
+        ));
         
         // Регистрируем опцию для проверки SSL при подключении к Moodle
         register_setting('moodle_sync_settings', 'moodle_sync_ssl_verify', array(
@@ -467,6 +475,7 @@ class Course_Moodle_Sync {
         // Получаем текущие значения настроек
         $moodle_url = get_option('moodle_sync_url', '');
         $moodle_token = get_option('moodle_sync_token', '');
+        $moodle_manual_enrol_role_id = (int) get_option('moodle_manual_enrol_role_id', 0);
         $moodle_ssl_verify = get_option('moodle_sync_ssl_verify', true);
         $moodle_enabled = get_option('moodle_sync_enabled', false);
         $moodle_update_courses = get_option('moodle_sync_update_courses', true);
@@ -534,6 +543,24 @@ class Course_Moodle_Sync {
                                    class="regular-text" />
                             <p class="description">
                                 <?php _e('Токен для доступа к Moodle REST API. Получить можно в настройках Moodle: Site administration -> Plugins -> Web services -> Manage tokens', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="moodle_manual_enrol_role_id"><?php _e('Роль для ручной записи на курс (ID)', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number"
+                                   id="moodle_manual_enrol_role_id"
+                                   name="moodle_manual_enrol_role_id"
+                                   value="<?php echo esc_attr((string) $moodle_manual_enrol_role_id); ?>"
+                                   class="small-text"
+                                   min="0"
+                                   step="1" />
+                            <p class="description">
+                                <?php _e('Для enrol_manual_enrol_users: ID роли «Студент» в Moodle (часто 5). Оставьте 0, чтобы Moodle сам выбрал роль по умолчанию метода «Ручная запись». Если зачисление в когорту работает, а на курс — нет, попробуйте указать ID роли студента (Администрирование → Пользователи → Права → Роли).', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>

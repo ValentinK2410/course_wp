@@ -1216,7 +1216,8 @@ class Course_Moodle_User_Sync {
             return false;
         }
 
-        $role_id = (int) apply_filters('course_moodle_manual_enrol_role_id', 0, $moodle_course_id, $wp_user_id);
+        $role_id = (int) get_option('moodle_manual_enrol_role_id', 0);
+        $role_id = (int) apply_filters('course_moodle_manual_enrol_role_id', $role_id, $moodle_course_id, $wp_user_id);
         $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
         $result    = $this->api->enrol_manual_enrol_users($moodle_course_id, $moodle_user_id, $role_id);
 
@@ -1224,8 +1225,24 @@ class Course_Moodle_User_Sync {
             error_log('Moodle User Sync: enrol_manual_enrol_users — запрос не выполнен (курс ' . $moodle_course_id . ')');
             return false;
         }
-        if (is_array($result) && isset($result['exception'])) {
+        if ($result === null) {
+            error_log('Moodle User Sync: enrol_manual_enrol_users — пустой ответ Moodle (курс ' . $moodle_course_id . ')');
+            return false;
+        }
+        if (! is_array($result)) {
+            error_log('Moodle User Sync: enrol_manual_enrol_users — неожиданный ответ Moodle: ' . print_r($result, true));
+            return false;
+        }
+        if (isset($result['exception'])) {
             error_log('Moodle User Sync: enrol_manual_enrol_users — исключение API: ' . print_r($result, true));
+            return false;
+        }
+
+        $warnings = Course_Moodle_API::extract_warnings_from_ws_response($result);
+        if (! empty($warnings)) {
+            error_log(
+                'Moodle User Sync: enrol_manual_enrol_users — Moodle вернул предупреждения (зачисление могло не произойти). Курс ' . $moodle_course_id . ', пользователь ' . $moodle_user_id . ': ' . print_r($warnings, true)
+            );
             return false;
         }
 
@@ -1251,8 +1268,17 @@ class Course_Moodle_User_Sync {
         $course_id  = self::parse_moodle_course_id_from_link($raw);
         $course_id  = (int) apply_filters('course_program_moodle_course_id', $course_id, $program_post_id, $wp_user_id);
         if ($course_id <= 0) {
+            if ($raw !== '') {
+                error_log(
+                    'Moodle User Sync: enroll_wp_user_in_program_moodle_course — не удалось извлечь ID курса из метаполя программы ' . $program_post_id . ', raw=' . $raw
+                );
+            }
             return true;
         }
+
+        error_log(
+            'Moodle User Sync: enroll_wp_user_in_program_moodle_course — программа ' . $program_post_id . ', курс Moodle id=' . $course_id . ', WP user ' . $wp_user_id
+        );
 
         return $this->enroll_wp_user_in_moodle_course($wp_user_id, $course_id);
     }
