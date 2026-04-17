@@ -672,6 +672,12 @@ class Course_Registration {
                             error_log('Course Registration: не удалось добавить в когорту Moodle ' . $cohort_id);
                         }
                     }
+                    $course_enroll_ok = $sync_instance->enroll_wp_user_in_program_moodle_course($user_id, $registration_program_id);
+                    if ($course_enroll_ok) {
+                        error_log('Course Registration: зачисление на курс Moodle по программе выполнено или не требуется');
+                    } else {
+                        error_log('Course Registration: не удалось зачислить на курс Moodle по программе (проверьте метаполе ссылки и Manual enrol в Moodle)');
+                    }
                     $program_title = get_the_title($registration_program_id);
                     $msg_ok        = $sync_instance->send_program_registration_moodle_message($user_id, $program_title);
                     if ($msg_ok) {

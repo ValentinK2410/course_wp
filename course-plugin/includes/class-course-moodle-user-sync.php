@@ -1159,6 +1159,105 @@ class Course_Moodle_User_Sync {
     }
 
     /**
+     * Извлечь числовой ID курса Moodle из строки: только цифры, URL вида .../course/view.php?id=N или параметр id= в запросе.
+     *
+     * @param string $raw Значение из метаполя программы.
+     * @return int ID курса или 0.
+     */
+    public static function parse_moodle_course_id_from_link($raw) {
+        $raw = trim((string) $raw);
+        if ($raw === '') {
+            return 0;
+        }
+        if (ctype_digit($raw)) {
+            return (int) $raw;
+        }
+        $parsed = wp_parse_url($raw);
+        if (is_array($parsed) && ! empty($parsed['query'])) {
+            parse_str($parsed['query'], $q);
+            if (isset($q['id']) && ctype_digit((string) $q['id'])) {
+                return (int) $q['id'];
+            }
+        }
+        if (preg_match('/(?:^|[?&])id=(\d+)\b/', $raw, $m)) {
+            return (int) $m[1];
+        }
+
+        return 0;
+    }
+
+    /**
+     * Записать пользователя WordPress на курс Moodle (ручная запись).
+     *
+     * @param int $wp_user_id       ID пользователя WordPress.
+     * @param int $moodle_course_id ID курса в Moodle.
+     * @return bool Успех или уже зачислен (без фатальной ошибки API).
+     */
+    public function enroll_wp_user_in_moodle_course($wp_user_id, $moodle_course_id) {
+        $wp_user_id       = (int) $wp_user_id;
+        $moodle_course_id = (int) $moodle_course_id;
+        if ($wp_user_id <= 0 || $moodle_course_id <= 0) {
+            return false;
+        }
+
+        $moodle_user_id = (int) get_user_meta($wp_user_id, 'moodle_user_id', true);
+        if (! $moodle_user_id) {
+            error_log('Moodle User Sync: enroll_wp_user_in_moodle_course — нет moodle_user_id для WP user ' . $wp_user_id);
+            return false;
+        }
+
+        $this->moodle_url   = get_option('moodle_sync_url', '');
+        $this->moodle_token = get_option('moodle_sync_token', '');
+        $sync_enabled_raw   = get_option('moodle_sync_users_enabled', '');
+        $sync_enabled       = ($sync_enabled_raw === '0') ? false : true;
+
+        if (! $sync_enabled || empty($this->moodle_url) || empty($this->moodle_token)) {
+            error_log('Moodle User Sync: enroll_wp_user_in_moodle_course — синхронизация отключена или нет URL/токена');
+            return false;
+        }
+
+        $role_id = (int) apply_filters('course_moodle_manual_enrol_role_id', 0, $moodle_course_id, $wp_user_id);
+        $this->api = new Course_Moodle_API($this->moodle_url, $this->moodle_token);
+        $result    = $this->api->enrol_manual_enrol_users($moodle_course_id, $moodle_user_id, $role_id);
+
+        if ($result === false) {
+            error_log('Moodle User Sync: enrol_manual_enrol_users — запрос не выполнен (курс ' . $moodle_course_id . ')');
+            return false;
+        }
+        if (is_array($result) && isset($result['exception'])) {
+            error_log('Moodle User Sync: enrol_manual_enrol_users — исключение API: ' . print_r($result, true));
+            return false;
+        }
+
+        error_log('Moodle User Sync: пользователь Moodle ' . $moodle_user_id . ' зачислен на курс ' . $moodle_course_id . ' (или уже был зачислен)');
+        return true;
+    }
+
+    /**
+     * Зачислить пользователя на курс Moodle, указанный в метаполе программы (_program_moodle_course_link).
+     *
+     * @param int $wp_user_id      ID пользователя WordPress.
+     * @param int $program_post_id ID поста program.
+     * @return bool false только при ошибке API; true если поле пустое или зачисление прошло.
+     */
+    public function enroll_wp_user_in_program_moodle_course($wp_user_id, $program_post_id) {
+        $wp_user_id      = (int) $wp_user_id;
+        $program_post_id = (int) $program_post_id;
+        if ($wp_user_id <= 0 || $program_post_id <= 0 || get_post_type($program_post_id) !== 'program') {
+            return true;
+        }
+
+        $raw        = (string) get_post_meta($program_post_id, '_program_moodle_course_link', true);
+        $course_id  = self::parse_moodle_course_id_from_link($raw);
+        $course_id  = (int) apply_filters('course_program_moodle_course_id', $course_id, $program_post_id, $wp_user_id);
+        if ($course_id <= 0) {
+            return true;
+        }
+
+        return $this->enroll_wp_user_in_moodle_course($wp_user_id, $course_id);
+    }
+
+    /**
      * Уведомление в Moodle о записи на программу (мгновенное сообщение; при включённой почте в Moodle может продублироваться email).
      *
      * @param int    $wp_user_id    ID пользователя WordPress.

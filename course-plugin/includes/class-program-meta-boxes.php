@@ -735,7 +735,8 @@ class Program_Meta_Boxes {
      * Метабокс: привязка к когорте Moodle (глобальная группа).
      */
     public function render_program_global_group_meta_box($post) {
-        $saved_id = (int) get_post_meta($post->ID, '_program_moodle_cohort_id', true);
+        $saved_id        = (int) get_post_meta($post->ID, '_program_moodle_cohort_id', true);
+        $course_link_raw = (string) get_post_meta($post->ID, '_program_moodle_course_link', true);
         $groups     = function_exists('course_plugin_get_moodle_global_groups')
             ? course_plugin_get_moodle_global_groups()
             : get_option('moodle_sync_global_groups', array());
@@ -782,6 +783,14 @@ class Program_Meta_Boxes {
         </select>
         <p class="description">
             <?php esc_html_e('Список когорт обновляется при синхронизации Moodle (Настройки → Moodle Sync).', 'course-plugin'); ?>
+        </p>
+        <hr style="margin: 12px 0;" />
+        <p>
+            <label for="program_moodle_course_link"><strong><?php esc_html_e('Курс Moodle для автозаписи', 'course-plugin'); ?></strong></label>
+        </p>
+        <input type="text" name="program_moodle_course_link" id="program_moodle_course_link" class="widefat" value="<?php echo esc_attr($course_link_raw); ?>" placeholder="<?php esc_attr_e('https://…/course/view.php?id=… или числовой ID курса', 'course-plugin'); ?>" />
+        <p class="description">
+            <?php esc_html_e('При регистрации на программу пользователь будет зачислен на этот курс через API (способ зачисления «Ручная запись» должен быть включён в курсе; в сервис веб-служб добавьте функцию enrol_manual_enrol_users).', 'course-plugin'); ?>
         </p>
         <?php
     }
@@ -865,6 +874,15 @@ class Program_Meta_Boxes {
                 delete_post_meta($post_id, '_program_moodle_cohort_id');
             } else {
                 update_post_meta($post_id, '_program_moodle_cohort_id', $cid);
+            }
+        }
+
+        if (isset($_POST['program_moodle_course_link'])) {
+            $link = sanitize_text_field(wp_unslash($_POST['program_moodle_course_link']));
+            if ($link === '') {
+                delete_post_meta($post_id, '_program_moodle_course_link');
+            } else {
+                update_post_meta($post_id, '_program_moodle_course_link', $link);
             }
         }
         

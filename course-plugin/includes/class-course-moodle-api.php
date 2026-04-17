@@ -568,6 +568,39 @@ class Course_Moodle_API {
     }
 
     /**
+     * Записать пользователя на курс методом «Ручная запись» (Manual enrolment).
+     * WS: enrol_manual_enrol_users — в курсе должен быть включён способ зачисления Manual,
+     * функция добавлена в внешний сервис и разрешена для токена.
+     *
+     * @param int      $course_id        ID курса в Moodle.
+     * @param int      $moodle_user_id   ID пользователя в Moodle.
+     * @param int      $role_id          ID роли (0 — не передавать, Moodle подставит роль по умолчанию для ручной записи).
+     * @return array|false|null Ответ Moodle, false при сбое HTTP, null при пустом теле ответа.
+     */
+    public function enrol_manual_enrol_users($course_id, $moodle_user_id, $role_id = 0) {
+        $course_id      = (int) $course_id;
+        $moodle_user_id = (int) $moodle_user_id;
+        if ($course_id <= 0 || $moodle_user_id <= 0) {
+            return false;
+        }
+
+        $enrolment = array(
+            'userid'   => $moodle_user_id,
+            'courseid' => $course_id,
+        );
+        if ($role_id > 0) {
+            $enrolment['roleid'] = (int) $role_id;
+        }
+
+        return $this->call(
+            'enrol_manual_enrol_users',
+            array(
+                'enrolments' => array( $enrolment ),
+            )
+        );
+    }
+
+    /**
      * Отправить пользователю мгновенное сообщение в Moodle (уведомление; при настройках может уйти на email).
      * WS: core_message_send_instant_messages.
      *

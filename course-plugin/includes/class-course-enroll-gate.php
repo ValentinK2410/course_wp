@@ -277,6 +277,7 @@ class Course_Enroll_Gate {
             } else {
                 error_log('Enroll Gate: когорта не привязана к программе ID=' . $program_id);
             }
+            $this->maybe_enroll_program_moodle_course($program_id);
         }
 
         if ($course_id > 0) {
@@ -286,6 +287,27 @@ class Course_Enroll_Gate {
             } else {
                 error_log('Enroll Gate: когорта не привязана к курсу ID=' . $course_id);
             }
+        }
+    }
+
+    /**
+     * Ручная запись на курс Moodle из метаполя программы (_program_moodle_course_link).
+     *
+     * @param int $program_id ID поста program.
+     */
+    private function maybe_enroll_program_moodle_course($program_id) {
+        $program_id = (int) $program_id;
+        $user_id    = get_current_user_id();
+        if ($program_id <= 0 || ! $user_id) {
+            return;
+        }
+        if (! class_exists('Course_Moodle_User_Sync')) {
+            return;
+        }
+        $sync = Course_Moodle_User_Sync::get_instance();
+        $ok   = $sync->enroll_wp_user_in_program_moodle_course($user_id, $program_id);
+        if (! $ok) {
+            error_log('Enroll Gate: не удалось зачислить пользователя ' . $user_id . ' на курс Moodle по программе ' . $program_id);
         }
     }
 

@@ -435,6 +435,15 @@ class Course_WP_Login_Registration {
                 $sync = Course_Moodle_User_Sync::get_instance();
                 $sync->sync_user($user->ID, $password);
                 error_log('WP Login Registration: Moodle-синхронизация выполнена после подтверждения email для user_id=' . $user->ID);
+
+                $registration_program_id = (int) get_user_meta($user->ID, 'registration_program_id', true);
+                if ($registration_program_id > 0 && get_post_type($registration_program_id) === 'program') {
+                    $cohort_id = (int) get_post_meta($registration_program_id, '_program_moodle_cohort_id', true);
+                    if ($cohort_id > 0) {
+                        $sync->add_user_to_program_cohort($user->ID, $cohort_id);
+                    }
+                    $sync->enroll_wp_user_in_program_moodle_course($user->ID, $registration_program_id);
+                }
             } catch (\Exception $e) {
                 error_log('WP Login Registration: Ошибка Moodle-синхронизации: ' . $e->getMessage());
             } catch (\Error $e) {
