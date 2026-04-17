@@ -584,19 +584,22 @@ class Course_Moodle_API {
             return false;
         }
 
-        $enrolment = array(
-            'userid'   => $moodle_user_id,
-            'courseid' => $course_id,
+        /*
+         * Плоские ключи enrolments[0][…] — надёжнее для wp_remote_post/http_build_query,
+         * чем вложенный массив (на части конфигураций Moodle вложенная структура доходила некорректно).
+         */
+        $params = array(
+            'enrolments[0][userid]'   => $moodle_user_id,
+            'enrolments[0][courseid]' => $course_id,
+            'enrolments[0][suspend]'  => 0,
         );
         if ($role_id > 0) {
-            $enrolment['roleid'] = (int) $role_id;
+            $params['enrolments[0][roleid]'] = (int) $role_id;
         }
 
         return $this->call(
             'enrol_manual_enrol_users',
-            array(
-                'enrolments' => array( $enrolment ),
-            )
+            $params
         );
     }
 

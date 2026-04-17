@@ -1239,9 +1239,36 @@ class Course_Moodle_User_Sync {
         }
 
         $warnings = Course_Moodle_API::extract_warnings_from_ws_response($result);
-        if (! empty($warnings)) {
+        $ignore   = apply_filters(
+            'course_moodle_manual_enrol_ignore_warning_codes',
+            array(
+                'useralreadyenrolled',
+                'alreadyenrolled',
+            ),
+            $moodle_course_id,
+            $moodle_user_id,
+            $wp_user_id
+        );
+        if (is_array($ignore)) {
+            $ignore = array_map('strtolower', array_map('strval', $ignore));
+        } else {
+            $ignore = array();
+        }
+        $blocking = array();
+        foreach ($warnings as $w) {
+            if (! is_array($w)) {
+                $blocking[] = $w;
+                continue;
+            }
+            $code = isset($w['warningcode']) ? strtolower((string) $w['warningcode']) : '';
+            if ($code !== '' && in_array($code, $ignore, true)) {
+                continue;
+            }
+            $blocking[] = $w;
+        }
+        if (! empty($blocking)) {
             error_log(
-                'Moodle User Sync: enrol_manual_enrol_users — Moodle вернул предупреждения (зачисление могло не произойти). Курс ' . $moodle_course_id . ', пользователь ' . $moodle_user_id . ': ' . print_r($warnings, true)
+                'Moodle User Sync: enrol_manual_enrol_users — Moodle вернул предупреждения (зачисление могло не произойти). Курс ' . $moodle_course_id . ', пользователь ' . $moodle_user_id . ': ' . print_r($blocking, true)
             );
             return false;
         }
