@@ -735,8 +735,9 @@ class Program_Meta_Boxes {
      * Метабокс: привязка к когорте Moodle (глобальная группа).
      */
     public function render_program_global_group_meta_box($post) {
-        $saved_id        = (int) get_post_meta($post->ID, '_program_moodle_cohort_id', true);
-        $course_link_raw = (string) get_post_meta($post->ID, '_program_moodle_course_link', true);
+        $saved_id           = (int) get_post_meta($post->ID, '_program_moodle_cohort_id', true);
+        $course_id_saved    = (int) get_post_meta($post->ID, '_program_moodle_course_id', true);
+        $course_link_raw    = (string) get_post_meta($post->ID, '_program_moodle_course_link', true);
         $groups     = function_exists('course_plugin_get_moodle_global_groups')
             ? course_plugin_get_moodle_global_groups()
             : get_option('moodle_sync_global_groups', array());
@@ -786,11 +787,18 @@ class Program_Meta_Boxes {
         </p>
         <hr style="margin: 12px 0;" />
         <p>
-            <label for="program_moodle_course_link"><strong><?php esc_html_e('Курс Moodle для автозаписи', 'course-plugin'); ?></strong></label>
+            <label for="program_moodle_course_id"><strong><?php esc_html_e('ID курса Moodle (число)', 'course-plugin'); ?></strong></label>
+        </p>
+        <input type="number" name="program_moodle_course_id" id="program_moodle_course_id" class="small-text" min="0" step="1" value="<?php echo $course_id_saved > 0 ? esc_attr((string) $course_id_saved) : ''; ?>" placeholder="<?php esc_attr_e('например 42', 'course-plugin'); ?>" />
+        <p class="description">
+            <?php esc_html_e('Если указан, используется в приоритете над ссылкой и связанными курсами WP. Удобно, когда ссылка копируется с лишним текстом.', 'course-plugin'); ?>
+        </p>
+        <p>
+            <label for="program_moodle_course_link"><strong><?php esc_html_e('Ссылка или ID курса Moodle для автозаписи', 'course-plugin'); ?></strong></label>
         </p>
         <input type="text" name="program_moodle_course_link" id="program_moodle_course_link" class="widefat" value="<?php echo esc_attr($course_link_raw); ?>" placeholder="<?php esc_attr_e('https://…/course/view.php?id=… или числовой ID курса', 'course-plugin'); ?>" />
         <p class="description">
-            <?php esc_html_e('При регистрации на программу пользователь будет зачислен на этот курс через API (способ зачисления «Ручная запись» должен быть включён в курсе; в сервис веб-служб добавьте функцию enrol_manual_enrol_users).', 'course-plugin'); ?>
+            <?php esc_html_e('При регистрации на программу пользователь будет зачислен на этот курс через API (способ зачисления «Ручная запись» должен быть включён в курсе; в сервис веб-служб добавьте функцию enrol_manual_enrol_users). Если поле числа выше пустое, ID можно взять из первого связанного курса WP с заполненным moodle_course_id.', 'course-plugin'); ?>
         </p>
         <?php
     }
@@ -874,6 +882,15 @@ class Program_Meta_Boxes {
                 delete_post_meta($post_id, '_program_moodle_cohort_id');
             } else {
                 update_post_meta($post_id, '_program_moodle_cohort_id', $cid);
+            }
+        }
+
+        if (isset($_POST['program_moodle_course_id'])) {
+            $mcid = absint($_POST['program_moodle_course_id']);
+            if ($mcid === 0) {
+                delete_post_meta($post_id, '_program_moodle_course_id');
+            } else {
+                update_post_meta($post_id, '_program_moodle_course_id', $mcid);
             }
         }
 

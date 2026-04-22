@@ -107,8 +107,19 @@ class Course_Moodle_API {
         
         // Декодируем JSON строку в массив PHP
         // json_decode() преобразует JSON в массив (второй параметр true означает массив, а не объект)
-        $data = json_decode($body, true);
-        
+        $trimmed = trim((string) $body);
+        $data    = json_decode($body, true);
+
+        // enrol_manual_enrol_users и др. иногда отдают HTTP 200 с пустым телом или литералом null — это успех, а не ошибка.
+        if (! is_array($data)) {
+            if ($response_code >= 200 && $response_code < 300 && ($trimmed === '' || strtolower($trimmed) === 'null')) {
+                $data = array();
+            } else {
+                error_log('Moodle API: ответ не JSON-массив (код ' . $response_code . '), тело: ' . substr($trimmed, 0, 200));
+                return false;
+            }
+        }
+
         // Проверяем, вернул ли Moodle исключение (ошибку)
         // Moodle возвращает ошибки в формате: {"exception": "...", "message": "..."}
         if (isset($data['exception'])) {
