@@ -427,6 +427,8 @@ class Course_WP_Login_Registration {
 
         error_log('WP Login Registration: Email подтверждён для user_id=' . $user->ID);
 
+        $self_enrol_gate_url = '';
+
         // Синхронизируем с Moodle
         $password = get_user_meta($user->ID, 'pending_moodle_password', true);
         if ($password && class_exists('Course_Moodle_User_Sync')) {
@@ -446,7 +448,18 @@ class Course_WP_Login_Registration {
                     if ($cohort_id > 0) {
                         $sync->add_user_to_program_cohort($user->ID, $cohort_id);
                     }
-                    $sync->enroll_wp_user_in_program_moodle_course($user->ID, $registration_program_id);
+                    $use_self_enrol = apply_filters('course_use_self_enrol_after_program_email_confirm', true, $user->ID, $registration_program_id);
+                    if ($use_self_enrol && class_exists('Course_Enroll_Gate')) {
+                        $self_moodle_url = Course_Moodle_User_Sync::get_moodle_self_enrol_url_for_program($registration_program_id, $user->ID);
+                        if ($self_moodle_url !== '') {
+                            $self_enrol_gate_url = Course_Enroll_Gate::get_enroll_url($self_moodle_url, $registration_program_id);
+                            error_log('WP Login Registration: после подтверждения email — редирект на самозапись Moodle: ' . $self_moodle_url);
+                        } else {
+                            $sync->enroll_wp_user_in_program_moodle_course($user->ID, $registration_program_id);
+                        }
+                    } else {
+                        $sync->enroll_wp_user_in_program_moodle_course($user->ID, $registration_program_id);
+                    }
                 }
             } catch (\Exception $e) {
                 error_log('WP Login Registration: Ошибка Moodle-синхронизации: ' . $e->getMessage());
@@ -477,10 +490,15 @@ class Course_WP_Login_Registration {
             do_action('wp_login', $user->user_login, $user);
         }
 
-        if (!empty($pending)) {
-            error_log('WP Login Registration: Редирект после подтверждения на сохранённый URL (автовход выполнен)');
-            $pending_with_flash = add_query_arg('email_confirmed', '1', $pending);
-            $pending_with_flash = apply_filters('course_redirect_after_email_confirm', $pending_with_flash, $user, $pending);
+        $redirect_base = $pending;
+        if ($self_enrol_gate_url !== '') {
+            $redirect_base = $self_enrol_gate_url;
+        }
+
+        if (!empty($redirect_base)) {
+            error_log('WP Login Registration: Редирект после подтверждения (автовход выполнен)');
+            $pending_with_flash = add_query_arg('email_confirmed', '1', $redirect_base);
+            $pending_with_flash = apply_filters('course_redirect_after_email_confirm', $pending_with_flash, $user, $redirect_base);
             wp_safe_redirect($pending_with_flash);
             exit;
         }

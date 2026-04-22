@@ -157,7 +157,12 @@ class Course_Enroll_Gate {
         }
         if ($target === '') {
             $moodle = rtrim(get_option('moodle_sync_url', ''), '/');
-            $target = $moodle !== '' ? ($moodle . '/') : home_url('/');
+            if ($moodle !== '' && class_exists('Course_Moodle_User_Sync')) {
+                $self = Course_Moodle_User_Sync::get_moodle_self_enrol_url_for_program($program_post_id, 0);
+                $target = $self !== '' ? $self : ($moodle . '/');
+            } else {
+                $target = $moodle !== '' ? ($moodle . '/') : home_url('/');
+            }
         }
         return self::get_enroll_url($target, $program_post_id);
     }
@@ -214,7 +219,7 @@ class Course_Enroll_Gate {
         }
 
         // Запись в когорты Moodle (программа и/или курс), если заданы мета-поля
-        $this->maybe_enroll_in_cohort();
+        $this->maybe_enroll_in_cohort($target_url);
 
         $email_confirmed_flash = isset($_GET['email_confirmed']) && (string) $_GET['email_confirmed'] === '1';
 
@@ -288,10 +293,26 @@ class Course_Enroll_Gate {
     }
 
     /**
+     * Целевой URL — страница самостоятельной записи Moodle (enrol/index.php).
+     *
+     * @param string $target_url Полный URL.
+     * @return bool
+     */
+    private function target_is_moodle_self_enrol_page($target_url) {
+        $path = parse_url((string) $target_url, PHP_URL_PATH);
+        if (! is_string($path) || $path === '') {
+            return false;
+        }
+        return stripos($path, 'enrol/index.php') !== false;
+    }
+
+    /**
      * Запись в когорты Moodle для программы и/или курса (если в мета заданы ID когорт).
      * Вызывается из handle_enroll_gate() при наличии enroll_program / enroll_course в запросе.
+     *
+     * @param string $target_url Расшифрованный целевой URL (для пропуска API ручной записи при самозаписи).
      */
-    private function maybe_enroll_in_cohort() {
+    private function maybe_enroll_in_cohort($target_url = '') {
         $program_id = (int) (get_query_var('enroll_program') ?: (isset($_GET['enroll_program']) ? absint($_GET['enroll_program']) : 0));
         $course_id  = (int) (get_query_var('enroll_course') ?: (isset($_GET['enroll_course']) ? absint($_GET['enroll_course']) : 0));
 
@@ -302,7 +323,10 @@ class Course_Enroll_Gate {
             } else {
                 error_log('Enroll Gate: когорта не привязана к программе ID=' . $program_id);
             }
-            $this->maybe_enroll_program_moodle_course($program_id);
+            $skip_manual = apply_filters('course_skip_manual_enrol_for_self_enrol_target', true, $target_url, $program_id);
+            if (! $skip_manual || ! $this->target_is_moodle_self_enrol_page($target_url)) {
+                $this->maybe_enroll_program_moodle_course($program_id);
+            }
         }
 
         if ($course_id > 0) {

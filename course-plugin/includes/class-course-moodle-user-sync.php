@@ -1314,6 +1314,65 @@ class Course_Moodle_User_Sync {
     }
 
     /**
+     * Числовой ID курса Moodle для программы (мета, ссылка, связанные курсы WP).
+     *
+     * @param int $program_post_id ID поста program.
+     * @param int $wp_user_id      ID пользователя WP (для фильтра course_program_moodle_course_id).
+     * @return int
+     */
+    public static function get_moodle_course_id_for_program($program_post_id, $wp_user_id = 0) {
+        $program_post_id = (int) $program_post_id;
+        $wp_user_id      = (int) $wp_user_id;
+        if ($program_post_id <= 0 || get_post_type($program_post_id) !== 'program') {
+            return 0;
+        }
+
+        $course_id = (int) get_post_meta($program_post_id, '_program_moodle_course_id', true);
+        if ($course_id <= 0) {
+            $raw       = (string) get_post_meta($program_post_id, '_program_moodle_course_link', true);
+            $course_id = self::parse_moodle_course_id_from_link($raw);
+        }
+        if ($course_id <= 0) {
+            $related = get_post_meta($program_post_id, '_program_related_courses', true);
+            if (is_array($related)) {
+                foreach ($related as $rid) {
+                    $rid = (int) $rid;
+                    if ($rid <= 0 || get_post_type($rid) !== 'course') {
+                        continue;
+                    }
+                    $mid = (int) get_post_meta($rid, 'moodle_course_id', true);
+                    if ($mid > 0) {
+                        $course_id = $mid;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return (int) apply_filters('course_program_moodle_course_id', $course_id, $program_post_id, $wp_user_id);
+    }
+
+    /**
+     * URL страницы самостоятельной записи Moodle enrol/index.php?id=… для программы.
+     *
+     * @param int $program_post_id ID поста program.
+     * @param int $wp_user_id      ID пользователя WP (для фильтра ID курса).
+     * @return string Полный URL или пустая строка.
+     */
+    public static function get_moodle_self_enrol_url_for_program($program_post_id, $wp_user_id = 0) {
+        $cid = self::get_moodle_course_id_for_program($program_post_id, $wp_user_id);
+        if ($cid <= 0) {
+            return '';
+        }
+        $moodle = rtrim(get_option('moodle_sync_url', ''), '/');
+        if ($moodle === '') {
+            return '';
+        }
+        $url = $moodle . '/enrol/index.php?id=' . $cid;
+        return (string) apply_filters('course_moodle_self_enrol_url', $url, $program_post_id, $wp_user_id, $cid);
+    }
+
+    /**
      * Зачислить пользователя на курс Moodle: метаполе _program_moodle_course_id, затем _program_moodle_course_link,
      * затем moodle_course_id первого связанного поста course.
      *
@@ -1328,34 +1387,7 @@ class Course_Moodle_User_Sync {
             return true;
         }
 
-        $course_id = (int) get_post_meta($program_post_id, '_program_moodle_course_id', true);
-        $source    = 'program_moodle_course_id';
-
-        if ($course_id <= 0) {
-            $raw       = (string) get_post_meta($program_post_id, '_program_moodle_course_link', true);
-            $course_id = self::parse_moodle_course_id_from_link($raw);
-            $source    = 'program_moodle_course_link';
-        }
-
-        if ($course_id <= 0) {
-            $related = get_post_meta($program_post_id, '_program_related_courses', true);
-            if (is_array($related)) {
-                foreach ($related as $rid) {
-                    $rid = (int) $rid;
-                    if ($rid <= 0 || get_post_type($rid) !== 'course') {
-                        continue;
-                    }
-                    $mid = (int) get_post_meta($rid, 'moodle_course_id', true);
-                    if ($mid > 0) {
-                        $course_id = $mid;
-                        $source    = 'related_wp_course_' . $rid;
-                        break;
-                    }
-                }
-            }
-        }
-
-        $course_id = (int) apply_filters('course_program_moodle_course_id', $course_id, $program_post_id, $wp_user_id);
+        $course_id = self::get_moodle_course_id_for_program($program_post_id, $wp_user_id);
         if ($course_id <= 0) {
             $raw = (string) get_post_meta($program_post_id, '_program_moodle_course_link', true);
             if ($raw !== '') {
@@ -1367,7 +1399,7 @@ class Course_Moodle_User_Sync {
         }
 
         error_log(
-            'Moodle User Sync: enroll_wp_user_in_program_moodle_course — программа ' . $program_post_id . ', курс Moodle id=' . $course_id . ', источник=' . $source . ', WP user ' . $wp_user_id
+            'Moodle User Sync: enroll_wp_user_in_program_moodle_course — программа ' . $program_post_id . ', курс Moodle id=' . $course_id . ', WP user ' . $wp_user_id
         );
 
         return $this->enroll_wp_user_in_moodle_course($wp_user_id, $course_id);
