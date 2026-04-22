@@ -138,6 +138,31 @@ class Course_Enroll_Gate {
     }
 
     /**
+     * URL для redirect_to после регистрации: шлюз /enroll/ с enroll_program и целевым Moodle.
+     * Нужен, чтобы в user meta сохранился pending_enroll_program_id и после подтверждения email
+     * выполнились зачисление в когорту и на курс (иначе redirect только на страницу программы не содержит enroll_program).
+     *
+     * @param int $program_post_id ID поста program.
+     * @return string Полный URL шлюза записи.
+     */
+    public static function get_program_enroll_gate_return_url($program_post_id) {
+        $program_post_id = (int) $program_post_id;
+        if ($program_post_id <= 0) {
+            return home_url('/');
+        }
+        $target = '';
+        $custom = get_post_meta($program_post_id, '_program_enroll_url', true);
+        if (is_string($custom)) {
+            $target = trim($custom);
+        }
+        if ($target === '') {
+            $moodle = rtrim(get_option('moodle_sync_url', ''), '/');
+            $target = $moodle !== '' ? ($moodle . '/') : home_url('/');
+        }
+        return self::get_enroll_url($target, $program_post_id);
+    }
+
+    /**
      * Обработка /enroll/
      */
     public function handle_enroll_gate() {

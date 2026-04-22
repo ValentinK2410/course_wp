@@ -35,7 +35,9 @@ while (have_posts()) : the_post();
         $program_register_is_external = true;
     } else {
         $program_register_url = class_exists('Course_Enroll_Gate')
-            ? Course_Enroll_Gate::get_registration_url_with_redirect(get_permalink())
+            ? Course_Enroll_Gate::get_registration_url_with_redirect(
+                Course_Enroll_Gate::get_program_enroll_gate_return_url(get_the_ID())
+            )
             : wp_registration_url();
     }
     $program_organizer_label = class_exists('Course_Meta_Boxes')
