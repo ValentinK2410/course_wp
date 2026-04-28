@@ -18,6 +18,13 @@ class Course_Frontend {
     private static $instance = null;
     
     /**
+     * Уже выполняли перевод просроченных курсов в черновик в этом HTTP-запросе
+     *
+     * @var bool
+     */
+    private static $expired_past_end_ran = false;
+    
+    /**
      * Получить экземпляр класса
      */
     public static function get_instance() {
@@ -46,8 +53,10 @@ class Course_Frontend {
         // Архив рубрик: FSE/блоковые темы не всегда используют template_include — дублируем через redirect
         add_action('template_redirect', array($this, 'maybe_render_category_archive'), 999);
         add_action('template_redirect', array($this, 'teachers_archive_redirect'), 1);
+        add_action('template_redirect', array($this, 'maybe_expire_courses_on_tax_course_pages'), 2);
         
         // Добавляем фильтры в запрос
+        add_action('pre_get_posts', array($this, 'maybe_expire_courses_past_end_before_query'), 0);
         add_action('pre_get_posts', array($this, 'filter_courses_query'));
         // Поиск на архиве: только заголовок (не post_content — иначе ложные совпадения)
         add_filter('posts_where', array($this, 'filter_courses_archive_title_search_where'), 10, 2);
@@ -205,6 +214,123 @@ class Course_Frontend {
         }
         
         return $template;
+    }
+    
+    /**
+     * Перед основным запросом каталога: опубликованные курсы с прошедшей датой окончания → черновик.
+     * Не зависит от авторизации. Один раз за запрос.
+     *
+     * @param WP_Query $query
+     */
+    public function maybe_expire_courses_past_end_before_query($query) {
+        if (is_admin() || ! $query->is_main_query()) {
+            return;
+        }
+        if (! $this->is_frontend_course_catalog_main_query($query)) {
+            return;
+        }
+        $this->expire_published_courses_past_end_date();
+    }
+    
+    /**
+     * Страницы таксономий курсов: в шаблоне часто второй WP_Query — снимаем просроченные до вывода.
+     */
+    public function maybe_expire_courses_on_tax_course_pages() {
+        if (is_admin() || wp_doing_ajax() || wp_doing_cron()) {
+            return;
+        }
+        if (defined('REST_REQUEST') && REST_REQUEST) {
+            return;
+        }
+        if (! apply_filters('course_plugin_expire_courses_on_catalog_visit', true)) {
+            return;
+        }
+        if (! function_exists('is_tax')) {
+            return;
+        }
+        $taxonomies = array('course_teacher', 'course_topic', 'course_level', 'course_specialization');
+        foreach ($taxonomies as $tax) {
+            if (is_tax($tax)) {
+                $this->expire_published_courses_past_end_date();
+                return;
+            }
+        }
+    }
+    
+    /**
+     * Основной запрос — архив курсов или лента курсов по таксономии.
+     *
+     * @param WP_Query $query
+     * @return bool
+     */
+    private function is_frontend_course_catalog_main_query($query) {
+        if (wp_doing_ajax() || wp_doing_cron()) {
+            return false;
+        }
+        if (! apply_filters('course_plugin_expire_courses_on_catalog_visit', true)) {
+            return false;
+        }
+        if ($query->is_post_type_archive('course')) {
+            return true;
+        }
+        if ($query->get('post_type') === 'course') {
+            return true;
+        }
+        $taxonomies = array('course_teacher', 'course_topic', 'course_level', 'course_specialization');
+        foreach ($taxonomies as $tax) {
+            if ($query->is_tax($tax)) {
+                return true;
+            }
+        }
+        if (isset($_SERVER['REQUEST_URI'])) {
+            $path = parse_url(wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH);
+            if ($path && preg_match('#/(course|courses)(/page/\d+)?/?$#', $path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Все опубликованные курсы, у которых _course_end_date (Y-m-d) раньше сегодняшнего дня сайта → draft.
+     */
+    public function expire_published_courses_past_end_date() {
+        if (self::$expired_past_end_ran) {
+            return;
+        }
+        self::$expired_past_end_ran = true;
+        
+        global $wpdb;
+        $today = current_time('Y-m-d');
+        
+        $ids = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT p.ID FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = %s
+                WHERE p.post_type = %s AND p.post_status = %s
+                AND pm.meta_value REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+                AND pm.meta_value < %s
+                GROUP BY p.ID",
+                '_course_end_date',
+                'course',
+                'publish',
+                $today
+            )
+        );
+        
+        if (empty($ids)) {
+            return;
+        }
+        
+        foreach ($ids as $post_id) {
+            $post_id = (int) $post_id;
+            wp_update_post(
+                array(
+                    'ID'          => $post_id,
+                    'post_status' => 'draft',
+                )
+            );
+        }
     }
     
     /**
@@ -727,6 +853,8 @@ class Course_Frontend {
      * Шорткод для отображения курсов
      */
     public function courses_shortcode($atts) {
+        $this->expire_published_courses_past_end_date();
+        
         $atts = shortcode_atts(array(
             'per_page' => 12,
             'specialization' => '',
