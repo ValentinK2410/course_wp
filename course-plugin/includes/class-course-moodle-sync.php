@@ -490,7 +490,7 @@ class Course_Moodle_Sync {
         $moodle_sync_include_cohorts    = (bool) get_option('moodle_sync_include_cohorts', true);
         $moodle_sync_include_courses    = (bool) get_option('moodle_sync_include_courses', true);
         $moodle_sync_include_students   = (bool) get_option('moodle_sync_include_students', true);
-        $moodle_sync_include_laravel    = (bool) get_option('moodle_sync_include_laravel', true);
+        $moodle_sync_include_laravel    = filter_var(get_option('moodle_sync_include_laravel', true), FILTER_VALIDATE_BOOLEAN);
         
         ?>
         <div class="wrap">
@@ -739,14 +739,15 @@ class Course_Moodle_Sync {
                     </tr>
                     <tr>
                         <th scope="row">
-                            <label for="moodle_sync_include_laravel"><?php _e('Laravel API', 'course-plugin'); ?></label>
+                            <label for="moodle_sync_include_laravel"><?php _e('Деканат (Laravel)', 'course-plugin'); ?></label>
                         </th>
                         <td>
                             <input type="hidden" name="moodle_sync_include_laravel" value="0" />
                             <label>
                                 <input type="checkbox" name="moodle_sync_include_laravel" id="moodle_sync_include_laravel" value="1" <?php checked($moodle_sync_include_laravel); ?> />
-                                <?php _e('Отправлять курсы в Laravel при синхронизации курсов (требуется URL и токен API выше)', 'course-plugin'); ?>
+                                <?php _e('Передавать курсы в деканат (Laravel API) при синхронизации. Если галочка снята — запросы к Laravel не выполняются.', 'course-plugin'); ?>
                             </label>
+                            <p class="description"><?php _e('Нужны заполненные URL и токен API выше.', 'course-plugin'); ?></p>
                         </td>
                     </tr>
                 </table>
@@ -883,11 +884,11 @@ class Course_Moodle_Sync {
      */
     private function get_default_sync_run_flags() {
         return array(
-            'categories' => (bool) get_option('moodle_sync_include_categories', true),
-            'cohorts'    => (bool) get_option('moodle_sync_include_cohorts', true),
-            'courses'    => (bool) get_option('moodle_sync_include_courses', true),
-            'students'   => (bool) get_option('moodle_sync_include_students', true),
-            'laravel'    => (bool) get_option('moodle_sync_include_laravel', true),
+            'categories' => filter_var(get_option('moodle_sync_include_categories', true), FILTER_VALIDATE_BOOLEAN),
+            'cohorts'    => filter_var(get_option('moodle_sync_include_cohorts', true), FILTER_VALIDATE_BOOLEAN),
+            'courses'    => filter_var(get_option('moodle_sync_include_courses', true), FILTER_VALIDATE_BOOLEAN),
+            'students'   => filter_var(get_option('moodle_sync_include_students', true), FILTER_VALIDATE_BOOLEAN),
+            'laravel'    => filter_var(get_option('moodle_sync_include_laravel', true), FILTER_VALIDATE_BOOLEAN),
         );
     }
     
@@ -1501,7 +1502,7 @@ class Course_Moodle_Sync {
             update_post_meta($post_id, 'moodle_course_visible', absint($course['visible']));
         }
         
-        // Отправляем курс в Laravel приложение (если шаг включён в текущей синхронизации)
+        // Деканат (Laravel): только если галочка включена в настройках и в текущем запуске sync
         if (!empty($this->sync_run_flags['laravel'])) {
             $this->sync_course_to_laravel($post_id, $course, $action);
         }
@@ -1510,43 +1511,41 @@ class Course_Moodle_Sync {
     }
     
     /**
-     * Определение статуса курса на основе данных из Moodle
-     * 
+     * Определение статуса курса на основе данных из Moodle (каталог = только publish)
+     *
      * Логика:
-     * 1. Если курс скрыт в Moodle (visible == 0) → черновик (draft)
-     * 2. Если дата начала курса еще не наступила → опубликован (publish)
-     * 3. Если дата начала курса уже прошла → черновик (draft)
-     * 4. Если дата начала не установлена → опубликован (publish)
-     * 
+     * 1. Скрыт в Moodle (visible == 0) → черновик
+     * 2. Если задана дата окончания и текущий календарный день сайта позже неё → черновик (убрать из каталога)
+     * 3. Иначе → опубликован (в т.ч. идущий курс после даты начала)
+     *
      * @param array $course Данные курса из Moodle
      * @return string Статус поста WordPress ('publish' или 'draft')
      */
     private function determine_course_status($course) {
-        // Проверяем видимость курса в Moodle
-        // visible == 0 означает скрыт, visible == 1 означает видим
-        if (isset($course['visible']) && $course['visible'] == 0) {
-            error_log('Moodle Sync: Курс "' . (isset($course['fullname']) ? $course['fullname'] : 'неизвестен') . '" скрыт в Moodle, устанавливаем статус "черновик"');
+        $title = isset($course['fullname']) ? $course['fullname'] : 'неизвестен';
+
+        if (isset($course['visible']) && (int) $course['visible'] === 0) {
+            error_log('Moodle Sync: Курс "' . $title . '" скрыт в Moodle, устанавливаем статус "черновик"');
             return 'draft';
         }
-        
-        // Проверяем дату начала курса
-        if (isset($course['startdate']) && $course['startdate'] > 0) {
-            $start_date_timestamp = $course['startdate'];
-            $current_timestamp = current_time('timestamp');
-            
-            // Если дата начала курса уже прошла, делаем его черновиком
-            if ($start_date_timestamp < $current_timestamp) {
-                error_log('Moodle Sync: Дата начала курса "' . (isset($course['fullname']) ? $course['fullname'] : 'неизвестен') . '" уже прошла (' . date('Y-m-d H:i:s', $start_date_timestamp) . '), устанавливаем статус "черновик"');
+
+        if (isset($course['enddate']) && (int) $course['enddate'] > 0) {
+            $end_ymd   = wp_date('Y-m-d', (int) $course['enddate']);
+            $today_ymd = current_time('Y-m-d');
+            if ($today_ymd > $end_ymd) {
+                error_log('Moodle Sync: Дата окончания курса "' . $title . '" прошла (' . $end_ymd . '), устанавливаем статус "черновик"');
                 return 'draft';
             }
-            
-            // Если дата начала еще не наступила, публикуем курс
-            error_log('Moodle Sync: Дата начала курса "' . (isset($course['fullname']) ? $course['fullname'] : 'неизвестен') . '" еще не наступила (' . date('Y-m-d H:i:s', $start_date_timestamp) . '), публикуем курс');
-            return 'publish';
         }
-        
-        // Если дата начала не установлена, публикуем курс
-        error_log('Moodle Sync: Дата начала курса "' . (isset($course['fullname']) ? $course['fullname'] : 'неизвестен') . '" не установлена, публикуем курс');
+
+        if (isset($course['startdate']) && (int) $course['startdate'] > 0) {
+            $start_ts = (int) $course['startdate'];
+            $now_ts   = (int) current_time('timestamp');
+            if ($start_ts > $now_ts) {
+                error_log('Moodle Sync: Дата начала курса "' . $title . '" ещё не наступила, публикуем курс в каталоге (как предстоящий)');
+            }
+        }
+
         return 'publish';
     }
     
@@ -1559,6 +1558,10 @@ class Course_Moodle_Sync {
      * @param string $action Действие ('created' или 'updated')
      */
     private function sync_course_to_laravel($wp_course_id, $moodle_course, $action) {
+        if (empty($this->sync_run_flags['laravel']) || ! filter_var(get_option('moodle_sync_include_laravel', true), FILTER_VALIDATE_BOOLEAN)) {
+            return;
+        }
+
         // Детальное логирование начала синхронизации
         $log_file = WP_CONTENT_DIR . '/course-registration-debug.log';
         $log_message = '[' . date('Y-m-d H:i:s') . '] ========== НАЧАЛО СИНХРОНИЗАЦИИ КУРСА С LARAVEL ==========' . "\n";
