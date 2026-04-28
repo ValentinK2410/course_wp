@@ -632,10 +632,12 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                             $days_diff = floor(($start_timestamp - $current_timestamp) / (60 * 60 * 24));
                             
                             // Определяем класс в зависимости от количества дней
+                            // Важно: для прошедшей даты начала храним отрицательное значение (как в single-course.php),
+                            // иначе шаблон ниже принимает его за «через N дней».
                             if ($days_diff < 0) {
                                 // Курс уже начался или прошел
                                 $date_class = 'date-past';
-                                $days_until_start = abs($days_diff);
+                                $days_until_start = $days_diff;
                             } elseif ($days_diff == 0) {
                                 // Курс начинается сегодня
                                 $date_class = 'date-today';
