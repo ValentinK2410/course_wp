@@ -3,7 +3,7 @@
  * Plugin Name: Курсы Про
  * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
- * Version: 1.3.69
+ * Version: 1.3.70
  * Author: Кузьменко Валентин (Valentink2410)
  * Author URI: https://github.com/ValentinK2410
  * Copyright: Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 
 // Определяем константы плагина для использования в других файлах
 // COURSE_PLUGIN_VERSION - версия плагина для версионирования стилей и скриптов
-define('COURSE_PLUGIN_VERSION', '1.3.69');
+define('COURSE_PLUGIN_VERSION', '1.3.70');
 
 // COURSE_PLUGIN_DIR - абсолютный путь к директории плагина (например: /var/www/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -221,6 +221,7 @@ class Course_Plugin {
             'includes/class-course-email-sender.php',    // Класс для улучшенной отправки email (SMTP поддержка)
             'includes/class-course-email-admin.php',    // Класс для админ-панели настроек email (SMTP)
             'includes/class-course-wp-login-registration.php', // Поля Имя/Фамилия + пароль в стандартной регистрации wp-login.php
+            'includes/class-course-db-search-replace-admin.php', // Инструмент: поиск/замена в таблицах БД (Инструменты)
         );
         
         // Проходим по каждому файлу в массиве
@@ -276,6 +277,10 @@ class Course_Plugin {
         // Добавляет колонки в список курсов, фильтры, функцию дублирования
         if (class_exists('Course_Admin')) {
             Course_Admin::get_instance();
+        }
+
+        if (class_exists('Course_DB_Search_Replace_Admin')) {
+            Course_DB_Search_Replace_Admin::get_instance();
         }
         
         // Инициализируем административный интерфейс программ
