@@ -9,7 +9,7 @@
  * Он работает независимо от настроек аутентификации Moodle.
  * 
  * Использование:
- * https://class.dekan.pro/sso-login.php?token=YOUR_TOKEN
+ * https://class.russianseminary.org/sso-login.php?token=YOUR_TOKEN
  */
 
 // Загружаем конфигурацию Moodle

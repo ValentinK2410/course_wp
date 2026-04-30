@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 class Course_Moodle_API {
     
     /**
-     * URL сайта Moodle (например: https://class.dekan.pro)
+     * URL сайта Moodle (например: https://class.russianseminary.org)
      * 
      * @var string
      */
