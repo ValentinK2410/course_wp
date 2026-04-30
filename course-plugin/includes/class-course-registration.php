@@ -820,6 +820,9 @@ class Course_Registration {
         @file_put_contents($log_file, $log_message, FILE_APPEND);
         
         // Отправляем письмо с паролем и ссылками (шорткод [course_register])
+        if (class_exists('Course_Email_Admin')) {
+            $headers = Course_Email_Admin::append_staff_bcc_to_headers($headers, $user->user_email);
+        }
         $mail_result = wp_mail($user->user_email, $subject, $message, $headers);
         
         if ($mail_result) {

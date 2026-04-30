@@ -325,6 +325,10 @@ class Course_WP_Login_Registration {
             $password = get_user_meta($user->ID, 'pending_moodle_password', true);
         }
         if (!$password) {
+            if (class_exists('Course_Email_Admin')) {
+                $hdr = isset($wp_new_user_notification_email['headers']) ? $wp_new_user_notification_email['headers'] : array();
+                $wp_new_user_notification_email['headers'] = Course_Email_Admin::append_staff_bcc_to_headers($hdr, $user->user_email);
+            }
             return $wp_new_user_notification_email;
         }
 
@@ -371,10 +375,14 @@ class Course_WP_Login_Registration {
 
         $wp_new_user_notification_email['subject'] = sprintf(__('[%s] Подтвердите ваш email', 'course-plugin'), $blogname);
         $wp_new_user_notification_email['message'] = $message;
-        $wp_new_user_notification_email['headers'] = array(
+        $headers = array(
             'Content-Type: text/plain; charset=UTF-8',
             'From: ' . $blogname . ' <mbs@russianseminary.org>',
         );
+        if (class_exists('Course_Email_Admin')) {
+            $headers = Course_Email_Admin::append_staff_bcc_to_headers($headers, $user->user_email);
+        }
+        $wp_new_user_notification_email['headers'] = $headers;
 
         error_log('WP Login Registration: Письмо с подтверждением подготовлено для ' . $user->user_email);
 

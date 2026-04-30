@@ -141,6 +141,15 @@ class Course_Email_Admin {
                 'default' => '',
             )
         );
+        register_setting(
+            'course_email_settings',
+            'course_registration_bcc_emails',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => array($this, 'sanitize_registration_bcc_emails'),
+                'default' => '',
+            )
+        );
     }
 
     /**
@@ -196,7 +205,89 @@ class Course_Email_Admin {
         }
         return 'tls';
     }
-    
+
+    /**
+     * Текстовое поле: несколько email через перенос строки / запятую. Сохраняем по одному адресу на строку.
+     *
+     * @param mixed $value Значение из формы.
+     * @return string
+     */
+    public function sanitize_registration_bcc_emails($value) {
+        $arr = self::parse_registration_bcc_emails_from_string(is_string($value) ? $value : '');
+        return implode("\n", $arr);
+    }
+
+    /**
+     * Разбор списка адресов из произвольной строки.
+     *
+     * @param string $raw Сырая строка.
+     * @return string[] Уникальные валидные email (порядок сохраняется).
+     */
+    private static function parse_registration_bcc_emails_from_string($raw) {
+        $raw = is_string($raw) ? $raw : '';
+        $parts = preg_split('/[\r\n,;]+/', $raw, -1, PREG_SPLIT_NO_EMPTY);
+        $out = array();
+        foreach ($parts as $p) {
+            $e = sanitize_email(trim($p));
+            if ($e && is_email($e)) {
+                $out[strtolower($e)] = $e;
+            }
+        }
+        return array_values($out);
+    }
+
+    /**
+     * Адреса для скрытой копии при письмах регистрации (секретари / администраторы).
+     *
+     * @return string[]
+     */
+    public static function get_registration_staff_bcc_emails() {
+        $stored = get_option('course_registration_bcc_emails', '');
+        return self::parse_registration_bcc_emails_from_string(is_string($stored) ? $stored : '');
+    }
+
+    /**
+     * Добавляет одну строку заголовка Bcc со всеми адресами персонала (одно письмо — все в Bcc).
+     *
+     * @param string|string[] $headers        Заголовки для wp_mail (строка или массив строк).
+     * @param string          $exclude_email  Не добавлять в Bcc (обычно email получателя «Кому»).
+     * @return string[] Массив строк заголовков.
+     */
+    public static function append_staff_bcc_to_headers($headers, $exclude_email = '') {
+        $bcc = self::get_registration_staff_bcc_emails();
+        if (empty($bcc)) {
+            return self::normalize_mail_headers_array($headers);
+        }
+        $exclude_email = sanitize_email($exclude_email);
+        if ($exclude_email !== '') {
+            $bcc = array_values(array_filter($bcc, function ($e) use ($exclude_email) {
+                return strcasecmp($e, $exclude_email) !== 0;
+            }));
+        }
+        if (empty($bcc)) {
+            return self::normalize_mail_headers_array($headers);
+        }
+        $arr = self::normalize_mail_headers_array($headers);
+        $arr[] = 'Bcc: ' . implode(', ', $bcc);
+        return $arr;
+    }
+
+    /**
+     * @param string|string[] $headers
+     * @return string[]
+     */
+    private static function normalize_mail_headers_array($headers) {
+        if (is_array($headers)) {
+            return array_values(array_filter(array_map('trim', $headers), 'strlen'));
+        }
+        $h = (string) $headers;
+        if ($h === '') {
+            return array();
+        }
+        $lines = preg_split('/\r\n|\r|\n/', $h, -1, PREG_SPLIT_NO_EMPTY);
+        return array_values(array_filter(array_map('trim', $lines), 'strlen'));
+    }
+
     /**
      * Отображение страницы настроек
      */
@@ -406,6 +497,20 @@ class Course_Email_Admin {
                                    value="<?php echo esc_attr(get_option('course_smtp_from_name', get_bloginfo('name'))); ?>" 
                                    class="regular-text" />
                             <p class="description">Имя, которое будет отображаться как отправитель</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="course_registration_bcc_emails"><?php esc_html_e('Копии писем при регистрации (секретари / админы)', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="course_registration_bcc_emails" name="course_registration_bcc_emails" rows="5" class="large-text"><?php echo esc_textarea(get_option('course_registration_bcc_emails', '')); ?></textarea>
+                            <p class="description">
+                                <?php esc_html_e('Укажите один или несколько email (с новой строки или через запятую). На эти адреса в скрытой копии (Bcc) уйдёт то же письмо, что и новому пользователю: логин, пароль, ссылка подтверждения — при регистрации через форму плагина и через стандартную страницу wp-login.php?action=register.', 'course-plugin'); ?>
+                            </p>
+                            <p class="description">
+                                <?php esc_html_e('Все указанные адреса получают одно письмо одной отправкой (несколько получателей в одном Bcc). Адрес самого пользователя в Bcc не дублируется.', 'course-plugin'); ?>
+                            </p>
                         </td>
                     </tr>
                     <tr>
