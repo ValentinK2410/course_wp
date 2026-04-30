@@ -3,10 +3,10 @@
  * WordPress → Moodle SSO Login Handler
  * 
  * Этот файл должен быть размещен в корневой директории Moodle:
- * /var/www/www-root/data/www/class.russianseminary.org/sso-login.php
+ * /var/www/www-root/data/www/class.seminary.msk.ru/sso-login.php
  * 
  * Использование:
- * https://class.russianseminary.org/sso-login.php?token=TOKEN
+ * https://class.seminary.msk.ru/sso-login.php?token=TOKEN
  * 
  * Файл автоматически загружает config.php Moodle и входит пользователя.
  */
