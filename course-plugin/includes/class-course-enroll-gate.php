@@ -175,13 +175,13 @@ class Course_Enroll_Gate {
             return;
         }
 
-        $target_encoded = get_query_var('enroll_url') ?: (isset($_GET['enroll_url']) ? sanitize_text_field($_GET['enroll_url']) : '');
-        if (empty($target_encoded)) {
+        $target_encoded = $this->get_raw_enroll_url_param();
+        if ($target_encoded === '') {
             wp_die(__('Не указана ссылка для записи.', 'course-plugin'), '', array('response' => 400));
         }
 
-        $target_url = base64_decode($target_encoded, true);
-        if (!$target_url || !filter_var($target_url, FILTER_VALIDATE_URL)) {
+        $target_url = $this->decode_enroll_target_url($target_encoded);
+        if ($target_url === '' || ! $this->is_allowed_enroll_redirect_url($target_url)) {
             wp_die(__('Некорректная ссылка для записи.', 'course-plugin'), '', array('response' => 400));
         }
 
@@ -267,6 +267,69 @@ class Course_Enroll_Gate {
 
         wp_redirect($target_url);
         exit;
+    }
+
+    /**
+     * Параметр enroll_url: не применять sanitize_text_field — он портит base64 (+, =, часть символов).
+     *
+     * @return string
+     */
+    private function get_raw_enroll_url_param() {
+        if (isset($_GET['enroll_url']) && $_GET['enroll_url'] !== '') {
+            $raw = wp_unslash($_GET['enroll_url']);
+            if (is_string($raw)) {
+                return trim($raw);
+            }
+        }
+        $qv = get_query_var('enroll_url');
+        return is_string($qv) ? trim($qv) : '';
+    }
+
+    /**
+     * Раскодировать base64 из шлюза в абсолютный URL.
+     *
+     * @param string $target_encoded
+     * @return string Пусто при ошибке
+     */
+    private function decode_enroll_target_url($target_encoded) {
+        $target_encoded = trim((string) $target_encoded);
+        if ($target_encoded === '') {
+            return '';
+        }
+        if (strpos($target_encoded, '%') !== false) {
+            $target_encoded = rawurldecode($target_encoded);
+        }
+        $decoded = base64_decode($target_encoded, true);
+        if ($decoded === false || $decoded === '') {
+            $decoded = base64_decode($target_encoded, false);
+        }
+        if (! is_string($decoded)) {
+            return '';
+        }
+
+        return trim($decoded);
+    }
+
+    /**
+     * Проверка целевого URL после decode (parse_url + wp_http_validate_url; без FILTER_VALIDATE_URL из‑за ложных отказов).
+     *
+     * @param string $url
+     * @return bool
+     */
+    private function is_allowed_enroll_redirect_url($url) {
+        if ($url === '') {
+            return false;
+        }
+        if (function_exists('wp_http_validate_url') && wp_http_validate_url($url)) {
+            return true;
+        }
+        $p = parse_url($url);
+        if (empty($p['scheme']) || empty($p['host'])) {
+            return false;
+        }
+        $scheme = strtolower($p['scheme']);
+
+        return ($scheme === 'http' || $scheme === 'https');
     }
 
     /**
