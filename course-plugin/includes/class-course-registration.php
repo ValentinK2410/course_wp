@@ -782,10 +782,10 @@ class Course_Registration {
         
         $message .= __('Вы можете использовать эти данные для входа на:', 'course-plugin') . "\r\n";
         $message .= sprintf(__('- Сайт МБС: %s', 'course-plugin'), wp_login_url()) . "\r\n";
-        $message .= sprintf(__('- Виртуальный класс МБС: %s', 'course-plugin'), 'https://class.seminary.msk.ru/login/index.php') . "\r\n";
+        $message .= sprintf(__('- Виртуальный класс МБС: %s', 'course-plugin'), 'https://class.russianseminary.org/login/index.php') . "\r\n";
         if ($moodle_user_id && !empty($moodle_url)) {
             $moodle_login = rtrim($moodle_url, '/') . '/login/index.php';
-            if ($moodle_login !== 'https://class.seminary.msk.ru/login/index.php') {
+            if ($moodle_login !== 'https://class.russianseminary.org/login/index.php') {
                 $message .= sprintf(__('- Moodle: %s', 'course-plugin'), $moodle_login) . "\r\n";
             }
         }

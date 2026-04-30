@@ -5,7 +5,7 @@
 #   MOODLE_ROOT=/path/to/moodle ./deploy-sso-to-moodle.sh
 #
 # Пример:
-#   ./deploy-sso-to-moodle.sh /var/www/www-root/data/www/class.seminary.msk.ru
+#   ./deploy-sso-to-moodle.sh /var/www/www-root/data/www/class.russianseminary.org
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,7 +15,7 @@ MOODLE_ROOT="${MOODLE_ROOT:-${1:-}}"
 if [ -z "$MOODLE_ROOT" ]; then
     # Пробуем стандартные пути
     for path in \
-        "/var/www/www-root/data/www/class.seminary.msk.ru"
+        "/var/www/www-root/data/www/class.russianseminary.org"
     do
         if [ -f "$SCRIPT_DIR/$path/config.php" ] 2>/dev/null; then
             MOODLE_ROOT="$SCRIPT_DIR/$path"
