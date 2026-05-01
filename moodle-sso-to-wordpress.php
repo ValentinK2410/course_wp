@@ -3,20 +3,20 @@
  * Moodle → WordPress SSO (обратный SSO)
  * 
  * Этот файл должен быть размещен в директории public Moodle:
- * /var/www/www-root/data/www/class.russianseminary.org/public/moodle-sso-to-wordpress.php
+ * /var/www/www-root/data/www/class.mbs.ru/public/moodle-sso-to-wordpress.php
  * 
  * config.php Moodle находится на уровень выше:
- * /var/www/www-root/data/www/class.russianseminary.org/config.php
+ * /var/www/www-root/data/www/class.mbs.ru/config.php
  * 
  * Использование:
- * https://class.russianseminary.org/moodle-sso-to-wordpress.php
+ * https://class.mbs.ru/moodle-sso-to-wordpress.php
  * 
  * Пользователь должен быть авторизован в Moodle.
  * Файл автоматически загружает config.php из родительской директории.
  */
 
 // Загружаем конфигурацию Moodle
-// config.php находится на уровень выше: /var/www/www-root/data/www/class.russianseminary.org/config.php
+// config.php находится на уровень выше: /var/www/www-root/data/www/class.mbs.ru/config.php
 require_once(__DIR__ . '/../config.php');
 
 // Проверяем, что пользователь авторизован в Moodle

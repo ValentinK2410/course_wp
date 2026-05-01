@@ -7,7 +7,7 @@
  * Для подключения добавьте в header.mustache темы ПРЯМО В КОД (не через script src):
  * {{#isloggedin}}
  * <script>
- * <?php include('/var/www/www-root/data/www/class.russianseminary.org/moodle-sso-buttons-inline.php'); ?>
+ * <?php include('/var/www/www-root/data/www/class.mbs.ru/moodle-sso-buttons-inline.php'); ?>
  * </script>
  * {{/isloggedin}}
  * 

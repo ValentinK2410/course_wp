@@ -23,7 +23,7 @@ class Course_Moodle_Sync {
     private static $instance = null;
     
     /**
-     * URL сайта Moodle (например: https://class.russianseminary.org)
+     * URL сайта Moodle (например: https://class.mbs.ru)
      * 
      * @var string
      */
@@ -523,9 +523,9 @@ class Course_Moodle_Sync {
                                    name="moodle_sync_url" 
                                    value="<?php echo esc_attr($moodle_url); ?>" 
                                    class="regular-text" 
-                                   placeholder="https://class.russianseminary.org" />
+                                   placeholder="https://class.mbs.ru" />
                             <p class="description">
-                                <?php _e('URL вашего сайта Moodle (например: https://class.russianseminary.org)', 'course-plugin'); ?>
+                                <?php _e('URL вашего сайта Moodle (например: https://class.mbs.ru)', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
