@@ -25,6 +25,13 @@ class Course_Enroll_Modal_Admin {
         add_action('admin_init', array($this, 'register_settings'));
     }
 
+    public function sanitize_modal_html($value) {
+        if (!is_string($value)) {
+            return '';
+        }
+        return wp_kses_post(wp_unslash($value));
+    }
+
     public function register_menu() {
         add_submenu_page(
             'edit.php?post_type=course',
@@ -42,7 +49,7 @@ class Course_Enroll_Modal_Admin {
             'course_plugin_enroll_modal_html',
             array(
                 'type' => 'string',
-                'sanitize_callback' => 'wp_kses_post',
+                'sanitize_callback' => array($this, 'sanitize_modal_html'),
                 'default' => '',
             )
         );
@@ -89,23 +96,48 @@ class Course_Enroll_Modal_Admin {
         if (!current_user_can('manage_options')) {
             return;
         }
+
+        $modal_html = get_option('course_plugin_enroll_modal_html', '');
+        if (!is_string($modal_html)) {
+            $modal_html = '';
+        }
+
+        $editor_id = 'course_enroll_modal_html_wysiwyg';
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Модальное окно записи', 'course-plugin'); ?></h1>
             <p class="description">
-                <?php esc_html_e('Текст показывается гостям на страницах программ при нажатии «Записаться» (перед переходом по ссылке записи). Разрешены обычные HTML-теги (абзацы, списки, ссылки, заголовки). Скрипты не вставляются.', 'course-plugin'); ?>
+                <?php esc_html_e('Текст показывается гостям на страницах программ при нажатии «Записаться» (перед переходом по ссылке записи). Редактор как у записей: вкладки «Визуально» и «Текст», вложения и скрипты отключены.', 'course-plugin'); ?>
             </p>
 
-            <form method="post" action="options.php">
+            <form method="post" action="options.php" class="course-enroll-modal-settings-form">
                 <?php settings_fields('course_enroll_modal_settings'); ?>
-                <table class="form-table">
+                <table class="form-table" role="presentation">
                     <tr>
                         <th scope="row">
-                            <label for="course_plugin_enroll_modal_html"><?php esc_html_e('HTML содержимое', 'course-plugin'); ?></label>
+                            <label for="<?php echo esc_attr($editor_id); ?>"><?php esc_html_e('Содержимое окна', 'course-plugin'); ?></label>
                         </th>
                         <td>
-                            <textarea name="course_plugin_enroll_modal_html" id="course_plugin_enroll_modal_html" class="large-text code" rows="18" cols="80"><?php echo esc_textarea(get_option('course_plugin_enroll_modal_html', '')); ?></textarea>
-                            <p class="description"><?php esc_html_e('Оставьте пустым, чтобы использовать стандартный текст с двумя шагами (как раньше).', 'course-plugin'); ?></p>
+                            <?php
+                            wp_editor(
+                                $modal_html,
+                                $editor_id,
+                                array(
+                                    'textarea_name' => 'course_plugin_enroll_modal_html',
+                                    'media_buttons'  => false,
+                                    'teeny'            => false,
+                                    'textarea_rows'    => 14,
+                                    'editor_height'    => 320,
+                                    'quicktags'        => true,
+                                    'drag_drop_upload' => false,
+                                    'tinymce'          => array(
+                                        'resize'             => true,
+                                        'wp_autoresize_on' => false,
+                                    ),
+                                )
+                            );
+                            ?>
+                            <p class="description"><?php esc_html_e('Оставьте пустым (удалите всё и сохраните), чтобы использовать стандартный текст с двумя шагами.', 'course-plugin'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -122,7 +154,7 @@ class Course_Enroll_Modal_Admin {
             </form>
 
             <hr />
-            <h2><?php esc_html_e('Пример разметки (можно скопировать как основу)', 'course-plugin'); ?></h2>
+            <h2><?php esc_html_e('Пример разметки (можно скопировать во вкладке «Текст»)', 'course-plugin'); ?></h2>
             <?php
             $example_html = '<h2 id="course-program-reg-modal-title" class="course-program-reg-modal__title">' . esc_html__('ПРОЦЕСС РЕГИСТРАЦИИ НА ПРОГРАММУ', 'course-plugin') . "</h2>\n"
                 . '<p class="course-program-reg-modal__lead">' . esc_html__('Процесс включает в себя два шага', 'course-plugin') . "</p>\n\n"
