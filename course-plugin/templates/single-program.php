@@ -725,11 +725,24 @@ while (have_posts()) : the_post();
     </section>
     <?php endif; ?>
 
-    <?php if (!empty($program_show_enroll_intro_modal)) : ?>
-    <div id="course-program-registration-modal" class="course-program-reg-modal" hidden role="dialog" aria-modal="true" aria-labelledby="course-program-reg-modal-title">
+    <?php if (!empty($program_show_enroll_intro_modal)) :
+        $course_enroll_modal_custom = class_exists('Course_Enroll_Modal_Admin') && Course_Enroll_Modal_Admin::uses_custom_html();
+        $course_enroll_modal_aria = $course_enroll_modal_custom
+            ? ' aria-label="' . esc_attr__('Информация о записи на программу', 'course-plugin') . '"'
+            : ' aria-labelledby="course-program-reg-modal-title"';
+        $course_modal_cta_label = class_exists('Course_Enroll_Modal_Admin')
+            ? Course_Enroll_Modal_Admin::get_cta_label()
+            : __('Приступить к регистрации', 'course-plugin');
+        ?>
+    <div id="course-program-registration-modal" class="course-program-reg-modal" hidden role="dialog" aria-modal="true"<?php echo $course_enroll_modal_aria; ?>>
         <div class="course-program-reg-modal__overlay js-course-program-enroll-modal-close" tabindex="-1"></div>
         <div class="course-program-reg-modal__panel">
             <button type="button" class="course-program-reg-modal__close js-course-program-enroll-modal-close" aria-label="<?php echo esc_attr__('Закрыть', 'course-plugin'); ?>">&times;</button>
+            <?php if ($course_enroll_modal_custom) : ?>
+            <div class="course-program-reg-modal__body course-program-reg-modal__body--custom">
+                <?php echo wp_kses_post(Course_Enroll_Modal_Admin::get_custom_html()); ?>
+            </div>
+            <?php else : ?>
             <h2 id="course-program-reg-modal-title" class="course-program-reg-modal__title"><?php esc_html_e('ПРОЦЕСС РЕГИСТРАЦИИ НА ПРОГРАММУ', 'course-plugin'); ?></h2>
             <p class="course-program-reg-modal__lead"><?php esc_html_e('Процесс включает в себя два шага', 'course-plugin'); ?></p>
 
@@ -742,10 +755,11 @@ while (have_posts()) : the_post();
                 <h3 class="course-program-reg-modal__step-title"><?php esc_html_e('ШАГ 2. Получение доступа на платформу и предоставление необходимых данных', 'course-plugin'); ?></h3>
                 <p class="course-program-reg-modal__text"><?php esc_html_e('Когда вы перейдёте по ссылке, которая придёт вам на email, вы попадёте в раздел зачисления на программу, где вам нужно будет ввести необходимые данные (рекомендацию и т. п.). У вас будет время, чтобы всё это сделать до вступительных экзаменов.', 'course-plugin'); ?></p>
             </div>
+            <?php endif; ?>
 
             <p class="course-program-reg-modal__actions">
                 <a href="<?php echo esc_url($program_register_url); ?>" class="course-program-reg-modal__cta"<?php echo $program_register_is_external ? ' target="_blank" rel="noopener"' : ''; ?>>
-                    <?php esc_html_e('Приступить к регистрации', 'course-plugin'); ?>
+                    <?php echo esc_html($course_modal_cta_label); ?>
                 </a>
             </p>
         </div>
@@ -762,6 +776,12 @@ while (have_posts()) : the_post();
         .course-program-reg-modal__step{margin-bottom:18px;}
         .course-program-reg-modal__step-title{font-size:.9rem;font-weight:700;margin:0 0 8px;color:#68202d;}
         .course-program-reg-modal__text{font-size:.88rem;line-height:1.55;margin:0;color:#333;}
+        .course-program-reg-modal__body--custom{font-size:.88rem;line-height:1.55;color:#333;}
+        .course-program-reg-modal__body--custom .course-program-reg-modal__title:first-child{margin-top:0;}
+        .course-program-reg-modal__body--custom h1,.course-program-reg-modal__body--custom h2,.course-program-reg-modal__body--custom h3{font-size:1.05rem;font-weight:700;margin:1em 0 .5em;color:#68202d;}
+        .course-program-reg-modal__body--custom h1:first-child,.course-program-reg-modal__body--custom h2:first-child,.course-program-reg-modal__body--custom h3:first-child{margin-top:0;}
+        .course-program-reg-modal__body--custom p{margin:0 0 .85em;}
+        .course-program-reg-modal__body--custom ul,.course-program-reg-modal__body--custom ol{margin:.5em 0 1em 1.25em;}
         .course-program-reg-modal__actions{margin:24px 0 0;text-align:center;}
         .course-program-reg-modal__cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,#68202d,#a13d4c);color:#fff!important;text-decoration:none;border-radius:8px;font-weight:600;font-size:.95rem;transition:opacity .2s,transform .15s;}
         .course-program-reg-modal__cta:hover{opacity:.95;transform:translateY(-1px);color:#fff!important;}

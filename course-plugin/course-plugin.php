@@ -3,7 +3,7 @@
  * Plugin Name: Курсы Про
  * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
- * Version: 1.3.75
+ * Version: 1.3.76
  * Author: Кузьменко Валентин (Valentink2410)
  * Author URI: https://github.com/ValentinK2410
  * Copyright: Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 
 // Определяем константы плагина для использования в других файлах
 // COURSE_PLUGIN_VERSION - версия плагина для версионирования стилей и скриптов
-define('COURSE_PLUGIN_VERSION', '1.3.75');
+define('COURSE_PLUGIN_VERSION', '1.3.76');
 
 // COURSE_PLUGIN_DIR - абсолютный путь к директории плагина (например: /var/www/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -203,6 +203,7 @@ class Course_Plugin {
             'includes/class-program-post-type.php',     // Класс для регистрации Custom Post Type "Программы"
             'includes/class-course-taxonomies.php',    // Класс для регистрации таксономий (специализация, уровень, тема, преподаватель)
             'includes/class-course-admin.php',          // Класс для административного интерфейса (колонки, фильтры, дублирование)
+            'includes/class-course-enroll-modal-admin.php', // HTML модального окна записи на программу
             'includes/class-program-admin.php',        // Класс для административного интерфейса программ
             'includes/class-course-meta-boxes.php',    // Класс для метабоксов с дополнительными полями курсов
             'includes/class-program-meta-boxes.php',   // Класс для метабоксов с дополнительными полями программ
@@ -277,6 +278,10 @@ class Course_Plugin {
         // Добавляет колонки в список курсов, фильтры, функцию дублирования
         if (class_exists('Course_Admin')) {
             Course_Admin::get_instance();
+        }
+
+        if (class_exists('Course_Enroll_Modal_Admin')) {
+            Course_Enroll_Modal_Admin::get_instance();
         }
 
         if (class_exists('Course_DB_Search_Replace_Admin')) {
