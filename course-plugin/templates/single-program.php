@@ -743,6 +743,11 @@ while (have_posts()) : the_post();
                 <?php echo wp_kses_post(Course_Enroll_Modal_Admin::get_custom_html()); ?>
             </div>
             <?php else : ?>
+            <?php
+            if (class_exists('Course_Enroll_Modal_Admin')) {
+                echo wp_kses_post(Course_Enroll_Modal_Admin::get_default_modal_inner_html());
+            } else {
+                ?>
             <h2 id="course-program-reg-modal-title" class="course-program-reg-modal__title"><?php esc_html_e('ПРОЦЕСС РЕГИСТРАЦИИ НА ПРОГРАММУ', 'course-plugin'); ?></h2>
             <p class="course-program-reg-modal__lead"><?php esc_html_e('Процесс включает в себя два шага', 'course-plugin'); ?></p>
 
@@ -755,6 +760,9 @@ while (have_posts()) : the_post();
                 <h3 class="course-program-reg-modal__step-title"><?php esc_html_e('ШАГ 2. Получение доступа на платформу и предоставление необходимых данных', 'course-plugin'); ?></h3>
                 <p class="course-program-reg-modal__text"><?php esc_html_e('Когда вы перейдёте по ссылке, которая придёт вам на email, вы попадёте в раздел зачисления на программу, где вам нужно будет ввести необходимые данные (рекомендацию и т. п.). У вас будет время, чтобы всё это сделать до вступительных экзаменов.', 'course-plugin'); ?></p>
             </div>
+                <?php
+            }
+            ?>
             <?php endif; ?>
 
             <p class="course-program-reg-modal__actions">
