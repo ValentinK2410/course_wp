@@ -784,12 +784,43 @@ while (have_posts()) : the_post();
         .course-program-reg-modal__step{margin-bottom:18px;}
         .course-program-reg-modal__step-title{font-size:.9rem;font-weight:700;margin:0 0 8px;color:#68202d;}
         .course-program-reg-modal__text{font-size:.88rem;line-height:1.55;margin:0;color:#333;}
-        .course-program-reg-modal__body--custom{font-size:.88rem;line-height:1.55;color:#333;}
-        .course-program-reg-modal__body--custom .course-program-reg-modal__title:first-child{margin-top:0;}
-        .course-program-reg-modal__body--custom h1,.course-program-reg-modal__body--custom h2,.course-program-reg-modal__body--custom h3{font-size:1.05rem;font-weight:700;margin:1em 0 .5em;color:#68202d;}
-        .course-program-reg-modal__body--custom h1:first-child,.course-program-reg-modal__body--custom h2:first-child,.course-program-reg-modal__body--custom h3:first-child{margin-top:0;}
-        .course-program-reg-modal__body--custom p{margin:0 0 .85em;}
-        .course-program-reg-modal__body--custom ul,.course-program-reg-modal__body--custom ol{margin:.5em 0 1em 1.25em;}
+        /* Кастомный HTML: изоляция от темы/Elementor; id — повышение специфичности */
+        #course-program-registration-modal .course-program-reg-modal__body--custom{
+            font-size:.88rem;line-height:1.55;color:#333;text-align:left;
+            max-width:100%;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom > h1:first-child,
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom > h2:first-child,
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom > h3:first-child{
+            text-align:center;font-size:1.15rem;font-weight:700;margin:0 0 12px;
+            color:#1a1a1a;letter-spacing:.02em;line-height:1.3;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom > h2:first-child + p,
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom > h3:first-child + p{
+            text-align:center;font-weight:600;color:#444;margin:0 0 20px;
+        }
+        #course-program-registration-modal .course-program-reg-modal__body--custom .course-program-reg-modal__title:first-child{margin-top:0;}
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom h1:not(:first-child),
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom h2:not(:first-child),
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom h3:not(:first-child){
+            text-align:left;font-size:.95rem;font-weight:700;margin:1em 0 .5em;color:#68202d;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom p{margin:0 0 .85em;}
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom ul{
+            list-style:disc outside!important;margin:.5em 0 1em!important;padding-left:1.35em!important;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom ol{
+            list-style:decimal outside!important;margin:.5em 0 1em!important;padding-left:1.35em!important;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom li{
+            display:list-item!important;margin:0 0 .4em!important;padding:0!important;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom a{
+            color:#2271b1!important;text-decoration:underline;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom a:hover{color:#135e96!important;}
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom strong,
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom b{font-weight:700;}
         .course-program-reg-modal__actions{margin:24px 0 0;text-align:center;}
         .course-program-reg-modal__cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,#68202d,#a13d4c);color:#fff!important;text-decoration:none;border-radius:8px;font-weight:600;font-size:.95rem;transition:opacity .2s,transform .15s;}
         .course-program-reg-modal__cta:hover{opacity:.95;transform:translateY(-1px);color:#fff!important;}

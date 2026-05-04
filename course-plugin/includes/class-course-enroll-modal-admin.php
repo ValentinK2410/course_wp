@@ -317,17 +317,41 @@ JS;
                 #course-enroll-modal-admin-preview .course-program-reg-modal__step{margin-bottom:18px;}
                 #course-enroll-modal-admin-preview .course-program-reg-modal__step-title{font-size:.9rem;font-weight:700;margin:0 0 8px;color:#68202d;}
                 #course-enroll-modal-admin-preview .course-program-reg-modal__text{font-size:.88rem;line-height:1.55;margin:0;color:#333;}
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom{font-size:.88rem;line-height:1.55;color:#333;}
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom .course-program-reg-modal__title:first-child{margin-top:0;}
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom h1,
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom h2,
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom h3{font-size:1.05rem;font-weight:700;margin:1em 0 .5em;color:#68202d;}
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom h1:first-child,
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom h2:first-child,
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom h3:first-child{margin-top:0;}
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom p{margin:0 0 .85em;}
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom ul,
-                #course-enroll-modal-admin-preview .course-program-reg-modal__body--custom ol{margin:.5em 0 1em 1.25em;}
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom{
+                    font-size:.88rem;line-height:1.55;color:#333;text-align:left;max-width:100%;
+                }
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom > h1:first-child,
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom > h2:first-child,
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom > h3:first-child{
+                    text-align:center;font-size:1.15rem;font-weight:700;margin:0 0 12px;
+                    color:#1a1a1a;letter-spacing:.02em;line-height:1.3;
+                }
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom > h2:first-child + p,
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom > h3:first-child + p{
+                    text-align:center;font-weight:600;color:#444;margin:0 0 20px;
+                }
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom .course-program-reg-modal__title:first-child{margin-top:0;}
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom h1:not(:first-child),
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom h2:not(:first-child),
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom h3:not(:first-child){
+                    text-align:left;font-size:.95rem;font-weight:700;margin:1em 0 .5em;color:#68202d;
+                }
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom p{margin:0 0 .85em;}
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom ul{
+                    list-style:disc outside!important;margin:.5em 0 1em!important;padding-left:1.35em!important;
+                }
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom ol{
+                    list-style:decimal outside!important;margin:.5em 0 1em!important;padding-left:1.35em!important;
+                }
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom li{
+                    display:list-item!important;margin:0 0 .4em!important;padding:0!important;
+                }
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom a{
+                    color:#2271b1!important;text-decoration:underline;
+                }
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom a:hover{color:#135e96!important;}
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom strong,
+                #course-enroll-modal-preview-body .course-program-reg-modal__body--custom b{font-weight:700;}
                 #course-enroll-modal-admin-preview .course-program-reg-modal__actions{margin:24px 0 0;text-align:center;}
                 #course-enroll-modal-admin-preview .course-program-reg-modal__cta{
                     display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;
