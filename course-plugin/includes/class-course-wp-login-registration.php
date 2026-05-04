@@ -353,25 +353,12 @@ class Course_WP_Login_Registration {
         $message .= __('Для получения доступа к виртуальному классу подтвердите ваш email, перейдя по ссылке:', 'course-plugin') . "\r\n";
         $message .= $confirm_url . "\r\n\r\n";
 
-        $message .= __('После подтверждения вы сможете использовать эти данные для входа на:', 'course-plugin') . "\r\n";
-        $message .= sprintf(__('- Сайт МБС: %s', 'course-plugin'), wp_login_url()) . "\r\n";
-        $message .= sprintf(__('- Виртуальный класс МБС: %s', 'course-plugin'), 'https://class.mbs.ru/login/index.php') . "\r\n";
-
-        $moodle_url  = get_option('moodle_sync_url', '');
-        $laravel_url = get_option('laravel_api_url', '');
-        if (!empty($moodle_url)) {
-            $moodle_login = rtrim($moodle_url, '/') . '/login/index.php';
-            if ($moodle_login !== 'https://class.mbs.ru/login/index.php') {
-                $message .= sprintf(__('- Moodle: %s', 'course-plugin'), $moodle_login) . "\r\n";
-            }
-        }
-        if (!empty($laravel_url)) {
-            $message .= sprintf(__('- Система управления: %s', 'course-plugin'), rtrim($laravel_url, '/') . '/login') . "\r\n";
-        }
-        $message .= "\r\n";
+        $message .= __('После подтверждения вы сможете использовать эти данные для входа на:', 'course-plugin') . "\r\n\r\n";
+        $message .= '    ' . __('Сайт МБС:', 'course-plugin') . ' https://mbs.ru/wp-login.php' . "\r\n\r\n";
+        $message .= '    ' . __('Виртуальный класс МБС:', 'course-plugin') . ' https://class.russianseminary.org/login/index.php' . "\r\n\r\n\r\n";
 
         $message .= __('С уважением,', 'course-plugin') . "\r\n";
-        $message .= sprintf(__('Команда %s', 'course-plugin'), $blogname) . "\r\n";
+        $message .= __('Московская богословская семинария', 'course-plugin') . "\r\n";
 
         $wp_new_user_notification_email['subject'] = sprintf(__('[%s] Подтвердите ваш email', 'course-plugin'), $blogname);
         $wp_new_user_notification_email['message'] = $message;

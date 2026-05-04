@@ -760,11 +760,6 @@ class Course_Registration {
             $subject = sprintf(__('[%s] Добро пожаловать!', 'course-plugin'), $blogname);
         }
         
-        // Проверяем, синхронизирован ли пользователь с Moodle
-        $moodle_user_id = get_user_meta($user_id, 'moodle_user_id', true);
-        $moodle_url = get_option('moodle_sync_url', '');
-        $laravel_url = get_option('laravel_api_url', '');
-        
         // Формируем текст письма
         $message = sprintf(__('Здравствуйте, %s!', 'course-plugin'), $user->display_name) . "\r\n\r\n";
         
@@ -780,22 +775,12 @@ class Course_Registration {
         $message .= sprintf(__('Email: %s', 'course-plugin'), $user->user_email) . "\r\n";
         $message .= sprintf(__('Пароль: %s', 'course-plugin'), $password) . "\r\n\r\n";
         
-        $message .= __('Вы можете использовать эти данные для входа на:', 'course-plugin') . "\r\n";
-        $message .= sprintf(__('- Сайт МБС: %s', 'course-plugin'), wp_login_url()) . "\r\n";
-        $message .= sprintf(__('- Виртуальный класс МБС: %s', 'course-plugin'), 'https://class.mbs.ru/login/index.php') . "\r\n";
-        if ($moodle_user_id && !empty($moodle_url)) {
-            $moodle_login = rtrim($moodle_url, '/') . '/login/index.php';
-            if ($moodle_login !== 'https://class.mbs.ru/login/index.php') {
-                $message .= sprintf(__('- Moodle: %s', 'course-plugin'), $moodle_login) . "\r\n";
-            }
-        }
-        if (!empty($laravel_url)) {
-            $message .= sprintf(__('- Система управления: %s', 'course-plugin'), rtrim($laravel_url, '/') . '/login') . "\r\n";
-        }
-        $message .= "\r\n";
+        $message .= __('Вы можете использовать эти данные для входа на:', 'course-plugin') . "\r\n\r\n";
+        $message .= '    ' . __('Сайт МБС:', 'course-plugin') . ' https://mbs.ru/wp-login.php' . "\r\n\r\n";
+        $message .= '    ' . __('Виртуальный класс МБС:', 'course-plugin') . ' https://class.russianseminary.org/login/index.php' . "\r\n\r\n\r\n";
         
         $message .= __('С уважением,', 'course-plugin') . "\r\n";
-        $message .= sprintf(__('Команда %s', 'course-plugin'), $blogname) . "\r\n";
+        $message .= __('Московская богословская семинария', 'course-plugin') . "\r\n";
         
         $from_email = 'mbs@russianseminary.org';
         $headers = array(
