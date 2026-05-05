@@ -869,12 +869,40 @@ class Course_Anti_Bot {
                         challengeContainer.appendChild(refreshButton);
                     }
                     
-                    // Вставляем перед кнопкой отправки
-                    var submitButton = form.querySelector('input[type="submit"]');
-                    if (submitButton && submitButton.parentNode) {
+                    // Вставляем капчу сразу перед абзацем с кнопкой (не внутрь <p.submit>),
+                    // затем поднимаем блок согласия на ПДн прямо перед капчей: … → согласие → капча → «Регистрация».
+                    var submitPara = form.querySelector('p.submit');
+                    var submitButton = form.querySelector('#wp-submit') || form.querySelector('input[type="submit"]');
+                    if (submitPara && form === submitPara.parentNode) {
+                        form.insertBefore(challengeContainer, submitPara);
+                    } else if (submitButton && submitButton.parentNode) {
                         submitButton.parentNode.insertBefore(challengeContainer, submitButton);
                     } else {
                         form.appendChild(challengeContainer);
+                    }
+
+                    var consentBlock = form.querySelector('.course-privacy-consent');
+                    if (consentBlock) {
+                        if (challengeContainer.parentNode === form) {
+                            form.insertBefore(consentBlock, challengeContainer);
+                        } else if (challengeContainer.parentNode) {
+                            challengeContainer.parentNode.insertBefore(consentBlock, challengeContainer);
+                        }
+                    }
+                }
+
+                var chNode = document.getElementById('challenge_container');
+                var consentEl = form.querySelector('.course-privacy-consent');
+                if (consentEl && chNode) {
+                    if (form === chNode.parentNode) {
+                        form.insertBefore(consentEl, chNode);
+                    } else if (chNode.parentNode) {
+                        chNode.parentNode.insertBefore(consentEl, chNode);
+                    }
+                } else if (consentEl && !chNode) {
+                    var sb = form.querySelector('#wp-submit') || form.querySelector('input[type="submit"]');
+                    if (sb && sb.parentNode) {
+                        sb.parentNode.insertBefore(consentEl, sb);
                     }
                 }
                 
