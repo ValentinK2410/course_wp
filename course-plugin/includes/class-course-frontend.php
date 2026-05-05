@@ -439,16 +439,39 @@ class Course_Frontend {
             // Собираем все meta_query в один массив
             $meta_query = array();
             
-            // Фильтр по месту прохождения (мета-поле)
-            if (isset($_GET['location']) && !empty($_GET['location'])) {
+            // Фильтр по месту: конкретные локации из боковой панели или быстрый фильтр (онлайн / Москва / регионы)
+            $location_scope = isset($_GET['location_scope']) ? sanitize_text_field(wp_unslash($_GET['location_scope'])) : '';
+            $allowed_location_scopes = array('online', 'moscow', 'regions');
+            $has_granular_location = isset($_GET['location']) && !empty($_GET['location']);
+
+            if ($has_granular_location) {
                 $locations = is_array($_GET['location']) ? $_GET['location'] : array($_GET['location']);
                 $locations = array_map('sanitize_text_field', $locations);
-                
                 $meta_query[] = array(
                     'key'     => '_course_location',
                     'value'   => $locations,
                     'compare' => 'IN',
                 );
+            } elseif ($location_scope && in_array($location_scope, $allowed_location_scopes, true)) {
+                if ($location_scope === 'online') {
+                    $meta_query[] = array(
+                        'key'     => '_course_location',
+                        'value'   => array('online', 'zoom'),
+                        'compare' => 'IN',
+                    );
+                } elseif ($location_scope === 'moscow') {
+                    $meta_query[] = array(
+                        'key'     => '_course_location',
+                        'value'   => 'moscow',
+                        'compare' => '=',
+                    );
+                } elseif ($location_scope === 'regions') {
+                    $meta_query[] = array(
+                        'key'     => '_course_location',
+                        'value'   => array('online', 'zoom', 'moscow'),
+                        'compare' => 'NOT IN',
+                    );
+                }
             }
             
             // Фильтр по дате начала курса

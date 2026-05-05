@@ -48,6 +48,24 @@ $posts_per_page = isset($wp_query->query_vars['posts_per_page']) ? $wp_query->qu
 $found_posts = $wp_query->found_posts;
 $showing_from = ($paged - 1) * $posts_per_page + 1;
 $showing_to = min($paged * $posts_per_page, $found_posts);
+
+$course_loc_scope_active = isset($_GET['location_scope']) ? sanitize_text_field(wp_unslash($_GET['location_scope'])) : '';
+if (!in_array($course_loc_scope_active, array('online', 'moscow', 'regions'), true)) {
+    $course_loc_scope_active = '';
+}
+$course_scope_applies = ($course_loc_scope_active !== '' && empty($_GET['location']));
+$course_archive_scope_query = wp_unslash($_GET);
+unset($course_archive_scope_query['paged'], $course_archive_scope_query['location']);
+$course_archive_base_url = get_post_type_archive_link('course');
+$course_archive_scope_url = function ($scope) use ($course_archive_scope_query, $course_archive_base_url) {
+    $q = $course_archive_scope_query;
+    if ($scope === '') {
+        unset($q['location_scope']);
+    } else {
+        $q['location_scope'] = $scope;
+    }
+    return esc_url(add_query_arg($q, $course_archive_base_url));
+};
 ?>
 
 <div class="premium-archive-wrapper">
@@ -111,15 +129,10 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
             </div>
             
             <form method="get" class="premium-filters-form" id="course-filters-form">
-                <!-- Поиск -->
-                <div class="filter-search-box filter-search-box--with-suggest">
-                    <svg class="search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
-                        <path d="M13 13L16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    <input type="text" class="filter-search-input" id="course-archive-search-input" placeholder="<?php _e('Поиск курса...', 'course-plugin'); ?>" name="search" value="<?php echo isset($_GET['search']) ? esc_attr($_GET['search']) : ''; ?>" autocomplete="off" aria-autocomplete="list" aria-controls="course-archive-search-suggest" style="padding-left:3.5rem!important;box-sizing:border-box!important;">
-                    <div class="archive-search-suggest" id="course-archive-search-suggest" hidden></div>
-                </div>
+                <input type="hidden" name="search" id="course-archive-search-hidden" value="<?php echo isset($_GET['search']) ? esc_attr(wp_unslash($_GET['search'])) : ''; ?>">
+                <?php if ($course_scope_applies) : ?>
+                    <input type="hidden" name="location_scope" value="<?php echo esc_attr($course_loc_scope_active); ?>">
+                <?php endif; ?>
                 
                 <!-- Преподаватель -->
                 <div class="filter-group filter-group-select">
@@ -481,10 +494,27 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                     </div>
                 </div>
             </div>
+
+            <div class="course-quick-filters-bar">
+                <div class="course-quick-filters-bar__scopes" role="group" aria-label="<?php echo esc_attr(__('Быстрый выбор места прохождения', 'course-plugin')); ?>">
+                    <a href="<?php echo $course_archive_scope_url('online'); ?>" class="course-scope-btn <?php echo ($course_scope_applies && $course_loc_scope_active === 'online') ? 'is-active' : ''; ?>"><?php _e('ОНЛАЙН', 'course-plugin'); ?></a>
+                    <a href="<?php echo $course_archive_scope_url('moscow'); ?>" class="course-scope-btn <?php echo ($course_scope_applies && $course_loc_scope_active === 'moscow') ? 'is-active' : ''; ?>"><?php _e('МОСКВА', 'course-plugin'); ?></a>
+                    <a href="<?php echo $course_archive_scope_url('regions'); ?>" class="course-scope-btn <?php echo ($course_scope_applies && $course_loc_scope_active === 'regions') ? 'is-active' : ''; ?>"><?php _e('РЕГИОНЫ', 'course-plugin'); ?></a>
+                </div>
+                <div class="filter-search-box filter-search-box--with-suggest course-quick-filters-bar__search">
+                    <svg class="search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/>
+                        <path d="M13 13L16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <label class="screen-reader-text" for="course-archive-search-input"><?php _e('Поиск курса', 'course-plugin'); ?></label>
+                    <input type="text" class="filter-search-input" id="course-archive-search-input" placeholder="<?php esc_attr_e('Поиск курса...', 'course-plugin'); ?>" value="<?php echo isset($_GET['search']) ? esc_attr(wp_unslash($_GET['search'])) : ''; ?>" autocomplete="off" aria-autocomplete="list" aria-controls="course-archive-search-suggest" style="padding-left:3.5rem!important;box-sizing:border-box!important;">
+                    <div class="archive-search-suggest" id="course-archive-search-suggest" hidden></div>
+                </div>
+            </div>
             
             <!-- Активные фильтры -->
             <?php
-            $has_active_filters = !empty($_GET['teacher']) || !empty($_GET['level']) || !empty($_GET['specialization']) || !empty($_GET['topic']) || !empty($_GET['search']) || !empty($_GET['location']) || !empty($_GET['date_from']) || !empty($_GET['date_to']) || !empty($_GET['price']);
+            $has_active_filters = !empty($_GET['teacher']) || !empty($_GET['level']) || !empty($_GET['specialization']) || !empty($_GET['topic']) || !empty($_GET['search']) || !empty($_GET['location']) || $course_scope_applies || !empty($_GET['date_from']) || !empty($_GET['date_to']) || !empty($_GET['price']);
             if ($has_active_filters) :
             ?>
             <div class="active-filters">
@@ -492,8 +522,21 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                 <div class="active-filters-list">
                     <?php if (!empty($_GET['search'])) : ?>
                         <span class="active-filter-tag">
-                            <?php echo esc_html($_GET['search']); ?>
+                            <?php echo esc_html(wp_unslash($_GET['search'])); ?>
                             <button type="button" class="remove-filter" data-filter="search">&times;</button>
+                        </span>
+                    <?php endif; ?>
+
+                    <?php if ($course_scope_applies && $course_loc_scope_active !== '') : ?>
+                        <span class="active-filter-tag">
+                            <?php
+                            echo esc_html(
+                                $course_loc_scope_active === 'online'
+                                    ? __('Онлайн', 'course-plugin')
+                                    : ($course_loc_scope_active === 'moscow' ? __('Москва', 'course-plugin') : __('Регионы', 'course-plugin'))
+                            );
+                            ?>
+                            <button type="button" class="remove-filter" data-filter="location_scope">&times;</button>
                         </span>
                     <?php endif; ?>
                     
@@ -910,6 +953,14 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var searchInput = document.getElementById('course-archive-search-input');
+    var searchHidden = document.getElementById('course-archive-search-hidden');
+    if (searchInput && searchHidden) {
+        searchInput.addEventListener('input', function() {
+            searchHidden.value = searchInput.value;
+        });
+    }
+
     // Переключение групп фильтров
     document.querySelectorAll('.filter-group-toggle').forEach(function(toggle) {
         toggle.addEventListener('click', function() {
@@ -958,22 +1009,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Автоматическая отправка формы при изменении сортировки
-    var sortSelect = document.getElementById('course-sort-select');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', function() {
-            var form = document.getElementById('course-filters-form');
-            if (form) {
-                var input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'sort';
-                input.value = this.value;
-                form.appendChild(input);
-                form.submit();
-            }
-        });
-    }
-    
     // Удаление отдельных фильтров
     document.querySelectorAll('.remove-filter').forEach(function(btn) {
         btn.addEventListener('click', function() {
@@ -985,6 +1020,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Удаляем оба параметра даты
                 url.searchParams.delete('date_from');
                 url.searchParams.delete('date_to');
+            } else if (filter === 'location_scope') {
+                url.searchParams.delete('location_scope');
             } else if (value) {
                 // Для фильтров с массивом значений (location[], level[] и т.д.)
                 var params = url.searchParams.getAll(filter + '[]');
