@@ -500,16 +500,55 @@ class Course_SSO {
     }
     
     /**
+     * В URL из писем/мессенджеров часто попадает HTML-сущность &amp; вместо разделителя &.
+     * Тогда PHP видит параметр amp;token, а не token — и обработчик отвечает «Token required».
+     *
+     * @return void
+     */
+    private static function merge_sso_login_query_if_amp_entities() {
+        if (empty($_SERVER['QUERY_STRING']) || !is_string($_SERVER['QUERY_STRING'])) {
+            return;
+        }
+        $qs = wp_unslash($_SERVER['QUERY_STRING']);
+        if (strpos($qs, '&amp;') === false && strpos($qs, '&#038;') === false) {
+            return;
+        }
+        $qs = str_replace(array('&amp;', '&#038;'), '&', $qs);
+        parse_str($qs, $parsed);
+        if (empty($parsed) || !is_array($parsed)) {
+            return;
+        }
+        foreach (array('token', 'moodle_api_key', 'redirect_to', 'redirect') as $key) {
+            if (!array_key_exists($key, $parsed)) {
+                continue;
+            }
+            $val = $parsed[$key];
+            if (!is_scalar($val)) {
+                continue;
+            }
+            $_GET[$key] = $val;
+            $_REQUEST[$key] = $val;
+        }
+    }
+
+    /**
      * AJAX обработчик для входа из Moodle в WordPress (обратный SSO)
      * 
      * Использование:
      * https://site.dekan.pro/wp-admin/admin-ajax.php?action=sso_login_from_moodle&token=TOKEN&moodle_api_key=API_KEY
      */
     public function ajax_sso_login_from_moodle() {
-        // Получаем токен из запроса
-        $token = isset($_REQUEST['token']) ? sanitize_text_field($_REQUEST['token']) : '';
-        
-        if (empty($token)) {
+        self::merge_sso_login_query_if_amp_entities();
+
+        $token = '';
+        if (isset($_REQUEST['token'])) {
+            $token = trim((string) wp_unslash($_REQUEST['token']));
+        }
+        if ($token === '' && isset($_REQUEST['amp;token'])) {
+            $token = trim((string) wp_unslash($_REQUEST['amp;token']));
+        }
+
+        if ($token === '') {
             wp_die('Token required', 'Bad Request', array('response' => 400));
         }
         
@@ -561,7 +600,13 @@ class Course_SSO {
         // Формат токена Moodle: base64(user_id:email:timestamp:hash)
         // Для этого формата требуется API ключ
         
-        $moodle_api_key = isset($_REQUEST['moodle_api_key']) ? trim($_REQUEST['moodle_api_key']) : '';
+        $moodle_api_key = '';
+        if (isset($_REQUEST['moodle_api_key'])) {
+            $moodle_api_key = trim((string) wp_unslash($_REQUEST['moodle_api_key']));
+        }
+        if ($moodle_api_key === '' && isset($_REQUEST['amp;moodle_api_key'])) {
+            $moodle_api_key = trim((string) wp_unslash($_REQUEST['amp;moodle_api_key']));
+        }
         $expected_key = get_option('moodle_sso_api_key', '');
         
         error_log('Course SSO: Токен WordPress формата не подошел, проверяем Moodle формат. Переданный ключ (первые 20 символов): ' . (!empty($moodle_api_key) ? substr($moodle_api_key, 0, 20) . '...' : 'пусто'));
