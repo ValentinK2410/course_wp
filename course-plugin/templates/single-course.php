@@ -160,6 +160,25 @@ while (have_posts()) : the_post();
     $course_seminary_new_url = get_post_meta(get_the_ID(), '_course_seminary_new_url', true); // Для новых студентов
     $course_seminary_student_url = get_post_meta(get_the_ID(), '_course_seminary_student_url', true); // Для студентов семинарии
     $course_lite_course_url = get_post_meta(get_the_ID(), '_course_lite_course_url', true); // Лайт версия курса
+
+    $course_post_id_enroll = (int) get_the_ID();
+    $course_show_enroll_intro_modal = class_exists('Course_Enroll_Gate') && ! is_user_logged_in()
+        && ($course_seminary_new_url || $course_seminary_student_url || $course_lite_course_url);
+
+    $course_enroll_registration_url = function ($target_url) use ($course_post_id_enroll) {
+        if (! class_exists('Course_Enroll_Gate') || empty($target_url)) {
+            return '';
+        }
+        $gate = Course_Enroll_Gate::get_enroll_url($target_url, 0, $course_post_id_enroll);
+
+        return Course_Enroll_Gate::get_registration_url_with_redirect($gate);
+    };
+
+    $course_modal_default_reg_url = '';
+    if ($course_show_enroll_intro_modal) {
+        $course_first_enroll_target = $course_seminary_new_url ?: $course_seminary_student_url ?: $course_lite_course_url;
+        $course_modal_default_reg_url = $course_enroll_registration_url($course_first_enroll_target);
+    }
     
     // ============================================
     // ВЫЧИСЛЕНИЕ СКИДКИ
@@ -392,12 +411,22 @@ while (have_posts()) : the_post();
                 $hero_enroll_url = $course_seminary_new_url ?: $course_seminary_student_url ?: $course_lite_course_url;
                 if ($hero_enroll_url) :
                     $hero_enroll_href = class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($hero_enroll_url, 0, get_the_ID()) : $hero_enroll_url;
+                    $hero_reg_url = $course_show_enroll_intro_modal ? $course_enroll_registration_url($hero_enroll_url) : '';
+                    if ($course_show_enroll_intro_modal && $hero_reg_url) :
                 ?>
+                    <button type="button" class="hero-enroll-btn action-btn action-btn-secondary js-course-program-enroll-modal-open" aria-haspopup="dialog" aria-controls="course-program-registration-modal" data-course-reg-url="<?php echo esc_attr($hero_reg_url); ?>">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <?php echo esc_html($btn_enroll_text); ?>
+                    </button>
+                <?php else : ?>
                     <a href="<?php echo esc_url($hero_enroll_href); ?>" target="_blank" rel="noopener" class="hero-enroll-btn action-btn action-btn-secondary">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                         <?php echo esc_html($btn_enroll_text); ?>
                     </a>
-                <?php endif; ?>
+                <?php
+                    endif;
+                endif;
+                ?>
             </div>
         </div>
     </header>
@@ -786,24 +815,57 @@ while (have_posts()) : the_post();
                     <div class="sidebar-card action-card">
                         <div class="action-buttons">
                             <?php if ($course_seminary_new_url) : ?>
-                                <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($course_seminary_new_url, 0, get_the_ID()) : $course_seminary_new_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-primary">
+                                <?php
+                                $sb_new_href = class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($course_seminary_new_url, 0, get_the_ID()) : $course_seminary_new_url;
+                                $sb_new_reg = $course_show_enroll_intro_modal ? $course_enroll_registration_url($course_seminary_new_url) : '';
+                                if ($course_show_enroll_intro_modal && $sb_new_reg) :
+                                ?>
+                                <button type="button" class="action-btn action-btn-primary js-course-program-enroll-modal-open" aria-haspopup="dialog" aria-controls="course-program-registration-modal" data-course-reg-url="<?php echo esc_attr($sb_new_reg); ?>">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                    <?php echo esc_html($btn_enroll_text); ?>
+                                </button>
+                                <?php else : ?>
+                                <a href="<?php echo esc_url($sb_new_href); ?>" target="_blank" rel="noopener" class="action-btn action-btn-primary">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/><path d="M10 6V14M6 10H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                                     <?php echo esc_html($btn_enroll_text); ?>
                                 </a>
+                                <?php endif; ?>
                             <?php endif; ?>
                             
                             <?php if ($course_seminary_student_url) : ?>
-                                <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($course_seminary_student_url, 0, get_the_ID()) : $course_seminary_student_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-secondary">
+                                <?php
+                                $sb_st_href = class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($course_seminary_student_url, 0, get_the_ID()) : $course_seminary_student_url;
+                                $sb_st_reg = $course_show_enroll_intro_modal ? $course_enroll_registration_url($course_seminary_student_url) : '';
+                                if ($course_show_enroll_intro_modal && $sb_st_reg) :
+                                ?>
+                                <button type="button" class="action-btn action-btn-secondary js-course-program-enroll-modal-open" aria-haspopup="dialog" aria-controls="course-program-registration-modal" data-course-reg-url="<?php echo esc_attr($sb_st_reg); ?>">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 18C3 14.134 6.134 11 10 11C13.866 11 17 14.134 17 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                    <?php echo esc_html($btn_student_text); ?>
+                                </button>
+                                <?php else : ?>
+                                <a href="<?php echo esc_url($sb_st_href); ?>" target="_blank" rel="noopener" class="action-btn action-btn-secondary">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 18C3 14.134 6.134 11 10 11C13.866 11 17 14.134 17 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                                     <?php echo esc_html($btn_student_text); ?>
                                 </a>
+                                <?php endif; ?>
                             <?php endif; ?>
                             
                             <?php if ($course_lite_course_url) : ?>
-                                <a href="<?php echo esc_url(class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($course_lite_course_url, 0, get_the_ID()) : $course_lite_course_url); ?>" target="_blank" rel="noopener" class="action-btn action-btn-outline">
+                                <?php
+                                $sb_lt_href = class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($course_lite_course_url, 0, get_the_ID()) : $course_lite_course_url;
+                                $sb_lt_reg = $course_show_enroll_intro_modal ? $course_enroll_registration_url($course_lite_course_url) : '';
+                                if ($course_show_enroll_intro_modal && $sb_lt_reg) :
+                                ?>
+                                <button type="button" class="action-btn action-btn-outline js-course-program-enroll-modal-open" aria-haspopup="dialog" aria-controls="course-program-registration-modal" data-course-reg-url="<?php echo esc_attr($sb_lt_reg); ?>">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10L10 3L17 10M5 8V16H15V8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    <?php echo esc_html($btn_lite_text); ?>
+                                </button>
+                                <?php else : ?>
+                                <a href="<?php echo esc_url($sb_lt_href); ?>" target="_blank" rel="noopener" class="action-btn action-btn-outline">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 10L10 3L17 10M5 8V16H15V8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     <?php echo esc_html($btn_lite_text); ?>
                                 </a>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -947,12 +1009,22 @@ while (have_posts()) : the_post();
             $cta_btn_url = $course_seminary_new_url ?: $course_seminary_student_url ?: $course_lite_course_url;
             if ($cta_btn_url) :
                 $cta_btn_href = class_exists('Course_Enroll_Gate') ? Course_Enroll_Gate::get_enroll_url($cta_btn_url, 0, get_the_ID()) : $cta_btn_url;
+                $cta_reg_url = $course_show_enroll_intro_modal ? $course_enroll_registration_url($cta_btn_url) : '';
+                if ($course_show_enroll_intro_modal && $cta_reg_url) :
             ?>
+                <button type="button" class="cta-btn js-course-program-enroll-modal-open" aria-haspopup="dialog" aria-controls="course-program-registration-modal" data-course-reg-url="<?php echo esc_attr($cta_reg_url); ?>">
+                    <?php echo esc_html($cta_button_text); ?>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            <?php else : ?>
                 <a href="<?php echo esc_url($cta_btn_href); ?>" target="_blank" rel="noopener" class="cta-btn">
                     <?php echo esc_html($cta_button_text); ?>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>
-            <?php endif; ?>
+            <?php
+                endif;
+            endif;
+            ?>
         </div>
         <div class="cta-decoration">
             <svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="80" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="100" cy="100" r="60" stroke="rgba(255,255,255,0.1)" stroke-width="2"/><circle cx="100" cy="100" r="40" stroke="rgba(255,255,255,0.1)" stroke-width="2"/></svg>
@@ -960,6 +1032,134 @@ while (have_posts()) : the_post();
     </section>
     <?php endif; ?>
 </div>
+
+    <?php if (!empty($course_show_enroll_intro_modal) && !empty($course_modal_default_reg_url)) :
+        $course_enroll_modal_custom = class_exists('Course_Enroll_Modal_Admin') && Course_Enroll_Modal_Admin::uses_custom_html();
+        $course_enroll_modal_aria = $course_enroll_modal_custom
+            ? ' aria-label="' . esc_attr__('Информация о записи на курс', 'course-plugin') . '"'
+            : ' aria-labelledby="course-program-reg-modal-title"';
+        $course_modal_cta_label = class_exists('Course_Enroll_Modal_Admin')
+            ? Course_Enroll_Modal_Admin::get_cta_label()
+            : __('Приступить к регистрации', 'course-plugin');
+        ?>
+    <div id="course-program-registration-modal" class="course-program-reg-modal" hidden role="dialog" aria-modal="true"<?php echo $course_enroll_modal_aria; ?>>
+        <div class="course-program-reg-modal__overlay js-course-program-enroll-modal-close" tabindex="-1"></div>
+        <div class="course-program-reg-modal__panel">
+            <button type="button" class="course-program-reg-modal__close js-course-program-enroll-modal-close" aria-label="<?php echo esc_attr__('Закрыть', 'course-plugin'); ?>">&times;</button>
+            <?php if ($course_enroll_modal_custom) : ?>
+            <div class="course-program-reg-modal__body course-program-reg-modal__body--custom">
+                <?php echo wp_kses_post(Course_Enroll_Modal_Admin::get_custom_html()); ?>
+            </div>
+            <?php else : ?>
+            <?php
+            if (class_exists('Course_Enroll_Modal_Admin')) {
+                echo wp_kses_post(Course_Enroll_Modal_Admin::get_default_modal_inner_html());
+            } else {
+                ?>
+            <h2 id="course-program-reg-modal-title" class="course-program-reg-modal__title"><?php esc_html_e('ПРОЦЕСС РЕГИСТРАЦИИ НА ПРОГРАММУ', 'course-plugin'); ?></h2>
+            <p class="course-program-reg-modal__lead"><?php esc_html_e('Процесс включает в себя два шага', 'course-plugin'); ?></p>
+
+            <div class="course-program-reg-modal__step">
+                <h3 class="course-program-reg-modal__step-title"><?php esc_html_e('ШАГ 1. Вход в аккаунт', 'course-plugin'); ?></h3>
+                <p class="course-program-reg-modal__text"><?php esc_html_e('Первый шаг включает в себя создание аккаунта на учебной платформе семинарии или вход в аккаунт, если он у вас уже есть. При создании аккаунта вам нужно будет ввести ФИО и адрес электронной почты. На указанный вами адрес электронной почты вам придёт ссылка, нажав на которую вы сможете перейти к следующему шагу регистрации.', 'course-plugin'); ?></p>
+            </div>
+
+            <div class="course-program-reg-modal__step">
+                <h3 class="course-program-reg-modal__step-title"><?php esc_html_e('ШАГ 2. Получение доступа на платформу и предоставление необходимых данных', 'course-plugin'); ?></h3>
+                <p class="course-program-reg-modal__text"><?php esc_html_e('Когда вы перейдёте по ссылке, которая придёт вам на email, вы попадёте в раздел зачисления на программу, где вам нужно будет ввести необходимые данные (рекомендацию и т. п.). У вас будет время, чтобы всё это сделать до вступительных экзаменов.', 'course-plugin'); ?></p>
+            </div>
+                <?php
+            }
+            ?>
+            <?php endif; ?>
+
+            <p class="course-program-reg-modal__actions">
+                <a href="<?php echo esc_url($course_modal_default_reg_url); ?>" class="course-program-reg-modal__cta">
+                    <?php echo esc_html($course_modal_cta_label); ?>
+                </a>
+            </p>
+        </div>
+    </div>
+    <style>
+        .course-program-reg-modal[hidden]{display:none!important;}
+        .course-program-reg-modal.is-open{display:flex!important;position:fixed;inset:0;z-index:100000;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;}
+        .course-program-reg-modal__overlay{position:absolute;inset:0;background:rgba(15,15,20,.72);backdrop-filter:blur(4px);}
+        .course-program-reg-modal__panel{position:relative;max-width:560px;width:100%;max-height:90vh;overflow:auto;background:#fff;color:#1a1a1a;border-radius:12px;padding:28px 24px 24px;box-shadow:0 24px 64px rgba(0,0,0,.35);}
+        .course-program-reg-modal__close{position:absolute;top:12px;right:14px;border:0;background:transparent;font-size:28px;line-height:1;cursor:pointer;color:#666;padding:4px 8px;}
+        .course-program-reg-modal__close:hover{color:#111;}
+        .course-program-reg-modal__title{font-size:1.15rem;font-weight:700;margin:0 0 8px;letter-spacing:.02em;line-height:1.3;}
+        .course-program-reg-modal__lead{font-size:.95rem;color:#444;margin:0 0 20px;font-weight:600;}
+        .course-program-reg-modal__step{margin-bottom:18px;}
+        .course-program-reg-modal__step-title{font-size:.9rem;font-weight:700;margin:0 0 8px;color:#68202d;}
+        .course-program-reg-modal__text{font-size:.88rem;line-height:1.55;margin:0;color:#333;}
+        #course-program-registration-modal .course-program-reg-modal__body--custom{
+            font-size:.88rem;line-height:1.55;color:#333;text-align:left;
+            max-width:100%;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom > h1:first-child,
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom > h2:first-child,
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom > h3:first-child{
+            text-align:center;font-size:1.15rem;font-weight:700;margin:0 0 12px;
+            color:#1a1a1a;letter-spacing:.02em;line-height:1.3;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom > h2:first-child + p,
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom > h3:first-child + p{
+            text-align:center;font-weight:600;color:#444;margin:0 0 20px;
+        }
+        #course-program-registration-modal .course-program-reg-modal__body--custom .course-program-reg-modal__title:first-child{margin-top:0;}
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom h1:not(:first-child),
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom h2:not(:first-child),
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom h3:not(:first-child){
+            text-align:left;font-size:.95rem;font-weight:700;margin:1em 0 .5em;color:#68202d;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom p{margin:0 0 .85em;}
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom ul{
+            list-style:disc outside!important;margin:.5em 0 1em!important;padding-left:1.35em!important;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom ol{
+            list-style:decimal outside!important;margin:.5em 0 1em!important;padding-left:1.35em!important;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom li{
+            display:list-item!important;margin:0 0 .4em!important;padding:0!important;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom a{
+            color:#2271b1!important;text-decoration:underline;
+        }
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom a:hover{color:#135e96!important;}
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom strong,
+        #course-program-registration-modal .course-program-reg-modal__panel .course-program-reg-modal__body--custom b{font-weight:700;}
+        .course-program-reg-modal__actions{margin:24px 0 0;text-align:center;}
+        .course-program-reg-modal__cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,#68202d,#a13d4c);color:#fff!important;text-decoration:none;border-radius:8px;font-weight:600;font-size:.95rem;transition:opacity .2s,transform .15s;}
+        .course-program-reg-modal__cta:hover{opacity:.95;transform:translateY(-1px);color:#fff!important;}
+        body.course-program-reg-modal-open{overflow:hidden;}
+        .premium-single-course button.action-btn,.premium-single-course button.cta-btn,.premium-single-course button.hero-enroll-btn{font:inherit;cursor:pointer;}
+    </style>
+    <script>
+    (function(){
+        var modal = document.getElementById('course-program-registration-modal');
+        if (!modal) return;
+        function openModal(){ modal.hidden = false; modal.classList.add('is-open'); document.body.classList.add('course-program-reg-modal-open'); }
+        function closeModal(){ modal.classList.remove('is-open'); modal.hidden = true; document.body.classList.remove('course-program-reg-modal-open'); }
+        document.querySelectorAll('.js-course-program-enroll-modal-open').forEach(function(btn){
+            btn.addEventListener('click', function(e){
+                e.preventDefault();
+                var cta = modal.querySelector('.course-program-reg-modal__cta');
+                var regUrl = btn.getAttribute('data-course-reg-url');
+                if (cta && regUrl) {
+                    cta.setAttribute('href', regUrl);
+                    cta.removeAttribute('target');
+                    cta.removeAttribute('rel');
+                }
+                openModal();
+            });
+        });
+        modal.querySelectorAll('.js-course-program-enroll-modal-close').forEach(function(el){
+            el.addEventListener('click', function(){ closeModal(); });
+        });
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal(); });
+    })();
+    </script>
+    <?php endif; ?>
 
 <?php
 // Завершаем цикл WordPress
