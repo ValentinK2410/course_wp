@@ -294,30 +294,27 @@ class Course_Moodle_API {
         // Вызываем функцию Moodle API 'core_user_create_users'
         // Эта функция создает нового пользователя в Moodle
         
-        // Подготавливаем данные пользователя
-        // Moodle требует, чтобы lastname не был пустым и отличался от firstname
+        // Moodle требует непустой lastname; firstname и lastname не должны совпадать целиком.
+        // ВАЖНО: нельзя отклонять фамилию только потому, что она начинается с тех же букв, что имя
+        // (например «Иван» + «Иванов») — иначе в Moodle уезжает заплатка «User».
         $firstname = isset($user_data['firstname']) ? trim($user_data['firstname']) : '';
         $lastname = !empty($user_data['lastname']) && trim($user_data['lastname']) !== '' ? trim($user_data['lastname']) : '-';
-        
-        // ВАЖНО: Если firstname и lastname одинаковые ИЛИ lastname начинается с firstname,
-        // Moodle вернет ошибку "Invalid parameter value detected"
-        // Исправляем это, заменяя lastname на "User"
-        if (($firstname === $lastname || strpos($lastname, $firstname) === 0) && $lastname !== '-' && $lastname !== 'User') {
-            $lastname = 'User';
-            error_log('Moodle API: lastname совпадает или начинается с firstname (' . $firstname . ' -> ' . $lastname . '), заменяем lastname на "User"');
+
+        if (($lastname === '' || $lastname === '-') && $firstname !== '') {
+            $lastname = $this->moodle_disambiguate_lastname($firstname, $user_data);
+            error_log('Moodle API: Пустая фамилия, подставлен запасной lastname: ' . $lastname);
         }
-        
-        // Если lastname все еще пустой или равен дефису, и firstname не пустой, используем "User"
-        if (($lastname === '' || $lastname === '-') && !empty($firstname)) {
-            $lastname = 'User';
+
+        if ($firstname !== '' && $firstname === $lastname) {
+            $lastname = $this->moodle_disambiguate_lastname($firstname, $user_data);
+            error_log('Moodle API: Имя и фамилия совпадали, подставлен запасной lastname: ' . $lastname);
         }
-        
-        // Финальная проверка: если после всех проверок они все еще совпадают, меняем lastname
-        if ($firstname === $lastname && $lastname !== 'User') {
+
+        if ($firstname !== '' && $firstname === $lastname) {
             $lastname = 'User';
-            error_log('Moodle API: Финальная проверка - firstname и lastname все еще совпадают, заменяем lastname на "User"');
+            error_log('Moodle API: После запасных вариантов имя и фамилия всё ещё совпадают, lastname=User');
         }
-        
+
         // Формируем массив данных для создания пользователя
         $moodle_user_data = array(
             'username' => $user_data['username'],
@@ -674,6 +671,31 @@ class Course_Moodle_API {
             )
         );
     }
+
+    /**
+     * Запасная фамилия для Moodle, если нельзя передать пустую или полностью совпадающую с именем.
+     *
+     * @param string $firstname Имя.
+     * @param array  $user_data Ожидаются ключи username и/или email.
+     * @return string
+     */
+    private function moodle_disambiguate_lastname($firstname, array $user_data) {
+        $fn = mb_strtolower($firstname, 'UTF-8');
+        if (!empty($user_data['username'])) {
+            $u = trim((string) $user_data['username']);
+            if ($u !== '' && mb_strtolower($u, 'UTF-8') !== $fn) {
+                return $u;
+            }
+        }
+        if (!empty($user_data['email']) && is_string($user_data['email'])) {
+            $at = strpos($user_data['email'], '@');
+            if ($at > 0) {
+                $local = substr($user_data['email'], 0, $at);
+                if ($local !== '' && mb_strtolower($local, 'UTF-8') !== $fn) {
+                    return $local;
+                }
+            }
+        }
+        return 'User';
+    }
 }
-
-

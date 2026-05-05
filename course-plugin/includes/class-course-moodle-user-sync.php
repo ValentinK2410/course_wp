@@ -117,6 +117,29 @@ class Course_Moodle_User_Sync {
             'default' => ''
         ));
     }
+
+    /**
+     * Запасная фамилия для Moodle при пустой фамилии в WP или полном совпадении с именем.
+     *
+     * @param string  $firstname
+     * @param WP_User $user
+     * @return string
+     */
+    private function moodle_disambiguate_lastname_from_wp_user($firstname, $user) {
+        $fn = mb_strtolower($firstname, 'UTF-8');
+        $login = trim($user->user_login);
+        if ($login !== '' && mb_strtolower($login, 'UTF-8') !== $fn) {
+            return $login;
+        }
+        $email = $user->user_email;
+        if ($email && strpos($email, '@') > 0) {
+            $local = strstr($email, '@', true);
+            if ($local !== false && $local !== '' && mb_strtolower($local, 'UTF-8') !== $fn) {
+                return $local;
+            }
+        }
+        return 'User';
+    }
     
     /**
      * Публичный метод для синхронизации пользователя
@@ -437,28 +460,29 @@ class Course_Moodle_User_Sync {
         // Также важно: lastname должен отличаться от firstname
         $firstname = !empty($user->first_name) ? trim($user->first_name) : (!empty($user->display_name) ? trim($user->display_name) : $user->user_login);
         
-        // Определяем фамилию
+        // Определяем фамилию (реальное поле last_name из WordPress передаём как есть).
         if (!empty($user->last_name) && trim($user->last_name) !== '') {
             $lastname = trim($user->last_name);
         } else {
-            // Если фамилия пустая, используем логин или "User"
-            // ВАЖНО: lastname должен отличаться от firstname и не начинаться с него
-            if ($user->user_login !== $firstname && strpos($user->user_login, $firstname) !== 0) {
+            if (mb_strtolower($user->user_login, 'UTF-8') !== mb_strtolower($firstname, 'UTF-8')) {
                 $lastname = $user->user_login;
             } else {
-                // Если логин совпадает с именем или начинается с него, используем просто "User"
-                $lastname = 'User';
+                $lastname = $this->moodle_disambiguate_lastname_from_wp_user($firstname, $user);
             }
         }
-        
-        // ВАЖНО: Проверяем, что lastname не совпадает с firstname и не начинается с него
-        // Moodle может отклонить, если lastname начинается с firstname
-        if ($firstname === $lastname || strpos($lastname, $firstname) === 0) {
-            // Если lastname совпадает или начинается с firstname, заменяем на "User"
-            $lastname = 'User';
-            error_log('Moodle User Sync: lastname совпадает или начинается с firstname, заменяем на "User"');
+
+        // Только полное совпадение имени и фамилии — повод подставить отличный lastname.
+        // Проверку «фамилия начинается с имени» не делаем: ломает «Иван» / «Иванов» и т.п.
+        if ($firstname !== '' && $firstname === $lastname) {
+            $lastname = $this->moodle_disambiguate_lastname_from_wp_user($firstname, $user);
+            error_log('Moodle User Sync: Имя и фамилия совпадали, подставлен запасной lastname: ' . $lastname);
         }
-        
+
+        if ($firstname !== '' && $firstname === $lastname) {
+            $lastname = 'User';
+            error_log('Moodle User Sync: После запасных вариантов имя и фамилия всё ещё совпадают, lastname=User');
+        }
+
         // Проверяем, не занят ли username в Moodle
         // Если занят, используем email как username или добавляем суффикс
         // Также нормализуем username (строчные буквы, так как Moodle может быть чувствителен к регистру)
