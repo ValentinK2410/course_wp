@@ -894,6 +894,7 @@
 .active-filter-tag {
     display: inline-flex;
     align-items: center;
+    flex-wrap: nowrap;
     gap: 6px;
     padding: 6px 12px;
     background: var(--premium-white);
@@ -901,18 +902,27 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--premium-gray-800);
+    max-width: 100%;
 }
 
 .active-filter-tag .remove-filter {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    flex: 0 0 20px;
+    width: 20px;
+    min-width: 20px;
+    max-width: 20px;
+    height: 20px;
+    min-height: 20px;
+    padding: 0;
+    margin: 0;
+    margin-left: 2px;
     border: none;
+    box-sizing: border-box;
     background: var(--premium-gray-200);
     border-radius: 50%;
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1;
     color: var(--premium-gray-600);
     cursor: pointer;
