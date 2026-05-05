@@ -330,10 +330,10 @@ class Course_Meta_Boxes {
                 </td>
             </tr>
             
-            <!-- Поле "Количество недель" -->
+            <!-- Поле "Количество дней" (meta: _course_weeks) -->
             <tr>
                 <th>
-                    <label for="course_weeks"><?php _e('Количество недель', 'course-plugin'); ?></label>
+                    <label for="course_weeks"><?php _e('Количество дней', 'course-plugin'); ?></label>
                 </th>
                 <td>
                     <input type="number" id="course_weeks" name="course_weeks" value="<?php echo esc_attr($course_weeks); ?>" class="small-text" min="1" />
@@ -1061,7 +1061,7 @@ class Course_Meta_Boxes {
             <div class="section-content">
                 <p class="description"><?php _e('Выберите, какие поля показывать в карточке обзора:', 'course-plugin'); ?></p>
                 <label><input type="checkbox" name="course_show_field_language" value="1" <?php checked($show_field_language !== '0'); ?> /> <?php _e('Язык курса', 'course-plugin'); ?></label><br>
-                <label><input type="checkbox" name="course_show_field_weeks" value="1" <?php checked($show_field_weeks !== '0'); ?> /> <?php _e('Количество недель', 'course-plugin'); ?></label><br>
+                <label><input type="checkbox" name="course_show_field_weeks" value="1" <?php checked($show_field_weeks !== '0'); ?> /> <?php _e('Количество дней', 'course-plugin'); ?></label><br>
                 <label><input type="checkbox" name="course_show_field_credits" value="1" <?php checked($show_field_credits !== '0'); ?> /> <?php _e('Кредиты', 'course-plugin'); ?></label><br>
                 <label><input type="checkbox" name="course_show_field_hours" value="1" <?php checked($show_field_hours !== '0'); ?> /> <?php _e('Часов в неделю', 'course-plugin'); ?></label><br>
                 <label><input type="checkbox" name="course_show_field_certificate" value="1" <?php checked($show_field_certificate !== '0'); ?> /> <?php _e('Сертификат', 'course-plugin'); ?></label>
@@ -1553,7 +1553,7 @@ class Course_Meta_Boxes {
             'course_seminary_student_url', // Ссылка на кнопку "Курс на семинарском уровне (студент)"
             'course_lite_course_url',      // Ссылка на кнопку "Лайт курс"
             // Поля для сайдбара "Краткий обзор курса"
-            'course_weeks',               // Количество недель
+            'course_weeks',               // Количество дней (ключ _course_weeks)
             'course_credits',             // Кредиты
             'course_hours_per_week',      // Часов в неделю
             'course_language',            // Язык курса

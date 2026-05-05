@@ -666,7 +666,7 @@ while (have_posts()) : the_post();
                 <!-- ============================================
                      КАРТОЧКА "КРАТКИЙ ОБЗОР КУРСА"
                      ============================================
-                     Основная информация о курсе: язык, недели, кредиты, часы, сертификат
+                     Основная информация о курсе: язык, длительность в днях, кредиты, часы, сертификат
                      -->
                 <?php if ($show_sidebar) : ?>
                 <div class="sidebar-card overview-card">
@@ -698,7 +698,7 @@ while (have_posts()) : the_post();
                                     <span class="overview-icon">
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 7H18M6 1V4M14 1V4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                                     </span>
-                                    <span class="overview-label"><?php _e('Недель:', 'course-plugin'); ?></span>
+                                    <span class="overview-label"><?php _e('Дней:', 'course-plugin'); ?></span>
                                     <span class="overview-value"><?php echo esc_html($course_weeks); ?></span>
                                 </li>
                             <?php endif; ?>
