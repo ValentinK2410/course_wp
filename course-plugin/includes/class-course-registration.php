@@ -805,7 +805,7 @@ class Course_Registration {
         
         $message .= __('Вы можете использовать эти данные для входа на:', 'course-plugin') . "\r\n\r\n";
         $message .= '    ' . __('Сайт МБС:', 'course-plugin') . ' https://mbs.ru/wp-login.php' . "\r\n\r\n";
-        $message .= '    ' . __('Виртуальный класс МБС:', 'course-plugin') . ' https://class.russianseminary.org/login/index.php' . "\r\n\r\n\r\n";
+        $message .= '    ' . __('Виртуальный класс МБС:', 'course-plugin') . ' https://class.mbs.ru/login/' . "\r\n\r\n\r\n";
         
         $message .= __('С уважением,', 'course-plugin') . "\r\n";
         $message .= __('Московская богословская семинария', 'course-plugin') . "\r\n";
