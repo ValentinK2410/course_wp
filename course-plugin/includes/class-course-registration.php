@@ -184,6 +184,8 @@ class Course_Registration {
                     <input type="password" name="user_pass_confirm" id="user_pass_confirm" class="input" value="" size="25" required />
                 </p>
                 
+                <?php self::render_privacy_consent_checkbox(); ?>
+                
                 <p class="submit">
                     <input type="submit" name="wp-submit" id="wp-submit" class="button button-primary" value="<?php esc_attr_e('Зарегистрироваться', 'course-plugin'); ?>" />
                 </p>
@@ -339,6 +341,11 @@ class Course_Registration {
                     return false;
                 }
                 
+                if (!$('#course_privacy_consent').is(':checked')) {
+                    $messages.html('<div class="error"><?php echo esc_js(__('Подтвердите согласие на обработку персональных данных и условия политики конфиденциальности.', 'course-plugin')); ?></div>').addClass('error');
+                    return false;
+                }
+                
                 // Отключаем кнопку отправки
                 $submit.prop('disabled', true).val('<?php echo esc_js(__('Регистрация...', 'course-plugin')); ?>');
                 
@@ -450,6 +457,21 @@ class Course_Registration {
             border-radius: 4px;
             font-size: 14px;
         }
+        .course-registration-form .course-privacy-consent label {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-weight: normal;
+            line-height: 1.45;
+            cursor: pointer;
+        }
+        .course-registration-form .course-privacy-consent input[type="checkbox"] {
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+        .course-registration-form .course-privacy-consent .course-privacy-consent-text a {
+            text-decoration: underline;
+        }
         </style>
         <?php
         return ob_get_clean();
@@ -551,6 +573,10 @@ class Course_Registration {
             wp_send_json_error(array('message' => __('Введите фамилию.', 'course-plugin')));
         }
         
+        if (empty($_POST['course_privacy_consent']) || (string) $_POST['course_privacy_consent'] !== '1') {
+            wp_send_json_error(array('message' => __('Необходимо согласие на обработку персональных данных и условия политики конфиденциальности.', 'course-plugin')));
+        }
+        
         if (empty($user_pass)) {
             wp_send_json_error(array('message' => __('Введите пароль.', 'course-plugin')));
         }
@@ -642,6 +668,8 @@ class Course_Registration {
         // Сохраняем пароль в метаполе для последующего использования
         update_user_meta($user_id, 'pending_moodle_password', $user_pass);
         error_log('Course Registration: Пароль сохранен в метаполе');
+        
+        self::save_privacy_consent_meta($user_id);
         
         if ($registration_program_id > 0) {
             update_user_meta($user_id, 'registration_program_id', $registration_program_id);
@@ -1184,6 +1212,69 @@ class Course_Registration {
         );
     }
     
+    /**
+     * Чекбокс согласия на обработку персональных данных и политики конфиденциальности.
+     * Используется в форме шорткода и на wp-login.php?action=register.
+     *
+     * @param array $args id, name, checked, wrapper_class.
+     * @return void
+     */
+    public static function render_privacy_consent_checkbox(array $args = array()) {
+        $defaults = array(
+            'id' => 'course_privacy_consent',
+            'name' => 'course_privacy_consent',
+            'checked' => false,
+            'wrapper_class' => 'course-privacy-consent',
+        );
+        $a = wp_parse_args($args, $defaults);
+        $privacy_url = function_exists('get_privacy_policy_url') ? get_privacy_policy_url() : '';
+
+        echo '<p class="' . esc_attr($a['wrapper_class']) . '">';
+        echo '<label for="' . esc_attr($a['id']) . '">';
+        echo '<input type="checkbox" name="' . esc_attr($a['name']) . '" id="' . esc_attr($a['id']) . '" value="1" required ' . checked((bool) $a['checked'], true, false) . ' /> ';
+        echo '<span class="course-privacy-consent-text">';
+        if ($privacy_url !== '') {
+            echo wp_kses(
+                sprintf(
+                    /* translators: 1: opening <a>, 2: closing </a> — ссылка на страницу политики конфиденциальности */
+                    __('Я даю согласие на обработку персональных данных и принимаю условия %1$sполитики конфиденциальности%2$s.', 'course-plugin'),
+                    '<a href="' . esc_url($privacy_url) . '" target="_blank" rel="noopener noreferrer">',
+                    '</a>'
+                ),
+                array(
+                    'a' => array(
+                        'href' => true,
+                        'target' => true,
+                        'rel' => true,
+                    ),
+                )
+            );
+        } else {
+            esc_html_e('Я даю согласие на обработку персональных данных и принимаю условия политики конфиденциальности (укажите страницу политики в «Настройки — Конфиденциальность»).', 'course-plugin');
+        }
+        echo ' <span class="required" style="color:#c00;">*</span>';
+        echo '</span></label></p>';
+    }
+
+    /**
+     * Сохранение факта согласия при регистрации (аудит).
+     *
+     * @param int $user_id ID пользователя.
+     * @return void
+     */
+    public static function save_privacy_consent_meta($user_id) {
+        $user_id = (int) $user_id;
+        if ($user_id <= 0 || empty($_POST['course_privacy_consent'])) {
+            return;
+        }
+        update_user_meta($user_id, 'course_privacy_consent', '1');
+        update_user_meta($user_id, 'course_privacy_consent_at', current_time('mysql'));
+        $privacy_url = function_exists('get_privacy_policy_url') ? get_privacy_policy_url() : '';
+        if ($privacy_url !== '') {
+            update_user_meta($user_id, 'course_privacy_policy_url', esc_url_raw($privacy_url));
+        }
+    }
+
     /**
      * Вывод страницы настроек регистрации
      */

@@ -92,6 +92,13 @@ class Course_WP_Login_Registration {
                        value="<?php echo esc_attr($last_name); ?>" size="25" required />
             </label>
         </p>
+        <?php
+        if (class_exists('Course_Registration')) {
+            Course_Registration::render_privacy_consent_checkbox(array(
+                'checked' => !empty($_POST['course_privacy_consent']),
+            ));
+        }
+        ?>
         <script>
         (function(){
             var loginField = document.getElementById('user_login');
@@ -122,6 +129,13 @@ class Course_WP_Login_Registration {
     public function validate_extra_fields($errors, $sanitized_user_login, $user_email) {
         if (empty($_POST['last_name']) || trim($_POST['last_name']) === '') {
             $errors->add('last_name_error', __('<strong>Ошибка</strong>: Введите фамилию.', 'course-plugin'));
+        }
+
+        if (empty($_POST['course_privacy_consent']) || (string) $_POST['course_privacy_consent'] !== '1') {
+            $errors->add(
+                'privacy_consent_error',
+                __('<strong>Ошибка</strong>: Необходимо согласие на обработку персональных данных и условия политики конфиденциальности.', 'course-plugin')
+            );
         }
 
         if (!empty($user_email)) {
@@ -201,6 +215,10 @@ class Course_WP_Login_Registration {
         }
         if ($last_name) {
             update_user_meta($user_id, 'last_name', $last_name);
+        }
+
+        if (class_exists('Course_Registration')) {
+            Course_Registration::save_privacy_consent_meta($user_id);
         }
 
         $user = get_userdata($user_id);
@@ -548,6 +566,21 @@ class Course_WP_Login_Registration {
             #registerform > p:first-child { display: none !important; }
             #registerform .required { color: #c00; }
             #registerform p label { display: block; margin-bottom: 8px; }
+            #registerform .course-privacy-consent label {
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+                font-weight: 400;
+                font-size: 13px;
+                line-height: 1.45;
+            }
+            #registerform .course-privacy-consent input[type="checkbox"] {
+                margin-top: 2px;
+                flex-shrink: 0;
+            }
+            #registerform .course-privacy-consent .course-privacy-consent-text a {
+                text-decoration: underline;
+            }
         </style>
         <?php
     }
