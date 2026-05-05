@@ -33,6 +33,11 @@ $posts_per_page = isset($wp_query->query_vars['posts_per_page']) ? $wp_query->qu
 $found_posts = $wp_query->found_posts;
 $showing_from = ($paged - 1) * $posts_per_page + 1;
 $showing_to = min($paged * $posts_per_page, $found_posts);
+
+$program_archive_sort = isset($_GET['sort']) ? sanitize_text_field(wp_unslash($_GET['sort'])) : 'default';
+if ($program_archive_sort === '') {
+    $program_archive_sort = 'default';
+}
 ?>
 
 <div class="premium-archive-wrapper programs-archive">
@@ -306,11 +311,11 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                     <!-- Сортировка -->
                     <div class="sort-dropdown">
                         <select id="program-sort-select" name="sort" class="premium-sort-select">
-                            <option value="default" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'default'); ?>><?php _e('По умолчанию', 'course-plugin'); ?></option>
-                            <option value="price_asc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'price_asc'); ?>><?php _e('Цена: по возрастанию', 'course-plugin'); ?></option>
-                            <option value="price_desc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'price_desc'); ?>><?php _e('Цена: по убыванию', 'course-plugin'); ?></option>
-                            <option value="date_desc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'date_desc'); ?>><?php _e('Сначала новые', 'course-plugin'); ?></option>
-                            <option value="title_asc" <?php selected(isset($_GET['sort']) ? $_GET['sort'] : '', 'title_asc'); ?>><?php _e('По названию А-Я', 'course-plugin'); ?></option>
+                            <option value="default" <?php selected($program_archive_sort, 'default'); ?>><?php _e('По умолчанию (А-Я)', 'course-plugin'); ?></option>
+                            <option value="price_asc" <?php selected($program_archive_sort, 'price_asc'); ?>><?php _e('Цена: по возрастанию', 'course-plugin'); ?></option>
+                            <option value="price_desc" <?php selected($program_archive_sort, 'price_desc'); ?>><?php _e('Цена: по убыванию', 'course-plugin'); ?></option>
+                            <option value="date_desc" <?php selected($program_archive_sort, 'date_desc'); ?>><?php _e('Сначала новые', 'course-plugin'); ?></option>
+                            <option value="title_asc" <?php selected($program_archive_sort, 'title_asc'); ?>><?php _e('По названию А-Я', 'course-plugin'); ?></option>
                         </select>
                     </div>
                 </div>

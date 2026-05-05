@@ -188,10 +188,12 @@ class Program_Frontend {
                 $query->set('tax_query', $tax_query);
             }
             
-            // Сортировка
-            if (isset($_GET['sort']) && !empty($_GET['sort'])) {
-                $sort = sanitize_text_field($_GET['sort']);
-                
+            // Сортировка: по умолчанию — по названию А-Я (бакалавриат/магистратура выше дипломных по алфавиту заголовков)
+            $sort = isset($_GET['sort']) ? sanitize_text_field(wp_unslash($_GET['sort'])) : '';
+            if ($sort === '' || $sort === 'default') {
+                $query->set('orderby', 'title');
+                $query->set('order', 'ASC');
+            } else {
                 switch ($sort) {
                     case 'price_asc':
                         $query->set('meta_key', '_program_price');
