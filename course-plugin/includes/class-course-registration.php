@@ -1210,8 +1210,43 @@ class Course_Registration {
                 'default' => 0,
             )
         );
+        register_setting(
+            'course_registration_settings',
+            'course_registration_privacy_page_id',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 0,
+            )
+        );
     }
     
+    /**
+     * URL страницы с политикой конфиденциальности и сведениями об обработке данных.
+     * Используется в формах регистрации. Сначала страница из настроек плагина, иначе — из «Настройки → Конфиденциальность».
+     *
+     * @return string
+     */
+    public static function get_privacy_info_page_url() {
+        $page_id = (int) get_option('course_registration_privacy_page_id', 0);
+        if ($page_id > 0) {
+            $post = get_post($page_id);
+            if ($post && $post->post_status === 'publish' && $post->post_type === 'page') {
+                $url = get_permalink($post);
+                if (is_string($url) && $url !== '') {
+                    return $url;
+                }
+            }
+        }
+        if (function_exists('get_privacy_policy_url')) {
+            $wp_privacy = get_privacy_policy_url();
+            if (is_string($wp_privacy) && $wp_privacy !== '') {
+                return $wp_privacy;
+            }
+        }
+        return '';
+    }
+
     /**
      * Чекбокс согласия на обработку персональных данных и политики конфиденциальности.
      * Используется в форме шорткода и на wp-login.php?action=register.
@@ -1227,7 +1262,7 @@ class Course_Registration {
             'wrapper_class' => 'course-privacy-consent',
         );
         $a = wp_parse_args($args, $defaults);
-        $privacy_url = function_exists('get_privacy_policy_url') ? get_privacy_policy_url() : '';
+        $privacy_url = self::get_privacy_info_page_url();
 
         echo '<p class="' . esc_attr($a['wrapper_class']) . '">';
         echo '<label for="' . esc_attr($a['id']) . '">';
@@ -1250,7 +1285,7 @@ class Course_Registration {
                 )
             );
         } else {
-            esc_html_e('Я даю согласие на обработку персональных данных и принимаю условия политики конфиденциальности (укажите страницу политики в «Настройки — Конфиденциальность»).', 'course-plugin');
+            esc_html_e('Я даю согласие на обработку персональных данных и принимаю условия политики конфиденциальности. Укажите страницу: Настройки → Регистрация (форма) — «Страница политики…», либо в «Настройки → Конфиденциальность».', 'course-plugin');
         }
         echo ' <span class="required" style="color:#c00;">*</span>';
         echo '</span></label></p>';
@@ -1269,7 +1304,7 @@ class Course_Registration {
         }
         update_user_meta($user_id, 'course_privacy_consent', '1');
         update_user_meta($user_id, 'course_privacy_consent_at', current_time('mysql'));
-        $privacy_url = function_exists('get_privacy_policy_url') ? get_privacy_policy_url() : '';
+        $privacy_url = self::get_privacy_info_page_url();
         if ($privacy_url !== '') {
             update_user_meta($user_id, 'course_privacy_policy_url', esc_url_raw($privacy_url));
         }
@@ -1304,6 +1339,25 @@ class Course_Registration {
                             ?>
                             <p class="description">
                                 <?php _e('Выберите страницу, в которую вставлен шорткод [course_register]. Ссылка «Регистрация» на странице входа (wp-login.php) будет вести на эту страницу.', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="course_registration_privacy_page_id"><?php esc_html_e('Страница политики конфиденциальности и обработки данных', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <?php
+                            wp_dropdown_pages(array(
+                                'name' => 'course_registration_privacy_page_id',
+                                'id' => 'course_registration_privacy_page_id',
+                                'show_option_none' => __('— Как в «Настройки → Конфиденциальность» WordPress —', 'course-plugin'),
+                                'option_none_value' => '0',
+                                'selected' => (int) get_option('course_registration_privacy_page_id', 0),
+                            ));
+                            ?>
+                            <p class="description">
+                                <?php esc_html_e('Страница, которая откроется по ссылке в чекбоксе согласия при регистрации (политика безопасности, обработка персональных данных). Если не выбрана, используется страница из настроек конфиденциальности WordPress.', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
