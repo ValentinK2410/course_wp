@@ -264,7 +264,56 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                     </div>
                 </div>
                 
-                <!-- Место прохождения -->
+                <!-- Место прохождения: только локации с опубликованными курсами (+ выбранные в URL) -->
+                <?php
+                $location_labels = array(
+                    'online' => __('Онлайн-курсы', 'course-plugin'),
+                    'zoom' => __('Зум', 'course-plugin'),
+                    'moscow' => __('Москва (центральный кампус)', 'course-plugin'),
+                    'prokhladny' => __('Прохладный', 'course-plugin'),
+                    'nizhny-novgorod' => __('Нижний Новгород', 'course-plugin'),
+                    'chelyabinsk' => __('Челябинск', 'course-plugin'),
+                    'norilsk' => __('Норильск', 'course-plugin'),
+                    'izhevsk' => __('Ижевск', 'course-plugin'),
+                    'yug' => __('Юг', 'course-plugin'),
+                    'novokuznetsk' => __('Новокузнецк', 'course-plugin'),
+                );
+                $selected_locations = isset($_GET['location']) ? array_map('sanitize_text_field', (array) $_GET['location']) : array();
+                $location_counts = array();
+                global $wpdb;
+                $loc_rows = $wpdb->get_results(
+                    $wpdb->prepare(
+                        "SELECT pm.meta_value AS slug, COUNT(DISTINCT p.ID) AS c
+                         FROM {$wpdb->posts} p
+                         INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = %s
+                         WHERE p.post_type = %s AND p.post_status = %s
+                         AND pm.meta_value <> ''
+                         GROUP BY pm.meta_value",
+                        '_course_location',
+                        'course',
+                        'publish'
+                    )
+                );
+                if (is_array($loc_rows)) {
+                    foreach ($loc_rows as $row) {
+                        if (!empty($row->slug)) {
+                            $location_counts[$row->slug] = (int) $row->c;
+                        }
+                    }
+                }
+                $locations_for_filter = array();
+                foreach ($location_labels as $location_slug => $location_name) {
+                    $cnt = isset($location_counts[$location_slug]) ? $location_counts[$location_slug] : 0;
+                    $is_selected = in_array($location_slug, $selected_locations, true);
+                    if ($cnt > 0 || $is_selected) {
+                        $locations_for_filter[$location_slug] = array(
+                            'name' => $location_name,
+                            'count' => $cnt,
+                        );
+                    }
+                }
+                ?>
+                <?php if (!empty($locations_for_filter)) : ?>
                 <div class="filter-group">
                     <button type="button" class="filter-group-toggle active" data-target="location-options">
                         <span class="filter-group-title">
@@ -280,33 +329,23 @@ $showing_to = min($paged * $posts_per_page, $found_posts);
                     </button>
                     <div class="filter-options" id="location-options">
                         <?php
-                        $locations = array(
-                            'online' => __('Онлайн-курсы', 'course-plugin'),
-                            'zoom' => __('Зум', 'course-plugin'),
-                            'moscow' => __('Москва (центральный кампус)', 'course-plugin'),
-                            'prokhladny' => __('Прохладный', 'course-plugin'),
-                            'nizhny-novgorod' => __('Нижний Новгород', 'course-plugin'),
-                            'chelyabinsk' => __('Челябинск', 'course-plugin'),
-                            'norilsk' => __('Норильск', 'course-plugin'),
-                            'izhevsk' => __('Ижевск', 'course-plugin'),
-                            'yug' => __('Юг', 'course-plugin'),
-                            'novokuznetsk' => __('Новокузнецк', 'course-plugin'),
-                        );
-                        
-                        $selected_locations = isset($_GET['location']) ? (array)$_GET['location'] : array();
-                        foreach ($locations as $location_slug => $location_name) {
-                            $checked = in_array($location_slug, $selected_locations) ? 'checked' : '';
+                        foreach ($locations_for_filter as $location_slug => $loc) {
+                            $checked = in_array($location_slug, $selected_locations, true) ? 'checked' : '';
+                            $location_name = $loc['name'];
+                            $cnt = (int) $loc['count'];
                             ?>
                             <label class="filter-option">
                                 <input type="checkbox" name="location[]" value="<?php echo esc_attr($location_slug); ?>" <?php echo $checked; ?>>
                                 <span class="option-checkbox"></span>
                                 <span class="option-text"><?php echo esc_html($location_name); ?></span>
+                                <span class="option-count"><?php echo esc_html((string) $cnt); ?></span>
                             </label>
                             <?php
                         }
                         ?>
                     </div>
                 </div>
+                <?php endif; ?>
                 
                 <!-- Дата начала курса -->
                 <div class="filter-group">
