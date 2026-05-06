@@ -290,7 +290,7 @@ while (have_posts()) : the_post();
                             </svg>
                         </div>
                     <?php endif; ?>
-                    
+
                     <!-- Price overlay -->
                     <div class="hero-price-overlay">
                         <?php if ($discount > 0) : ?>
@@ -319,6 +319,8 @@ while (have_posts()) : the_post();
                             </button>
                         <?php endif; ?>
                     </div>
+
+                    <?php if (class_exists('Course_Hero_Catalog_Nav')) : Course_Hero_Catalog_Nav::render(get_the_ID(), 'program', 'program'); endif; ?>
                 </div>
             </div>
         </div>

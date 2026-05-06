@@ -393,10 +393,12 @@ while (have_posts()) : the_post();
                                 <svg width="80" height="80" viewBox="0 0 80 80" fill="none"><rect x="10" y="15" width="60" height="40" rx="4" stroke="currentColor" stroke-width="3"/><path d="M35 30L50 40L35 50V30Z" fill="currentColor"/><rect x="25" y="60" width="30" height="4" rx="2" fill="currentColor"/></svg>
                             </div>
                         <?php endif; ?>
+                        <?php if (class_exists('Course_Hero_Catalog_Nav')) : Course_Hero_Catalog_Nav::render(get_the_ID(), 'course'); endif; ?>
                     </div>
                 <?php elseif (has_post_thumbnail()) : ?>
                     <div class="hero-image">
                         <?php the_post_thumbnail('large'); ?>
+                        <?php if (class_exists('Course_Hero_Catalog_Nav')) : Course_Hero_Catalog_Nav::render(get_the_ID(), 'course'); endif; ?>
                     </div>
                 <?php else : ?>
                     <div class="hero-image-placeholder">
@@ -405,6 +407,7 @@ while (have_posts()) : the_post();
                             <path d="M50 45L75 60L50 75V45Z" fill="currentColor"/>
                             <rect x="40" y="85" width="40" height="6" rx="3" fill="currentColor"/>
                         </svg>
+                        <?php if (class_exists('Course_Hero_Catalog_Nav')) : Course_Hero_Catalog_Nav::render(get_the_ID(), 'course'); endif; ?>
                     </div>
                 <?php endif; ?>
                 <?php

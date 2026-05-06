@@ -3,7 +3,7 @@
  * Plugin Name: Курсы Про
  * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
- * Version: 1.3.92
+ * Version: 1.3.94
  * Author: Кузьменко Валентин (Valentink2410)
  * Author URI: https://github.com/ValentinK2410
  * Copyright: Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 
 // Определяем константы плагина для использования в других файлах
 // COURSE_PLUGIN_VERSION - версия плагина для версионирования стилей и скриптов
-define('COURSE_PLUGIN_VERSION', '1.3.92');
+define('COURSE_PLUGIN_VERSION', '1.3.94');
 
 // COURSE_PLUGIN_DIR - абсолютный путь к директории плагина (например: /var/www/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -217,6 +217,7 @@ class Course_Plugin {
             'includes/class-course-registration.php',   // Класс для формы регистрации пользователей
             'includes/class-course-sso.php',             // Класс для Single Sign-On (SSO)
             'includes/class-course-enroll-gate.php',     // Шлюз записи (требует авторизацию перед Moodle)
+            'includes/class-course-hero-catalog-nav.php', // Навигация по соседним курсам/программам на hero
             'includes/class-course-anti-bot.php',        // Класс для защиты от ботов
             'includes/class-course-anti-bot-admin.php',  // Класс для админ-панели защиты от ботов
             'includes/class-course-email-sender.php',    // Класс для улучшенной отправки email (SMTP поддержка)
