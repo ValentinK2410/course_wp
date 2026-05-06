@@ -372,7 +372,7 @@
 .hero-catalog-nav {
     position: absolute;
     left: 50%;
-    bottom: 14px;
+    top: 14px;
     transform: translateX(-50%);
     z-index: 4;
     display: flex;

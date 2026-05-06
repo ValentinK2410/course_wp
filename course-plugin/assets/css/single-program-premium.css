@@ -318,12 +318,12 @@
     gap: 16px;
 }
 
-/* Навигация по соседним программам на обложке (поверх градиента, в зоне изображения) */
+/* Навигация по соседним программам на обложке (верх картинки) */
 .hero-visual-card > .hero-catalog-nav {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    bottom: clamp(96px, 28%, 168px);
+    top: 14px;
     z-index: 5;
     display: flex;
     align-items: stretch;
