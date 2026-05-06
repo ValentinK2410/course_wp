@@ -853,6 +853,13 @@ class Course_Frontend {
                     array('course-frontend-style'),
                     COURSE_PLUGIN_VERSION
                 );
+                wp_enqueue_script(
+                    'single-course-related-carousel',
+                    COURSE_PLUGIN_URL . 'assets/js/single-course-related-carousel.js',
+                    array(),
+                    COURSE_PLUGIN_VERSION,
+                    true
+                );
             }
             
             wp_enqueue_script(

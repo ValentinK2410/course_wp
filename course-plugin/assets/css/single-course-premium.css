@@ -603,75 +603,176 @@
     height: 100%;
 }
 
-/* Related Courses */
-.related-courses-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
+/* Related Courses — карусель в стиле карточек страницы преподавателя */
+.related-courses-carousel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.related-course-card {
-    border-radius: var(--sc-radius-lg);
+.related-carousel__viewport {
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
+}
+
+.related-carousel__track {
+    display: flex;
+    gap: 24px;
+    transition: transform 0.35s ease;
+    will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .related-carousel__track {
+        transition: none;
+    }
+}
+
+.related-carousel__slide {
+    flex-shrink: 0;
+}
+
+.related-carousel__nav {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
     background: var(--sc-white);
-    box-shadow: var(--sc-shadow-sm);
+    color: var(--sc-gray-800);
+    box-shadow: var(--sc-shadow-md);
+    cursor: pointer;
     transition: var(--sc-transition);
 }
 
-.related-course-card:hover {
-    transform: translateY(-6px);
-    box-shadow: var(--sc-shadow-lg);
+.related-carousel__nav:hover {
+    background: var(--sc-gray-100);
+    color: var(--sc-primary);
 }
 
-.related-card-link {
-    display: block;
+.related-carousel__nav:focus-visible {
+    outline: 2px solid var(--sc-accent);
+    outline-offset: 2px;
+}
+
+.related-carousel__nav[hidden] {
+    display: none;
+}
+
+/* Карточка (как teacher-course-card / teacher-single.css) */
+.related-teacher-card {
+    background: var(--sc-white);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: var(--sc-transition);
+    height: 100%;
+}
+
+.related-teacher-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+}
+
+.related-teacher-card__link {
     text-decoration: none;
     color: inherit;
+    display: block;
 }
 
-.related-card-header {
+.related-teacher-card__thumb {
     position: relative;
-    padding: 24px;
-    height: 120px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-}
-
-.related-card-badge {
-    padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: var(--sc-radius-full);
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--sc-white);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.related-card-icon {
-    opacity: 0.6;
-}
-
-.related-card-content {
-    padding: 20px 24px 24px;
-}
-
-.related-card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--sc-gray-900);
-    margin: 0 0 8px;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    height: 220px;
     overflow: hidden;
+    background: linear-gradient(135deg, var(--sc-secondary) 0%, var(--sc-primary) 100%);
 }
 
-.related-card-teacher {
-    font-size: 0.875rem;
+.related-teacher-card__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+.related-teacher-card:hover .related-teacher-card__thumb img {
+    transform: scale(1.06);
+}
+
+.related-teacher-card__discount {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: #f56565;
+    color: var(--sc-white);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(245, 101, 101, 0.35);
+}
+
+.related-teacher-card__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.related-teacher-card__title-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 20px;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--sc-white);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0) 100%);
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+    z-index: 1;
+}
+
+.related-teacher-card__body {
+    padding: 20px;
+}
+
+.related-teacher-card__price-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.related-teacher-card__old-price {
+    font-size: 1rem;
     color: var(--sc-gray-500);
+    text-decoration: line-through;
+}
+
+.related-teacher-card__price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #68202d;
+}
+
+.related-teacher-card__meta {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--sc-gray-600);
     margin: 0;
 }
 
@@ -1118,8 +1219,13 @@
         grid-template-columns: 1fr;
     }
     
-    .related-courses-grid {
-        grid-template-columns: 1fr;
+    .related-carousel__nav {
+        width: 40px;
+        height: 40px;
+    }
+
+    .related-teacher-card__thumb {
+        height: 200px;
     }
     
     .content-sidebar {

@@ -616,30 +616,32 @@ while (have_posts()) : the_post();
                 <!-- ============================================
                      СЕКЦИЯ "ДРУГИЕ КУРСЫ ПО ТЕМЕ"
                      ============================================
-                     Похожие курсы из той же специализации
+                     Только при наличии специализации и других курсов в ней; карусель.
                      -->
-                <?php if ($show_related) :
-                $related_args = array(
-                    'post_type' => 'course',
-                    'posts_per_page' => 3,
-                    'post__not_in' => array(get_the_ID()),
-                    'orderby' => 'rand',
-                );
-                
-                if ($specializations && !is_wp_error($specializations) && !empty($specializations)) {
-                    $related_args['tax_query'] = array(
-                        array(
-                            'taxonomy' => 'course_specialization',
-                            'field' => 'term_id',
-                            'terms' => array($specializations[0]->term_id),
+                <?php
+                if ($show_related && $specializations && !is_wp_error($specializations) && !empty($specializations)) {
+                    $spec_term_ids = array_map('intval', wp_list_pluck($specializations, 'term_id'));
+                    $related_posts = get_posts(array(
+                        'post_type'              => 'course',
+                        'post_status'            => 'publish',
+                        'posts_per_page'         => -1,
+                        'post__not_in'           => array(get_the_ID()),
+                        'orderby'                => 'title',
+                        'order'                  => 'ASC',
+                        'tax_query'              => array(
+                            array(
+                                'taxonomy' => 'course_specialization',
+                                'field'    => 'term_id',
+                                'terms'    => $spec_term_ids,
+                                'operator' => 'IN',
+                            ),
                         ),
-                    );
-                }
-                
-                $related_courses = new WP_Query($related_args);
-                
-                if ($related_courses->have_posts()) :
-                ?>
+                        'no_found_rows'          => true,
+                        'update_post_meta_cache' => false,
+                        'update_post_term_cache' => false,
+                    ));
+                    if (!empty($related_posts)) :
+                        ?>
                     <section class="content-section section-related">
                         <div class="section-header">
                             <div class="section-icon" style="background: <?php echo $scheme['light']; ?>; color: <?php echo $scheme['accent']; ?>">
@@ -647,46 +649,79 @@ while (have_posts()) : the_post();
                             </div>
                             <h2 class="section-title"><?php echo esc_html($section_related_title); ?></h2>
                         </div>
-                        <div class="related-courses-grid">
-                            <?php 
-                            $related_schemes = array(
-                                'linear-gradient(135deg, #68202d 0%, #8b2d3a 100%)',
-                                'linear-gradient(135deg, #8b2d3a 0%, #a13d4c 100%)',
-                                'linear-gradient(135deg, #a13d4c 0%, #d4576b 100%)',
-                            );
-                            $i = 0;
-                            while ($related_courses->have_posts()) : $related_courses->the_post(); 
-                                $rel_teacher = get_the_terms(get_the_ID(), 'course_teacher');
-                                $rel_teacher_name = ($rel_teacher && !is_wp_error($rel_teacher)) ? $rel_teacher[0]->name : '';
-                            ?>
-                                <article class="related-course-card">
-                                    <a href="<?php the_permalink(); ?>" class="related-card-link">
-                                        <div class="related-card-header" style="background: <?php echo $related_schemes[$i % 3]; ?>">
-                                            <span class="related-card-badge"><?php _e('Курс', 'course-plugin'); ?></span>
-                                            <div class="related-card-icon">
-                                                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                                                    <circle cx="20" cy="20" r="16" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-                                                    <path d="M16 14L26 20L16 26V14Z" fill="rgba(255,255,255,0.8)"/>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        <div class="related-card-content">
-                                            <h4 class="related-card-title"><?php the_title(); ?></h4>
-                                            <?php if ($rel_teacher_name) : ?>
-                                                <p class="related-card-teacher"><?php echo esc_html($rel_teacher_name); ?></p>
-                                            <?php endif; ?>
-                                        </div>
-                                    </a>
-                                </article>
-                            <?php 
-                            $i++;
-                            endwhile; 
-                            ?>
+                        <div class="related-courses-carousel js-related-courses-carousel">
+                            <button type="button" class="related-carousel__nav related-carousel__prev" aria-label="<?php echo esc_attr__('Предыдущие курсы', 'course-plugin'); ?>">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                            <div class="related-carousel__viewport">
+                                <div class="related-carousel__track">
+                                    <?php
+                                    foreach ($related_posts as $rel_post) {
+                                        $rid = (int) $rel_post->ID;
+                                        $r_price = get_post_meta($rid, '_course_price', true);
+                                        $r_old = get_post_meta($rid, '_course_old_price', true);
+                                        $r_code = get_post_meta($rid, '_course_code', true);
+                                        $r_discount = 0;
+                                        if ($r_old && $r_price && (float) $r_price < (float) $r_old) {
+                                            $r_discount = (int) round(((float) $r_old - (float) $r_price) / (float) $r_old * 100);
+                                        }
+                                        $r_link = get_permalink($rid);
+                                        $r_title = get_the_title($rid);
+                                        if (!$r_link) {
+                                            continue;
+                                        }
+                                        ?>
+                                    <div class="related-carousel__slide">
+                                        <article class="related-teacher-card">
+                                            <a href="<?php echo esc_url($r_link); ?>" class="related-teacher-card__link">
+                                                <div class="related-teacher-card__thumb">
+                                                    <?php if ($r_discount > 0) : ?>
+                                                        <span class="related-teacher-card__discount">-<?php echo (int) $r_discount; ?>%</span>
+                                                    <?php endif; ?>
+                                                    <?php if (has_post_thumbnail($rid)) : ?>
+                                                        <?php echo get_the_post_thumbnail($rid, 'medium_large', array('alt' => wp_strip_all_tags($r_title))); ?>
+                                                    <?php else : ?>
+                                                        <div class="related-teacher-card__placeholder" aria-hidden="true">
+                                                            <svg width="56" height="56" viewBox="0 0 56 56" fill="none"><path d="M12 14h32v24H12V14z" stroke="currentColor" stroke-width="2"/><path d="M22 26l6 4 8-10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <h3 class="related-teacher-card__title-overlay"><?php echo esc_html($r_title); ?></h3>
+                                                </div>
+                                                <div class="related-teacher-card__body">
+                                                    <?php if ($r_price !== '' && $r_price !== null) : ?>
+                                                        <div class="related-teacher-card__price-row">
+                                                            <?php if ($r_old && (float) $r_price < (float) $r_old) : ?>
+                                                                <span class="related-teacher-card__old-price"><?php echo esc_html(number_format((float) $r_old, 2, ',', ' ')); ?> ₽</span>
+                                                            <?php endif; ?>
+                                                            <span class="related-teacher-card__price"><?php echo esc_html(number_format((float) $r_price, 2, ',', ' ')); ?> ₽</span>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <p class="related-teacher-card__meta">
+                                                        <?php
+                                                        echo esc_html($r_title);
+                                                        if ($r_code !== '' && $r_code !== null) {
+                                                            echo esc_html(' (' . $r_code . ')');
+                                                        }
+                                                        ?>
+                                                    </p>
+                                                </div>
+                                            </a>
+                                        </article>
+                                    </div>
+                                        <?php
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                            <button type="button" class="related-carousel__nav related-carousel__next" aria-label="<?php echo esc_attr__('Следующие курсы', 'course-plugin'); ?>">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
                         </div>
                     </section>
-                    <?php wp_reset_postdata(); ?>
-                <?php endif; ?>
-                <?php endif; ?>
+                        <?php
+                    endif;
+                }
+                ?>
             </main>
             
             <!-- ============================================
