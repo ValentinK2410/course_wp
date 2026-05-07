@@ -158,8 +158,8 @@ class Course_Registration {
                 </p>
                 
                 <p>
-                    <label for="user_email"><?php _e('Email', 'course-plugin'); ?> <span class="required">*</span></label>
-                    <input type="email" name="user_email" id="user_email" class="input" value="" size="25" required />
+                    <label for="user_email"><?php _e('Email', 'course-plugin'); ?> <span class="required">*</span> <span class="course-required-hint"><?php _e('(обязательно)', 'course-plugin'); ?></span></label>
+                    <input type="email" name="user_email" id="user_email" class="input" value="" size="25" required autocomplete="email" aria-required="true" />
                     <small id="email-check-message" style="display: none; margin-top: 5px;"></small>
                 </p>
                 
@@ -428,6 +428,11 @@ class Course_Registration {
             color: #666;
             font-size: 12px;
             margin-top: 5px;
+        }
+        .course-registration-form .course-required-hint {
+            font-weight: normal;
+            color: #646970;
+            font-size: 0.9em;
         }
         .course-registration-messages {
             margin-bottom: 15px;

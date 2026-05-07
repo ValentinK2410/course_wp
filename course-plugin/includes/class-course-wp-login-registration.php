@@ -611,7 +611,38 @@ class Course_WP_Login_Registration {
             #registerform .course-user-agreement-consent .course-user-agreement-consent-text a {
                 text-decoration: underline;
             }
+            #registerform .course-email-required-hint {
+                font-weight: normal;
+                color: #646970;
+                font-size: 12px;
+                margin-left: 2px;
+            }
         </style>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('registerform');
+            if (!form) return;
+            var lbl = form.querySelector('label[for="user_email"]');
+            if (lbl && !lbl.querySelector('.course-email-required-mark')) {
+                var star = document.createElement('span');
+                star.className = 'required course-email-required-mark';
+                star.textContent = ' *';
+                lbl.appendChild(star);
+                var hint = document.createElement('span');
+                hint.className = 'course-email-required-hint';
+                hint.textContent = <?php echo wp_json_encode(' ' . __('(обязательно)', 'course-plugin')); ?>;
+                lbl.appendChild(hint);
+            }
+            var emailInp = document.getElementById('user_email');
+            if (emailInp) {
+                emailInp.setAttribute('required', 'required');
+                emailInp.setAttribute('aria-required', 'true');
+                if (!emailInp.getAttribute('autocomplete')) {
+                    emailInp.setAttribute('autocomplete', 'email');
+                }
+            }
+        });
+        </script>
         <?php
     }
 }
