@@ -164,8 +164,8 @@ class Course_Registration {
                 </p>
                 
                 <p>
-                    <label for="first_name"><?php _e('Имя', 'course-plugin'); ?></label>
-                    <input type="text" name="first_name" id="first_name" class="input" value="" size="25" />
+                    <label for="first_name"><?php _e('Имя', 'course-plugin'); ?> <span class="required">*</span></label>
+                    <input type="text" name="first_name" id="first_name" class="input" value="" size="25" required />
                 </p>
                 
                 <p>
@@ -340,6 +340,11 @@ class Course_Registration {
                 // Проверяем длину пароля
                 if ($('#user_pass').val().length < 8) {
                     $messages.html('<div class="error"><?php echo esc_js(__('Пароль должен содержать минимум 8 символов!', 'course-plugin')); ?></div>').addClass('error');
+                    return false;
+                }
+
+                if ($.trim($('#first_name').val()) === '') {
+                    $messages.html('<div class="error"><?php echo esc_js(__('Введите имя.', 'course-plugin')); ?></div>').addClass('error');
                     return false;
                 }
                 
@@ -590,8 +595,12 @@ class Course_Registration {
         if (empty($user_email) || !is_email($user_email)) {
             wp_send_json_error(array('message' => __('Введите корректный email адрес.', 'course-plugin')));
         }
-        
-        if (empty($last_name)) {
+
+        if (trim($first_name) === '') {
+            wp_send_json_error(array('message' => __('Введите имя.', 'course-plugin')));
+        }
+
+        if (trim($last_name) === '') {
             wp_send_json_error(array('message' => __('Введите фамилию.', 'course-plugin')));
         }
         

@@ -81,9 +81,9 @@ class Course_WP_Login_Registration {
             <input type="hidden" name="course_redirect_to" value="<?php echo esc_attr($redirect_to); ?>" />
         <?php endif; ?>
         <p>
-            <label for="first_name"><?php _e('Имя', 'course-plugin'); ?><br />
+            <label for="first_name"><?php _e('Имя', 'course-plugin'); ?> <span class="required" style="color:#c00;">*</span><br />
                 <input type="text" name="first_name" id="first_name" class="input"
-                       value="<?php echo esc_attr($first_name); ?>" size="25" />
+                       value="<?php echo esc_attr($first_name); ?>" size="25" required />
             </label>
         </p>
         <p>
@@ -130,6 +130,10 @@ class Course_WP_Login_Registration {
     // ------------------------------------------------------------------
 
     public function validate_extra_fields($errors, $sanitized_user_login, $user_email) {
+        if (empty($_POST['first_name']) || trim((string) $_POST['first_name']) === '') {
+            $errors->add('first_name_error', __('<strong>Ошибка</strong>: Введите имя.', 'course-plugin'));
+        }
+
         if (empty($_POST['last_name']) || trim($_POST['last_name']) === '') {
             $errors->add('last_name_error', __('<strong>Ошибка</strong>: Введите фамилию.', 'course-plugin'));
         }
