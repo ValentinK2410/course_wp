@@ -97,6 +97,9 @@ class Course_WP_Login_Registration {
             Course_Registration::render_privacy_consent_checkbox(array(
                 'checked' => !empty($_POST['course_privacy_consent']),
             ));
+            Course_Registration::render_user_agreement_consent_checkbox(array(
+                'checked' => !empty($_POST['course_user_agreement_consent']),
+            ));
         }
         ?>
         <script>
@@ -135,6 +138,13 @@ class Course_WP_Login_Registration {
             $errors->add(
                 'privacy_consent_error',
                 __('<strong>Ошибка</strong>: Необходимо согласие на обработку персональных данных и условия политики конфиденциальности.', 'course-plugin')
+            );
+        }
+
+        if (empty($_POST['course_user_agreement_consent']) || (string) $_POST['course_user_agreement_consent'] !== '1') {
+            $errors->add(
+                'user_agreement_consent_error',
+                __('<strong>Ошибка</strong>: Необходимо принять условия Пользовательского соглашения.', 'course-plugin')
             );
         }
 
@@ -219,6 +229,7 @@ class Course_WP_Login_Registration {
 
         if (class_exists('Course_Registration')) {
             Course_Registration::save_privacy_consent_meta($user_id);
+            Course_Registration::save_user_agreement_consent_meta($user_id);
         }
 
         $user = get_userdata($user_id);
@@ -579,6 +590,21 @@ class Course_WP_Login_Registration {
                 flex-shrink: 0;
             }
             #registerform .course-privacy-consent .course-privacy-consent-text a {
+                text-decoration: underline;
+            }
+            #registerform .course-user-agreement-consent label {
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+                font-weight: 400;
+                font-size: 13px;
+                line-height: 1.45;
+            }
+            #registerform .course-user-agreement-consent input[type="checkbox"] {
+                margin-top: 2px;
+                flex-shrink: 0;
+            }
+            #registerform .course-user-agreement-consent .course-user-agreement-consent-text a {
                 text-decoration: underline;
             }
         </style>

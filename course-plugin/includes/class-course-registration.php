@@ -185,6 +185,8 @@ class Course_Registration {
                 </p>
                 
                 <?php self::render_privacy_consent_checkbox(); ?>
+
+                <?php self::render_user_agreement_consent_checkbox(); ?>
                 
                 <p class="submit">
                     <input type="submit" name="wp-submit" id="wp-submit" class="button button-primary" value="<?php esc_attr_e('Зарегистрироваться', 'course-plugin'); ?>" />
@@ -345,6 +347,11 @@ class Course_Registration {
                     $messages.html('<div class="error"><?php echo esc_js(__('Подтвердите согласие на обработку персональных данных и условия политики конфиденциальности.', 'course-plugin')); ?></div>').addClass('error');
                     return false;
                 }
+
+                if (!$('#course_user_agreement_consent').is(':checked')) {
+                    $messages.html('<div class="error"><?php echo esc_js(__('Необходимо принять условия Пользовательского соглашения.', 'course-plugin')); ?></div>').addClass('error');
+                    return false;
+                }
                 
                 // Отключаем кнопку отправки
                 $submit.prop('disabled', true).val('<?php echo esc_js(__('Регистрация...', 'course-plugin')); ?>');
@@ -472,6 +479,21 @@ class Course_Registration {
         .course-registration-form .course-privacy-consent .course-privacy-consent-text a {
             text-decoration: underline;
         }
+        .course-registration-form .course-user-agreement-consent label {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-weight: normal;
+            line-height: 1.45;
+            cursor: pointer;
+        }
+        .course-registration-form .course-user-agreement-consent input[type="checkbox"] {
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+        .course-registration-form .course-user-agreement-consent .course-user-agreement-consent-text a {
+            text-decoration: underline;
+        }
         </style>
         <?php
         return ob_get_clean();
@@ -576,6 +598,10 @@ class Course_Registration {
         if (empty($_POST['course_privacy_consent']) || (string) $_POST['course_privacy_consent'] !== '1') {
             wp_send_json_error(array('message' => __('Необходимо согласие на обработку персональных данных и условия политики конфиденциальности.', 'course-plugin')));
         }
+
+        if (empty($_POST['course_user_agreement_consent']) || (string) $_POST['course_user_agreement_consent'] !== '1') {
+            wp_send_json_error(array('message' => __('Необходимо принять условия Пользовательского соглашения.', 'course-plugin')));
+        }
         
         if (empty($user_pass)) {
             wp_send_json_error(array('message' => __('Введите пароль.', 'course-plugin')));
@@ -670,6 +696,7 @@ class Course_Registration {
         error_log('Course Registration: Пароль сохранен в метаполе');
         
         self::save_privacy_consent_meta($user_id);
+        self::save_user_agreement_consent_meta($user_id);
         
         if ($registration_program_id > 0) {
             update_user_meta($user_id, 'registration_program_id', $registration_program_id);
@@ -1219,6 +1246,15 @@ class Course_Registration {
                 'default' => 0,
             )
         );
+        register_setting(
+            'course_registration_settings',
+            'course_registration_user_agreement_page_id',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 0,
+            )
+        );
     }
     
     /**
@@ -1292,6 +1328,87 @@ class Course_Registration {
     }
 
     /**
+     * URL страницы «Пользовательское соглашение» (настраивается в админке).
+     *
+     * @return string
+     */
+    public static function get_user_agreement_page_url() {
+        $page_id = (int) get_option('course_registration_user_agreement_page_id', 0);
+        if ($page_id > 0) {
+            $post = get_post($page_id);
+            if ($post && $post->post_status === 'publish' && $post->post_type === 'page') {
+                $url = get_permalink($post);
+                if (is_string($url) && $url !== '') {
+                    return $url;
+                }
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Чекбокс принятия Пользовательского соглашения.
+     *
+     * @param array $args id, name, checked, wrapper_class.
+     * @return void
+     */
+    public static function render_user_agreement_consent_checkbox(array $args = array()) {
+        $defaults = array(
+            'id' => 'course_user_agreement_consent',
+            'name' => 'course_user_agreement_consent',
+            'checked' => false,
+            'wrapper_class' => 'course-user-agreement-consent',
+        );
+        $a       = wp_parse_args($args, $defaults);
+        $terms_url = self::get_user_agreement_page_url();
+
+        echo '<p class="' . esc_attr($a['wrapper_class']) . '">';
+        echo '<label for="' . esc_attr($a['id']) . '">';
+        echo '<input type="checkbox" name="' . esc_attr($a['name']) . '" id="' . esc_attr($a['id']) . '" value="1" required ' . checked((bool) $a['checked'], true, false) . ' /> ';
+        echo '<span class="course-user-agreement-consent-text">';
+        if ($terms_url !== '') {
+            echo wp_kses(
+                sprintf(
+                    /* translators: 1: opening <a>, 2: closing </a> — ссылка на страницу пользовательского соглашения */
+                    __('Я принимаю условия %1$sПользовательского соглашения%2$s.', 'course-plugin'),
+                    '<a href="' . esc_url($terms_url) . '" target="_blank" rel="noopener noreferrer">',
+                    '</a>'
+                ),
+                array(
+                    'a' => array(
+                        'href'   => true,
+                        'target' => true,
+                        'rel'    => true,
+                    ),
+                )
+            );
+        } else {
+            esc_html_e('Я принимаю условия Пользовательского соглашения. Укажите страницу в разделе «Настройки → Регистрация (форма)» — поле «Страница пользовательского соглашения».', 'course-plugin');
+        }
+        echo ' <span class="required" style="color:#c00;">*</span>';
+        echo '</span></label></p>';
+    }
+
+    /**
+     * Сохранение факта принятия пользовательского соглашения (аудит).
+     *
+     * @param int $user_id ID пользователя.
+     * @return void
+     */
+    public static function save_user_agreement_consent_meta($user_id) {
+        $user_id = (int) $user_id;
+        if ($user_id <= 0 || empty($_POST['course_user_agreement_consent'])) {
+            return;
+        }
+        update_user_meta($user_id, 'course_user_agreement_consent', '1');
+        update_user_meta($user_id, 'course_user_agreement_at', current_time('mysql'));
+        $terms_url = self::get_user_agreement_page_url();
+        if ($terms_url !== '') {
+            update_user_meta($user_id, 'course_user_agreement_url', esc_url_raw($terms_url));
+        }
+    }
+
+    /**
      * Сохранение факта согласия при регистрации (аудит).
      *
      * @param int $user_id ID пользователя.
@@ -1358,6 +1475,25 @@ class Course_Registration {
                             ?>
                             <p class="description">
                                 <?php esc_html_e('Страница, которая откроется по ссылке в чекбоксе согласия при регистрации (политика безопасности, обработка персональных данных). Если не выбрана, используется страница из настроек конфиденциальности WordPress.', 'course-plugin'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="course_registration_user_agreement_page_id"><?php esc_html_e('Страница пользовательского соглашения', 'course-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <?php
+                            wp_dropdown_pages(array(
+                                'name' => 'course_registration_user_agreement_page_id',
+                                'id' => 'course_registration_user_agreement_page_id',
+                                'show_option_none' => __('— Не выбрана —', 'course-plugin'),
+                                'option_none_value' => '0',
+                                'selected' => (int) get_option('course_registration_user_agreement_page_id', 0),
+                            ));
+                            ?>
+                            <p class="description">
+                                <?php esc_html_e('Страница, которая откроется по ссылке «Пользовательское соглашение» в форме регистрации. Пока страница не выбрана, в форме отображается напоминание администратору.', 'course-plugin'); ?>
                             </p>
                         </td>
                     </tr>
