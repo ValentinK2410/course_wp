@@ -1,14 +1,33 @@
 /**
  * Страница одиночного мероприятия tp_event (Unicamp):
- * информационное мероприятие без оплаты, мест и записи — только блоки даты/времени и т.п.
+ * без записи на событие, без цены и учёта мест; текст на всю ширину (без пустой правой колонки).
  */
 
-/* Правая колонка: цена, лимиты мест, кнопка регистрации и подсказка про логин */
+/* Правая колонка списка: цена и лимиты мест (остальное — дата, время, место, организатор) */
 body.single-tp_event .entry-event-info > li.meta-price,
 body.single-tp_event .entry-event-info > li.total,
-body.single-tp_event .entry-event-info > li.booking_slot,
-body.single-tp_event .entry-register {
+body.single-tp_event .entry-event-info > li.booking_slot {
     display: none !important;
+}
+
+/* Регистрация: не скрывать весь .entry-register — там же ul.entry-event-info */
+body.single-tp_event .entry-register .tm-button-wrapper,
+body.single-tp_event .entry-register p.event-register-message {
+    display: none !important;
+}
+
+/*
+ * Одноколоночный вывод: после скрытия «лишнего» правая .col-md-4 даёт пустую полосу.
+ * Скрываем колонку и растягиваем основной текст на всю ширину контейнера.
+ */
+body.single-tp_event .tp_single_event .summary.entry-summary > .row > .col-md-4 {
+    display: none !important;
+}
+
+body.single-tp_event .tp_single_event .summary.entry-summary > .row > .col-md-8 {
+    flex: 0 0 100%;
+    width: 100% !important;
+    max-width: 100% !important;
 }
 
 /* Комментарии под текстом страницы */
