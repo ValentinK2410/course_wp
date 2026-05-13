@@ -99,6 +99,7 @@ if ($courses->have_posts()) : ?>
                                 </p>
                             <?php endif; ?>
 
+                            <?php if (!$is_program) : ?>
                             <p class="csp-card-excerpt"><?php echo wp_trim_words(get_the_excerpt(), 14, '...'); ?></p>
 
                             <?php if ($teachers && !is_wp_error($teachers)) : ?>
@@ -115,6 +116,7 @@ if ($courses->have_posts()) : ?>
                                     <?php endif; ?>
                                     <span class="csp-teacher-name"><?php echo esc_html($teachers[0]->name); ?></span>
                                 </div>
+                            <?php endif; ?>
                             <?php endif; ?>
 
                             <div class="csp-card-footer">
