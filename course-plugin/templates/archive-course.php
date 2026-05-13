@@ -740,27 +740,11 @@ $course_archive_scope_url = function ($scope) use ($course_archive_scope_query, 
                             
                             if ($course_end_date) {
                                 $end_timestamp = strtotime($course_end_date);
-                                // Формат: "Дата: 10-13 мая 2026"
-                                $start_day = date('j', $start_timestamp);
-                                $end_day = date('j', $end_timestamp);
-                                // Проверяем, в одном ли месяце даты
-                                if (date('m', $start_timestamp) === date('m', $end_timestamp)) {
-                                    $month = date_i18n('F', $start_timestamp);
-                                    $year = date('Y', $start_timestamp);
-                                    $date_text = sprintf(__('Дата: %s-%s %s %s', 'course-plugin'), $start_day, $end_day, $month, $year);
-                                } else {
-                                    // Разные месяцы
-                                    $start_month = date_i18n('F', $start_timestamp);
-                                    $end_month = date_i18n('F', $end_timestamp);
-                                    $year = date('Y', $start_timestamp);
-                                    $date_text = sprintf(__('Дата: %s %s - %s %s %s', 'course-plugin'), $start_day, $start_month, $end_day, $end_month, $year);
-                                }
+                                $range = course_plugin_format_catalog_date_range($start_timestamp, $end_timestamp, ' - ');
+                                $date_text = sprintf(__('Дата: %s', 'course-plugin'), $range);
                             } else {
-                                // Только дата начала
-                                $day = date('j', $start_timestamp);
-                                $month = date_i18n('F', $start_timestamp);
-                                $year = date('Y', $start_timestamp);
-                                $date_text = sprintf(__('Дата: %s %s %s', 'course-plugin'), $day, $month, $year);
+                                $range = course_plugin_format_catalog_date_range($start_timestamp, false, ' - ');
+                                $date_text = sprintf(__('Дата: %s', 'course-plugin'), $range);
                             }
                         }
                     ?>

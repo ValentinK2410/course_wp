@@ -37,6 +37,7 @@ if ($courses->have_posts()) : ?>
                 $price = get_post_meta(get_the_ID(), $is_program ? '_program_price' : '_course_price', true);
                 $old_price = get_post_meta(get_the_ID(), $is_program ? '_program_old_price' : '_course_old_price', true);
                 $start_date = get_post_meta(get_the_ID(), $is_program ? '_program_start_date' : '_course_start_date', true);
+                $end_date = get_post_meta(get_the_ID(), $is_program ? '_program_end_date' : '_course_end_date', true);
                 $duration = get_post_meta(get_the_ID(), $is_program ? '_program_duration' : '_course_duration', true);
                 $rating = get_post_meta(get_the_ID(), '_course_rating', true) ?: 0;
                 $reviews_count = get_post_meta(get_the_ID(), '_course_reviews_count', true) ?: 0;
@@ -80,7 +81,7 @@ if ($courses->have_posts()) : ?>
                                     <span class="csp-tag csp-tag-level"><?php echo esc_html($levels[0]->name); ?></span>
                                 <?php endif; ?>
                                 <?php if ($start_date) :
-                                    $formatted = date_i18n('d M Y', strtotime($start_date));
+                                    $formatted = course_plugin_format_catalog_date_range(strtotime($start_date), !empty($end_date) ? strtotime($end_date) : false, ' – ');
                                 ?>
                                     <span class="csp-tag csp-tag-date">
                                         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 1v4M11 1v4M2 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>

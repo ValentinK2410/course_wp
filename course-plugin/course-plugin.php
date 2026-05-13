@@ -3,7 +3,7 @@
  * Plugin Name: Курсы Про
  * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
- * Version: 1.3.99
+ * Version: 1.4.0
  * Author: Кузьменко Валентин (Valentink2410)
  * Author URI: https://github.com/ValentinK2410
  * Copyright: Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 
 // Определяем константы плагина для использования в других файлах
 // COURSE_PLUGIN_VERSION - версия плагина для версионирования стилей и скриптов
-define('COURSE_PLUGIN_VERSION', '1.3.99');
+define('COURSE_PLUGIN_VERSION', '1.4.0');
 
 // COURSE_PLUGIN_DIR - абсолютный путь к директории плагина (например: /var/www/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -199,6 +199,7 @@ class Course_Plugin {
         // Массив путей к файлам классов относительно директории плагина
         $files = array(
             'includes/class-course-logger.php',        // Класс для логирования (должен быть первым)
+            'includes/course-plugin-formatting.php',   // Форматирование дат для карточек каталога
             'includes/class-course-post-type.php',      // Класс для регистрации Custom Post Type "Курсы"
             'includes/class-program-post-type.php',     // Класс для регистрации Custom Post Type "Программы"
             'includes/class-course-taxonomies.php',    // Класс для регистрации таксономий (специализация, уровень, тема, преподаватель)

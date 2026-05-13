@@ -202,23 +202,9 @@ while (have_posts()) : the_post();
         
         if ($course_end_date) {
             $end_timestamp = strtotime($course_end_date);
-            $start_day = date('j', $start_timestamp);
-            $end_day = date('j', $end_timestamp);
-            if (date('m', $start_timestamp) === date('m', $end_timestamp)) {
-                $month = date_i18n('F', $start_timestamp);
-                $year = date('Y', $start_timestamp);
-                $formatted_dates = sprintf(__('%s–%s %s %s', 'course-plugin'), $start_day, $end_day, $month, $year);
-            } else {
-                $start_month = date_i18n('F', $start_timestamp);
-                $end_month = date_i18n('F', $end_timestamp);
-                $year = date('Y', $start_timestamp);
-                $formatted_dates = sprintf(__('%s %s — %s %s %s', 'course-plugin'), $start_day, $start_month, $end_day, $end_month, $year);
-            }
+            $formatted_dates = course_plugin_format_catalog_date_range($start_timestamp, $end_timestamp, ' — ');
         } else {
-            $day = date('j', $start_timestamp);
-            $month = date_i18n('F', $start_timestamp);
-            $year = date('Y', $start_timestamp);
-            $formatted_dates = sprintf(__('%s %s %s', 'course-plugin'), $day, $month, $year);
+            $formatted_dates = course_plugin_format_catalog_date_range($start_timestamp, false, ' — ');
         }
     }
     

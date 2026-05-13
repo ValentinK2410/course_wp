@@ -367,25 +367,12 @@ if ($program_archive_sort === '') {
                             ? Course_Meta_Boxes::get_organizer_label(get_post_meta(get_the_ID(), '_program_organizer', true))
                             : '';
                         
-                        // Форматируем дату начала программы
+                        // Форматируем дату начала программы (год окончания учитывается при пересечении года)
                         $program_date_text = '';
                         if ($program_start_date) {
                             $start_ts = strtotime($program_start_date);
-                            $day = date('j', $start_ts);
-                            $month = date_i18n('F', $start_ts);
-                            $year = date('Y', $start_ts);
-                            if ($program_end_date) {
-                                $end_ts = strtotime($program_end_date);
-                                $end_day = date('j', $end_ts);
-                                if (date('m', $start_ts) === date('m', $end_ts)) {
-                                    $program_date_text = sprintf(__('%s–%s %s %s', 'course-plugin'), $day, $end_day, $month, $year);
-                                } else {
-                                    $end_month = date_i18n('F', $end_ts);
-                                    $program_date_text = sprintf(__('%s %s – %s %s %s', 'course-plugin'), $day, $month, $end_day, $end_month, $year);
-                                }
-                            } else {
-                                $program_date_text = sprintf(__('%s %s %s', 'course-plugin'), $day, $month, $year);
-                            }
+                            $end_ts = $program_end_date ? strtotime($program_end_date) : false;
+                            $program_date_text = course_plugin_format_catalog_date_range($start_ts, $end_ts, ' – ');
                         }
                         
                         // Получаем уровень
