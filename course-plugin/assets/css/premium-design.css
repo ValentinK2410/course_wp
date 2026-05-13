@@ -794,6 +794,24 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-wrap: wrap;
+}
+
+.catalog-view-mode-links {
+    display: flex;
+    align-items: center;
+}
+
+.catalog-view-mode-link {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--premium-primary);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.catalog-view-mode-link:hover {
+    text-decoration: underline;
 }
 
 /* Переключатель вида */

@@ -129,8 +129,8 @@ class Program_Frontend {
             
             // Поиск: см. filter_programs_archive_title_search_where (только post_title)
             
-            // Количество программ на странице (из GET параметра или по умолчанию 15)
-            $posts_per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 15;
+            // Количество программ на странице: по умолчанию 20; per_page=all или show_all=1 — все результаты
+            $posts_per_page = course_plugin_get_catalog_posts_per_page_from_request(20, 'program');
             $query->set('posts_per_page', $posts_per_page);
             
             $tax_query = array();

@@ -377,8 +377,8 @@ class Course_Frontend {
             
             // Поиск по строке: см. filter_courses_archive_title_search_where (только post_title, не WP s)
             
-            // Количество курсов на странице (из GET параметра или по умолчанию 15)
-            $posts_per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 15;
+            // Количество курсов на странице: по умолчанию 20; per_page=all или show_all=1 — все результаты
+            $posts_per_page = course_plugin_get_catalog_posts_per_page_from_request(20, 'course');
             $query->set('posts_per_page', $posts_per_page);
             
             $tax_query = array();

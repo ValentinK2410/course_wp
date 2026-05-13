@@ -27,12 +27,30 @@ if (is_post_type_archive('program')) {
     $is_program_archive = true;
 }
 
-// Получаем параметры пагинации
+// Получаем параметры пагинации и режим «все на одной странице»
 $paged = get_query_var('paged') ? get_query_var('paged') : 1;
-$posts_per_page = isset($wp_query->query_vars['posts_per_page']) ? $wp_query->query_vars['posts_per_page'] : get_option('posts_per_page', 15);
+$cp_prog_default_per = 20;
+$qv_pp = isset($wp_query->query_vars['posts_per_page']) ? (int) $wp_query->query_vars['posts_per_page'] : $cp_prog_default_per;
+$program_catalog_show_all = ($qv_pp < 1);
 $found_posts = $wp_query->found_posts;
-$showing_from = ($paged - 1) * $posts_per_page + 1;
-$showing_to = min($paged * $posts_per_page, $found_posts);
+
+if ($program_catalog_show_all) {
+    $showing_from = $found_posts > 0 ? 1 : 0;
+    $showing_to = $found_posts;
+} else {
+    $posts_per_page = $qv_pp;
+    $showing_from = ($paged - 1) * $posts_per_page + 1;
+    $showing_to = min($paged * $posts_per_page, $found_posts);
+}
+
+$cp_prog_link = get_post_type_archive_link('program');
+$cp_prog_merged = wp_unslash($_GET);
+$cp_prog_show_all_args = array_merge($cp_prog_merged, array('per_page' => 'all'));
+unset($cp_prog_show_all_args['paged'], $cp_prog_show_all_args['show_all']);
+$cp_program_url_show_all = esc_url(add_query_arg($cp_prog_show_all_args, $cp_prog_link));
+$cp_prog_paged_args = array_merge($cp_prog_merged, array());
+unset($cp_prog_paged_args['per_page'], $cp_prog_paged_args['show_all'], $cp_prog_paged_args['paged']);
+$cp_program_url_paged = esc_url(add_query_arg($cp_prog_paged_args, $cp_prog_link));
 
 $program_archive_sort = isset($_GET['sort']) ? sanitize_text_field(wp_unslash($_GET['sort'])) : 'default';
 if ($program_archive_sort === '') {
@@ -124,6 +142,9 @@ if ($program_archive_sort === '') {
             }
             ?>
             <form method="get" class="premium-filters-form" id="program-filters-form">
+                <?php if ($program_catalog_show_all) : ?>
+                    <input type="hidden" name="per_page" value="all">
+                <?php endif; ?>
                 <!-- Поиск -->
                 <div class="filter-search-box filter-search-box--with-suggest">
                     <svg class="search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -317,6 +338,13 @@ if ($program_archive_sort === '') {
                             <option value="date_desc" <?php selected($program_archive_sort, 'date_desc'); ?>><?php _e('Сначала новые', 'course-plugin'); ?></option>
                             <option value="title_asc" <?php selected($program_archive_sort, 'title_asc'); ?>><?php _e('По названию А-Я', 'course-plugin'); ?></option>
                         </select>
+                    </div>
+                    <div class="catalog-view-mode-links">
+                        <?php if ($program_catalog_show_all) : ?>
+                            <a href="<?php echo $cp_program_url_paged; ?>" class="catalog-view-mode-link"><?php _e('По страницам', 'course-plugin'); ?></a>
+                        <?php else : ?>
+                            <a href="<?php echo $cp_program_url_show_all; ?>" class="catalog-view-mode-link"><?php _e('Показать все', 'course-plugin'); ?></a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -531,19 +559,24 @@ if ($program_archive_sort === '') {
                 </div>
                 
                 <!-- Пагинация -->
+                <?php if (!$program_catalog_show_all && $wp_query->max_num_pages > 1) : ?>
                 <div class="premium-pagination">
                     <?php
                     $big = 999999999;
+                    $paginate_add_args = wp_unslash($_GET);
+                    unset($paginate_add_args['paged']);
                     echo paginate_links(array(
                         'base' => str_replace($big, '%#%', esc_url(get_pagenum_link($big))),
                         'format' => '?paged=%#%',
                         'current' => max(1, $paged),
                         'total' => $wp_query->max_num_pages,
+                        'add_args' => $paginate_add_args,
                         'prev_text' => '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
                         'next_text' => '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
                     ));
                     ?>
                 </div>
+                <?php endif; ?>
                 
             <?php else : ?>
                 <div class="no-results">
