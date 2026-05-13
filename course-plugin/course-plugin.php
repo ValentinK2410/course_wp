@@ -3,7 +3,7 @@
  * Plugin Name: Курсы Про
  * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
- * Version: 1.4.4
+ * Version: 1.5.0
  * Author: Кузьменко Валентин (Valentink2410)
  * Author URI: https://github.com/ValentinK2410
  * Copyright: Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 
 // Определяем константы плагина для использования в других файлах
 // COURSE_PLUGIN_VERSION - версия плагина для версионирования стилей и скриптов
-define('COURSE_PLUGIN_VERSION', '1.4.4');
+define('COURSE_PLUGIN_VERSION', '1.5.0');
 
 // COURSE_PLUGIN_DIR - абсолютный путь к директории плагина (например: /var/www/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -200,6 +200,7 @@ class Course_Plugin {
         $files = array(
             'includes/class-course-logger.php',        // Класс для логирования (должен быть первым)
             'includes/course-plugin-formatting.php',   // Форматирование дат для карточек каталога
+            'includes/class-course-tp-event-tweaks.php', // Unicamp tp_event: заголовок мероприятия без записи на событие
             'includes/class-course-post-type.php',      // Класс для регистрации Custom Post Type "Курсы"
             'includes/class-program-post-type.php',     // Класс для регистрации Custom Post Type "Программы"
             'includes/class-course-taxonomies.php',    // Класс для регистрации таксономий (специализация, уровень, тема, преподаватель)
@@ -315,6 +316,11 @@ class Course_Plugin {
         // Инициализируем фронтенд программ
         if (class_exists('Program_Frontend')) {
             Program_Frontend::get_instance();
+        }
+        
+        // Тип записи событий Unicamp (tp_event): информативные страницы без регистрации
+        if (class_exists('Course_Tp_Event_Tweaks')) {
+            Course_Tp_Event_Tweaks::get_instance();
         }
         
         // Инициализируем метаполя преподавателей

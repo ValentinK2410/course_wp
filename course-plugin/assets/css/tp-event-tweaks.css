@@ -1,0 +1,17 @@
+/**
+ * Страница одиночного мероприятия tp_event (Unicamp):
+ * информационное мероприятие без оплаты, мест и записи — только блоки даты/времени и т.п.
+ */
+
+/* Правая колонка: цена, лимиты мест, кнопка регистрации и подсказка про логин */
+body.single-tp_event .entry-event-info > li.meta-price,
+body.single-tp_event .entry-event-info > li.total,
+body.single-tp_event .entry-event-info > li.booking_slot,
+body.single-tp_event .entry-register {
+    display: none !important;
+}
+
+/* Комментарии под текстом страницы */
+body.single-tp_event .entry-event-section.entry-event-comments {
+    display: none !important;
+}
