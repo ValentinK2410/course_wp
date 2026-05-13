@@ -2109,9 +2109,9 @@ article.teacher-card {
 /* Панель инструментов (поиск, фильтры, сортировка) */
 .premium-archive-wrapper.teachers-archive .teachers-toolbar {
     display: flex !important;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 16px !important;
     margin-bottom: 32px !important;
     padding: 20px !important;
     background: var(--premium-white) !important;
@@ -2235,11 +2235,6 @@ article.teacher-card {
 .premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown-toggle:hover .filter-count,
 .premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown-toggle:focus-visible .filter-count {
     color: var(--premium-white) !important;
-}
-
-.premium-archive-wrapper.teachers-archive .teachers-toolbar {
-    align-items: center !important;
-    gap: 16px !important;
 }
 
 .premium-archive-wrapper.teachers-archive .toolbar-left {
