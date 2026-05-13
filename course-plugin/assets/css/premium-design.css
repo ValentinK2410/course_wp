@@ -2203,6 +2203,7 @@ article.teacher-card {
     min-height: 44px !important;
     height: 44px !important;
     padding: 0 14px !important;
+    margin: 0 !important;
     background: var(--premium-white) !important;
     background-color: var(--premium-white) !important;
     color: var(--premium-gray-900) !important;
@@ -2238,6 +2239,7 @@ article.teacher-card {
 }
 
 .premium-archive-wrapper.teachers-archive .toolbar-left {
+    display: flex !important;
     align-items: center !important;
     gap: 10px !important;
     flex: 1 1 auto !important;
@@ -2245,41 +2247,68 @@ article.teacher-card {
 }
 
 .premium-archive-wrapper.teachers-archive .toolbar-right {
+    display: flex !important;
     align-items: center !important;
     gap: 12px !important;
     flex-shrink: 0 !important;
     margin-left: auto !important;
 }
 
+/* Горизонтальное выравнивание: общая ось, сброс margin темы */
 .premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-search-box {
+    display: flex !important;
+    align-items: center !important;
     align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown {
+    display: flex !important;
+    align-items: center !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .sort-dropdown {
+    display: flex !important;
+    align-items: center !important;
+    align-self: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-search-box input.filter-search-input {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    flex: 1 1 auto !important;
     min-height: 44px !important;
     height: 44px !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    padding-right: 14px !important;
-    padding-left: 3.25rem !important;
-    line-height: 44px !important;
+    max-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 14px 0 3.25rem !important;
+    line-height: normal !important;
     border-width: 2px !important;
     border-style: solid !important;
     border-color: var(--premium-gray-300) !important;
     color: var(--premium-gray-900) !important;
-    vertical-align: middle !important;
 }
 
 .premium-archive-wrapper.teachers-archive .teachers-toolbar .sort-dropdown .premium-sort-select {
     box-sizing: border-box !important;
     min-height: 44px !important;
     height: 44px !important;
+    max-height: 44px !important;
+    margin: 0 !important;
     padding: 0 40px 0 14px !important;
-    line-height: 44px !important;
+    line-height: normal !important;
     border: 2px solid var(--premium-gray-300) !important;
     border-radius: var(--premium-radius) !important;
     background-color: var(--premium-white) !important;
     color: var(--premium-gray-800) !important;
+    display: inline-flex !important;
+    align-items: center !important;
 }
 
 .premium-archive-wrapper.teachers-archive .teachers-toolbar .sort-dropdown .premium-sort-select:hover,
@@ -2293,9 +2322,44 @@ article.teacher-card {
 .premium-archive-wrapper.teachers-archive .teachers-toolbar .results-count {
     display: inline-flex !important;
     align-items: center !important;
+    align-self: center !important;
+    justify-content: center !important;
     min-height: 44px !important;
+    height: 44px !important;
     margin: 0 !important;
-    line-height: 1.35 !important;
+    padding: 0 !important;
+    line-height: 1.3 !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .results-count strong {
+    line-height: inherit !important;
+}
+
+/* Высокая специфичность для тем / Elementor: одна линия по вертикали */
+html body .premium-archive-wrapper.teachers-archive .teachers-toolbar {
+    align-items: center !important;
+}
+
+html body .premium-archive-wrapper.teachers-archive .teachers-toolbar .toolbar-left,
+html body .premium-archive-wrapper.teachers-archive .teachers-toolbar .toolbar-right {
+    align-items: center !important;
+}
+
+html body .premium-archive-wrapper.teachers-archive .teachers-toolbar button.filter-dropdown-toggle {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+html body .premium-archive-wrapper.teachers-archive .teachers-toolbar input.filter-search-input {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+html body .premium-archive-wrapper.teachers-archive .teachers-toolbar select.premium-sort-select {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 .filter-count {
