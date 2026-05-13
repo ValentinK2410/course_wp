@@ -2197,6 +2197,112 @@ article.teacher-card {
     color: var(--premium-primary);
 }
 
+/* Страница /teachers/: тема(Elementor и др.) часто задаёт button:hover тёмным — фиксируем читаемый hover и единую высоту строки */
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown-toggle {
+    box-sizing: border-box !important;
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 0 14px !important;
+    background: var(--premium-white) !important;
+    background-color: var(--premium-white) !important;
+    color: var(--premium-gray-900) !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: var(--premium-gray-300) !important;
+    font-weight: 600 !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown-toggle:hover,
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown-toggle:focus-visible {
+    background: var(--premium-gray-100) !important;
+    background-color: var(--premium-gray-100) !important;
+    color: var(--premium-gray-900) !important;
+    border-color: var(--premium-primary) !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown-toggle svg {
+    flex-shrink: 0;
+    color: var(--premium-gray-700) !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown-toggle:hover svg,
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown-toggle:focus-visible svg {
+    color: var(--premium-primary) !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown-toggle:hover .filter-count,
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-dropdown-toggle:focus-visible .filter-count {
+    color: var(--premium-white) !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar {
+    align-items: center !important;
+    gap: 16px !important;
+}
+
+.premium-archive-wrapper.teachers-archive .toolbar-left {
+    align-items: center !important;
+    gap: 10px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.premium-archive-wrapper.teachers-archive .toolbar-right {
+    align-items: center !important;
+    gap: 12px !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-search-box {
+    align-self: center !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .filter-search-box input.filter-search-input {
+    min-height: 44px !important;
+    height: 44px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-right: 14px !important;
+    padding-left: 3.25rem !important;
+    line-height: 44px !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: var(--premium-gray-300) !important;
+    color: var(--premium-gray-900) !important;
+    vertical-align: middle !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .sort-dropdown .premium-sort-select {
+    box-sizing: border-box !important;
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 0 40px 0 14px !important;
+    line-height: 44px !important;
+    border: 2px solid var(--premium-gray-300) !important;
+    border-radius: var(--premium-radius) !important;
+    background-color: var(--premium-white) !important;
+    color: var(--premium-gray-800) !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .sort-dropdown .premium-sort-select:hover,
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .sort-dropdown .premium-sort-select:focus {
+    background: var(--premium-white) !important;
+    background-color: var(--premium-white) !important;
+    color: var(--premium-gray-900) !important;
+    border-color: var(--premium-primary) !important;
+}
+
+.premium-archive-wrapper.teachers-archive .teachers-toolbar .results-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    line-height: 1.35 !important;
+}
+
 .filter-count {
     display: inline-flex;
     align-items: center;
