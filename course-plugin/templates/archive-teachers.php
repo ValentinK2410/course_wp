@@ -14,6 +14,17 @@ $sort = isset($_GET['sort']) ? sanitize_text_field($_GET['sort']) : 'name';
 $specialization_filter = isset($_GET['specialization']) ? (array)$_GET['specialization'] : array();
 $specialization_filter = array_map('sanitize_text_field', $specialization_filter);
 
+$seminary_role_filter = '';
+if (isset($_GET['seminary_role']) && is_string($_GET['seminary_role'])) {
+    $r = sanitize_key(wp_unslash($_GET['seminary_role']));
+    if (class_exists('Course_Teacher_Meta')) {
+        $role_labels_allow = Course_Teacher_Meta::get_seminary_role_labels();
+        if ($r !== '' && isset($role_labels_allow[$r])) {
+            $seminary_role_filter = $r;
+        }
+    }
+}
+
 // Получаем всех преподавателей
 $teachers_args = array(
     'taxonomy' => 'course_teacher',
@@ -31,6 +42,11 @@ $teachers = get_terms($teachers_args);
 // Подсчёт курсов и получение дополнительных данных для каждого преподавателя
 $teachers_with_data = array();
 $teacher_count_by_spec = array();
+$teacher_count_by_role = array(
+    'staff' => 0,
+    'invited' => 0,
+    'lecturer' => 0,
+);
 if (!is_wp_error($teachers)) {
     foreach ($teachers as $term) {
         if (class_exists('Course_Teacher_Meta') && Course_Teacher_Meta::is_teacher_hidden_in_biblical($term->term_id)) {
@@ -100,6 +116,13 @@ if (!is_wp_error($teachers)) {
             $teacher_count_by_spec[$spec_slug]++;
         }
         
+        if (class_exists('Course_Teacher_Meta')) {
+            $tr = Course_Teacher_Meta::get_teacher_seminary_role($term->term_id);
+            if ($tr !== '') {
+                $teacher_count_by_role[$tr]++;
+            }
+        }
+        
         // Фильтрация по специализации
         if (!empty($specialization_filter)) {
             $has_match = false;
@@ -110,6 +133,12 @@ if (!is_wp_error($teachers)) {
                 }
             }
             if (!$has_match) {
+                continue;
+            }
+        }
+        
+        if ($seminary_role_filter !== '' && class_exists('Course_Teacher_Meta')) {
+            if (Course_Teacher_Meta::get_teacher_seminary_role($term->term_id) !== $seminary_role_filter) {
                 continue;
             }
         }
@@ -151,6 +180,8 @@ $all_specializations = get_terms(array(
     'taxonomy' => 'course_specialization',
     'hide_empty' => true,
 ));
+
+$seminary_role_labels = class_exists('Course_Teacher_Meta') ? Course_Teacher_Meta::get_seminary_role_labels() : array();
 ?>
 
 <style>
@@ -324,6 +355,39 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                                 <span class="option-checkbox"></span>
                                 <span class="option-text"><?php echo esc_html($spec->name); ?></span>
                                 <span class="option-count"><?php echo $spec_teacher_count; ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
+                <?php if (!empty($seminary_role_labels)) : ?>
+                <div class="filter-dropdown">
+                    <button type="button" class="filter-dropdown-toggle" id="seminary-role-filter-toggle" aria-expanded="false" aria-haspopup="true">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 1L8 15M1 8H15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                        <?php _e('Роль в семинарии', 'course-plugin'); ?>
+                        <?php if ($seminary_role_filter !== '') : ?>
+                            <span class="filter-count">1</span>
+                        <?php endif; ?>
+                    </button>
+                    <div class="filter-dropdown-menu" id="seminary-role-filter-menu">
+                        <label class="filter-option">
+                            <input type="radio" name="seminary_role" value="" <?php checked($seminary_role_filter, ''); ?> />
+                            <span class="option-checkbox"></span>
+                            <span class="option-text"><?php _e('Все преподаватели', 'course-plugin'); ?></span>
+                            <span class="option-count">—</span>
+                        </label>
+                        <?php foreach ($seminary_role_labels as $role_slug => $role_label) :
+                            $role_teacher_count = isset($teacher_count_by_role[$role_slug]) ? (int) $teacher_count_by_role[$role_slug] : 0;
+                        ?>
+                            <label class="filter-option">
+                                <input type="radio" name="seminary_role" value="<?php echo esc_attr($role_slug); ?>" <?php checked($seminary_role_filter, $role_slug); ?> />
+                                <span class="option-checkbox"></span>
+                                <span class="option-text"><?php echo esc_html($role_label); ?></span>
+                                <span class="option-count"><?php echo $role_teacher_count; ?></span>
                             </label>
                         <?php endforeach; ?>
                     </div>
@@ -531,27 +595,57 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Фильтр по специализации
     var specToggle = document.getElementById('specialization-filter-toggle');
     var specMenu = document.getElementById('specialization-filter-menu');
+    var roleToggle = document.getElementById('seminary-role-filter-toggle');
+    var roleMenu = document.getElementById('seminary-role-filter-menu');
     
+    document.addEventListener('click', function() {
+        if (specMenu) {
+            specMenu.classList.remove('active');
+        }
+        if (roleMenu) {
+            roleMenu.classList.remove('active');
+        }
+    });
+    
+    // Фильтр по специализации
     if (specToggle && specMenu) {
         specToggle.addEventListener('click', function(e) {
             e.stopPropagation();
+            if (roleMenu) {
+                roleMenu.classList.remove('active');
+            }
             specMenu.classList.toggle('active');
-        });
-        
-        document.addEventListener('click', function() {
-            specMenu.classList.remove('active');
         });
         
         specMenu.addEventListener('click', function(e) {
             e.stopPropagation();
         });
         
-        var specCheckboxes = specMenu.querySelectorAll('input[type="checkbox"]');
-        specCheckboxes.forEach(function(checkbox) {
+        specMenu.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
             checkbox.addEventListener('change', function() {
+                applyFilters();
+            });
+        });
+    }
+    
+    // Фильтр по роли в семинарии
+    if (roleToggle && roleMenu) {
+        roleToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (specMenu) {
+                specMenu.classList.remove('active');
+            }
+            roleMenu.classList.toggle('active');
+        });
+        
+        roleMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        roleMenu.querySelectorAll('input[name="seminary_role"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
                 applyFilters();
             });
         });
@@ -573,10 +667,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (specMenu) {
-            var checkedSpecs = specMenu.querySelectorAll('input[type="checkbox"]:checked');
-            checkedSpecs.forEach(function(checkbox) {
+            specMenu.querySelectorAll('input[type="checkbox"]:checked').forEach(function(checkbox) {
                 url.searchParams.append('specialization[]', checkbox.value);
             });
+        }
+        
+        if (roleMenu) {
+            var roleChecked = roleMenu.querySelector('input[name="seminary_role"]:checked');
+            if (roleChecked && roleChecked.value) {
+                url.searchParams.set('seminary_role', roleChecked.value);
+            }
         }
         
         window.location.href = url.toString();

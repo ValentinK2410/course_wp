@@ -284,6 +284,34 @@ JS;
         </tr>
         
         <tr class="form-field">
+            <th scope="row"><?php _e('Роль в семинарии', 'course-plugin'); ?></th>
+            <td>
+                <fieldset>
+                    <legend class="screen-reader-text"><?php _e('Роль в семинарии', 'course-plugin'); ?></legend>
+                    <?php
+                    $role_current = self::get_teacher_seminary_role($term->term_id);
+                    $role_labels = self::get_seminary_role_labels();
+                    ?>
+                    <p>
+                        <label>
+                            <input type="radio" name="teacher_seminary_role" value="" <?php checked($role_current, ''); ?> />
+                            <?php _e('Не задано', 'course-plugin'); ?>
+                        </label>
+                    </p>
+                    <?php foreach ($role_labels as $slug => $role_label) : ?>
+                        <p>
+                            <label>
+                                <input type="radio" name="teacher_seminary_role" value="<?php echo esc_attr($slug); ?>" <?php checked($role_current, $slug); ?> />
+                                <?php echo esc_html($role_label); ?>
+                            </label>
+                        </p>
+                    <?php endforeach; ?>
+                </fieldset>
+                <p class="description"><?php _e('Используется для фильтра «Роль в семинарии» на странице списка преподавателей.', 'course-plugin'); ?></p>
+            </td>
+        </tr>
+        
+        <tr class="form-field">
             <th scope="row"><?php _e('Главная страница', 'course-plugin'); ?></th>
             <td>
                 <label for="teacher_show_on_homepage">
@@ -409,6 +437,17 @@ JS;
         </div>
         
         <div class="form-field">
+            <fieldset>
+                <legend><?php _e('Роль в семинарии', 'course-plugin'); ?></legend>
+                <?php $role_labels = self::get_seminary_role_labels(); ?>
+                <p><label><input type="radio" name="teacher_seminary_role" value="" checked="checked" /> <?php _e('Не задано', 'course-plugin'); ?></label></p>
+                <?php foreach ($role_labels as $slug => $role_label) : ?>
+                    <p><label><input type="radio" name="teacher_seminary_role" value="<?php echo esc_attr($slug); ?>" /> <?php echo esc_html($role_label); ?></label></p>
+                <?php endforeach; ?>
+            </fieldset>
+        </div>
+        
+        <div class="form-field">
             <label for="teacher_show_on_homepage">
                 <input type="checkbox" name="teacher_show_on_homepage" id="teacher_show_on_homepage" value="1" />
                 <?php _e('Показывать на главной', 'course-plugin'); ?>
@@ -513,6 +552,14 @@ JS;
             delete_term_meta($term_id, 'teacher_show_on_homepage');
             delete_term_meta($term_id, 'teacher_homepage_order');
         }
+        
+        $role_labels = self::get_seminary_role_labels();
+        $posted_role = isset($_POST['teacher_seminary_role']) ? sanitize_key(wp_unslash($_POST['teacher_seminary_role'])) : '';
+        if ($posted_role !== '' && isset($role_labels[$posted_role])) {
+            update_term_meta($term_id, 'teacher_seminary_role', $posted_role);
+        } else {
+            delete_term_meta($term_id, 'teacher_seminary_role');
+        }
     }
     
     /**
@@ -556,6 +603,7 @@ JS;
         $new_columns['description'] = $columns['description'];
         $new_columns['slug'] = $columns['slug'];
         $new_columns['teacher_homepage'] = __('Главная', 'course-plugin');
+        $new_columns['teacher_seminary_role'] = __('Роль в семинарии', 'course-plugin');
         $new_columns['teacher_biblical'] = __('Библейский раздел', 'course-plugin');
         $new_columns['posts'] = $columns['posts'];
         return $new_columns;
@@ -585,6 +633,13 @@ JS;
             $ord = self::get_teacher_homepage_order($term_id);
             return '<span class="dashicons dashicons-admin-home" title="' . esc_attr(__('На главной', 'course-plugin')) . '" style="color:#2271b1;"></span> '
                 . '<span class="description">' . esc_html(sprintf(__('пор. %d', 'course-plugin'), $ord)) . '</span>';
+        }
+        if ($column_name === 'teacher_seminary_role') {
+            $slug = self::get_teacher_seminary_role($term_id);
+            $labels = self::get_seminary_role_labels();
+            return $slug !== '' && isset($labels[$slug])
+                ? '<span>' . esc_html($labels[$slug]) . '</span>'
+                : '<span aria-hidden="true">—</span>';
         }
         if ($column_name === 'teacher_biblical') {
             $hidden = self::is_teacher_hidden_in_biblical($term_id);
@@ -701,6 +756,31 @@ JS;
      */
     public static function get_teacher_homepage_order($term_id) {
         return (int) get_term_meta((int) $term_id, 'teacher_homepage_order', true);
+    }
+    
+    /**
+     * Подписи ролей на странице /teachers/ и в метаполях термина.
+     *
+     * @return array<string,string> slug => label
+     */
+    public static function get_seminary_role_labels() {
+        return array(
+            'staff' => __('Штатный преподаватель', 'course-plugin'),
+            'invited' => __('Приглашённый преподаватель', 'course-plugin'),
+            'lecturer' => __('Лектор', 'course-plugin'),
+        );
+    }
+    
+    /**
+     * Сохранённая роль преподавателя (teacher_seminary_role).
+     *
+     * @param int $term_id ID преподавателя (course_teacher).
+     * @return string Одно из keys get_seminary_role_labels() либо пустая строка.
+     */
+    public static function get_teacher_seminary_role($term_id) {
+        $labels = self::get_seminary_role_labels();
+        $slug = sanitize_key(get_term_meta((int) $term_id, 'teacher_seminary_role', true));
+        return isset($labels[$slug]) ? $slug : '';
     }
     
     /**
