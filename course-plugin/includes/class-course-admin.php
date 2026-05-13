@@ -559,13 +559,13 @@ class Course_Admin {
                         <tbody>
                             <tr><td><code>per_page</code></td><td>6</td><td><?php _e('Количество преподавателей', 'course-plugin'); ?></td></tr>
                             <tr><td><code>columns</code></td><td>3</td><td><?php _e('Колонок в сетке (2, 3, 4)', 'course-plugin'); ?></td></tr>
-                            <tr><td><code>biblical</code></td><td>—</td><td><?php _e('1 — скрыть преподавателей с галочкой «библейский раздел»', 'course-plugin'); ?></td></tr>
+                            <tr><td><code>homepage</code></td><td>—</td><td><?php _e('1 — только преподаватели с галочкой «Показывать на главной» (порядок в карточке термина)', 'course-plugin'); ?></td></tr>
                             <tr><td><code>specialization</code></td><td>—</td><td><?php _e('Slug направления; если он в списке библейских — то же скрытие', 'course-plugin'); ?></td></tr>
                             <tr><td><code>button_style</code></td><td>default</td><td>default, outline, minimal, theme</td></tr>
                             <tr><td><code>theme_class</code></td><td>—</td><td><?php _e('Доп. CSS-класс', 'course-plugin'); ?></td></tr>
                         </tbody>
                     </table>
-                    <p><strong><?php _e('Примеры:', 'course-plugin'); ?></strong> <code>[teachers per_page="8" columns="4"]</code>, <code>[teachers biblical="1"]</code></p>
+                    <p><strong><?php _e('Примеры:', 'course-plugin'); ?></strong> <code>[teachers per_page="8" columns="4"]</code>, <code>[teachers homepage="1" per_page="6" columns="3"]</code>, <code>[teachers biblical="1"]</code></p>
                     <?php endif; ?>
                 </div>
             </details>

@@ -284,6 +284,22 @@ JS;
         </tr>
         
         <tr class="form-field">
+            <th scope="row"><?php _e('Главная страница', 'course-plugin'); ?></th>
+            <td>
+                <label for="teacher_show_on_homepage">
+                    <input type="checkbox" name="teacher_show_on_homepage" id="teacher_show_on_homepage" value="1" <?php checked(get_term_meta($term->term_id, 'teacher_show_on_homepage', true), '1'); ?> />
+                    <?php _e('Показывать на главной', 'course-plugin'); ?>
+                </label>
+                <p class="description"><?php _e('Учитывается при выводе шорткода с параметром homepage="1", например [teachers homepage="1" per_page="6" columns="3"]. Отметьте до шести преподавателей и задайте порядок ниже.', 'course-plugin'); ?></p>
+                <p style="margin-top:10px;">
+                    <label for="teacher_homepage_order"><?php _e('Порядок на главной', 'course-plugin'); ?></label><br />
+                    <input type="number" id="teacher_homepage_order" name="teacher_homepage_order" value="<?php echo esc_attr(get_term_meta($term->term_id, 'teacher_show_on_homepage', true) === '1' ? (string) (int) get_term_meta($term->term_id, 'teacher_homepage_order', true) : ''); ?>" class="small-text" min="0" max="999" step="1" />
+                    <span class="description"><?php _e('Меньшее число — выше в списке; при одинаковом порядке — по алфавиту.', 'course-plugin'); ?></span>
+                </p>
+            </td>
+        </tr>
+        
+        <tr class="form-field">
             <th scope="row"><?php _e('Библейский раздел', 'course-plugin'); ?></th>
             <td>
                 <label for="teacher_hide_in_biblical">
@@ -393,6 +409,18 @@ JS;
         </div>
         
         <div class="form-field">
+            <label for="teacher_show_on_homepage">
+                <input type="checkbox" name="teacher_show_on_homepage" id="teacher_show_on_homepage" value="1" />
+                <?php _e('Показывать на главной', 'course-plugin'); ?>
+            </label>
+            <p class="description"><?php _e('Для блока на главной с шорткодом [teachers homepage="1" …].', 'course-plugin'); ?></p>
+            <p style="margin-top:8px;">
+                <label for="teacher_homepage_order"><?php _e('Порядок на главной', 'course-plugin'); ?></label><br />
+                <input type="number" id="teacher_homepage_order" name="teacher_homepage_order" value="" class="small-text" min="0" max="999" step="1" placeholder="10" />
+            </p>
+        </div>
+        
+        <div class="form-field">
             <label for="teacher_hide_in_biblical">
                 <input type="checkbox" name="teacher_hide_in_biblical" id="teacher_hide_in_biblical" value="1" />
                 <?php _e('Скрыть в библейском разделе сайта', 'course-plugin'); ?>
@@ -476,6 +504,15 @@ JS;
         } else {
             delete_term_meta($term_id, 'teacher_hide_in_biblical');
         }
+        
+        if (isset($_POST['teacher_show_on_homepage']) && $_POST['teacher_show_on_homepage'] === '1') {
+            update_term_meta($term_id, 'teacher_show_on_homepage', '1');
+            $ord = isset($_POST['teacher_homepage_order']) ? absint(wp_unslash($_POST['teacher_homepage_order'])) : 100;
+            update_term_meta($term_id, 'teacher_homepage_order', min(999, $ord));
+        } else {
+            delete_term_meta($term_id, 'teacher_show_on_homepage');
+            delete_term_meta($term_id, 'teacher_homepage_order');
+        }
     }
     
     /**
@@ -518,6 +555,7 @@ JS;
         $new_columns['name'] = $columns['name'];
         $new_columns['description'] = $columns['description'];
         $new_columns['slug'] = $columns['slug'];
+        $new_columns['teacher_homepage'] = __('Главная', 'course-plugin');
         $new_columns['teacher_biblical'] = __('Библейский раздел', 'course-plugin');
         $new_columns['posts'] = $columns['posts'];
         return $new_columns;
@@ -539,6 +577,14 @@ JS;
             } else {
                 return '—';
             }
+        }
+        if ($column_name === 'teacher_homepage') {
+            if (!self::is_teacher_on_homepage($term_id)) {
+                return '<span aria-hidden="true">—</span>';
+            }
+            $ord = self::get_teacher_homepage_order($term_id);
+            return '<span class="dashicons dashicons-admin-home" title="' . esc_attr(__('На главной', 'course-plugin')) . '" style="color:#2271b1;"></span> '
+                . '<span class="description">' . esc_html(sprintf(__('пор. %d', 'course-plugin'), $ord)) . '</span>';
         }
         if ($column_name === 'teacher_biblical') {
             $hidden = self::is_teacher_hidden_in_biblical($term_id);
@@ -635,6 +681,26 @@ JS;
      */
     public static function is_teacher_hidden_in_biblical($term_id) {
         return get_term_meta((int) $term_id, 'teacher_hide_in_biblical', true) === '1';
+    }
+    
+    /**
+     * Отмечен для блока преподавателей на главной (шорткод с homepage="1").
+     *
+     * @param int $term_id ID преподавателя (course_teacher).
+     * @return bool
+     */
+    public static function is_teacher_on_homepage($term_id) {
+        return get_term_meta((int) $term_id, 'teacher_show_on_homepage', true) === '1';
+    }
+    
+    /**
+     * Порядок вывода на главной (меньше — раньше).
+     *
+     * @param int $term_id ID преподавателя.
+     * @return int
+     */
+    public static function get_teacher_homepage_order($term_id) {
+        return (int) get_term_meta((int) $term_id, 'teacher_homepage_order', true);
     }
     
     /**

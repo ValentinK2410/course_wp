@@ -964,8 +964,9 @@ class Course_Frontend {
      * Параметры:
      * - per_page (число) — количество преподавателей (по умолчанию 6)
      * - columns (число) — колонок в сетке на десктопе (2, 3, 4)
-     * 
-     * Пример: [teachers per_page="8"]
+     * - homepage (1/true) — только преподаватели с галочкой «Показывать на главной», порядок из метаполя
+     *
+     * Пример: [teachers per_page="8"], [teachers homepage="1" per_page="6" columns="3"]
      */
     public function teachers_shortcode($atts) {
         $atts = shortcode_atts(array(
@@ -975,6 +976,7 @@ class Course_Frontend {
             'theme_class' => '',
             'biblical' => '',
             'specialization' => '',
+            'homepage' => '',
         ), $atts);
         
         $teachers_args = array(
@@ -998,6 +1000,25 @@ class Course_Frontend {
                 }
             }
             $teachers = $filtered;
+        }
+        
+        $homepage_only = filter_var($atts['homepage'], FILTER_VALIDATE_BOOLEAN);
+        if ($homepage_only && class_exists('Course_Teacher_Meta')) {
+            $featured = array();
+            foreach ($teachers as $term) {
+                if (Course_Teacher_Meta::is_teacher_on_homepage($term->term_id)) {
+                    $featured[] = $term;
+                }
+            }
+            usort($featured, static function ($a, $b) {
+                $oa = Course_Teacher_Meta::get_teacher_homepage_order($a->term_id);
+                $ob = Course_Teacher_Meta::get_teacher_homepage_order($b->term_id);
+                if ($oa !== $ob) {
+                    return $oa <=> $ob;
+                }
+                return strcasecmp($a->name, $b->name);
+            });
+            $teachers = $featured;
         }
         
         $limit = max(1, intval($atts['per_page']));
