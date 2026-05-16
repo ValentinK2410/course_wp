@@ -82,14 +82,6 @@ if ($program_archive_sort === '') {
                     ?></span>
                     <span class="stat-label"><?php _e('курсов', 'course-plugin'); ?></span>
                 </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                    <span class="stat-number"><?php 
-                        $specializations = get_terms(array('taxonomy' => 'course_specialization', 'hide_empty' => true));
-                        echo is_wp_error($specializations) ? 0 : count($specializations);
-                    ?></span>
-                    <span class="stat-label"><?php _e('направлений', 'course-plugin'); ?></span>
-                </div>
             </div>
         </div>
         
@@ -122,7 +114,7 @@ if ($program_archive_sort === '') {
             // Подсчёт программ по каждому термину (без учёта курсов)
             global $wpdb;
             $program_counts_by_tax = array();
-            foreach (array('course_level', 'course_specialization', 'course_topic') as $tax) {
+            foreach (array('course_level', 'course_topic') as $tax) {
                 $program_counts_by_tax[$tax] = array();
                 $rows = $wpdb->get_results($wpdb->prepare("
                     SELECT tt.term_id, COUNT(DISTINCT tr.object_id) AS cnt
@@ -187,46 +179,6 @@ if ($program_archive_sort === '') {
                                     <span class="option-checkbox"></span>
                                     <span class="option-text"><?php echo esc_html($level->name); ?></span>
                                     <span class="option-count"><?php echo isset($program_counts_by_tax['course_level'][$level->term_id]) ? $program_counts_by_tax['course_level'][$level->term_id] : 0; ?></span>
-                                </label>
-                                <?php
-                            }
-                        }
-                        ?>
-                    </div>
-                </div>
-                
-                <!-- Направление: таксономия course_specialization (общая для курсов и программ) -->
-                <div class="filter-group">
-                    <button type="button" class="filter-group-toggle active" data-target="spec-options">
-                        <span class="filter-group-title">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
-                                <path d="M5 6H11M5 8H11M5 10H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                            </svg>
-                            <?php _e('Направление', 'course-plugin'); ?>
-                        </span>
-                        <svg class="toggle-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                    <div class="filter-options" id="spec-options">
-                        <?php
-                        $specializations = get_terms(array(
-                            'taxonomy' => 'course_specialization',
-                            'hide_empty' => false,
-                            'orderby' => 'name',
-                        ));
-                        
-                        if ($specializations && !is_wp_error($specializations)) {
-                            $selected_specs = isset($_GET['specialization']) ? (array)$_GET['specialization'] : array();
-                            foreach ($specializations as $spec) {
-                                $checked = in_array($spec->slug, $selected_specs) ? 'checked' : '';
-                                ?>
-                                <label class="filter-option">
-                                    <input type="checkbox" name="specialization[]" value="<?php echo esc_attr($spec->slug); ?>" <?php echo $checked; ?>>
-                                    <span class="option-checkbox"></span>
-                                    <span class="option-text"><?php echo esc_html($spec->name); ?></span>
-                                    <span class="option-count"><?php echo isset($program_counts_by_tax['course_specialization'][$spec->term_id]) ? $program_counts_by_tax['course_specialization'][$spec->term_id] : 0; ?></span>
                                 </label>
                                 <?php
                             }
@@ -351,7 +303,7 @@ if ($program_archive_sort === '') {
             
             <!-- Активные фильтры -->
             <?php
-            $has_active_filters = !empty($_GET['level']) || !empty($_GET['specialization']) || !empty($_GET['topic']) || !empty($_GET['search']);
+            $has_active_filters = !empty($_GET['level']) || !empty($_GET['topic']) || !empty($_GET['search']);
             if ($has_active_filters) :
             ?>
             <div class="active-filters">

@@ -135,18 +135,6 @@ class Program_Frontend {
             
             $tax_query = array();
             
-            // Фильтр по специализации (может быть массивом)
-            if (isset($_GET['specialization']) && !empty($_GET['specialization'])) {
-                $specializations = is_array($_GET['specialization']) ? $_GET['specialization'] : array($_GET['specialization']);
-                $specializations = array_map('sanitize_text_field', $specializations);
-                $tax_query[] = array(
-                    'taxonomy' => 'course_specialization',
-                    'field'    => 'slug',
-                    'terms'    => $specializations,
-                    'operator' => 'IN',
-                );
-            }
-            
             // Фильтр по уровню образования (может быть массивом)
             if (isset($_GET['level']) && !empty($_GET['level'])) {
                 $levels = is_array($_GET['level']) ? $_GET['level'] : array($_GET['level']);
