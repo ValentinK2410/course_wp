@@ -1674,18 +1674,7 @@
 /* ================================================
    СПЕЦИФИЧНЫЕ СТИЛИ ДЛЯ ПРОГРАММ
    ================================================ */
-.premium-archive-wrapper.programs-archive .premium-archive-header {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.premium-archive-wrapper.programs-archive .filter-apply-btn {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    box-shadow: 0 4px 14px rgba(240, 147, 251, 0.4);
-}
-
-.premium-archive-wrapper.programs-archive .filter-apply-btn:hover {
-    box-shadow: 0 6px 20px rgba(240, 147, 251, 0.5);
-}
+/* Шапка и кнопка фильтра — как у архива курсов (общий --premium-gradient-1) */
 
 /* Карточки программ: 3 строки заголовка за счёт уменьшенного шрифта */
 .premium-archive-wrapper.programs-archive .card-title {
