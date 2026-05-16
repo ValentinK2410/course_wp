@@ -1296,31 +1296,46 @@
     transform: translateX(4px);
 }
 
-/* Вид списком */
+/* Вид списком: превью слева на всю высоту карточки, контент справа (структура: article > .card-link > .card-header + .card-content) */
 .premium-courses-grid[data-view="list"] .premium-course-card {
+    display: block;
+}
+
+.premium-courses-grid[data-view="list"] .card-link {
     display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    min-height: 240px;
 }
 
 .premium-courses-grid[data-view="list"] .card-header {
-    width: 280px;
+    flex: 0 0 clamp(200px, 26vw, 320px);
+    width: clamp(200px, 26vw, 320px);
+    max-width: 340px;
     height: auto;
     min-height: 240px;
-    flex-shrink: 0;
+    align-self: stretch;
 }
 
 .premium-courses-grid[data-view="list"] .card-content {
-    flex: 1;
+    flex: 1 1 0;
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .premium-courses-grid[data-view="list"] .card-title {
-    font-size: 1.5rem;
-    -webkit-line-clamp: 1;
+    font-size: 1.375rem;
+    -webkit-line-clamp: 2;
 }
 
 .premium-courses-grid[data-view="list"] .card-footer {
     margin-top: auto;
+}
+
+.premium-courses-grid[data-view="list"] .premium-course-card:hover {
+    transform: translateY(-4px);
 }
 
 /* ================================================
@@ -1502,13 +1517,16 @@
         grid-template-columns: 1fr;
     }
     
-    .premium-courses-grid[data-view="list"] .premium-course-card {
+    .premium-courses-grid[data-view="list"] .card-link {
         flex-direction: column;
+        min-height: 0;
     }
-    
+
     .premium-courses-grid[data-view="list"] .card-header {
         width: 100%;
-        min-height: 240px;
+        max-width: none;
+        flex: none;
+        min-height: 220px;
     }
     
     .premium-archive-title {
