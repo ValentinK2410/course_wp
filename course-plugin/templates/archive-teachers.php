@@ -493,6 +493,7 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                                         <p class="teacher-card-description teacher-card-education"><?php echo esc_html($education_snippet); ?></p>
                                     <?php endif; ?>
                                     
+                                    <?php if ($courses_count > 0) : ?>
                                     <div class="teacher-card-meta">
                                         <span class="teacher-courses-count">
                                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -505,6 +506,7 @@ html body .premium-archive-wrapper.teachers-archive article.teacher-card {
                                             ); ?>
                                         </span>
                                     </div>
+                                    <?php endif; ?>
                                     
                                     <!-- Контакты (email на карточке архива не показываем — компактнее) -->
                                     <?php if ($teacher_phone || $teacher_facebook || $teacher_twitter || $teacher_linkedin) : ?>

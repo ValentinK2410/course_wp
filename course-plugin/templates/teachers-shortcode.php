@@ -79,9 +79,11 @@ if ($theme_class) {
                         <?php endif; ?>
                         
                         <div class="teacher-card-meta">
+                            <?php if ($courses_count > 0) : ?>
                             <span class="teacher-courses-count">
                                 <?php printf(_n('%d курс', '%d курсов', $courses_count, 'course-plugin'), $courses_count); ?>
                             </span>
+                            <?php endif; ?>
                             <a href="<?php echo esc_url($teacher_link); ?>" class="teacher-view-profile">
                                 <?php _e('Профиль', 'course-plugin'); ?> →
                             </a>
