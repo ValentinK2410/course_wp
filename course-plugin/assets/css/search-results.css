@@ -1,0 +1,6 @@
+/**
+ * Результаты поиска (тема Unicamp): скрыть автора и дату в карточках.
+ */
+body.search-results .post-meta {
+	display: none;
+}

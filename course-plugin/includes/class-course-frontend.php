@@ -765,6 +765,16 @@ class Course_Frontend {
                 COURSE_PLUGIN_VERSION
             );
         }
+
+        // Поиск по сайту (Unicamp): без автора и даты в карточках результатов
+        if (is_search()) {
+            wp_enqueue_style(
+                'course-search-results',
+                COURSE_PLUGIN_URL . 'assets/css/search-results.css',
+                array(),
+                COURSE_PLUGIN_VERSION
+            );
+        }
         
         // Подключаем стили и скрипты на страницах курсов и преподавателей
         $is_teachers_archive = (int) get_query_var('teachers_archive') === 1;
