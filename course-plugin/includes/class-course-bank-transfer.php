@@ -63,11 +63,18 @@ class Course_Bank_Transfer {
      * @return string
      */
     public static function get_gateway_base_url() {
+        $custom = trim((string) get_option('course_sberbank_gateway_base_url', ''));
+        if ($custom !== '') {
+            return trailingslashit(esc_url_raw($custom));
+        }
+
         $test_mode = (bool) get_option('course_sberbank_test_mode', true);
         if ($test_mode) {
             return 'https://3dsec.sberbank.ru/payment/';
         }
-        return 'https://securepayments.sberbank.ru/payment/';
+
+        // Боевой шлюз МБС (как на ch67149.tmweb.ru): api.securepaymentgateway.ru
+        return 'https://api.securepaymentgateway.ru/payment/';
     }
 
     /**

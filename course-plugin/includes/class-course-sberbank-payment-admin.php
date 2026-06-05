@@ -74,6 +74,11 @@ class Course_Sberbank_Payment_Admin {
             'sanitize_callback' => 'esc_url_raw',
             'default'           => '',
         ));
+        register_setting('course_sberbank_settings', 'course_sberbank_gateway_base_url', array(
+            'type'              => 'string',
+            'sanitize_callback' => 'esc_url_raw',
+            'default'           => '',
+        ));
     }
 
     /**
@@ -93,9 +98,7 @@ class Course_Sberbank_Payment_Admin {
         }
 
         $test_mode = (bool) get_option('course_sberbank_test_mode', true);
-        $gateway   = $test_mode
-            ? 'https://3dsec.sberbank.ru/payment/rest/register.do'
-            : 'https://securepayments.sberbank.ru/payment/rest/register.do';
+        $gateway   = Course_Bank_Transfer::get_register_url();
         ?>
         <div class="wrap">
             <h1><?php esc_html_e('Платёжный шлюз Сбербанка', 'course-plugin'); ?></h1>
@@ -128,7 +131,7 @@ class Course_Sberbank_Payment_Admin {
                         <td>
                             <label>
                                 <input type="checkbox" name="course_sberbank_test_mode" value="1" <?php checked($test_mode); ?> />
-                                <?php esc_html_e('Использовать 3dsec.sberbank.ru (снимите для боевого securepayments.sberbank.ru)', 'course-plugin'); ?>
+                                <?php esc_html_e('Использовать 3dsec.sberbank.ru (снимите для боевого api.securepaymentgateway.ru)', 'course-plugin'); ?>
                             </label>
                         </td>
                     </tr>
@@ -143,6 +146,13 @@ class Course_Sberbank_Payment_Admin {
                         <th scope="row"><label for="course_sberbank_fail_url"><?php esc_html_e('URL неуспешной оплаты (failUrl)', 'course-plugin'); ?></label></th>
                         <td>
                             <input type="url" class="large-text" id="course_sberbank_fail_url" name="course_sberbank_fail_url" value="<?php echo esc_attr((string) get_option('course_sberbank_fail_url', '')); ?>" placeholder="https://mbs.ru/help_sberb/?payment=fail" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="course_sberbank_gateway_base_url"><?php esc_html_e('Базовый URL шлюза (опционально)', 'course-plugin'); ?></label></th>
+                        <td>
+                            <input type="url" class="large-text" id="course_sberbank_gateway_base_url" name="course_sberbank_gateway_base_url" value="<?php echo esc_attr((string) get_option('course_sberbank_gateway_base_url', '')); ?>" placeholder="https://api.securepaymentgateway.ru/payment/" />
+                            <p class="description"><?php esc_html_e('По умолчанию: тест — 3dsec.sberbank.ru, бой — api.securepaymentgateway.ru (как на старом сайте МБС).', 'course-plugin'); ?></p>
                         </td>
                     </tr>
                 </table>
