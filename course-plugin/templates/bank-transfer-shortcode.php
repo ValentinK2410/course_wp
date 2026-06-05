@@ -50,6 +50,18 @@ $details = array(
 ?>
 
 <div class="mbt" data-mbt-version="<?php echo esc_attr(COURSE_PLUGIN_VERSION); ?>">
+    <?php if (!empty($context['payment_notice'])) : ?>
+        <div class="mbt-alert<?php echo (!empty($context['payment_status']) && $context['payment_status'] === 'fail') ? ' mbt-alert--fail' : ' mbt-alert--success'; ?>" role="status">
+            <?php echo esc_html($context['payment_notice']); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (empty($context['is_configured'])) : ?>
+        <div class="mbt-alert mbt-alert--warn" role="alert">
+            <?php esc_html_e('Онлайн-оплата временно недоступна: не настроен платёжный шлюз Сбербанка. Обратитесь к администратору сайта.', 'course-plugin'); ?>
+        </div>
+    <?php endif; ?>
+
     <div class="mbt__grid">
         <section class="mbt-card mbt-card--details" aria-labelledby="mbt-details-title">
             <div class="mbt-card__hero">
@@ -105,16 +117,21 @@ $details = array(
                     </svg>
                 </div>
                 <div>
-                    <p class="mbt-card__kicker"><?php esc_html_e('Онлайн-оплата', 'course-plugin'); ?></p>
-                    <h3 class="mbt-card__title" id="mbt-pay-title"><?php esc_html_e('Сделать перевод на счёт в банке', 'course-plugin'); ?></h3>
+                    <p class="mbt-card__kicker"><?php esc_html_e('ПАО Сбербанк', 'course-plugin'); ?></p>
+                    <h3 class="mbt-card__title" id="mbt-pay-title"><?php esc_html_e('Оплатить картой через Сбербанк', 'course-plugin'); ?></h3>
                 </div>
             </div>
+
+            <?php if (!empty($context['gateway_test'])) : ?>
+                <p class="mbt-test-badge"><?php esc_html_e('Тестовая среда платёжного шлюза', 'course-plugin'); ?></p>
+            <?php endif; ?>
 
             <form
                 class="mbt-form"
                 method="post"
-                action="<?php echo esc_url($context['paykeeper_url']); ?>"
+                action="#"
                 data-mbt-form
+                data-mbt-sberbank="1"
                 novalidate
             >
                 <div class="mbt-field">
@@ -181,8 +198,8 @@ $details = array(
                     />
                 </div>
 
-                <button type="submit" class="mbt-btn mbt-btn--primary mbt-btn--full">
-                    <?php esc_html_e('Перейти к оплате', 'course-plugin'); ?>
+                <button type="submit" class="mbt-btn mbt-btn--primary mbt-btn--full"<?php echo empty($context['is_configured']) ? ' disabled' : ''; ?>>
+                    <?php esc_html_e('Перейти к оплате в Сбербанке', 'course-plugin'); ?>
                 </button>
             </form>
         </section>

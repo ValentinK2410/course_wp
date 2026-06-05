@@ -124,10 +124,14 @@
 
         if (form) {
             form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
                 var valid = true;
                 var sumField = form.querySelector('[name="sum"]');
                 var nameField = form.querySelector('[name="clientid"]');
                 var emailField = form.querySelector('[name="client_email"]');
+                var commentField = form.querySelector('[name="service_name"]');
+                var submitBtn = form.querySelector('[type="submit"]');
 
                 [sumField, nameField, emailField].forEach(function (field) {
                     if (field) {
@@ -160,14 +164,54 @@
                     }
                 }
 
-                if (!valid) {
-                    event.preventDefault();
+                if (!valid || !form.hasAttribute('data-mbt-sberbank')) {
                     return;
                 }
 
-                if (sumField) {
-                    sumField.value = String(parseSum(sumField.value));
+                if (!i18n.ajaxurl || !i18n.nonce) {
+                    showToast(root, i18n.errorGeneric || 'Не удалось зарегистрировать заказ');
+                    return;
                 }
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('is-loading');
+                }
+                showToast(root, i18n.processing || 'Подготовка оплаты…');
+
+                var payload = new window.FormData();
+                payload.append('action', 'mbs_sberbank_register');
+                payload.append('nonce', i18n.nonce);
+                payload.append('sum', String(parseSum(sumField ? sumField.value : '0')));
+                payload.append('clientid', nameField ? nameField.value.trim() : '');
+                payload.append('client_email', emailField ? emailField.value.trim() : '');
+                payload.append('service_name', commentField ? commentField.value.trim() : '');
+
+                window.fetch(i18n.ajaxurl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: payload
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (data && data.success && data.data && data.data.formUrl) {
+                            window.location.href = data.data.formUrl;
+                            return;
+                        }
+                        var message = (data && data.data && data.data.message) ? data.data.message : (i18n.errorGeneric || 'Ошибка');
+                        showToast(root, message);
+                    })
+                    .catch(function () {
+                        showToast(root, i18n.errorGeneric || 'Не удалось зарегистрировать заказ');
+                    })
+                    .finally(function () {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.classList.remove('is-loading');
+                        }
+                    });
             });
         }
     }

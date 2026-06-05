@@ -3,7 +3,7 @@
  * Plugin Name: Курсы Про
  * Plugin URI: https://github.com/ValentinK2410/course_wp
  * Description: Плагин для управления курсами с возможностью добавления, редактирования и удаления курсов. Включает разделы: специализация и программы, уровень образования, тема, преподаватель.
- * Version: 1.6.0
+ * Version: 1.6.1
  * Author: Кузьменко Валентин (Valentink2410)
  * Author URI: https://github.com/ValentinK2410
  * Copyright: Copyright (c) 2024 Кузьменко Валентин (Valentink2410)
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 
 // Определяем константы плагина для использования в других файлах
 // COURSE_PLUGIN_VERSION - версия плагина для версионирования стилей и скриптов
-define('COURSE_PLUGIN_VERSION', '1.6.0');
+define('COURSE_PLUGIN_VERSION', '1.6.1');
 
 // COURSE_PLUGIN_DIR - абсолютный путь к директории плагина (например: /var/www/wp-content/plugins/course-plugin/)
 define('COURSE_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -210,7 +210,8 @@ class Course_Plugin {
             'includes/class-course-meta-boxes.php',    // Класс для метабоксов с дополнительными полями курсов
             'includes/class-program-meta-boxes.php',   // Класс для метабоксов с дополнительными полями программ
             'includes/class-course-frontend.php',       // Класс для фронтенда (шаблоны, фильтры, стили)
-            'includes/class-course-bank-transfer.php', // Шорткод перевода / оплаты [mbs_bank_transfer]
+            'includes/class-course-bank-transfer.php', // Шорткод перевода / оплаты Сбербанк [mbs_bank_transfer]
+            'includes/class-course-sberbank-payment-admin.php', // Настройки платёжного шлюза Сбербанка
             'includes/class-program-frontend.php',      // Класс для фронтенда программ
             'includes/class-course-teacher-meta.php',  // Класс для метаполей преподавателей (фото, описание и т.д.)
             'includes/class-course-moodle-api.php',    // Класс для работы с Moodle REST API
@@ -316,6 +317,10 @@ class Course_Plugin {
 
         if (class_exists('Course_Bank_Transfer')) {
             Course_Bank_Transfer::get_instance();
+        }
+
+        if (class_exists('Course_Sberbank_Payment_Admin')) {
+            Course_Sberbank_Payment_Admin::get_instance();
         }
         
         // Инициализируем фронтенд программ

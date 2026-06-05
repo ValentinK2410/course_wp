@@ -284,6 +284,46 @@
 	width: 100%;
 }
 
+.mbt-alert {
+	margin: 0 0 18px;
+	padding: 14px 18px;
+	border-radius: 14px;
+	font-size: 0.9375rem;
+	line-height: 1.5;
+	font-weight: 600;
+}
+
+.mbt-alert--success {
+	background: #e8f7ec;
+	border: 1px solid rgba(33, 160, 56, 0.25);
+	color: #166534;
+}
+
+.mbt-alert--fail,
+.mbt-alert--warn {
+	background: #fff7ed;
+	border: 1px solid rgba(234, 88, 12, 0.25);
+	color: #9a3412;
+}
+
+.mbt-test-badge {
+	margin: -8px 0 0;
+	padding: 8px 12px;
+	border-radius: 999px;
+	display: inline-block;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	background: #fff7ed;
+	color: #c2410c;
+}
+
+.mbt-btn.is-loading {
+	opacity: 0.75;
+	pointer-events: none;
+}
+
 .mbt-note {
 	margin: 20px 0 0;
 	padding: 16px 18px;
