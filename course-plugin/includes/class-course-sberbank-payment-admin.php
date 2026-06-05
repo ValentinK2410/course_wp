@@ -100,7 +100,13 @@ class Course_Sberbank_Payment_Admin {
         <div class="wrap">
             <h1><?php esc_html_e('Платёжный шлюз Сбербанка', 'course-plugin'); ?></h1>
             <p>
-                <?php esc_html_e('Укажите логин и пароль магазина из личного кабинета Сбербанка. На сайте используется шорткод [mbs_bank_transfer].', 'course-plugin'); ?>
+                <?php
+                printf(
+                    /* translators: %s: donations page URL */
+                    esc_html__('Укажите логин и пароль магазина из личного кабинета Сбербанка. Страница оплаты: %s (шорткод [mbs_bank_transfer]).', 'course-plugin'),
+                    esc_url(Course_Bank_Transfer::get_payment_page_url())
+                );
+                ?>
             </p>
             <p>
                 <strong><?php esc_html_e('Текущий endpoint:', 'course-plugin'); ?></strong>
@@ -129,14 +135,14 @@ class Course_Sberbank_Payment_Admin {
                     <tr>
                         <th scope="row"><label for="course_sberbank_return_url"><?php esc_html_e('URL успешной оплаты (returnUrl)', 'course-plugin'); ?></label></th>
                         <td>
-                            <input type="url" class="large-text" id="course_sberbank_return_url" name="course_sberbank_return_url" value="<?php echo esc_attr((string) get_option('course_sberbank_return_url', '')); ?>" placeholder="https://mbs.ru/help_ano_vtb/?payment=success" />
-                            <p class="description"><?php esc_html_e('Полный URL с https://. Если пусто — страница со шорткодом.', 'course-plugin'); ?></p>
+                            <input type="url" class="large-text" id="course_sberbank_return_url" name="course_sberbank_return_url" value="<?php echo esc_attr((string) get_option('course_sberbank_return_url', '')); ?>" placeholder="https://mbs.ru/help_sberb/?payment=success" />
+                            <p class="description"><?php esc_html_e('Полный URL с https://. Если пусто — https://mbs.ru/help_sberb/?payment=success', 'course-plugin'); ?></p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row"><label for="course_sberbank_fail_url"><?php esc_html_e('URL неуспешной оплаты (failUrl)', 'course-plugin'); ?></label></th>
                         <td>
-                            <input type="url" class="large-text" id="course_sberbank_fail_url" name="course_sberbank_fail_url" value="<?php echo esc_attr((string) get_option('course_sberbank_fail_url', '')); ?>" placeholder="https://mbs.ru/help_ano_vtb/?payment=fail" />
+                            <input type="url" class="large-text" id="course_sberbank_fail_url" name="course_sberbank_fail_url" value="<?php echo esc_attr((string) get_option('course_sberbank_fail_url', '')); ?>" placeholder="https://mbs.ru/help_sberb/?payment=fail" />
                         </td>
                     </tr>
                 </table>

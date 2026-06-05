@@ -43,14 +43,15 @@ class Course_Bank_Transfer {
      */
     public static function get_default_settings() {
         $defaults = array(
-            'bank_name'     => 'ПАО Сбербанк, г. Москва',
-            'account'       => '40703810638120101749',
-            'corr_account'  => '30101810400000000225',
-            'bik'           => '044525225',
-            'inn'           => '7726081186',
-            'recipient'     => 'Московская богословская семинария',
-            'default_sum'   => 1000,
-            'preset_sums'   => array(500, 1000, 2000, 3000, 5000, 10000),
+            'payment_page_url' => 'https://mbs.ru/help_sberb/',
+            'bank_name'        => 'ПАО Сбербанк, г. Москва',
+            'account'          => '40703810638120101749',
+            'corr_account'     => '30101810400000000225',
+            'bik'              => '044525225',
+            'inn'              => '7726081186',
+            'recipient'        => 'Московская богословская семинария',
+            'default_sum'      => 1000,
+            'preset_sums'      => array(500, 1000, 2000, 3000, 5000, 10000),
         );
 
         return apply_filters('course_plugin_bank_transfer_settings', $defaults);
@@ -146,6 +147,26 @@ class Course_Bank_Transfer {
     }
 
     /**
+     * Страница пожертвований / оплаты через Сбербанк.
+     *
+     * @return string
+     */
+    public static function get_payment_page_url() {
+        $settings = self::get_default_settings();
+        $url      = isset($settings['payment_page_url']) ? trim((string) $settings['payment_page_url']) : '';
+        if ($url !== '') {
+            return esc_url_raw($url);
+        }
+
+        $page = get_page_by_path('help_sberb');
+        if ($page instanceof WP_Post) {
+            return get_permalink($page);
+        }
+
+        return home_url('/help_sberb/');
+    }
+
+    /**
      * URL возврата после оплаты.
      *
      * @param string $status success|fail
@@ -158,15 +179,7 @@ class Course_Bank_Transfer {
             return $saved;
         }
 
-        $base = '';
-        if (is_singular()) {
-            $base = get_permalink();
-        }
-        if (!$base) {
-            $base = home_url('/');
-        }
-
-        return add_query_arg('payment', $status, $base);
+        return add_query_arg('payment', $status, self::get_payment_page_url());
     }
 
     /**
