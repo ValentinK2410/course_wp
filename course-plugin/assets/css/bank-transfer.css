@@ -1,0 +1,333 @@
+/**
+ * [mbs_bank_transfer] — перевод / оплата, стиль в духе Сбербанка.
+ */
+.mbt {
+	--mbt-green: #21a038;
+	--mbt-green-dark: #1a8f32;
+	--mbt-green-soft: #e8f7ec;
+	--mbt-green-glow: rgba(33, 160, 56, 0.18);
+	--mbt-text: #1f2937;
+	--mbt-muted: #6b7280;
+	--mbt-border: #e5e7eb;
+	--mbt-bg: #f6fbf7;
+	--mbt-radius: 20px;
+	--mbt-shadow: 0 18px 48px rgba(17, 24, 39, 0.08);
+	font-family: "PT Sans Caption", "Segoe UI", system-ui, sans-serif;
+	color: var(--mbt-text);
+	max-width: 1080px;
+	margin: 0 auto;
+}
+
+.mbt__grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 24px;
+	align-items: stretch;
+}
+
+.mbt-card {
+	background: #fff;
+	border: 1px solid var(--mbt-border);
+	border-radius: var(--mbt-radius);
+	box-shadow: var(--mbt-shadow);
+	padding: 28px;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	position: relative;
+	overflow: hidden;
+}
+
+.mbt-card::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	background: linear-gradient(90deg, var(--mbt-green) 0%, #2fd058 100%);
+}
+
+.mbt-card--pay::before {
+	background: linear-gradient(90deg, var(--mbt-green-dark) 0%, var(--mbt-green) 55%, #3ecf63 100%);
+}
+
+.mbt-card__hero {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+}
+
+.mbt-card__hero-icon {
+	flex-shrink: 0;
+	width: 52px;
+	height: 52px;
+	border-radius: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--mbt-green-soft);
+	color: var(--mbt-green);
+}
+
+.mbt-card__hero-icon--pay {
+	background: linear-gradient(135deg, var(--mbt-green) 0%, #2bc954 100%);
+	color: #fff;
+	box-shadow: 0 10px 24px var(--mbt-green-glow);
+}
+
+.mbt-card__kicker {
+	margin: 0 0 4px;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--mbt-green);
+}
+
+.mbt-card__title {
+	margin: 0;
+	font-size: 1.35rem;
+	line-height: 1.3;
+	font-weight: 700;
+	color: var(--mbt-text);
+}
+
+.mbt-details {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.mbt-details__row {
+	padding: 14px 16px;
+	border-radius: 14px;
+	background: var(--mbt-bg);
+	border: 1px solid rgba(33, 160, 56, 0.08);
+}
+
+.mbt-details__label {
+	display: block;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--mbt-muted);
+	margin-bottom: 6px;
+}
+
+.mbt-details__value-wrap {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.mbt-details__value {
+	font-size: 0.98rem;
+	line-height: 1.45;
+	font-weight: 600;
+	word-break: break-word;
+}
+
+.mbt-copy {
+	flex-shrink: 0;
+	width: 36px;
+	height: 36px;
+	border: none;
+	border-radius: 10px;
+	background: #fff;
+	color: var(--mbt-green);
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.mbt-copy:hover,
+.mbt-copy:focus-visible {
+	background: var(--mbt-green);
+	color: #fff;
+	outline: none;
+}
+
+.mbt-copy.is-copied {
+	background: var(--mbt-green-dark);
+	color: #fff;
+}
+
+.mbt-form {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.mbt-field {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.mbt-field__label {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--mbt-text);
+}
+
+.mbt-input {
+	width: 100%;
+	box-sizing: border-box;
+	border: 1.5px solid var(--mbt-border);
+	border-radius: 14px;
+	padding: 14px 16px;
+	font-size: 1rem;
+	line-height: 1.4;
+	color: var(--mbt-text);
+	background: #fff;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mbt-input::placeholder {
+	color: #9ca3af;
+}
+
+.mbt-input:focus {
+	outline: none;
+	border-color: var(--mbt-green);
+	box-shadow: 0 0 0 4px var(--mbt-green-glow);
+}
+
+.mbt-input--sum {
+	font-size: 1.5rem;
+	font-weight: 700;
+	padding: 16px 18px;
+	background: var(--mbt-bg);
+}
+
+.mbt-presets {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.mbt-preset {
+	border: 1.5px solid var(--mbt-border);
+	background: #fff;
+	color: var(--mbt-text);
+	border-radius: 999px;
+	padding: 8px 14px;
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.mbt-preset:hover,
+.mbt-preset:focus-visible {
+	border-color: var(--mbt-green);
+	color: var(--mbt-green);
+	outline: none;
+}
+
+.mbt-preset.is-active {
+	background: var(--mbt-green);
+	border-color: var(--mbt-green);
+	color: #fff;
+	box-shadow: 0 8px 20px var(--mbt-green-glow);
+}
+
+.mbt-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	border: none;
+	border-radius: 14px;
+	padding: 14px 22px;
+	font-size: 0.95rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.mbt-btn--primary {
+	background: linear-gradient(135deg, var(--mbt-green) 0%, #2bc954 100%);
+	color: #fff;
+	box-shadow: 0 12px 28px var(--mbt-green-glow);
+}
+
+.mbt-btn--primary:hover,
+.mbt-btn--primary:focus-visible {
+	transform: translateY(-1px);
+	box-shadow: 0 16px 32px rgba(33, 160, 56, 0.28);
+	outline: none;
+}
+
+.mbt-btn--ghost {
+	background: #fff;
+	color: var(--mbt-green);
+	border: 1.5px solid rgba(33, 160, 56, 0.25);
+}
+
+.mbt-btn--ghost:hover,
+.mbt-btn--ghost:focus-visible {
+	background: var(--mbt-green-soft);
+	outline: none;
+}
+
+.mbt-btn--full {
+	width: 100%;
+}
+
+.mbt-note {
+	margin: 20px 0 0;
+	padding: 16px 18px;
+	border-radius: 14px;
+	background: #f9fafb;
+	border: 1px solid var(--mbt-border);
+	font-size: 0.875rem;
+	line-height: 1.6;
+	color: var(--mbt-muted);
+}
+
+.mbt-toast {
+	position: fixed;
+	left: 50%;
+	bottom: 24px;
+	transform: translateX(-50%) translateY(12px);
+	background: #111827;
+	color: #fff;
+	padding: 12px 18px;
+	border-radius: 12px;
+	font-size: 0.875rem;
+	font-weight: 600;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.25s ease, transform 0.25s ease;
+	z-index: 100000;
+}
+
+.mbt-toast.is-visible {
+	opacity: 1;
+	transform: translateX(-50%) translateY(0);
+}
+
+.mbt-input.is-invalid {
+	border-color: #ef4444;
+	box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+
+@media (max-width: 900px) {
+	.mbt__grid {
+		grid-template-columns: 1fr;
+	}
+
+	.mbt-card {
+		padding: 22px 18px;
+	}
+}
