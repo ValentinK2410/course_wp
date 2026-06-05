@@ -133,32 +133,71 @@
 	word-break: break-word;
 }
 
-.mbt-copy {
+.mbt .mbt-copy {
 	flex-shrink: 0;
-	width: 36px;
+	min-width: 36px;
 	height: 36px;
-	border: none;
+	padding: 0 12px;
+	border: 1px solid rgba(33, 160, 56, 0.2) !important;
 	border-radius: 10px;
-	background: #fff;
-	color: var(--mbt-green);
+	background: #fff !important;
+	color: var(--mbt-green) !important;
 	cursor: pointer;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+	gap: 6px;
+	font-family: inherit;
+	font-size: 0.75rem;
+	font-weight: 700;
+	line-height: 1;
+	transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.mbt-copy:hover,
-.mbt-copy:focus-visible {
-	background: var(--mbt-green);
-	color: #fff;
+.mbt .mbt-copy__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.mbt .mbt-copy__icon svg {
+	display: block;
+}
+
+.mbt .mbt-copy__text {
+	color: #21a038 !important;
+	white-space: nowrap;
+}
+
+.mbt .mbt-copy:hover,
+.mbt .mbt-copy:focus-visible {
+	background: var(--mbt-green) !important;
+	border-color: var(--mbt-green) !important;
+	color: #fff !important;
 	outline: none;
 }
 
-.mbt-copy.is-copied {
-	background: var(--mbt-green-dark);
-	color: #fff;
+.mbt .mbt-copy:hover .mbt-copy__text,
+.mbt .mbt-copy:focus-visible .mbt-copy__text,
+.mbt .mbt-copy.is-copied .mbt-copy__text {
+	color: #fff !important;
+}
+
+.mbt .mbt-copy:hover .mbt-copy__icon svg rect,
+.mbt .mbt-copy:hover .mbt-copy__icon svg path,
+.mbt .mbt-copy:focus-visible .mbt-copy__icon svg rect,
+.mbt .mbt-copy:focus-visible .mbt-copy__icon svg path,
+.mbt .mbt-copy.is-copied .mbt-copy__icon svg rect,
+.mbt .mbt-copy.is-copied .mbt-copy__icon svg path {
+	stroke: #fff !important;
+}
+
+.mbt .mbt-copy.is-copied {
+	background: var(--mbt-green-dark) !important;
+	border-color: var(--mbt-green-dark) !important;
+	color: #fff !important;
 }
 
 .mbt-form {
@@ -369,5 +408,15 @@
 
 	.mbt-card {
 		padding: 22px 18px;
+	}
+}
+
+@media (max-width: 520px) {
+	.mbt .mbt-copy {
+		padding: 0 10px;
+	}
+
+	.mbt .mbt-copy__text {
+		font-size: 0.6875rem;
 	}
 }

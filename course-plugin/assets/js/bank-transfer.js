@@ -64,10 +64,18 @@
                 var text = btn.getAttribute('data-mbt-copy') || '';
                 copyText(text)
                     .then(function () {
+                        var label = btn.querySelector('.mbt-copy__text');
+                        var prev = label ? label.textContent : '';
                         btn.classList.add('is-copied');
+                        if (label) {
+                            label.textContent = i18n.copied || 'Скопировано';
+                        }
                         showToast(root, i18n.copied || 'Скопировано');
                         window.setTimeout(function () {
                             btn.classList.remove('is-copied');
+                            if (label && prev) {
+                                label.textContent = prev;
+                            }
                         }, 1500);
                     })
                     .catch(function () {

@@ -89,12 +89,15 @@ $details = array(
                                     type="button"
                                     class="mbt-copy"
                                     data-mbt-copy="<?php echo esc_attr($row['value']); ?>"
-                                    aria-label="<?php echo esc_attr(sprintf(__('Скопировать %s', 'course-plugin'), $row['label'])); ?>"
+                                    title="<?php echo esc_attr(sprintf(__('Скопировать %s', 'course-plugin'), $row['label'])); ?>"
                                 >
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                        <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/>
-                                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.6"/>
-                                    </svg>
+                                    <span class="mbt-copy__icon" aria-hidden="true">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="9" y="9" width="11" height="11" rx="2" stroke="#21A038" stroke-width="1.6"/>
+                                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="#21A038" stroke-width="1.6"/>
+                                        </svg>
+                                    </span>
+                                    <span class="mbt-copy__text"><?php esc_html_e('Копировать', 'course-plugin'); ?></span>
                                 </button>
                             <?php endif; ?>
                         </div>
