@@ -76,9 +76,22 @@ class Course_Sberbank_Payment_Admin {
         ));
         register_setting('course_sberbank_settings', 'course_sberbank_gateway_base_url', array(
             'type'              => 'string',
-            'sanitize_callback' => 'esc_url_raw',
+            'sanitize_callback' => array($this, 'sanitize_gateway_base_url'),
             'default'           => '',
         ));
+    }
+
+    /**
+     * @param mixed $value
+     * @return string
+     */
+    public function sanitize_gateway_base_url($value) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+
+        return Course_Bank_Transfer::normalize_gateway_base_url($value);
     }
 
     /**

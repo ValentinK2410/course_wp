@@ -83,7 +83,12 @@ class Course_Bank_Transfer {
      * @param string $url
      * @return string
      */
-    private static function normalize_gateway_base_url($url) {
+    public static function normalize_gateway_base_url($url) {
+        $url = trim((string) $url);
+        if ($url === '') {
+            return '';
+        }
+
         $url  = trailingslashit(esc_url_raw($url));
         $path = trim((string) wp_parse_url($url, PHP_URL_PATH), '/');
 
@@ -92,6 +97,59 @@ class Course_Bank_Transfer {
         }
 
         return $url;
+    }
+
+    /**
+     * @param string $raw
+     * @return array<string, mixed>|null
+     */
+    private static function decode_gateway_response($raw) {
+        $raw = trim((string) $raw);
+        if ($raw === '') {
+            return null;
+        }
+
+        if ($raw[0] === "\xEF" && str_starts_with($raw, "\xEF\xBB\xBF")) {
+            $raw = substr($raw, 3);
+        }
+
+        $data = json_decode($raw, true);
+        if (is_array($data)) {
+            return $data;
+        }
+
+        $start = strpos($raw, '{');
+        $end   = strrpos($raw, '}');
+        if ($start !== false && $end !== false && $end > $start) {
+            $data = json_decode(substr($raw, $start, $end - $start + 1), true);
+            if (is_array($data)) {
+                return $data;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $register_url
+     * @param int    $http_code
+     * @param string $raw
+     * @return void
+     */
+    private static function log_gateway_failure($register_url, $http_code, $raw) {
+        if (!defined('WP_DEBUG_LOG') || !WP_DEBUG_LOG) {
+            return;
+        }
+
+        $snippet = mb_substr(preg_replace('/\s+/', ' ', (string) $raw), 0, 500);
+        error_log(
+            sprintf(
+                'MBS Sberbank register.do failed: url=%s http=%d body=%s',
+                $register_url,
+                $http_code,
+                $snippet
+            )
+        );
     }
 
     /**
@@ -251,10 +309,14 @@ class Course_Bank_Transfer {
             ),
         );
 
-        $response = wp_remote_post(
-            self::get_register_url(),
+        $register_url = self::get_register_url();
+        $response     = wp_remote_post(
+            $register_url,
             array(
                 'timeout' => 30,
+                'headers' => array(
+                    'Content-Type' => 'application/x-www-form-urlencoded; charset=UTF-8',
+                ),
                 'body'    => $body,
             )
         );
@@ -264,11 +326,26 @@ class Course_Bank_Transfer {
         }
 
         $code = (int) wp_remote_retrieve_response_code($response);
-        $raw  = wp_remote_retrieve_body($response);
-        $data = json_decode($raw, true);
+        $raw  = (string) wp_remote_retrieve_body($response);
+        $data = self::decode_gateway_response($raw);
 
         if (!is_array($data)) {
-            return new WP_Error('bad_response', __('Некорректный ответ платёжного шлюза.', 'course-plugin'), array('http_code' => $code));
+            self::log_gateway_failure($register_url, $code, $raw);
+
+            $message = __('Некорректный ответ платёжного шлюза.', 'course-plugin');
+            if ($code === 404 || str_contains($raw, '<html')) {
+                $message = __('Неверный адрес шлюза. В настройках должен быть endpoint …/payment/rest/register.do', 'course-plugin');
+            }
+
+            return new WP_Error(
+                'bad_response',
+                $message,
+                array(
+                    'http_code'     => $code,
+                    'register_url'  => $register_url,
+                    'body_snippet'  => mb_substr($raw, 0, 200),
+                )
+            );
         }
 
         $error_code = isset($data['errorCode']) ? (string) $data['errorCode'] : '';
