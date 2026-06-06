@@ -65,7 +65,7 @@ class Course_Bank_Transfer {
     public static function get_gateway_base_url() {
         $custom = trim((string) get_option('course_sberbank_gateway_base_url', ''));
         if ($custom !== '') {
-            return trailingslashit(esc_url_raw($custom));
+            return self::normalize_gateway_base_url($custom);
         }
 
         $test_mode = (bool) get_option('course_sberbank_test_mode', true);
@@ -75,6 +75,23 @@ class Course_Bank_Transfer {
 
         // Боевой шлюз МБС (как на ch67149.tmweb.ru): api.securepaymentgateway.ru
         return 'https://api.securepaymentgateway.ru/payment/';
+    }
+
+    /**
+     * Добавляет /payment/ если указан только домен шлюза (как api.securepaymentgateway.ru).
+     *
+     * @param string $url
+     * @return string
+     */
+    private static function normalize_gateway_base_url($url) {
+        $url  = trailingslashit(esc_url_raw($url));
+        $path = trim((string) wp_parse_url($url, PHP_URL_PATH), '/');
+
+        if ($path === '' || !str_contains($path, 'payment')) {
+            return trailingslashit(untrailingslashit($url) . '/payment');
+        }
+
+        return $url;
     }
 
     /**

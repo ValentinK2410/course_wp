@@ -152,7 +152,7 @@ class Course_Sberbank_Payment_Admin {
                         <th scope="row"><label for="course_sberbank_gateway_base_url"><?php esc_html_e('Базовый URL шлюза (опционально)', 'course-plugin'); ?></label></th>
                         <td>
                             <input type="url" class="large-text" id="course_sberbank_gateway_base_url" name="course_sberbank_gateway_base_url" value="<?php echo esc_attr((string) get_option('course_sberbank_gateway_base_url', '')); ?>" placeholder="https://api.securepaymentgateway.ru/payment/" />
-                            <p class="description"><?php esc_html_e('По умолчанию: тест — 3dsec.sberbank.ru, бой — api.securepaymentgateway.ru (как на старом сайте МБС).', 'course-plugin'); ?></p>
+                            <p class="description"><?php esc_html_e('По умолчанию: тест — 3dsec.sberbank.ru, бой — api.securepaymentgateway.ru. Если указан только домен без /payment/, путь добавится автоматически.', 'course-plugin'); ?></p>
                         </td>
                     </tr>
                 </table>
